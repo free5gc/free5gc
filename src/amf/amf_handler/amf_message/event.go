@@ -1,0 +1,30 @@
+package amf_message
+
+type Event int
+
+const (
+	EventNGAPMessage Event = iota
+	EventNGAPAcceptConn
+	EventNGAPCloseConn
+	EventN1N2MessageTransfer
+	EventN1N2MessageTransferStatus
+	EventProvideDomainSelectionInfo
+	EventProvideLocationInfo
+	EventN1N2MessageSubscribe
+	EventN1N2MessageUnSubscribe
+	EventCreateUEContext
+	EventSmContextStatusNotify
+	EventUEContextRelease
+	EventUEContextTransfer
+	EventEBIAssignment
+	EventAMFStatusChangeSubscribe
+	EventGMMT3513
+	EventGMMT3565
+	EventGMMT3560ForAuthenticationRequest
+	EventGMMT3560ForSecurityModeCommand
+	EventGMMT3550
+	EventAMFStatusChangeUnSubscribe
+	EventAMFStatusChangeSubscribeModfy
+	EventRegistrationStatusUpdate
+	EventGMMT3522
+)

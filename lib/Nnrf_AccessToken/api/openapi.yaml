@@ -1,0 +1,205 @@
+openapi: 3.0.0
+info:
+  description: NRF OAuth2 Authorization
+  title: NRF OAuth2
+  version: 1.0.0
+externalDocs:
+  description: 3GPP TS 29.510 V15.2.0; 5G System; Network Function Repository Services; Stage 3
+  url: http://www.3gpp.org/ftp/Specs/archive/29_series/29.510/
+servers:
+- url: /
+paths:
+  /oauth2/token:
+    post:
+      operationId: AccessTokenRequest
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AccessTokenReq'
+        required: true
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessTokenRsp'
+          description: Successful Access Token Request
+          headers:
+            Cache-Control:
+              $ref: '#/components/headers/cache-control'
+            Pragma:
+              $ref: '#/components/headers/pragma'
+        400:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessTokenErr'
+          description: Error in the Access Token Request
+          headers:
+            Cache-Control:
+              $ref: '#/components/headers/cache-control'
+            Pragma:
+              $ref: '#/components/headers/pragma'
+      summary: Access Token Request
+      tags:
+      - Access Token Request
+components:
+  headers:
+    cache-control:
+      explode: false
+      required: true
+      schema:
+        enum:
+        - no-store
+        type: string
+      style: simple
+    pragma:
+      explode: false
+      required: true
+      schema:
+        enum:
+        - no-cache
+        type: string
+      style: simple
+  schemas:
+    AccessTokenReq:
+      properties:
+        grant_type:
+          enum:
+          - client_credentials
+          type: string
+        nfInstanceId:
+          format: uuid
+          type: string
+        nfType:
+          $ref: '#/components/schemas/NFType'
+        targetNfType:
+          $ref: '#/components/schemas/NFType'
+        scope:
+          pattern: ^([a-zA-Z0-9_-]+)( [a-zA-Z0-9_-]+)*$
+          type: string
+        targetNfInstanceId:
+          format: uuid
+          type: string
+        requesterPlmn:
+          $ref: '#/components/schemas/PlmnId'
+        targetPlmn:
+          $ref: '#/components/schemas/PlmnId'
+      required:
+      - grant_type
+      - nfInstanceId
+      - scope
+      type: object
+    AccessTokenRsp:
+      example:
+        access_token: access_token
+        scope: scope
+        token_type: token_type
+        expires_in: 0
+      properties:
+        access_token:
+          description: JWS Compact Serialized representation of JWS signed JSON object (AccessTokenClaims)
+          type: string
+        token_type:
+          type: string
+        expires_in:
+          format: int32
+          type: integer
+        scope:
+          pattern: ^([a-zA-Z0-9_-]+)( [a-zA-Z0-9_-]+)*$
+          type: string
+      required:
+      - access_token
+      - token_type
+      type: object
+    AccessTokenClaims:
+      properties:
+        issuer:
+          format: uuid
+          type: string
+        subject:
+          type: string
+        audience:
+          anyOf:
+          - $ref: '#/components/schemas/NFType'
+          - items:
+              $ref: '#/components/schemas/NfInstanceId'
+            minItems: 1
+            type: array
+        scope:
+          pattern: ^([a-zA-Z0-9_-]+)( [a-zA-Z0-9_-]+)*$
+          type: string
+        expiration:
+          format: int32
+          type: integer
+      required:
+      - audience
+      - expiration
+      - issuer
+      - scope
+      - subject
+      type: object
+    AccessTokenErr:
+      properties:
+        error:
+          enum:
+          - invalid_request
+          - invalid_client
+          - invalid_grant
+          - unauthorized_client
+          - unsupported_grant_type
+          - invalid_scope
+          type: string
+        error_description:
+          type: string
+        error_uri:
+          type: string
+      required:
+      - error
+      type: object
+    NfInstanceId:
+      format: uuid
+      type: string
+    NFType:
+      enum:
+      - NRF
+      - UDM
+      - AMF
+      - SMF
+      - AUSF
+      - NEF
+      - PCF
+      - SMSF
+      - NSSF
+      - UDR
+      - LMF
+      - GMLC
+      - 5G_EIR
+      - SEPP
+      - UPF
+      - N3IWF
+      - AF
+      - UDSF
+      - BSF
+      - CHF
+      - NWDAF
+      type: string
+    PlmnId:
+      properties:
+        mcc:
+          pattern: ^\d{3}$
+          type: string
+        mnc:
+          pattern: ^\d{2,3}$
+          type: string
+      required:
+      - mcc
+      - mnc
+      type: object
+    Mcc:
+      pattern: ^\d{3}$
+      type: string
+    Mnc:
+      pattern: ^\d{2,3}$
+      type: string

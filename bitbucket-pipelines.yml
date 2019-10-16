@@ -1,0 +1,30 @@
+# This is a sample build configuration for Go.
+# Check our guides at https://confluence.atlassian.com/x/5Q4SMw for more examples.
+# Only use spaces to indent your .yml configuration.
+# -----
+# You can specify a custom docker image from Docker Hub as your build environment.
+image: golang:1.12
+ 
+pipelines:
+  pull-requests:
+    '**':
+      - step:
+          name: ENV setup
+          script:
+            - PACKAGE_PATH="${GOPATH}/src/bitbucket.org/${BITBUCKET_REPO_FULL_NAME}"
+            - mkdir -pv "${PACKAGE_PATH}"
+            - tar -cO --exclude-vcs --exclude=bitbucket-pipelines.yml . | tar -xv -C "${PACKAGE_PATH}"
+      - step:
+          name: Check coding style
+          size: 2x
+          script:
+            - curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | bash -s -- -b $GOPATH/bin v1.17.1
+            - cd "${PACKAGE_PATH}"
+            - golangci-lint run ./...
+      - step:
+          name: Build Project
+          trigger: manual
+          script:
+            - go get -v
+            - go build ./... -v
+            - go test ./... -v -cover -race

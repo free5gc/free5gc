@@ -1,0 +1,3231 @@
+openapi: 3.0.0
+info:
+  description: AMF Event Exposure Service
+  title: Namf_EventExposure
+  version: 1.0.0
+externalDocs:
+  description: 3GPP TS 29.518 V15.2.0; 5G System; Access and Mobility Management Services
+  url: http://www.3gpp.org/ftp/Specs/archive/29_series/29.518/
+servers:
+- url: '{apiRoot}/namf-evts/v1'
+  variables:
+    apiRoot:
+      default: https://example.com
+      description: apiRoot as defined in subclause subclause 4.4 of 3GPP TS 29.501
+security:
+- {}
+- oAuth2Clientcredentials:
+  - namf-evts
+paths:
+  /subscriptions:
+    post:
+      callbacks:
+        onEventReport:
+          '{$request.body#/subscription/eventNotifyUri}':
+            post:
+              operationId: onEventReport_Post
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/AmfEventNotification'
+                required: true
+              responses:
+                204:
+                  description: Successful acknowledgement
+                400:
+                  content:
+                    application/problem+json:
+                      schema:
+                        $ref: '#/components/schemas/ProblemDetails'
+                  description: Bad request
+                411:
+                  content:
+                    application/problem+json:
+                      schema:
+                        $ref: '#/components/schemas/ProblemDetails'
+                  description: Length Required
+                413:
+                  content:
+                    application/problem+json:
+                      schema:
+                        $ref: '#/components/schemas/ProblemDetails'
+                  description: Payload Too Large
+                415:
+                  content:
+                    application/problem+json:
+                      schema:
+                        $ref: '#/components/schemas/ProblemDetails'
+                  description: Unsupported Media Type
+                429:
+                  content:
+                    application/problem+json:
+                      schema:
+                        $ref: '#/components/schemas/ProblemDetails'
+                  description: Too Many Requests
+                500:
+                  content:
+                    application/problem+json:
+                      schema:
+                        $ref: '#/components/schemas/ProblemDetails'
+                  description: Internal Server Error
+                503:
+                  content:
+                    application/problem+json:
+                      schema:
+                        $ref: '#/components/schemas/ProblemDetails'
+                  description: Service Unavailable
+                default:
+                  description: Unexpected error
+              summary: Event Notificaiton Delivery
+              x-callback-request: true
+        onSubscriptionIdChangeEvtReport:
+          '{$request.body#/subscription/subsChangeNotifyUri}':
+            post:
+              operationId: onSubscriptionIdChangeEvtReport_Post
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/AmfEventNotification'
+                required: true
+              responses:
+                204:
+                  description: Successful acknowledgement
+                400:
+                  content:
+                    application/problem+json:
+                      schema:
+                        $ref: '#/components/schemas/ProblemDetails'
+                  description: Bad request
+                411:
+                  content:
+                    application/problem+json:
+                      schema:
+                        $ref: '#/components/schemas/ProblemDetails'
+                  description: Length Required
+                413:
+                  content:
+                    application/problem+json:
+                      schema:
+                        $ref: '#/components/schemas/ProblemDetails'
+                  description: Payload Too Large
+                415:
+                  content:
+                    application/problem+json:
+                      schema:
+                        $ref: '#/components/schemas/ProblemDetails'
+                  description: Unsupported Media Type
+                429:
+                  content:
+                    application/problem+json:
+                      schema:
+                        $ref: '#/components/schemas/ProblemDetails'
+                  description: Too Many Requests
+                500:
+                  content:
+                    application/problem+json:
+                      schema:
+                        $ref: '#/components/schemas/ProblemDetails'
+                  description: Internal Server Error
+                503:
+                  content:
+                    application/problem+json:
+                      schema:
+                        $ref: '#/components/schemas/ProblemDetails'
+                  description: Service Unavailable
+                default:
+                  description: Unexpected error
+              summary: Event Notificaiton Delivery For Subscription Id Change
+              x-callback-request: true
+      operationId: CreateSubscription
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AmfCreateEventSubscription'
+        required: true
+      responses:
+        201:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AmfCreatedEventSubscription'
+          description: Subsription Created
+          headers:
+            Location:
+              description: 'Contains the URI of the newly created resource, according
+                to the structure: {apiRoot}/namf-evts/v1/subscriptions/{subscriptionId}'
+              explode: false
+              required: true
+              schema:
+                type: string
+              style: simple
+        400:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+          description: Bad request
+        403:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+          description: Forbidden
+        411:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+          description: Length Required
+        413:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+          description: Payload Too Large
+        415:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+          description: Unsupported Media Type
+        429:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+          description: Too Many Requests
+        500:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+          description: Internal Server Error
+        503:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+          description: Service Unavailable
+        default:
+          description: Unexpected error
+      summary: Namf_EventExposure Subscribe service Operation
+      tags:
+      - Subscriptions collection (Document)
+  /subscriptions/{subscriptionId}:
+    delete:
+      operationId: DeleteSubscription
+      parameters:
+      - description: Unique ID of the subscription to be deleted
+        explode: false
+        in: path
+        name: subscriptionId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        200:
+          description: Subsription deleted successfully
+        400:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+          description: Bad request
+        404:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+          description: Not Found
+        411:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+          description: Length Required
+        413:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+          description: Payload Too Large
+        415:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+          description: Unsupported Media Type
+        429:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+          description: Too Many Requests
+        500:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+          description: Internal Server Error
+        503:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+          description: Service Unavailable
+        default:
+          description: Unexpected error
+      summary: Namf_EventExposure Unsubscribe service Operation
+      tags:
+      - Individual subscription (Document)
+    patch:
+      operationId: ModifySubscription
+      parameters:
+      - description: Unique ID of the subscription to be modified
+        explode: false
+        in: path
+        name: subscriptionId
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json-patch+json:
+            schema:
+              $ref: '#/components/schemas/ModifySubscription_request'
+        required: true
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AmfUpdatedEventSubscription'
+          description: Subsription modified successfully
+        400:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+          description: Bad request
+        403:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+          description: Forbidden
+        404:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+          description: Not Found
+        411:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+          description: Length Required
+        413:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+          description: Payload Too Large
+        415:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+          description: Unsupported Media Type
+        429:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+          description: Too Many Requests
+        500:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+          description: Internal Server Error
+        503:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+          description: Service Unavailable
+        default:
+          description: Unexpected error
+      summary: Namf_EventExposure Subscribe Modify service Operation
+      tags:
+      - Individual subscription (Document)
+components:
+  schemas:
+    AmfEventSubscription:
+      example:
+        eventNotifyUri: eventNotifyUri
+        nfId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        eventList:
+        - subscribedDataFilterList:
+          - null
+          - null
+          areaList:
+          - presenceInfo:
+              ecgiList:
+              - eutraCellId: eutraCellId
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              - eutraCellId: eutraCellId
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              globalRanNodeIdList:
+              - gNbId:
+                  bitLength: 22
+                  gNBValue: gNBValue
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                n3IwfId: n3IwfId
+                ngeNbId: ngeNbId
+              - gNbId:
+                  bitLength: 22
+                  gNBValue: gNBValue
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                n3IwfId: n3IwfId
+                ngeNbId: ngeNbId
+              praId: praId
+              trackingAreaList:
+              - tac: tac
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              - tac: tac
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              ncgiList:
+              - plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                nrCellId: nrCellId
+              - plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                nrCellId: nrCellId
+            ladnInfo:
+              ladn: ladn
+          - presenceInfo:
+              ecgiList:
+              - eutraCellId: eutraCellId
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              - eutraCellId: eutraCellId
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              globalRanNodeIdList:
+              - gNbId:
+                  bitLength: 22
+                  gNBValue: gNBValue
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                n3IwfId: n3IwfId
+                ngeNbId: ngeNbId
+              - gNbId:
+                  bitLength: 22
+                  gNBValue: gNBValue
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                n3IwfId: n3IwfId
+                ngeNbId: ngeNbId
+              praId: praId
+              trackingAreaList:
+              - tac: tac
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              - tac: tac
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              ncgiList:
+              - plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                nrCellId: nrCellId
+              - plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                nrCellId: nrCellId
+            ladnInfo:
+              ladn: ladn
+          locationFilterList:
+          - null
+          - null
+          immediateFlag: true
+        - subscribedDataFilterList:
+          - null
+          - null
+          areaList:
+          - presenceInfo:
+              ecgiList:
+              - eutraCellId: eutraCellId
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              - eutraCellId: eutraCellId
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              globalRanNodeIdList:
+              - gNbId:
+                  bitLength: 22
+                  gNBValue: gNBValue
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                n3IwfId: n3IwfId
+                ngeNbId: ngeNbId
+              - gNbId:
+                  bitLength: 22
+                  gNBValue: gNBValue
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                n3IwfId: n3IwfId
+                ngeNbId: ngeNbId
+              praId: praId
+              trackingAreaList:
+              - tac: tac
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              - tac: tac
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              ncgiList:
+              - plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                nrCellId: nrCellId
+              - plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                nrCellId: nrCellId
+            ladnInfo:
+              ladn: ladn
+          - presenceInfo:
+              ecgiList:
+              - eutraCellId: eutraCellId
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              - eutraCellId: eutraCellId
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              globalRanNodeIdList:
+              - gNbId:
+                  bitLength: 22
+                  gNBValue: gNBValue
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                n3IwfId: n3IwfId
+                ngeNbId: ngeNbId
+              - gNbId:
+                  bitLength: 22
+                  gNBValue: gNBValue
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                n3IwfId: n3IwfId
+                ngeNbId: ngeNbId
+              praId: praId
+              trackingAreaList:
+              - tac: tac
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              - tac: tac
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              ncgiList:
+              - plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                nrCellId: nrCellId
+              - plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                nrCellId: nrCellId
+            ladnInfo:
+              ladn: ladn
+          locationFilterList:
+          - null
+          - null
+          immediateFlag: true
+        subsChangeNotifyUri: subsChangeNotifyUri
+        pei: pei
+        anyUE: true
+        groupId: groupId
+        options:
+          expiry: 2000-01-23T04:56:07.000+00:00
+          maxReports: 6
+        supi: supi
+        notifyCorrelationId: notifyCorrelationId
+        subsChangeNotifyCorrelationId: subsChangeNotifyCorrelationId
+        gpsi: gpsi
+      properties:
+        eventList:
+          items:
+            $ref: '#/components/schemas/AmfEvent'
+          minItems: 1
+          type: array
+        eventNotifyUri:
+          type: string
+        notifyCorrelationId:
+          type: string
+        nfId:
+          format: uuid
+          type: string
+        subsChangeNotifyUri:
+          type: string
+        subsChangeNotifyCorrelationId:
+          type: string
+        supi:
+          pattern: ^(imsi-[0-9]{5,15}|nai-.+|.+)$
+          type: string
+        groupId:
+          pattern: ^[A-Fa-f0-9]{8}-[0-9]{3}-[0-9]{2,3}-([A-Fa-f0-9][A-Fa-f0-9]){1,10}$
+          type: string
+        gpsi:
+          pattern: ^(msisdn-[0-9]{5,15}|extid-[^@]+@[^@]+|.+)$
+          type: string
+        pei:
+          pattern: ^(imei-[0-9]{15}|imeisv-[0-9]{16}|.+)$
+          type: string
+        anyUE:
+          type: boolean
+        options:
+          $ref: '#/components/schemas/AmfEventMode'
+      required:
+      - eventNotifyUri
+      - events
+      - nfId
+      - notifyCorrelationId
+      type: object
+    AmfEvent:
+      example:
+        subscribedDataFilterList:
+        - null
+        - null
+        areaList:
+        - presenceInfo:
+            ecgiList:
+            - eutraCellId: eutraCellId
+              plmnId:
+                mnc: mnc
+                mcc: mcc
+            - eutraCellId: eutraCellId
+              plmnId:
+                mnc: mnc
+                mcc: mcc
+            globalRanNodeIdList:
+            - gNbId:
+                bitLength: 22
+                gNBValue: gNBValue
+              plmnId:
+                mnc: mnc
+                mcc: mcc
+              n3IwfId: n3IwfId
+              ngeNbId: ngeNbId
+            - gNbId:
+                bitLength: 22
+                gNBValue: gNBValue
+              plmnId:
+                mnc: mnc
+                mcc: mcc
+              n3IwfId: n3IwfId
+              ngeNbId: ngeNbId
+            praId: praId
+            trackingAreaList:
+            - tac: tac
+              plmnId:
+                mnc: mnc
+                mcc: mcc
+            - tac: tac
+              plmnId:
+                mnc: mnc
+                mcc: mcc
+            ncgiList:
+            - plmnId:
+                mnc: mnc
+                mcc: mcc
+              nrCellId: nrCellId
+            - plmnId:
+                mnc: mnc
+                mcc: mcc
+              nrCellId: nrCellId
+          ladnInfo:
+            ladn: ladn
+        - presenceInfo:
+            ecgiList:
+            - eutraCellId: eutraCellId
+              plmnId:
+                mnc: mnc
+                mcc: mcc
+            - eutraCellId: eutraCellId
+              plmnId:
+                mnc: mnc
+                mcc: mcc
+            globalRanNodeIdList:
+            - gNbId:
+                bitLength: 22
+                gNBValue: gNBValue
+              plmnId:
+                mnc: mnc
+                mcc: mcc
+              n3IwfId: n3IwfId
+              ngeNbId: ngeNbId
+            - gNbId:
+                bitLength: 22
+                gNBValue: gNBValue
+              plmnId:
+                mnc: mnc
+                mcc: mcc
+              n3IwfId: n3IwfId
+              ngeNbId: ngeNbId
+            praId: praId
+            trackingAreaList:
+            - tac: tac
+              plmnId:
+                mnc: mnc
+                mcc: mcc
+            - tac: tac
+              plmnId:
+                mnc: mnc
+                mcc: mcc
+            ncgiList:
+            - plmnId:
+                mnc: mnc
+                mcc: mcc
+              nrCellId: nrCellId
+            - plmnId:
+                mnc: mnc
+                mcc: mcc
+              nrCellId: nrCellId
+          ladnInfo:
+            ladn: ladn
+        locationFilterList:
+        - null
+        - null
+        immediateFlag: true
+      properties:
+        type:
+          $ref: '#/components/schemas/AmfEventType'
+        immediateFlag:
+          type: boolean
+        areaList:
+          items:
+            $ref: '#/components/schemas/AmfEventArea'
+          minItems: 1
+          type: array
+        locationFilterList:
+          items:
+            $ref: '#/components/schemas/LocationFilter'
+          minItems: 1
+          type: array
+        subscribedDataFilterList:
+          items:
+            $ref: '#/components/schemas/SubscribedDataFilter'
+          minItems: 1
+          type: array
+      required:
+      - type
+      type: object
+    AmfEventNotification:
+      example:
+        reportList:
+        - timezone: timezone
+          areaList:
+          - presenceInfo:
+              ecgiList:
+              - eutraCellId: eutraCellId
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              - eutraCellId: eutraCellId
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              globalRanNodeIdList:
+              - gNbId:
+                  bitLength: 22
+                  gNBValue: gNBValue
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                n3IwfId: n3IwfId
+                ngeNbId: ngeNbId
+              - gNbId:
+                  bitLength: 22
+                  gNBValue: gNBValue
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                n3IwfId: n3IwfId
+                ngeNbId: ngeNbId
+              praId: praId
+              trackingAreaList:
+              - tac: tac
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              - tac: tac
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              ncgiList:
+              - plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                nrCellId: nrCellId
+              - plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                nrCellId: nrCellId
+            ladnInfo:
+              ladn: ladn
+          - presenceInfo:
+              ecgiList:
+              - eutraCellId: eutraCellId
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              - eutraCellId: eutraCellId
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              globalRanNodeIdList:
+              - gNbId:
+                  bitLength: 22
+                  gNBValue: gNBValue
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                n3IwfId: n3IwfId
+                ngeNbId: ngeNbId
+              - gNbId:
+                  bitLength: 22
+                  gNBValue: gNBValue
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                n3IwfId: n3IwfId
+                ngeNbId: ngeNbId
+              praId: praId
+              trackingAreaList:
+              - tac: tac
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              - tac: tac
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              ncgiList:
+              - plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                nrCellId: nrCellId
+              - plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                nrCellId: nrCellId
+            ladnInfo:
+              ladn: ladn
+          supi: supi
+          cmInfoList:
+          - {}
+          - {}
+          rmInfoList:
+          - {}
+          - {}
+          gpsi: gpsi
+          timeStamp: 2000-01-23T04:56:07.000+00:00
+          numberOfUes: 4
+          pei: pei
+          anyUe: true
+          accessTypeList:
+          - null
+          - null
+          location:
+            eutraLocation:
+              geographicalInformation: geographicalInformation
+              globalNgenbId:
+                gNbId:
+                  bitLength: 22
+                  gNBValue: gNBValue
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                n3IwfId: n3IwfId
+                ngeNbId: ngeNbId
+              ageOfLocationInformation: 18471
+              tai:
+                tac: tac
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              ueLocationTimestamp: 2000-01-23T04:56:07.000+00:00
+              geodeticInformation: geodeticInformation
+              ecgi:
+                eutraCellId: eutraCellId
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+            nrLocation:
+              geographicalInformation: geographicalInformation
+              globalGnbId:
+                gNbId:
+                  bitLength: 22
+                  gNBValue: gNBValue
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                n3IwfId: n3IwfId
+                ngeNbId: ngeNbId
+              ageOfLocationInformation: 7543
+              ncgi:
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                nrCellId: nrCellId
+              tai:
+                tac: tac
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              ueLocationTimestamp: 2000-01-23T04:56:07.000+00:00
+              geodeticInformation: geodeticInformation
+            n3gaLocation:
+              ueIpv4Addr: 198.51.100.1
+              n3gppTai:
+                tac: tac
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              ueIpv6Addr: 2001:db8:85a3::8a2e:370:7334
+              n3IwfId: n3IwfId
+              portNumber: 0
+          state:
+            remainDuration: 5
+            active: true
+            remainReports: 1
+          subscriptionId: subscriptionId
+          subscribedData:
+            sari: sari
+            rfspIndex: 9
+          commFailure:
+            ranReleaseCode:
+              value: 0
+              group: 0
+            nasReleaseCode: nasReleaseCode
+        - timezone: timezone
+          areaList:
+          - presenceInfo:
+              ecgiList:
+              - eutraCellId: eutraCellId
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              - eutraCellId: eutraCellId
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              globalRanNodeIdList:
+              - gNbId:
+                  bitLength: 22
+                  gNBValue: gNBValue
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                n3IwfId: n3IwfId
+                ngeNbId: ngeNbId
+              - gNbId:
+                  bitLength: 22
+                  gNBValue: gNBValue
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                n3IwfId: n3IwfId
+                ngeNbId: ngeNbId
+              praId: praId
+              trackingAreaList:
+              - tac: tac
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              - tac: tac
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              ncgiList:
+              - plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                nrCellId: nrCellId
+              - plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                nrCellId: nrCellId
+            ladnInfo:
+              ladn: ladn
+          - presenceInfo:
+              ecgiList:
+              - eutraCellId: eutraCellId
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              - eutraCellId: eutraCellId
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              globalRanNodeIdList:
+              - gNbId:
+                  bitLength: 22
+                  gNBValue: gNBValue
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                n3IwfId: n3IwfId
+                ngeNbId: ngeNbId
+              - gNbId:
+                  bitLength: 22
+                  gNBValue: gNBValue
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                n3IwfId: n3IwfId
+                ngeNbId: ngeNbId
+              praId: praId
+              trackingAreaList:
+              - tac: tac
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              - tac: tac
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              ncgiList:
+              - plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                nrCellId: nrCellId
+              - plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                nrCellId: nrCellId
+            ladnInfo:
+              ladn: ladn
+          supi: supi
+          cmInfoList:
+          - {}
+          - {}
+          rmInfoList:
+          - {}
+          - {}
+          gpsi: gpsi
+          timeStamp: 2000-01-23T04:56:07.000+00:00
+          numberOfUes: 4
+          pei: pei
+          anyUe: true
+          accessTypeList:
+          - null
+          - null
+          location:
+            eutraLocation:
+              geographicalInformation: geographicalInformation
+              globalNgenbId:
+                gNbId:
+                  bitLength: 22
+                  gNBValue: gNBValue
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                n3IwfId: n3IwfId
+                ngeNbId: ngeNbId
+              ageOfLocationInformation: 18471
+              tai:
+                tac: tac
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              ueLocationTimestamp: 2000-01-23T04:56:07.000+00:00
+              geodeticInformation: geodeticInformation
+              ecgi:
+                eutraCellId: eutraCellId
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+            nrLocation:
+              geographicalInformation: geographicalInformation
+              globalGnbId:
+                gNbId:
+                  bitLength: 22
+                  gNBValue: gNBValue
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                n3IwfId: n3IwfId
+                ngeNbId: ngeNbId
+              ageOfLocationInformation: 7543
+              ncgi:
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                nrCellId: nrCellId
+              tai:
+                tac: tac
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              ueLocationTimestamp: 2000-01-23T04:56:07.000+00:00
+              geodeticInformation: geodeticInformation
+            n3gaLocation:
+              ueIpv4Addr: 198.51.100.1
+              n3gppTai:
+                tac: tac
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              ueIpv6Addr: 2001:db8:85a3::8a2e:370:7334
+              n3IwfId: n3IwfId
+              portNumber: 0
+          state:
+            remainDuration: 5
+            active: true
+            remainReports: 1
+          subscriptionId: subscriptionId
+          subscribedData:
+            sari: sari
+            rfspIndex: 9
+          commFailure:
+            ranReleaseCode:
+              value: 0
+              group: 0
+            nasReleaseCode: nasReleaseCode
+        notifyCorrelationId: notifyCorrelationId
+        subsChangeNotifyCorrelationId: subsChangeNotifyCorrelationId
+      properties:
+        notifyCorrelationId:
+          type: string
+        subsChangeNotifyCorrelationId:
+          type: string
+        reportList:
+          items:
+            $ref: '#/components/schemas/AmfEventReport'
+          minItems: 1
+          type: array
+      type: object
+    AmfEventReport:
+      example:
+        timezone: timezone
+        areaList:
+        - presenceInfo:
+            ecgiList:
+            - eutraCellId: eutraCellId
+              plmnId:
+                mnc: mnc
+                mcc: mcc
+            - eutraCellId: eutraCellId
+              plmnId:
+                mnc: mnc
+                mcc: mcc
+            globalRanNodeIdList:
+            - gNbId:
+                bitLength: 22
+                gNBValue: gNBValue
+              plmnId:
+                mnc: mnc
+                mcc: mcc
+              n3IwfId: n3IwfId
+              ngeNbId: ngeNbId
+            - gNbId:
+                bitLength: 22
+                gNBValue: gNBValue
+              plmnId:
+                mnc: mnc
+                mcc: mcc
+              n3IwfId: n3IwfId
+              ngeNbId: ngeNbId
+            praId: praId
+            trackingAreaList:
+            - tac: tac
+              plmnId:
+                mnc: mnc
+                mcc: mcc
+            - tac: tac
+              plmnId:
+                mnc: mnc
+                mcc: mcc
+            ncgiList:
+            - plmnId:
+                mnc: mnc
+                mcc: mcc
+              nrCellId: nrCellId
+            - plmnId:
+                mnc: mnc
+                mcc: mcc
+              nrCellId: nrCellId
+          ladnInfo:
+            ladn: ladn
+        - presenceInfo:
+            ecgiList:
+            - eutraCellId: eutraCellId
+              plmnId:
+                mnc: mnc
+                mcc: mcc
+            - eutraCellId: eutraCellId
+              plmnId:
+                mnc: mnc
+                mcc: mcc
+            globalRanNodeIdList:
+            - gNbId:
+                bitLength: 22
+                gNBValue: gNBValue
+              plmnId:
+                mnc: mnc
+                mcc: mcc
+              n3IwfId: n3IwfId
+              ngeNbId: ngeNbId
+            - gNbId:
+                bitLength: 22
+                gNBValue: gNBValue
+              plmnId:
+                mnc: mnc
+                mcc: mcc
+              n3IwfId: n3IwfId
+              ngeNbId: ngeNbId
+            praId: praId
+            trackingAreaList:
+            - tac: tac
+              plmnId:
+                mnc: mnc
+                mcc: mcc
+            - tac: tac
+              plmnId:
+                mnc: mnc
+                mcc: mcc
+            ncgiList:
+            - plmnId:
+                mnc: mnc
+                mcc: mcc
+              nrCellId: nrCellId
+            - plmnId:
+                mnc: mnc
+                mcc: mcc
+              nrCellId: nrCellId
+          ladnInfo:
+            ladn: ladn
+        supi: supi
+        cmInfoList:
+        - {}
+        - {}
+        rmInfoList:
+        - {}
+        - {}
+        gpsi: gpsi
+        timeStamp: 2000-01-23T04:56:07.000+00:00
+        numberOfUes: 4
+        pei: pei
+        anyUe: true
+        accessTypeList:
+        - null
+        - null
+        location:
+          eutraLocation:
+            geographicalInformation: geographicalInformation
+            globalNgenbId:
+              gNbId:
+                bitLength: 22
+                gNBValue: gNBValue
+              plmnId:
+                mnc: mnc
+                mcc: mcc
+              n3IwfId: n3IwfId
+              ngeNbId: ngeNbId
+            ageOfLocationInformation: 18471
+            tai:
+              tac: tac
+              plmnId:
+                mnc: mnc
+                mcc: mcc
+            ueLocationTimestamp: 2000-01-23T04:56:07.000+00:00
+            geodeticInformation: geodeticInformation
+            ecgi:
+              eutraCellId: eutraCellId
+              plmnId:
+                mnc: mnc
+                mcc: mcc
+          nrLocation:
+            geographicalInformation: geographicalInformation
+            globalGnbId:
+              gNbId:
+                bitLength: 22
+                gNBValue: gNBValue
+              plmnId:
+                mnc: mnc
+                mcc: mcc
+              n3IwfId: n3IwfId
+              ngeNbId: ngeNbId
+            ageOfLocationInformation: 7543
+            ncgi:
+              plmnId:
+                mnc: mnc
+                mcc: mcc
+              nrCellId: nrCellId
+            tai:
+              tac: tac
+              plmnId:
+                mnc: mnc
+                mcc: mcc
+            ueLocationTimestamp: 2000-01-23T04:56:07.000+00:00
+            geodeticInformation: geodeticInformation
+          n3gaLocation:
+            ueIpv4Addr: 198.51.100.1
+            n3gppTai:
+              tac: tac
+              plmnId:
+                mnc: mnc
+                mcc: mcc
+            ueIpv6Addr: 2001:db8:85a3::8a2e:370:7334
+            n3IwfId: n3IwfId
+            portNumber: 0
+        state:
+          remainDuration: 5
+          active: true
+          remainReports: 1
+        subscriptionId: subscriptionId
+        subscribedData:
+          sari: sari
+          rfspIndex: 9
+        commFailure:
+          ranReleaseCode:
+            value: 0
+            group: 0
+          nasReleaseCode: nasReleaseCode
+      properties:
+        type:
+          $ref: '#/components/schemas/AmfEventType'
+        state:
+          $ref: '#/components/schemas/AmfEventState'
+        timeStamp:
+          format: date-time
+          type: string
+        subscriptionId:
+          type: string
+        anyUe:
+          type: boolean
+        supi:
+          pattern: ^(imsi-[0-9]{5,15}|nai-.+|.+)$
+          type: string
+        areaList:
+          items:
+            $ref: '#/components/schemas/AmfEventArea'
+          minItems: 1
+          type: array
+        gpsi:
+          pattern: ^(msisdn-[0-9]{5,15}|extid-[^@]+@[^@]+|.+)$
+          type: string
+        pei:
+          pattern: ^(imei-[0-9]{15}|imeisv-[0-9]{16}|.+)$
+          type: string
+        location:
+          $ref: '#/components/schemas/UserLocation'
+        timezone:
+          type: string
+        accessTypeList:
+          items:
+            $ref: '#/components/schemas/AccessType'
+          minItems: 1
+          type: array
+        rmInfoList:
+          items:
+            $ref: '#/components/schemas/RmInfo'
+          minItems: 1
+          type: array
+        cmInfoList:
+          items:
+            $ref: '#/components/schemas/CmInfo'
+          minItems: 1
+          type: array
+        reachability:
+          $ref: '#/components/schemas/UeReachability'
+        subscribedData:
+          $ref: '#/components/schemas/SubscribedData'
+        commFailure:
+          $ref: '#/components/schemas/CommunicationFailure'
+        numberOfUes:
+          format: int32
+          type: integer
+      required:
+      - state
+      - timeStamp
+      - type
+      type: object
+    AmfEventMode:
+      example:
+        expiry: 2000-01-23T04:56:07.000+00:00
+        maxReports: 6
+      properties:
+        trigger:
+          $ref: '#/components/schemas/AmfEventTrigger'
+        maxReports:
+          format: int32
+          type: integer
+        expiry:
+          format: date-time
+          type: string
+      required:
+      - trigger
+      type: object
+    AmfEventState:
+      example:
+        remainDuration: 5
+        active: true
+        remainReports: 1
+      properties:
+        active:
+          type: boolean
+        remainReports:
+          format: int32
+          type: integer
+        remainDuration:
+          format: int32
+          type: integer
+      required:
+      - active
+      type: object
+    RmInfo:
+      example: {}
+      properties:
+        rmState:
+          $ref: '#/components/schemas/RmState'
+        accessType:
+          $ref: '#/components/schemas/AccessType'
+      required:
+      - accessType
+      - rmState
+      type: object
+    CmInfo:
+      example: {}
+      properties:
+        cmState:
+          $ref: '#/components/schemas/CmState'
+        accessType:
+          $ref: '#/components/schemas/AccessType'
+      required:
+      - accessType
+      - cmState
+      type: object
+    SubscribedData:
+      example:
+        sari: sari
+        rfspIndex: 9
+      properties:
+        sari:
+          format: byte
+          type: string
+        rfspIndex:
+          format: int32
+          type: integer
+      type: object
+    CommunicationFailure:
+      example:
+        ranReleaseCode:
+          value: 0
+          group: 0
+        nasReleaseCode: nasReleaseCode
+      properties:
+        nasReleaseCode:
+          type: string
+        ranReleaseCode:
+          $ref: '#/components/schemas/NgApCause'
+      type: object
+    AmfCreateEventSubscription:
+      example:
+        supportedFeatures: supportedFeatures
+        subscription:
+          eventNotifyUri: eventNotifyUri
+          nfId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          eventList:
+          - subscribedDataFilterList:
+            - null
+            - null
+            areaList:
+            - presenceInfo:
+                ecgiList:
+                - eutraCellId: eutraCellId
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                - eutraCellId: eutraCellId
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                globalRanNodeIdList:
+                - gNbId:
+                    bitLength: 22
+                    gNBValue: gNBValue
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                  n3IwfId: n3IwfId
+                  ngeNbId: ngeNbId
+                - gNbId:
+                    bitLength: 22
+                    gNBValue: gNBValue
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                  n3IwfId: n3IwfId
+                  ngeNbId: ngeNbId
+                praId: praId
+                trackingAreaList:
+                - tac: tac
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                - tac: tac
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                ncgiList:
+                - plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                  nrCellId: nrCellId
+                - plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                  nrCellId: nrCellId
+              ladnInfo:
+                ladn: ladn
+            - presenceInfo:
+                ecgiList:
+                - eutraCellId: eutraCellId
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                - eutraCellId: eutraCellId
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                globalRanNodeIdList:
+                - gNbId:
+                    bitLength: 22
+                    gNBValue: gNBValue
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                  n3IwfId: n3IwfId
+                  ngeNbId: ngeNbId
+                - gNbId:
+                    bitLength: 22
+                    gNBValue: gNBValue
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                  n3IwfId: n3IwfId
+                  ngeNbId: ngeNbId
+                praId: praId
+                trackingAreaList:
+                - tac: tac
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                - tac: tac
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                ncgiList:
+                - plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                  nrCellId: nrCellId
+                - plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                  nrCellId: nrCellId
+              ladnInfo:
+                ladn: ladn
+            locationFilterList:
+            - null
+            - null
+            immediateFlag: true
+          - subscribedDataFilterList:
+            - null
+            - null
+            areaList:
+            - presenceInfo:
+                ecgiList:
+                - eutraCellId: eutraCellId
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                - eutraCellId: eutraCellId
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                globalRanNodeIdList:
+                - gNbId:
+                    bitLength: 22
+                    gNBValue: gNBValue
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                  n3IwfId: n3IwfId
+                  ngeNbId: ngeNbId
+                - gNbId:
+                    bitLength: 22
+                    gNBValue: gNBValue
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                  n3IwfId: n3IwfId
+                  ngeNbId: ngeNbId
+                praId: praId
+                trackingAreaList:
+                - tac: tac
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                - tac: tac
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                ncgiList:
+                - plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                  nrCellId: nrCellId
+                - plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                  nrCellId: nrCellId
+              ladnInfo:
+                ladn: ladn
+            - presenceInfo:
+                ecgiList:
+                - eutraCellId: eutraCellId
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                - eutraCellId: eutraCellId
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                globalRanNodeIdList:
+                - gNbId:
+                    bitLength: 22
+                    gNBValue: gNBValue
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                  n3IwfId: n3IwfId
+                  ngeNbId: ngeNbId
+                - gNbId:
+                    bitLength: 22
+                    gNBValue: gNBValue
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                  n3IwfId: n3IwfId
+                  ngeNbId: ngeNbId
+                praId: praId
+                trackingAreaList:
+                - tac: tac
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                - tac: tac
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                ncgiList:
+                - plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                  nrCellId: nrCellId
+                - plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                  nrCellId: nrCellId
+              ladnInfo:
+                ladn: ladn
+            locationFilterList:
+            - null
+            - null
+            immediateFlag: true
+          subsChangeNotifyUri: subsChangeNotifyUri
+          pei: pei
+          anyUE: true
+          groupId: groupId
+          options:
+            expiry: 2000-01-23T04:56:07.000+00:00
+            maxReports: 6
+          supi: supi
+          notifyCorrelationId: notifyCorrelationId
+          subsChangeNotifyCorrelationId: subsChangeNotifyCorrelationId
+          gpsi: gpsi
+      properties:
+        subscription:
+          $ref: '#/components/schemas/AmfEventSubscription'
+        supportedFeatures:
+          pattern: ^[A-Fa-f0-9]*$
+          type: string
+      required:
+      - subscription
+      type: object
+    AmfCreatedEventSubscription:
+      example:
+        supportedFeatures: supportedFeatures
+        reportList:
+        - timezone: timezone
+          areaList:
+          - presenceInfo:
+              ecgiList:
+              - eutraCellId: eutraCellId
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              - eutraCellId: eutraCellId
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              globalRanNodeIdList:
+              - gNbId:
+                  bitLength: 22
+                  gNBValue: gNBValue
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                n3IwfId: n3IwfId
+                ngeNbId: ngeNbId
+              - gNbId:
+                  bitLength: 22
+                  gNBValue: gNBValue
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                n3IwfId: n3IwfId
+                ngeNbId: ngeNbId
+              praId: praId
+              trackingAreaList:
+              - tac: tac
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              - tac: tac
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              ncgiList:
+              - plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                nrCellId: nrCellId
+              - plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                nrCellId: nrCellId
+            ladnInfo:
+              ladn: ladn
+          - presenceInfo:
+              ecgiList:
+              - eutraCellId: eutraCellId
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              - eutraCellId: eutraCellId
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              globalRanNodeIdList:
+              - gNbId:
+                  bitLength: 22
+                  gNBValue: gNBValue
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                n3IwfId: n3IwfId
+                ngeNbId: ngeNbId
+              - gNbId:
+                  bitLength: 22
+                  gNBValue: gNBValue
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                n3IwfId: n3IwfId
+                ngeNbId: ngeNbId
+              praId: praId
+              trackingAreaList:
+              - tac: tac
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              - tac: tac
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              ncgiList:
+              - plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                nrCellId: nrCellId
+              - plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                nrCellId: nrCellId
+            ladnInfo:
+              ladn: ladn
+          supi: supi
+          cmInfoList:
+          - {}
+          - {}
+          rmInfoList:
+          - {}
+          - {}
+          gpsi: gpsi
+          timeStamp: 2000-01-23T04:56:07.000+00:00
+          numberOfUes: 4
+          pei: pei
+          anyUe: true
+          accessTypeList:
+          - null
+          - null
+          location:
+            eutraLocation:
+              geographicalInformation: geographicalInformation
+              globalNgenbId:
+                gNbId:
+                  bitLength: 22
+                  gNBValue: gNBValue
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                n3IwfId: n3IwfId
+                ngeNbId: ngeNbId
+              ageOfLocationInformation: 18471
+              tai:
+                tac: tac
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              ueLocationTimestamp: 2000-01-23T04:56:07.000+00:00
+              geodeticInformation: geodeticInformation
+              ecgi:
+                eutraCellId: eutraCellId
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+            nrLocation:
+              geographicalInformation: geographicalInformation
+              globalGnbId:
+                gNbId:
+                  bitLength: 22
+                  gNBValue: gNBValue
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                n3IwfId: n3IwfId
+                ngeNbId: ngeNbId
+              ageOfLocationInformation: 7543
+              ncgi:
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                nrCellId: nrCellId
+              tai:
+                tac: tac
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              ueLocationTimestamp: 2000-01-23T04:56:07.000+00:00
+              geodeticInformation: geodeticInformation
+            n3gaLocation:
+              ueIpv4Addr: 198.51.100.1
+              n3gppTai:
+                tac: tac
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              ueIpv6Addr: 2001:db8:85a3::8a2e:370:7334
+              n3IwfId: n3IwfId
+              portNumber: 0
+          state:
+            remainDuration: 5
+            active: true
+            remainReports: 1
+          subscriptionId: subscriptionId
+          subscribedData:
+            sari: sari
+            rfspIndex: 9
+          commFailure:
+            ranReleaseCode:
+              value: 0
+              group: 0
+            nasReleaseCode: nasReleaseCode
+        - timezone: timezone
+          areaList:
+          - presenceInfo:
+              ecgiList:
+              - eutraCellId: eutraCellId
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              - eutraCellId: eutraCellId
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              globalRanNodeIdList:
+              - gNbId:
+                  bitLength: 22
+                  gNBValue: gNBValue
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                n3IwfId: n3IwfId
+                ngeNbId: ngeNbId
+              - gNbId:
+                  bitLength: 22
+                  gNBValue: gNBValue
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                n3IwfId: n3IwfId
+                ngeNbId: ngeNbId
+              praId: praId
+              trackingAreaList:
+              - tac: tac
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              - tac: tac
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              ncgiList:
+              - plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                nrCellId: nrCellId
+              - plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                nrCellId: nrCellId
+            ladnInfo:
+              ladn: ladn
+          - presenceInfo:
+              ecgiList:
+              - eutraCellId: eutraCellId
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              - eutraCellId: eutraCellId
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              globalRanNodeIdList:
+              - gNbId:
+                  bitLength: 22
+                  gNBValue: gNBValue
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                n3IwfId: n3IwfId
+                ngeNbId: ngeNbId
+              - gNbId:
+                  bitLength: 22
+                  gNBValue: gNBValue
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                n3IwfId: n3IwfId
+                ngeNbId: ngeNbId
+              praId: praId
+              trackingAreaList:
+              - tac: tac
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              - tac: tac
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              ncgiList:
+              - plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                nrCellId: nrCellId
+              - plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                nrCellId: nrCellId
+            ladnInfo:
+              ladn: ladn
+          supi: supi
+          cmInfoList:
+          - {}
+          - {}
+          rmInfoList:
+          - {}
+          - {}
+          gpsi: gpsi
+          timeStamp: 2000-01-23T04:56:07.000+00:00
+          numberOfUes: 4
+          pei: pei
+          anyUe: true
+          accessTypeList:
+          - null
+          - null
+          location:
+            eutraLocation:
+              geographicalInformation: geographicalInformation
+              globalNgenbId:
+                gNbId:
+                  bitLength: 22
+                  gNBValue: gNBValue
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                n3IwfId: n3IwfId
+                ngeNbId: ngeNbId
+              ageOfLocationInformation: 18471
+              tai:
+                tac: tac
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              ueLocationTimestamp: 2000-01-23T04:56:07.000+00:00
+              geodeticInformation: geodeticInformation
+              ecgi:
+                eutraCellId: eutraCellId
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+            nrLocation:
+              geographicalInformation: geographicalInformation
+              globalGnbId:
+                gNbId:
+                  bitLength: 22
+                  gNBValue: gNBValue
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                n3IwfId: n3IwfId
+                ngeNbId: ngeNbId
+              ageOfLocationInformation: 7543
+              ncgi:
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+                nrCellId: nrCellId
+              tai:
+                tac: tac
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              ueLocationTimestamp: 2000-01-23T04:56:07.000+00:00
+              geodeticInformation: geodeticInformation
+            n3gaLocation:
+              ueIpv4Addr: 198.51.100.1
+              n3gppTai:
+                tac: tac
+                plmnId:
+                  mnc: mnc
+                  mcc: mcc
+              ueIpv6Addr: 2001:db8:85a3::8a2e:370:7334
+              n3IwfId: n3IwfId
+              portNumber: 0
+          state:
+            remainDuration: 5
+            active: true
+            remainReports: 1
+          subscriptionId: subscriptionId
+          subscribedData:
+            sari: sari
+            rfspIndex: 9
+          commFailure:
+            ranReleaseCode:
+              value: 0
+              group: 0
+            nasReleaseCode: nasReleaseCode
+        subscription:
+          eventNotifyUri: eventNotifyUri
+          nfId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          eventList:
+          - subscribedDataFilterList:
+            - null
+            - null
+            areaList:
+            - presenceInfo:
+                ecgiList:
+                - eutraCellId: eutraCellId
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                - eutraCellId: eutraCellId
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                globalRanNodeIdList:
+                - gNbId:
+                    bitLength: 22
+                    gNBValue: gNBValue
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                  n3IwfId: n3IwfId
+                  ngeNbId: ngeNbId
+                - gNbId:
+                    bitLength: 22
+                    gNBValue: gNBValue
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                  n3IwfId: n3IwfId
+                  ngeNbId: ngeNbId
+                praId: praId
+                trackingAreaList:
+                - tac: tac
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                - tac: tac
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                ncgiList:
+                - plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                  nrCellId: nrCellId
+                - plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                  nrCellId: nrCellId
+              ladnInfo:
+                ladn: ladn
+            - presenceInfo:
+                ecgiList:
+                - eutraCellId: eutraCellId
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                - eutraCellId: eutraCellId
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                globalRanNodeIdList:
+                - gNbId:
+                    bitLength: 22
+                    gNBValue: gNBValue
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                  n3IwfId: n3IwfId
+                  ngeNbId: ngeNbId
+                - gNbId:
+                    bitLength: 22
+                    gNBValue: gNBValue
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                  n3IwfId: n3IwfId
+                  ngeNbId: ngeNbId
+                praId: praId
+                trackingAreaList:
+                - tac: tac
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                - tac: tac
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                ncgiList:
+                - plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                  nrCellId: nrCellId
+                - plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                  nrCellId: nrCellId
+              ladnInfo:
+                ladn: ladn
+            locationFilterList:
+            - null
+            - null
+            immediateFlag: true
+          - subscribedDataFilterList:
+            - null
+            - null
+            areaList:
+            - presenceInfo:
+                ecgiList:
+                - eutraCellId: eutraCellId
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                - eutraCellId: eutraCellId
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                globalRanNodeIdList:
+                - gNbId:
+                    bitLength: 22
+                    gNBValue: gNBValue
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                  n3IwfId: n3IwfId
+                  ngeNbId: ngeNbId
+                - gNbId:
+                    bitLength: 22
+                    gNBValue: gNBValue
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                  n3IwfId: n3IwfId
+                  ngeNbId: ngeNbId
+                praId: praId
+                trackingAreaList:
+                - tac: tac
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                - tac: tac
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                ncgiList:
+                - plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                  nrCellId: nrCellId
+                - plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                  nrCellId: nrCellId
+              ladnInfo:
+                ladn: ladn
+            - presenceInfo:
+                ecgiList:
+                - eutraCellId: eutraCellId
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                - eutraCellId: eutraCellId
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                globalRanNodeIdList:
+                - gNbId:
+                    bitLength: 22
+                    gNBValue: gNBValue
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                  n3IwfId: n3IwfId
+                  ngeNbId: ngeNbId
+                - gNbId:
+                    bitLength: 22
+                    gNBValue: gNBValue
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                  n3IwfId: n3IwfId
+                  ngeNbId: ngeNbId
+                praId: praId
+                trackingAreaList:
+                - tac: tac
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                - tac: tac
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                ncgiList:
+                - plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                  nrCellId: nrCellId
+                - plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                  nrCellId: nrCellId
+              ladnInfo:
+                ladn: ladn
+            locationFilterList:
+            - null
+            - null
+            immediateFlag: true
+          subsChangeNotifyUri: subsChangeNotifyUri
+          pei: pei
+          anyUE: true
+          groupId: groupId
+          options:
+            expiry: 2000-01-23T04:56:07.000+00:00
+            maxReports: 6
+          supi: supi
+          notifyCorrelationId: notifyCorrelationId
+          subsChangeNotifyCorrelationId: subsChangeNotifyCorrelationId
+          gpsi: gpsi
+        subscriptionId: subscriptionId
+      properties:
+        subscription:
+          $ref: '#/components/schemas/AmfEventSubscription'
+        subscriptionId:
+          type: string
+        reportList:
+          items:
+            $ref: '#/components/schemas/AmfEventReport'
+          minItems: 1
+          type: array
+        supportedFeatures:
+          pattern: ^[A-Fa-f0-9]*$
+          type: string
+      required:
+      - subscription
+      - subscriptionId
+      type: object
+    AmfUpdateEventSubscriptionItem:
+      items:
+        $ref: '#/components/schemas/AmfUpdateEventSubscriptionItem_inner'
+      minItems: 1
+      type: array
+    AmfUpdateEventOptionItem:
+      properties:
+        op:
+          enum:
+          - replace
+          type: string
+        path:
+          pattern: \/options\/expiry$
+          type: string
+        value:
+          format: date-time
+          type: string
+      required:
+      - op
+      - path
+      - value
+      type: object
+    AmfUpdatedEventSubscription:
+      example:
+        subscription:
+          eventNotifyUri: eventNotifyUri
+          nfId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          eventList:
+          - subscribedDataFilterList:
+            - null
+            - null
+            areaList:
+            - presenceInfo:
+                ecgiList:
+                - eutraCellId: eutraCellId
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                - eutraCellId: eutraCellId
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                globalRanNodeIdList:
+                - gNbId:
+                    bitLength: 22
+                    gNBValue: gNBValue
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                  n3IwfId: n3IwfId
+                  ngeNbId: ngeNbId
+                - gNbId:
+                    bitLength: 22
+                    gNBValue: gNBValue
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                  n3IwfId: n3IwfId
+                  ngeNbId: ngeNbId
+                praId: praId
+                trackingAreaList:
+                - tac: tac
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                - tac: tac
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                ncgiList:
+                - plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                  nrCellId: nrCellId
+                - plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                  nrCellId: nrCellId
+              ladnInfo:
+                ladn: ladn
+            - presenceInfo:
+                ecgiList:
+                - eutraCellId: eutraCellId
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                - eutraCellId: eutraCellId
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                globalRanNodeIdList:
+                - gNbId:
+                    bitLength: 22
+                    gNBValue: gNBValue
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                  n3IwfId: n3IwfId
+                  ngeNbId: ngeNbId
+                - gNbId:
+                    bitLength: 22
+                    gNBValue: gNBValue
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                  n3IwfId: n3IwfId
+                  ngeNbId: ngeNbId
+                praId: praId
+                trackingAreaList:
+                - tac: tac
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                - tac: tac
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                ncgiList:
+                - plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                  nrCellId: nrCellId
+                - plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                  nrCellId: nrCellId
+              ladnInfo:
+                ladn: ladn
+            locationFilterList:
+            - null
+            - null
+            immediateFlag: true
+          - subscribedDataFilterList:
+            - null
+            - null
+            areaList:
+            - presenceInfo:
+                ecgiList:
+                - eutraCellId: eutraCellId
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                - eutraCellId: eutraCellId
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                globalRanNodeIdList:
+                - gNbId:
+                    bitLength: 22
+                    gNBValue: gNBValue
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                  n3IwfId: n3IwfId
+                  ngeNbId: ngeNbId
+                - gNbId:
+                    bitLength: 22
+                    gNBValue: gNBValue
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                  n3IwfId: n3IwfId
+                  ngeNbId: ngeNbId
+                praId: praId
+                trackingAreaList:
+                - tac: tac
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                - tac: tac
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                ncgiList:
+                - plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                  nrCellId: nrCellId
+                - plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                  nrCellId: nrCellId
+              ladnInfo:
+                ladn: ladn
+            - presenceInfo:
+                ecgiList:
+                - eutraCellId: eutraCellId
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                - eutraCellId: eutraCellId
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                globalRanNodeIdList:
+                - gNbId:
+                    bitLength: 22
+                    gNBValue: gNBValue
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                  n3IwfId: n3IwfId
+                  ngeNbId: ngeNbId
+                - gNbId:
+                    bitLength: 22
+                    gNBValue: gNBValue
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                  n3IwfId: n3IwfId
+                  ngeNbId: ngeNbId
+                praId: praId
+                trackingAreaList:
+                - tac: tac
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                - tac: tac
+                  plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                ncgiList:
+                - plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                  nrCellId: nrCellId
+                - plmnId:
+                    mnc: mnc
+                    mcc: mcc
+                  nrCellId: nrCellId
+              ladnInfo:
+                ladn: ladn
+            locationFilterList:
+            - null
+            - null
+            immediateFlag: true
+          subsChangeNotifyUri: subsChangeNotifyUri
+          pei: pei
+          anyUE: true
+          groupId: groupId
+          options:
+            expiry: 2000-01-23T04:56:07.000+00:00
+            maxReports: 6
+          supi: supi
+          notifyCorrelationId: notifyCorrelationId
+          subsChangeNotifyCorrelationId: subsChangeNotifyCorrelationId
+          gpsi: gpsi
+      properties:
+        subscription:
+          $ref: '#/components/schemas/AmfEventSubscription'
+      required:
+      - subscription
+      type: object
+    AmfEventArea:
+      example:
+        presenceInfo:
+          ecgiList:
+          - eutraCellId: eutraCellId
+            plmnId:
+              mnc: mnc
+              mcc: mcc
+          - eutraCellId: eutraCellId
+            plmnId:
+              mnc: mnc
+              mcc: mcc
+          globalRanNodeIdList:
+          - gNbId:
+              bitLength: 22
+              gNBValue: gNBValue
+            plmnId:
+              mnc: mnc
+              mcc: mcc
+            n3IwfId: n3IwfId
+            ngeNbId: ngeNbId
+          - gNbId:
+              bitLength: 22
+              gNBValue: gNBValue
+            plmnId:
+              mnc: mnc
+              mcc: mcc
+            n3IwfId: n3IwfId
+            ngeNbId: ngeNbId
+          praId: praId
+          trackingAreaList:
+          - tac: tac
+            plmnId:
+              mnc: mnc
+              mcc: mcc
+          - tac: tac
+            plmnId:
+              mnc: mnc
+              mcc: mcc
+          ncgiList:
+          - plmnId:
+              mnc: mnc
+              mcc: mcc
+            nrCellId: nrCellId
+          - plmnId:
+              mnc: mnc
+              mcc: mcc
+            nrCellId: nrCellId
+        ladnInfo:
+          ladn: ladn
+      properties:
+        presenceInfo:
+          $ref: '#/components/schemas/PresenceInfo'
+        ladnInfo:
+          $ref: '#/components/schemas/LadnInfo'
+      type: object
+    LadnInfo:
+      example:
+        ladn: ladn
+      properties:
+        ladn:
+          type: string
+        presence:
+          $ref: '#/components/schemas/PresenceState'
+      required:
+      - ladn
+      type: object
+    5gGuti:
+      type: string
+    Sari:
+      format: byte
+      type: string
+    RfspIndex:
+      format: int32
+      type: integer
+    AmfEventType:
+      enum:
+      - LOCATION_REPORT
+      - PRESENCE_IN_AOI_REPORT
+      - TIMEZONE_REPORT
+      - ACCESS_TYPE_REPORT
+      - REGISTRATION_STATE_REPORT
+      - CONNECTIVITY_STATE_REPORT
+      - REACHABILITY_REPORT
+      - SUBSCRIBED_DATA_REPORT
+      - COMMUNICATION_FAILURE_REPORT
+      - UES_IN_AREA_REPORT
+      - SUBSCRIPTION_ID_CHANGE
+      - SUBSCRIPTION_ID_ADDITION
+      type: string
+    AmfEventTrigger:
+      enum:
+      - ONE_TIME
+      - CONTINUOUS
+      type: string
+    LocationFilter:
+      enum:
+      - TAI
+      - CELL_ID
+      - N3IWF
+      - UE_IP
+      - UDP_PORT
+      type: string
+    SubscribedDataFilter:
+      enum:
+      - SARI
+      - RFSP_INDEX
+      type: string
+    UeReachability:
+      enum:
+      - UNREACHABLE
+      - REACHABLE
+      - REGULATORY_ONLY
+      type: string
+    RmState:
+      enum:
+      - REGISTERED
+      - DEREGISTERED
+      type: string
+    CmState:
+      enum:
+      - IDLE
+      - CONNECTED
+      type: string
+    ProblemDetails:
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          format: int32
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+        cause:
+          type: string
+        invalidParams:
+          items:
+            $ref: '#/components/schemas/InvalidParam'
+          minItems: 1
+          type: array
+      type: object
+    Uri:
+      type: string
+    InvalidParam:
+      properties:
+        param:
+          type: string
+        reason:
+          type: string
+      required:
+      - param
+      type: object
+    NfInstanceId:
+      format: uuid
+      type: string
+    Supi:
+      pattern: ^(imsi-[0-9]{5,15}|nai-.+|.+)$
+      type: string
+    GroupId:
+      pattern: ^[A-Fa-f0-9]{8}-[0-9]{3}-[0-9]{2,3}-([A-Fa-f0-9][A-Fa-f0-9]){1,10}$
+      type: string
+    Gpsi:
+      pattern: ^(msisdn-[0-9]{5,15}|extid-[^@]+@[^@]+|.+)$
+      type: string
+    Pei:
+      pattern: ^(imei-[0-9]{15}|imeisv-[0-9]{16}|.+)$
+      type: string
+    DateTime:
+      format: date-time
+      type: string
+    UserLocation:
+      example:
+        eutraLocation:
+          geographicalInformation: geographicalInformation
+          globalNgenbId:
+            gNbId:
+              bitLength: 22
+              gNBValue: gNBValue
+            plmnId:
+              mnc: mnc
+              mcc: mcc
+            n3IwfId: n3IwfId
+            ngeNbId: ngeNbId
+          ageOfLocationInformation: 18471
+          tai:
+            tac: tac
+            plmnId:
+              mnc: mnc
+              mcc: mcc
+          ueLocationTimestamp: 2000-01-23T04:56:07.000+00:00
+          geodeticInformation: geodeticInformation
+          ecgi:
+            eutraCellId: eutraCellId
+            plmnId:
+              mnc: mnc
+              mcc: mcc
+        nrLocation:
+          geographicalInformation: geographicalInformation
+          globalGnbId:
+            gNbId:
+              bitLength: 22
+              gNBValue: gNBValue
+            plmnId:
+              mnc: mnc
+              mcc: mcc
+            n3IwfId: n3IwfId
+            ngeNbId: ngeNbId
+          ageOfLocationInformation: 7543
+          ncgi:
+            plmnId:
+              mnc: mnc
+              mcc: mcc
+            nrCellId: nrCellId
+          tai:
+            tac: tac
+            plmnId:
+              mnc: mnc
+              mcc: mcc
+          ueLocationTimestamp: 2000-01-23T04:56:07.000+00:00
+          geodeticInformation: geodeticInformation
+        n3gaLocation:
+          ueIpv4Addr: 198.51.100.1
+          n3gppTai:
+            tac: tac
+            plmnId:
+              mnc: mnc
+              mcc: mcc
+          ueIpv6Addr: 2001:db8:85a3::8a2e:370:7334
+          n3IwfId: n3IwfId
+          portNumber: 0
+      properties:
+        eutraLocation:
+          $ref: '#/components/schemas/EutraLocation'
+        nrLocation:
+          $ref: '#/components/schemas/NrLocation'
+        n3gaLocation:
+          $ref: '#/components/schemas/N3gaLocation'
+      type: object
+    EutraLocation:
+      example:
+        geographicalInformation: geographicalInformation
+        globalNgenbId:
+          gNbId:
+            bitLength: 22
+            gNBValue: gNBValue
+          plmnId:
+            mnc: mnc
+            mcc: mcc
+          n3IwfId: n3IwfId
+          ngeNbId: ngeNbId
+        ageOfLocationInformation: 18471
+        tai:
+          tac: tac
+          plmnId:
+            mnc: mnc
+            mcc: mcc
+        ueLocationTimestamp: 2000-01-23T04:56:07.000+00:00
+        geodeticInformation: geodeticInformation
+        ecgi:
+          eutraCellId: eutraCellId
+          plmnId:
+            mnc: mnc
+            mcc: mcc
+      properties:
+        tai:
+          $ref: '#/components/schemas/Tai'
+        ecgi:
+          $ref: '#/components/schemas/Ecgi'
+        ageOfLocationInformation:
+          format: int32
+          maximum: 32767
+          minimum: 0
+          type: integer
+        ueLocationTimestamp:
+          format: date-time
+          type: string
+        geographicalInformation:
+          pattern: ^[0-9A-F]{16}$
+          type: string
+        geodeticInformation:
+          pattern: ^[0-9A-F]{20}$
+          type: string
+        globalNgenbId:
+          $ref: '#/components/schemas/GlobalRanNodeId'
+      required:
+      - ecgi
+      - tai
+      type: object
+    Tai:
+      example:
+        tac: tac
+        plmnId:
+          mnc: mnc
+          mcc: mcc
+      properties:
+        plmnId:
+          $ref: '#/components/schemas/PlmnId'
+        tac:
+          pattern: (^[A-Fa-f0-9]{4}$)|(^[A-Fa-f0-9]{6}$)
+          type: string
+      required:
+      - plmnId
+      - tac
+      type: object
+    PlmnId:
+      example:
+        mnc: mnc
+        mcc: mcc
+      properties:
+        mcc:
+          pattern: ^\d{3}$
+          type: string
+        mnc:
+          pattern: ^\d{2,3}$
+          type: string
+      required:
+      - mcc
+      - mnc
+      type: object
+    Mcc:
+      pattern: ^\d{3}$
+      type: string
+    Mnc:
+      pattern: ^\d{2,3}$
+      type: string
+    Tac:
+      pattern: (^[A-Fa-f0-9]{4}$)|(^[A-Fa-f0-9]{6}$)
+      type: string
+    Ecgi:
+      example:
+        eutraCellId: eutraCellId
+        plmnId:
+          mnc: mnc
+          mcc: mcc
+      properties:
+        plmnId:
+          $ref: '#/components/schemas/PlmnId'
+        eutraCellId:
+          pattern: ^[A-Fa-f0-9]{7}$
+          type: string
+      required:
+      - eutraCellId
+      - plmnId
+      type: object
+    EutraCellId:
+      pattern: ^[A-Fa-f0-9]{7}$
+      type: string
+    GlobalRanNodeId:
+      example:
+        gNbId:
+          bitLength: 22
+          gNBValue: gNBValue
+        plmnId:
+          mnc: mnc
+          mcc: mcc
+        n3IwfId: n3IwfId
+        ngeNbId: ngeNbId
+      oneOf:
+      - required:
+        - n3IwfId
+      - required:
+        - gNbId
+      - required:
+        - ngeNbId
+      properties:
+        plmnId:
+          $ref: '#/components/schemas/PlmnId'
+        n3IwfId:
+          type: string
+        gNbId:
+          $ref: '#/components/schemas/GNbId'
+        ngeNbId:
+          pattern: ^(MacroNGeNB-[A-Fa-f0-9]{5}|LMacroNGeNB-[A-Fa-f0-9]{6}|SMacroNGeNB-[A-Fa-f0-9]{5})$
+          type: string
+      required:
+      - plmnId
+      type: object
+    N3IwfId:
+      type: string
+    GNbId:
+      example:
+        bitLength: 22
+        gNBValue: gNBValue
+      properties:
+        bitLength:
+          format: int32
+          maximum: 32
+          minimum: 22
+          type: integer
+        gNBValue:
+          pattern: ^[A-Fa-f0-9]{6,8}$
+          type: string
+      required:
+      - bitLength
+      - gNBValue
+      type: object
+    NgeNbId:
+      pattern: ^(MacroNGeNB-[A-Fa-f0-9]{5}|LMacroNGeNB-[A-Fa-f0-9]{6}|SMacroNGeNB-[A-Fa-f0-9]{5})$
+      type: string
+    NrLocation:
+      example:
+        geographicalInformation: geographicalInformation
+        globalGnbId:
+          gNbId:
+            bitLength: 22
+            gNBValue: gNBValue
+          plmnId:
+            mnc: mnc
+            mcc: mcc
+          n3IwfId: n3IwfId
+          ngeNbId: ngeNbId
+        ageOfLocationInformation: 7543
+        ncgi:
+          plmnId:
+            mnc: mnc
+            mcc: mcc
+          nrCellId: nrCellId
+        tai:
+          tac: tac
+          plmnId:
+            mnc: mnc
+            mcc: mcc
+        ueLocationTimestamp: 2000-01-23T04:56:07.000+00:00
+        geodeticInformation: geodeticInformation
+      properties:
+        tai:
+          $ref: '#/components/schemas/Tai'
+        ncgi:
+          $ref: '#/components/schemas/Ncgi'
+        ageOfLocationInformation:
+          format: int32
+          maximum: 32767
+          minimum: 0
+          type: integer
+        ueLocationTimestamp:
+          format: date-time
+          type: string
+        geographicalInformation:
+          pattern: ^[0-9A-F]{16}$
+          type: string
+        geodeticInformation:
+          pattern: ^[0-9A-F]{20}$
+          type: string
+        globalGnbId:
+          $ref: '#/components/schemas/GlobalRanNodeId'
+      required:
+      - ncgi
+      - tai
+      type: object
+    Ncgi:
+      example:
+        plmnId:
+          mnc: mnc
+          mcc: mcc
+        nrCellId: nrCellId
+      properties:
+        plmnId:
+          $ref: '#/components/schemas/PlmnId'
+        nrCellId:
+          pattern: ^[A-Fa-f0-9]{9}$
+          type: string
+      required:
+      - nrCellId
+      - plmnId
+      type: object
+    NrCellId:
+      pattern: ^[A-Fa-f0-9]{9}$
+      type: string
+    N3gaLocation:
+      example:
+        ueIpv4Addr: 198.51.100.1
+        n3gppTai:
+          tac: tac
+          plmnId:
+            mnc: mnc
+            mcc: mcc
+        ueIpv6Addr: 2001:db8:85a3::8a2e:370:7334
+        n3IwfId: n3IwfId
+        portNumber: 0
+      properties:
+        n3gppTai:
+          $ref: '#/components/schemas/Tai'
+        n3IwfId:
+          pattern: ^[A-Fa-f0-9]+$
+          type: string
+        ueIpv4Addr:
+          example: 198.51.100.1
+          pattern: ^(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])$
+          type: string
+        ueIpv6Addr:
+          $ref: '#/components/schemas/Ipv6Addr'
+        portNumber:
+          format: int32
+          minimum: 0
+          type: integer
+      type: object
+    Ipv4Addr:
+      example: 198.51.100.1
+      pattern: ^(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])$
+      type: string
+    Ipv6Addr:
+      allOf:
+      - pattern: ^((:|(0?|([1-9a-f][0-9a-f]{0,3}))):)((0?|([1-9a-f][0-9a-f]{0,3})):){0,6}(:|(0?|([1-9a-f][0-9a-f]{0,3})))$
+      - pattern: ^((([^:]+:){7}([^:]+))|((([^:]+:)*[^:]+)?::(([^:]+:)*[^:]+)?))$
+      example: 2001:db8:85a3::8a2e:370:7334
+      type: string
+    Uinteger:
+      format: int32
+      minimum: 0
+      type: integer
+    TimeZone:
+      type: string
+    AccessType:
+      enum:
+      - 3GPP_ACCESS
+      - NON_3GPP_ACCESS
+      type: string
+    DurationSec:
+      format: int32
+      type: integer
+    NgApCause:
+      example:
+        value: 0
+        group: 0
+      properties:
+        group:
+          format: int32
+          minimum: 0
+          type: integer
+        value:
+          format: int32
+          minimum: 0
+          type: integer
+      required:
+      - group
+      - value
+      type: object
+    SupportedFeatures:
+      pattern: ^[A-Fa-f0-9]*$
+      type: string
+    PresenceInfo:
+      example:
+        ecgiList:
+        - eutraCellId: eutraCellId
+          plmnId:
+            mnc: mnc
+            mcc: mcc
+        - eutraCellId: eutraCellId
+          plmnId:
+            mnc: mnc
+            mcc: mcc
+        globalRanNodeIdList:
+        - gNbId:
+            bitLength: 22
+            gNBValue: gNBValue
+          plmnId:
+            mnc: mnc
+            mcc: mcc
+          n3IwfId: n3IwfId
+          ngeNbId: ngeNbId
+        - gNbId:
+            bitLength: 22
+            gNBValue: gNBValue
+          plmnId:
+            mnc: mnc
+            mcc: mcc
+          n3IwfId: n3IwfId
+          ngeNbId: ngeNbId
+        praId: praId
+        trackingAreaList:
+        - tac: tac
+          plmnId:
+            mnc: mnc
+            mcc: mcc
+        - tac: tac
+          plmnId:
+            mnc: mnc
+            mcc: mcc
+        ncgiList:
+        - plmnId:
+            mnc: mnc
+            mcc: mcc
+          nrCellId: nrCellId
+        - plmnId:
+            mnc: mnc
+            mcc: mcc
+          nrCellId: nrCellId
+      properties:
+        praId:
+          type: string
+        presenceState:
+          $ref: '#/components/schemas/PresenceState'
+        trackingAreaList:
+          items:
+            $ref: '#/components/schemas/Tai'
+          minItems: 1
+          type: array
+        ecgiList:
+          items:
+            $ref: '#/components/schemas/Ecgi'
+          minItems: 1
+          type: array
+        ncgiList:
+          items:
+            $ref: '#/components/schemas/Ncgi'
+          minItems: 1
+          type: array
+        globalRanNodeIdList:
+          items:
+            $ref: '#/components/schemas/GlobalRanNodeId'
+          minItems: 1
+          type: array
+      type: object
+    PresenceState:
+      enum:
+      - IN_AREA
+      - OUT_OF_AREA
+      - UNKNOWN
+      - INACTIVE
+      type: string
+    Bytes:
+      format: byte
+      type: string
+    ModifySubscription_request:
+      oneOf:
+      - $ref: '#/components/schemas/AmfUpdateEventSubscriptionItem'
+      - $ref: '#/components/schemas/AmfUpdateEventOptionItem'
+    AmfUpdateEventSubscriptionItem_inner:
+      properties:
+        op:
+          enum:
+          - add
+          - remove
+          - replace
+          type: string
+        path:
+          pattern: \/eventList\/[0-]$|\/eventList\/[1-9][0-9]*$
+          type: string
+        value:
+          $ref: '#/components/schemas/AmfEvent'
+      required:
+      - op
+      - path
+      type: object
+  securitySchemes:
+    oAuth2ClientCredentials:
+      flows:
+        clientCredentials:
+          scopes:
+            namf-evts: Access to the Namf_EventExposure API
+          tokenUrl: '{nrfApiRoot}/oauth2/token'
+      type: oauth2

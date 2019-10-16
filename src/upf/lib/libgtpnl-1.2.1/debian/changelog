@@ -1,0 +1,33 @@
+libgtpnl (1.2.1) unstable; urgency=medium
+
+  [ Pau Espin Pedrol ]
+  * debian/rules: Don't overwrite .tarball-version
+  * debian: Adapt package name to lib's current major version
+
+  [ Oliver Smith ]
+  * contrib/jenkins.sh: run "make maintainer-clean"
+
+ -- Pau Espin Pedrol <pespin@sysmocom.de>  Wed, 07 Aug 2019 12:29:04 +0200
+
+libgtpnl (1.2.0) unstable; urgency=medium
+
+  * Fix CTRL_ATTR_FAMILY_ID attribute size
+
+ -- Harald Welte <laforge@gnumonks.org>  Wed, 02 May 2018 16:37:14 +0200
+
+libgtpnl (1.1.0) unstable; urgency=medium
+
+  * Add genl_socket_close() function
+  * Add contrib/jenkins.sh for jenkins build verification
+  * Add '--enable-sanitize' from other osmocom projects
+  * gtp_build_payload(): Support absent peer and SGSN address
+  * Use release helper from libosmocore
+  * add 'm4' subdirectory to .gitignore
+
+ -- Harald Welte <laforge@gnumonks.org>  Sun, 12 Nov 2017 23:31:27 +0900
+
+libgtpnl (1.0.1) unstable; urgency=medium
+
+  * Initial release.
+
+ -- Harald Welte <laforge@gnumonks.org>  Mon, 30 Oct 2017 23:03:47 +0100

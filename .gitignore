@@ -1,0 +1,7 @@
+# Goland project folder
+.idea/
+
+# Visual Studio Code
+.vscode/
+
+*.log

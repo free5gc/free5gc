@@ -1,0 +1,15 @@
+# libgtpnl pkg-config file
+
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: libgtpnl
+Description: Netlink library for GTP Linux kernel implementation
+URL: http://git.osmocom.org/libgtpnl/
+Version: @VERSION@
+Requires:
+Conflicts:
+Libs: -L${libdir} -lgtpnl
+Cflags: -I${includedir}

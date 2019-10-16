@@ -1,0 +1,2822 @@
+openapi: 3.0.0
+info:
+  description: NRF NFDiscovery  Service
+  title: NRF NFDiscovery Service
+  version: 1.0.0
+externalDocs:
+  description: 3GPP TS 29.510 V15.2.0; 5G System; Network Function Repository Services; Stage 3
+  url: http://www.3gpp.org/ftp/Specs/archive/29_series/29.510/
+servers:
+- url: '{apiRoot}/nnrf-disc/v1'
+  variables:
+    apiRoot:
+      default: https://example.com
+      description: apiRoot as defined in subclause subclause 4.4 of 3GPP TS 29.501
+security:
+- {}
+- oAuth2ClientCredentials:
+  - nnrf-disc
+paths:
+  /nf-instances:
+    get:
+      operationId: SearchNFInstances
+      parameters:
+      - description: Type of the target NF
+        explode: true
+        in: query
+        name: target-nf-type
+        required: true
+        schema:
+          $ref: '#/components/schemas/NFType'
+        style: form
+      - description: Type of the requester NF
+        explode: true
+        in: query
+        name: requester-nf-type
+        required: true
+        schema:
+          $ref: '#/components/schemas/NFType'
+        style: form
+      - description: Name of the service offered by the NF
+        explode: false
+        in: query
+        name: service-names
+        required: false
+        schema:
+          items:
+            type: string
+          minItems: 1
+          type: array
+        style: form
+      - description: FQDN of the requester NF
+        explode: true
+        in: query
+        name: requester-nf-instance-fqdn
+        required: false
+        schema:
+          $ref: '#/components/schemas/Fqdn'
+        style: form
+      - description: Id of the PLMN where the target NF is located
+        explode: true
+        in: query
+        name: target-plmn-list
+        required: false
+        schema:
+          items:
+            $ref: ./TS29571_CommonData.yaml#/components/schemas/PlmnId
+          minItems: 1
+          type: array
+        style: form
+      - description: Id of the PLMN where the NF issuing the Discovery request is located
+        explode: true
+        in: query
+        name: requester-plmn-list
+        required: false
+        schema:
+          items:
+            $ref: ./TS29571_CommonData.yaml#/components/schemas/PlmnId
+          minItems: 1
+          type: array
+        style: form
+      - description: Identity of the NF instance being discovered
+        explode: true
+        in: query
+        name: target-nf-instance-id
+        required: false
+        schema:
+          $ref: '#/components/schemas/NfInstanceId'
+        style: form
+      - description: FQDN of the NF instance being discovered
+        explode: true
+        in: query
+        name: target-nf-fqdn
+        required: false
+        schema:
+          $ref: '#/components/schemas/Fqdn'
+        style: form
+      - description: Uri of the home NRF
+        explode: true
+        in: query
+        name: hnrf-uri
+        required: false
+        schema:
+          $ref: '#/components/schemas/Uri'
+        style: form
+      - description: Slice info of the target NF
+        explode: true
+        in: query
+        name: snssais
+        required: false
+        schema:
+          items:
+            $ref: ./TS29571_CommonData.yaml#/components/schemas/Snssai
+          minItems: 1
+          type: array
+        style: form
+      - description: Dnn supported by the BSF, SMF or UPF
+        explode: true
+        in: query
+        name: dnn
+        required: false
+        schema:
+          $ref: '#/components/schemas/Dnn'
+        style: form
+      - description: NSI IDs that are served by the services being discovered
+        explode: false
+        in: query
+        name: nsi-list
+        required: false
+        schema:
+          items:
+            type: string
+          minItems: 1
+          type: array
+        style: form
+      - explode: true
+        in: query
+        name: smf-serving-area
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: Tracking Area Identity
+        explode: true
+        in: query
+        name: tai
+        required: false
+        schema:
+          $ref: ./TS29571_CommonData.yaml#/components/schemas/Tai
+        style: form
+      - description: AMF Region Identity
+        explode: true
+        in: query
+        name: amf-region-id
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: AMF Set Identity
+        explode: true
+        in: query
+        name: amf-set-id
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: Guami used to search for an appropriate AMF
+        explode: true
+        in: query
+        name: guami
+        required: false
+        schema:
+          $ref: '#/components/schemas/Guami'
+        style: form
+      - description: SUPI of the user
+        explode: true
+        in: query
+        name: supi
+        required: false
+        schema:
+          $ref: '#/components/schemas/Supi'
+        style: form
+      - description: IPv4 address of the UE
+        explode: true
+        in: query
+        name: ue-ipv4-address
+        required: false
+        schema:
+          $ref: '#/components/schemas/Ipv4Addr'
+        style: form
+      - description: IP domain of the UE, which supported by BSF
+        explode: true
+        in: query
+        name: ip-domain
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: IPv6 prefix of the UE
+        explode: true
+        in: query
+        name: ue-ipv6-prefix
+        required: false
+        schema:
+          $ref: '#/components/schemas/Ipv6Prefix'
+        style: form
+      - description: Combined PGW-C and SMF or a standalone SMF
+        explode: true
+        in: query
+        name: pgw-ind
+        required: false
+        schema:
+          type: boolean
+        style: form
+      - description: PGW FQDN of a combined PGW-C and SMF
+        explode: true
+        in: query
+        name: pgw
+        required: false
+        schema:
+          $ref: '#/components/schemas/Fqdn'
+        style: form
+      - description: GPSI of the user
+        explode: true
+        in: query
+        name: gpsi
+        required: false
+        schema:
+          $ref: '#/components/schemas/Gpsi'
+        style: form
+      - description: external group identifier of the user
+        explode: true
+        in: query
+        name: external-group-identity
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: data set supported by the NF
+        explode: true
+        in: query
+        name: data-set
+        required: false
+        schema:
+          $ref: '#/components/schemas/DataSetId'
+        style: form
+      - description: routing indicator in SUCI
+        explode: true
+        in: query
+        name: routing-indicator
+        required: false
+        schema:
+          pattern: ^[0-9]{1,4}$
+          type: string
+        style: form
+      - description: Group IDs of the NFs being discovered
+        explode: false
+        in: query
+        name: group-id-list
+        required: false
+        schema:
+          items:
+            $ref: '#/components/schemas/NfGroupId'
+          minItems: 1
+          type: array
+        style: form
+      - description: Data network access identifiers of the NFs being discovered
+        explode: false
+        in: query
+        name: dnai-list
+        required: false
+        schema:
+          items:
+            $ref: '#/components/schemas/Dnai'
+          minItems: 1
+          type: array
+        style: form
+      - description: Features required to be supported by the target NF
+        explode: true
+        in: query
+        name: supported-features
+        required: false
+        schema:
+          $ref: '#/components/schemas/SupportedFeatures'
+        style: form
+      - description: UPF supporting interworking with EPS or not
+        explode: true
+        in: query
+        name: upf-iwk-eps-ind
+        required: false
+        schema:
+          type: boolean
+        style: form
+      - description: PLMN ID supported by a CHF
+        explode: true
+        in: query
+        name: chf-supported-plmn
+        required: false
+        schema:
+          $ref: ./TS29571_CommonData.yaml#/components/schemas/PlmnId
+        style: form
+      - description: preferred target NF location
+        explode: true
+        in: query
+        name: preferred-locality
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: AccessType supported by the target NF
+        explode: true
+        in: query
+        name: access-type
+        required: false
+        schema:
+          $ref: '#/components/schemas/AccessType'
+        style: form
+      - description: Validator for conditional requests, as described in IETF RFC 7232, 3.2
+        explode: false
+        in: header
+        name: If-None-Match
+        required: false
+        schema:
+          type: string
+        style: simple
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchResult'
+          description: Expected response to a valid request
+          headers:
+            Cache-Control:
+              description: Cache-Control containing max-age, described in IETF RFC 7234, 5.2
+              explode: false
+              schema:
+                type: string
+              style: simple
+            ETag:
+              description: Entity Tag containing a strong validator, described in IETF RFC 7232, 2.3
+              explode: false
+              schema:
+                type: string
+              style: simple
+        307:
+          description: Temporary Redirect
+        400:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+          description: Bad request
+        403:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+          description: Forbidden
+        404:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+          description: Not Found
+        411:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+          description: Length Required
+        413:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+          description: Payload Too Large
+        415:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+          description: Unsupported Media Type
+        500:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+          description: Internal Server Error
+        501:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+          description: Not Implemented
+        503:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+          description: Service Unavailable
+        default:
+          description: Generic Error
+      summary: Search a collection of NF Instances
+      tags:
+      - NF Instances (Store)
+components:
+  schemas:
+    SearchResult:
+      example:
+        validityPeriod: 0
+        nfInstances:
+        - sNssais:
+          - sd: sd
+            sst: 153
+          - sd: sd
+            sst: 153
+          pcfInfo:
+            rxDiamHost: rxDiamHost
+            dnnList:
+            - null
+            - null
+            rxDiamRealm: rxDiamRealm
+            supiRanges:
+            - start: start
+              pattern: pattern
+              end: end
+            - start: start
+              pattern: pattern
+              end: end
+          ipv6Addresses:
+          - 2001:db8:85a3::8a2e:370:7334
+          - 2001:db8:85a3::8a2e:370:7334
+          customInfo: '{}'
+          plmnList:
+          - mnc: mnc
+            mcc: mcc
+          - mnc: mnc
+            mcc: mcc
+          udmInfo:
+            routingIndicators:
+            - routingIndicators
+            - routingIndicators
+            groupId: groupId
+            externalGroupIdentifiersRanges:
+            - start: start
+              pattern: pattern
+              end: end
+            - start: start
+              pattern: pattern
+              end: end
+            supiRanges:
+            - start: start
+              pattern: pattern
+              end: end
+            - start: start
+              pattern: pattern
+              end: end
+            gpsiRanges:
+            - start: start
+              pattern: pattern
+              end: end
+            - start: start
+              pattern: pattern
+              end: end
+          capacity: 9606
+          nsiList:
+          - nsiList
+          - nsiList
+          load: 59
+          nfServices:
+          - recoveryTime: 2000-01-23T04:56:07.000+00:00
+            supportedFeatures: supportedFeatures
+            fqdn: fqdn
+            serviceInstanceId: serviceInstanceId
+            priority: 23697
+            capacity: 46276
+            defaultNotificationSubscriptions:
+            - callbackUri: callbackUri
+            - callbackUri: callbackUri
+            load: 93
+            versions:
+            - apiFullVersion: apiFullVersion
+              apiVersionInUri: apiVersionInUri
+              expiry: 2000-01-23T04:56:07.000+00:00
+            - apiFullVersion: apiFullVersion
+              apiVersionInUri: apiVersionInUri
+              expiry: 2000-01-23T04:56:07.000+00:00
+            ipEndPoints:
+            - ipv6Address: 2001:db8:85a3::8a2e:370:7334
+              port: 15087
+              ipv4Address: 198.51.100.1
+            - ipv6Address: 2001:db8:85a3::8a2e:370:7334
+              port: 15087
+              ipv4Address: 198.51.100.1
+            apiPrefix: apiPrefix
+            chfServiceInfo:
+              primaryChfServiceInstance: primaryChfServiceInstance
+              secondaryChfServiceInstance: secondaryChfServiceInstance
+          - recoveryTime: 2000-01-23T04:56:07.000+00:00
+            supportedFeatures: supportedFeatures
+            fqdn: fqdn
+            serviceInstanceId: serviceInstanceId
+            priority: 23697
+            capacity: 46276
+            defaultNotificationSubscriptions:
+            - callbackUri: callbackUri
+            - callbackUri: callbackUri
+            load: 93
+            versions:
+            - apiFullVersion: apiFullVersion
+              apiVersionInUri: apiVersionInUri
+              expiry: 2000-01-23T04:56:07.000+00:00
+            - apiFullVersion: apiFullVersion
+              apiVersionInUri: apiVersionInUri
+              expiry: 2000-01-23T04:56:07.000+00:00
+            ipEndPoints:
+            - ipv6Address: 2001:db8:85a3::8a2e:370:7334
+              port: 15087
+              ipv4Address: 198.51.100.1
+            - ipv6Address: 2001:db8:85a3::8a2e:370:7334
+              port: 15087
+              ipv4Address: 198.51.100.1
+            apiPrefix: apiPrefix
+            chfServiceInfo:
+              primaryChfServiceInstance: primaryChfServiceInstance
+              secondaryChfServiceInstance: secondaryChfServiceInstance
+          udrInfo:
+            supportedDataSets:
+            - null
+            - null
+            groupId: groupId
+            externalGroupIdentifiersRanges:
+            - start: start
+              pattern: pattern
+              end: end
+            - start: start
+              pattern: pattern
+              end: end
+            supiRanges:
+            - start: start
+              pattern: pattern
+              end: end
+            - start: start
+              pattern: pattern
+              end: end
+            gpsiRanges:
+            - start: start
+              pattern: pattern
+              end: end
+            - start: start
+              pattern: pattern
+              end: end
+          ausfInfo:
+            routingIndicators:
+            - routingIndicators
+            - routingIndicators
+            groupId: groupId
+            supiRanges:
+            - start: start
+              pattern: pattern
+              end: end
+            - start: start
+              pattern: pattern
+              end: end
+          nfServicePersistence: false
+          ipv4Addresses:
+          - 198.51.100.1
+          - 198.51.100.1
+          recoveryTime: 2000-01-23T04:56:07.000+00:00
+          nfInstanceId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          upfInfo:
+            iwkEpsInd: false
+            interfaceUpfInfoList:
+            - networkInstance: networkInstance
+              ipv4EndpointAddresses:
+              - 198.51.100.1
+              - 198.51.100.1
+              ipv6EndpointAddresses:
+              - 2001:db8:85a3::8a2e:370:7334
+              - 2001:db8:85a3::8a2e:370:7334
+              endpointFqdn: endpointFqdn
+            - networkInstance: networkInstance
+              ipv4EndpointAddresses:
+              - 198.51.100.1
+              - 198.51.100.1
+              ipv6EndpointAddresses:
+              - 2001:db8:85a3::8a2e:370:7334
+              - 2001:db8:85a3::8a2e:370:7334
+              endpointFqdn: endpointFqdn
+            smfServingArea:
+            - smfServingArea
+            - smfServingArea
+            sNssaiUpfInfoList:
+            - dnnUpfInfoList:
+              - dnaiList:
+                - null
+                - null
+                dnn: dnn
+              - dnaiList:
+                - null
+                - null
+                dnn: dnn
+              sNssai:
+                sd: sd
+                sst: 153
+            - dnnUpfInfoList:
+              - dnaiList:
+                - null
+                - null
+                dnn: dnn
+              - dnaiList:
+                - null
+                - null
+                dnn: dnn
+              sNssai:
+                sd: sd
+                sst: 153
+          bsfInfo:
+            dnnList:
+            - null
+            - null
+            ipv6PrefixRanges:
+            - start: 2001:db8:abcd:12::0/64
+              end: 2001:db8:abcd:12::0/64
+            - start: 2001:db8:abcd:12::0/64
+              end: 2001:db8:abcd:12::0/64
+            ipDomainList:
+            - ipDomainList
+            - ipDomainList
+            ipv4AddressRanges:
+            - start: 198.51.100.1
+              end: 198.51.100.1
+            - start: 198.51.100.1
+              end: 198.51.100.1
+          fqdn: fqdn
+          locality: locality
+          priority: 36944
+          chfInfo:
+            gpsiRangeList:
+            - start: start
+              pattern: pattern
+              end: end
+            - start: start
+              pattern: pattern
+              end: end
+            plmnRangeList:
+            - start: start
+              pattern: pattern
+              end: end
+            - start: start
+              pattern: pattern
+              end: end
+            supiRangeList:
+            - start: start
+              pattern: pattern
+              end: end
+            - start: start
+              pattern: pattern
+              end: end
+          amfInfo:
+            backupInfoAmfRemoval:
+            - plmnId:
+                mnc: mnc
+                mcc: mcc
+              amfId: amfId
+            - plmnId:
+                mnc: mnc
+                mcc: mcc
+              amfId: amfId
+            guamiList:
+            - plmnId:
+                mnc: mnc
+                mcc: mcc
+              amfId: amfId
+            - plmnId:
+                mnc: mnc
+                mcc: mcc
+              amfId: amfId
+            taiRangeList:
+            - tacRangeList:
+              - start: start
+                pattern: pattern
+                end: end
+              - start: start
+                pattern: pattern
+                end: end
+              plmnId:
+                mnc: mnc
+                mcc: mcc
+            - tacRangeList:
+              - start: start
+                pattern: pattern
+                end: end
+              - start: start
+                pattern: pattern
+                end: end
+              plmnId:
+                mnc: mnc
+                mcc: mcc
+            backupInfoAmfFailure:
+            - plmnId:
+                mnc: mnc
+                mcc: mcc
+              amfId: amfId
+            - plmnId:
+                mnc: mnc
+                mcc: mcc
+              amfId: amfId
+            amfSetId: amfSetId
+            amfRegionId: amfRegionId
+            n2InterfaceAmfInfo:
+              ipv4EndpointAddress:
+              - 198.51.100.1
+              - 198.51.100.1
+              amfName: amfName
+              ipv6EndpointAddress:
+              - 2001:db8:85a3::8a2e:370:7334
+              - 2001:db8:85a3::8a2e:370:7334
+            taiList:
+            - tac: tac
+              plmnId:
+                mnc: mnc
+                mcc: mcc
+            - tac: tac
+              plmnId:
+                mnc: mnc
+                mcc: mcc
+          smfInfo:
+            accessType:
+            - null
+            - null
+            sNssaiSmfInfoList:
+            - dnnSmfInfoList:
+              - dnn: dnn
+              - dnn: dnn
+              sNssai:
+                sd: sd
+                sst: 153
+            - dnnSmfInfoList:
+              - dnn: dnn
+              - dnn: dnn
+              sNssai:
+                sd: sd
+                sst: 153
+            taiRangeList:
+            - tacRangeList:
+              - start: start
+                pattern: pattern
+                end: end
+              - start: start
+                pattern: pattern
+                end: end
+              plmnId:
+                mnc: mnc
+                mcc: mcc
+            - tacRangeList:
+              - start: start
+                pattern: pattern
+                end: end
+              - start: start
+                pattern: pattern
+                end: end
+              plmnId:
+                mnc: mnc
+                mcc: mcc
+            taiList:
+            - tac: tac
+              plmnId:
+                mnc: mnc
+                mcc: mcc
+            - tac: tac
+              plmnId:
+                mnc: mnc
+                mcc: mcc
+            pgwFqdn: pgwFqdn
+        - sNssais:
+          - sd: sd
+            sst: 153
+          - sd: sd
+            sst: 153
+          pcfInfo:
+            rxDiamHost: rxDiamHost
+            dnnList:
+            - null
+            - null
+            rxDiamRealm: rxDiamRealm
+            supiRanges:
+            - start: start
+              pattern: pattern
+              end: end
+            - start: start
+              pattern: pattern
+              end: end
+          ipv6Addresses:
+          - 2001:db8:85a3::8a2e:370:7334
+          - 2001:db8:85a3::8a2e:370:7334
+          customInfo: '{}'
+          plmnList:
+          - mnc: mnc
+            mcc: mcc
+          - mnc: mnc
+            mcc: mcc
+          udmInfo:
+            routingIndicators:
+            - routingIndicators
+            - routingIndicators
+            groupId: groupId
+            externalGroupIdentifiersRanges:
+            - start: start
+              pattern: pattern
+              end: end
+            - start: start
+              pattern: pattern
+              end: end
+            supiRanges:
+            - start: start
+              pattern: pattern
+              end: end
+            - start: start
+              pattern: pattern
+              end: end
+            gpsiRanges:
+            - start: start
+              pattern: pattern
+              end: end
+            - start: start
+              pattern: pattern
+              end: end
+          capacity: 9606
+          nsiList:
+          - nsiList
+          - nsiList
+          load: 59
+          nfServices:
+          - recoveryTime: 2000-01-23T04:56:07.000+00:00
+            supportedFeatures: supportedFeatures
+            fqdn: fqdn
+            serviceInstanceId: serviceInstanceId
+            priority: 23697
+            capacity: 46276
+            defaultNotificationSubscriptions:
+            - callbackUri: callbackUri
+            - callbackUri: callbackUri
+            load: 93
+            versions:
+            - apiFullVersion: apiFullVersion
+              apiVersionInUri: apiVersionInUri
+              expiry: 2000-01-23T04:56:07.000+00:00
+            - apiFullVersion: apiFullVersion
+              apiVersionInUri: apiVersionInUri
+              expiry: 2000-01-23T04:56:07.000+00:00
+            ipEndPoints:
+            - ipv6Address: 2001:db8:85a3::8a2e:370:7334
+              port: 15087
+              ipv4Address: 198.51.100.1
+            - ipv6Address: 2001:db8:85a3::8a2e:370:7334
+              port: 15087
+              ipv4Address: 198.51.100.1
+            apiPrefix: apiPrefix
+            chfServiceInfo:
+              primaryChfServiceInstance: primaryChfServiceInstance
+              secondaryChfServiceInstance: secondaryChfServiceInstance
+          - recoveryTime: 2000-01-23T04:56:07.000+00:00
+            supportedFeatures: supportedFeatures
+            fqdn: fqdn
+            serviceInstanceId: serviceInstanceId
+            priority: 23697
+            capacity: 46276
+            defaultNotificationSubscriptions:
+            - callbackUri: callbackUri
+            - callbackUri: callbackUri
+            load: 93
+            versions:
+            - apiFullVersion: apiFullVersion
+              apiVersionInUri: apiVersionInUri
+              expiry: 2000-01-23T04:56:07.000+00:00
+            - apiFullVersion: apiFullVersion
+              apiVersionInUri: apiVersionInUri
+              expiry: 2000-01-23T04:56:07.000+00:00
+            ipEndPoints:
+            - ipv6Address: 2001:db8:85a3::8a2e:370:7334
+              port: 15087
+              ipv4Address: 198.51.100.1
+            - ipv6Address: 2001:db8:85a3::8a2e:370:7334
+              port: 15087
+              ipv4Address: 198.51.100.1
+            apiPrefix: apiPrefix
+            chfServiceInfo:
+              primaryChfServiceInstance: primaryChfServiceInstance
+              secondaryChfServiceInstance: secondaryChfServiceInstance
+          udrInfo:
+            supportedDataSets:
+            - null
+            - null
+            groupId: groupId
+            externalGroupIdentifiersRanges:
+            - start: start
+              pattern: pattern
+              end: end
+            - start: start
+              pattern: pattern
+              end: end
+            supiRanges:
+            - start: start
+              pattern: pattern
+              end: end
+            - start: start
+              pattern: pattern
+              end: end
+            gpsiRanges:
+            - start: start
+              pattern: pattern
+              end: end
+            - start: start
+              pattern: pattern
+              end: end
+          ausfInfo:
+            routingIndicators:
+            - routingIndicators
+            - routingIndicators
+            groupId: groupId
+            supiRanges:
+            - start: start
+              pattern: pattern
+              end: end
+            - start: start
+              pattern: pattern
+              end: end
+          nfServicePersistence: false
+          ipv4Addresses:
+          - 198.51.100.1
+          - 198.51.100.1
+          recoveryTime: 2000-01-23T04:56:07.000+00:00
+          nfInstanceId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          upfInfo:
+            iwkEpsInd: false
+            interfaceUpfInfoList:
+            - networkInstance: networkInstance
+              ipv4EndpointAddresses:
+              - 198.51.100.1
+              - 198.51.100.1
+              ipv6EndpointAddresses:
+              - 2001:db8:85a3::8a2e:370:7334
+              - 2001:db8:85a3::8a2e:370:7334
+              endpointFqdn: endpointFqdn
+            - networkInstance: networkInstance
+              ipv4EndpointAddresses:
+              - 198.51.100.1
+              - 198.51.100.1
+              ipv6EndpointAddresses:
+              - 2001:db8:85a3::8a2e:370:7334
+              - 2001:db8:85a3::8a2e:370:7334
+              endpointFqdn: endpointFqdn
+            smfServingArea:
+            - smfServingArea
+            - smfServingArea
+            sNssaiUpfInfoList:
+            - dnnUpfInfoList:
+              - dnaiList:
+                - null
+                - null
+                dnn: dnn
+              - dnaiList:
+                - null
+                - null
+                dnn: dnn
+              sNssai:
+                sd: sd
+                sst: 153
+            - dnnUpfInfoList:
+              - dnaiList:
+                - null
+                - null
+                dnn: dnn
+              - dnaiList:
+                - null
+                - null
+                dnn: dnn
+              sNssai:
+                sd: sd
+                sst: 153
+          bsfInfo:
+            dnnList:
+            - null
+            - null
+            ipv6PrefixRanges:
+            - start: 2001:db8:abcd:12::0/64
+              end: 2001:db8:abcd:12::0/64
+            - start: 2001:db8:abcd:12::0/64
+              end: 2001:db8:abcd:12::0/64
+            ipDomainList:
+            - ipDomainList
+            - ipDomainList
+            ipv4AddressRanges:
+            - start: 198.51.100.1
+              end: 198.51.100.1
+            - start: 198.51.100.1
+              end: 198.51.100.1
+          fqdn: fqdn
+          locality: locality
+          priority: 36944
+          chfInfo:
+            gpsiRangeList:
+            - start: start
+              pattern: pattern
+              end: end
+            - start: start
+              pattern: pattern
+              end: end
+            plmnRangeList:
+            - start: start
+              pattern: pattern
+              end: end
+            - start: start
+              pattern: pattern
+              end: end
+            supiRangeList:
+            - start: start
+              pattern: pattern
+              end: end
+            - start: start
+              pattern: pattern
+              end: end
+          amfInfo:
+            backupInfoAmfRemoval:
+            - plmnId:
+                mnc: mnc
+                mcc: mcc
+              amfId: amfId
+            - plmnId:
+                mnc: mnc
+                mcc: mcc
+              amfId: amfId
+            guamiList:
+            - plmnId:
+                mnc: mnc
+                mcc: mcc
+              amfId: amfId
+            - plmnId:
+                mnc: mnc
+                mcc: mcc
+              amfId: amfId
+            taiRangeList:
+            - tacRangeList:
+              - start: start
+                pattern: pattern
+                end: end
+              - start: start
+                pattern: pattern
+                end: end
+              plmnId:
+                mnc: mnc
+                mcc: mcc
+            - tacRangeList:
+              - start: start
+                pattern: pattern
+                end: end
+              - start: start
+                pattern: pattern
+                end: end
+              plmnId:
+                mnc: mnc
+                mcc: mcc
+            backupInfoAmfFailure:
+            - plmnId:
+                mnc: mnc
+                mcc: mcc
+              amfId: amfId
+            - plmnId:
+                mnc: mnc
+                mcc: mcc
+              amfId: amfId
+            amfSetId: amfSetId
+            amfRegionId: amfRegionId
+            n2InterfaceAmfInfo:
+              ipv4EndpointAddress:
+              - 198.51.100.1
+              - 198.51.100.1
+              amfName: amfName
+              ipv6EndpointAddress:
+              - 2001:db8:85a3::8a2e:370:7334
+              - 2001:db8:85a3::8a2e:370:7334
+            taiList:
+            - tac: tac
+              plmnId:
+                mnc: mnc
+                mcc: mcc
+            - tac: tac
+              plmnId:
+                mnc: mnc
+                mcc: mcc
+          smfInfo:
+            accessType:
+            - null
+            - null
+            sNssaiSmfInfoList:
+            - dnnSmfInfoList:
+              - dnn: dnn
+              - dnn: dnn
+              sNssai:
+                sd: sd
+                sst: 153
+            - dnnSmfInfoList:
+              - dnn: dnn
+              - dnn: dnn
+              sNssai:
+                sd: sd
+                sst: 153
+            taiRangeList:
+            - tacRangeList:
+              - start: start
+                pattern: pattern
+                end: end
+              - start: start
+                pattern: pattern
+                end: end
+              plmnId:
+                mnc: mnc
+                mcc: mcc
+            - tacRangeList:
+              - start: start
+                pattern: pattern
+                end: end
+              - start: start
+                pattern: pattern
+                end: end
+              plmnId:
+                mnc: mnc
+                mcc: mcc
+            taiList:
+            - tac: tac
+              plmnId:
+                mnc: mnc
+                mcc: mcc
+            - tac: tac
+              plmnId:
+                mnc: mnc
+                mcc: mcc
+            pgwFqdn: pgwFqdn
+      properties:
+        validityPeriod:
+          format: int32
+          type: integer
+        nfInstances:
+          items:
+            $ref: '#/components/schemas/NFProfile'
+          type: array
+      required:
+      - nfInstances
+      type: object
+    NFProfile:
+      example:
+        sNssais:
+        - sd: sd
+          sst: 153
+        - sd: sd
+          sst: 153
+        pcfInfo:
+          rxDiamHost: rxDiamHost
+          dnnList:
+          - null
+          - null
+          rxDiamRealm: rxDiamRealm
+          supiRanges:
+          - start: start
+            pattern: pattern
+            end: end
+          - start: start
+            pattern: pattern
+            end: end
+        ipv6Addresses:
+        - 2001:db8:85a3::8a2e:370:7334
+        - 2001:db8:85a3::8a2e:370:7334
+        customInfo: '{}'
+        plmnList:
+        - mnc: mnc
+          mcc: mcc
+        - mnc: mnc
+          mcc: mcc
+        udmInfo:
+          routingIndicators:
+          - routingIndicators
+          - routingIndicators
+          groupId: groupId
+          externalGroupIdentifiersRanges:
+          - start: start
+            pattern: pattern
+            end: end
+          - start: start
+            pattern: pattern
+            end: end
+          supiRanges:
+          - start: start
+            pattern: pattern
+            end: end
+          - start: start
+            pattern: pattern
+            end: end
+          gpsiRanges:
+          - start: start
+            pattern: pattern
+            end: end
+          - start: start
+            pattern: pattern
+            end: end
+        capacity: 9606
+        nsiList:
+        - nsiList
+        - nsiList
+        load: 59
+        nfServices:
+        - recoveryTime: 2000-01-23T04:56:07.000+00:00
+          supportedFeatures: supportedFeatures
+          fqdn: fqdn
+          serviceInstanceId: serviceInstanceId
+          priority: 23697
+          capacity: 46276
+          defaultNotificationSubscriptions:
+          - callbackUri: callbackUri
+          - callbackUri: callbackUri
+          load: 93
+          versions:
+          - apiFullVersion: apiFullVersion
+            apiVersionInUri: apiVersionInUri
+            expiry: 2000-01-23T04:56:07.000+00:00
+          - apiFullVersion: apiFullVersion
+            apiVersionInUri: apiVersionInUri
+            expiry: 2000-01-23T04:56:07.000+00:00
+          ipEndPoints:
+          - ipv6Address: 2001:db8:85a3::8a2e:370:7334
+            port: 15087
+            ipv4Address: 198.51.100.1
+          - ipv6Address: 2001:db8:85a3::8a2e:370:7334
+            port: 15087
+            ipv4Address: 198.51.100.1
+          apiPrefix: apiPrefix
+          chfServiceInfo:
+            primaryChfServiceInstance: primaryChfServiceInstance
+            secondaryChfServiceInstance: secondaryChfServiceInstance
+        - recoveryTime: 2000-01-23T04:56:07.000+00:00
+          supportedFeatures: supportedFeatures
+          fqdn: fqdn
+          serviceInstanceId: serviceInstanceId
+          priority: 23697
+          capacity: 46276
+          defaultNotificationSubscriptions:
+          - callbackUri: callbackUri
+          - callbackUri: callbackUri
+          load: 93
+          versions:
+          - apiFullVersion: apiFullVersion
+            apiVersionInUri: apiVersionInUri
+            expiry: 2000-01-23T04:56:07.000+00:00
+          - apiFullVersion: apiFullVersion
+            apiVersionInUri: apiVersionInUri
+            expiry: 2000-01-23T04:56:07.000+00:00
+          ipEndPoints:
+          - ipv6Address: 2001:db8:85a3::8a2e:370:7334
+            port: 15087
+            ipv4Address: 198.51.100.1
+          - ipv6Address: 2001:db8:85a3::8a2e:370:7334
+            port: 15087
+            ipv4Address: 198.51.100.1
+          apiPrefix: apiPrefix
+          chfServiceInfo:
+            primaryChfServiceInstance: primaryChfServiceInstance
+            secondaryChfServiceInstance: secondaryChfServiceInstance
+        udrInfo:
+          supportedDataSets:
+          - null
+          - null
+          groupId: groupId
+          externalGroupIdentifiersRanges:
+          - start: start
+            pattern: pattern
+            end: end
+          - start: start
+            pattern: pattern
+            end: end
+          supiRanges:
+          - start: start
+            pattern: pattern
+            end: end
+          - start: start
+            pattern: pattern
+            end: end
+          gpsiRanges:
+          - start: start
+            pattern: pattern
+            end: end
+          - start: start
+            pattern: pattern
+            end: end
+        ausfInfo:
+          routingIndicators:
+          - routingIndicators
+          - routingIndicators
+          groupId: groupId
+          supiRanges:
+          - start: start
+            pattern: pattern
+            end: end
+          - start: start
+            pattern: pattern
+            end: end
+        nfServicePersistence: false
+        ipv4Addresses:
+        - 198.51.100.1
+        - 198.51.100.1
+        recoveryTime: 2000-01-23T04:56:07.000+00:00
+        nfInstanceId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        upfInfo:
+          iwkEpsInd: false
+          interfaceUpfInfoList:
+          - networkInstance: networkInstance
+            ipv4EndpointAddresses:
+            - 198.51.100.1
+            - 198.51.100.1
+            ipv6EndpointAddresses:
+            - 2001:db8:85a3::8a2e:370:7334
+            - 2001:db8:85a3::8a2e:370:7334
+            endpointFqdn: endpointFqdn
+          - networkInstance: networkInstance
+            ipv4EndpointAddresses:
+            - 198.51.100.1
+            - 198.51.100.1
+            ipv6EndpointAddresses:
+            - 2001:db8:85a3::8a2e:370:7334
+            - 2001:db8:85a3::8a2e:370:7334
+            endpointFqdn: endpointFqdn
+          smfServingArea:
+          - smfServingArea
+          - smfServingArea
+          sNssaiUpfInfoList:
+          - dnnUpfInfoList:
+            - dnaiList:
+              - null
+              - null
+              dnn: dnn
+            - dnaiList:
+              - null
+              - null
+              dnn: dnn
+            sNssai:
+              sd: sd
+              sst: 153
+          - dnnUpfInfoList:
+            - dnaiList:
+              - null
+              - null
+              dnn: dnn
+            - dnaiList:
+              - null
+              - null
+              dnn: dnn
+            sNssai:
+              sd: sd
+              sst: 153
+        bsfInfo:
+          dnnList:
+          - null
+          - null
+          ipv6PrefixRanges:
+          - start: 2001:db8:abcd:12::0/64
+            end: 2001:db8:abcd:12::0/64
+          - start: 2001:db8:abcd:12::0/64
+            end: 2001:db8:abcd:12::0/64
+          ipDomainList:
+          - ipDomainList
+          - ipDomainList
+          ipv4AddressRanges:
+          - start: 198.51.100.1
+            end: 198.51.100.1
+          - start: 198.51.100.1
+            end: 198.51.100.1
+        fqdn: fqdn
+        locality: locality
+        priority: 36944
+        chfInfo:
+          gpsiRangeList:
+          - start: start
+            pattern: pattern
+            end: end
+          - start: start
+            pattern: pattern
+            end: end
+          plmnRangeList:
+          - start: start
+            pattern: pattern
+            end: end
+          - start: start
+            pattern: pattern
+            end: end
+          supiRangeList:
+          - start: start
+            pattern: pattern
+            end: end
+          - start: start
+            pattern: pattern
+            end: end
+        amfInfo:
+          backupInfoAmfRemoval:
+          - plmnId:
+              mnc: mnc
+              mcc: mcc
+            amfId: amfId
+          - plmnId:
+              mnc: mnc
+              mcc: mcc
+            amfId: amfId
+          guamiList:
+          - plmnId:
+              mnc: mnc
+              mcc: mcc
+            amfId: amfId
+          - plmnId:
+              mnc: mnc
+              mcc: mcc
+            amfId: amfId
+          taiRangeList:
+          - tacRangeList:
+            - start: start
+              pattern: pattern
+              end: end
+            - start: start
+              pattern: pattern
+              end: end
+            plmnId:
+              mnc: mnc
+              mcc: mcc
+          - tacRangeList:
+            - start: start
+              pattern: pattern
+              end: end
+            - start: start
+              pattern: pattern
+              end: end
+            plmnId:
+              mnc: mnc
+              mcc: mcc
+          backupInfoAmfFailure:
+          - plmnId:
+              mnc: mnc
+              mcc: mcc
+            amfId: amfId
+          - plmnId:
+              mnc: mnc
+              mcc: mcc
+            amfId: amfId
+          amfSetId: amfSetId
+          amfRegionId: amfRegionId
+          n2InterfaceAmfInfo:
+            ipv4EndpointAddress:
+            - 198.51.100.1
+            - 198.51.100.1
+            amfName: amfName
+            ipv6EndpointAddress:
+            - 2001:db8:85a3::8a2e:370:7334
+            - 2001:db8:85a3::8a2e:370:7334
+          taiList:
+          - tac: tac
+            plmnId:
+              mnc: mnc
+              mcc: mcc
+          - tac: tac
+            plmnId:
+              mnc: mnc
+              mcc: mcc
+        smfInfo:
+          accessType:
+          - null
+          - null
+          sNssaiSmfInfoList:
+          - dnnSmfInfoList:
+            - dnn: dnn
+            - dnn: dnn
+            sNssai:
+              sd: sd
+              sst: 153
+          - dnnSmfInfoList:
+            - dnn: dnn
+            - dnn: dnn
+            sNssai:
+              sd: sd
+              sst: 153
+          taiRangeList:
+          - tacRangeList:
+            - start: start
+              pattern: pattern
+              end: end
+            - start: start
+              pattern: pattern
+              end: end
+            plmnId:
+              mnc: mnc
+              mcc: mcc
+          - tacRangeList:
+            - start: start
+              pattern: pattern
+              end: end
+            - start: start
+              pattern: pattern
+              end: end
+            plmnId:
+              mnc: mnc
+              mcc: mcc
+          taiList:
+          - tac: tac
+            plmnId:
+              mnc: mnc
+              mcc: mcc
+          - tac: tac
+            plmnId:
+              mnc: mnc
+              mcc: mcc
+          pgwFqdn: pgwFqdn
+      properties:
+        nfInstanceId:
+          format: uuid
+          type: string
+        nfType:
+          $ref: '#/components/schemas/NFType'
+        nfStatus:
+          $ref: '#/components/schemas/NFStatus'
+        plmnList:
+          items:
+            $ref: '#/components/schemas/PlmnId'
+          minItems: 1
+          type: array
+        sNssais:
+          items:
+            $ref: '#/components/schemas/Snssai'
+          minItems: 1
+          type: array
+        nsiList:
+          items:
+            type: string
+          minItems: 1
+          type: array
+        fqdn:
+          type: string
+        ipv4Addresses:
+          items:
+            $ref: '#/components/schemas/Ipv4Addr'
+          minItems: 1
+          type: array
+        ipv6Addresses:
+          items:
+            $ref: '#/components/schemas/Ipv6Addr'
+          minItems: 1
+          type: array
+        capacity:
+          format: int32
+          maximum: 65535
+          minimum: 0
+          type: integer
+        load:
+          format: int32
+          maximum: 100
+          minimum: 0
+          type: integer
+        locality:
+          type: string
+        priority:
+          format: int32
+          maximum: 65535
+          minimum: 0
+          type: integer
+        udrInfo:
+          $ref: '#/components/schemas/UdrInfo'
+        udmInfo:
+          $ref: '#/components/schemas/UdmInfo'
+        ausfInfo:
+          $ref: '#/components/schemas/AusfInfo'
+        amfInfo:
+          $ref: '#/components/schemas/AmfInfo'
+        smfInfo:
+          $ref: '#/components/schemas/SmfInfo'
+        upfInfo:
+          $ref: '#/components/schemas/UpfInfo'
+        pcfInfo:
+          $ref: '#/components/schemas/PcfInfo'
+        bsfInfo:
+          $ref: '#/components/schemas/BsfInfo'
+        chfInfo:
+          $ref: '#/components/schemas/ChfInfo'
+        customInfo:
+          type: object
+        recoveryTime:
+          format: date-time
+          type: string
+        nfServicePersistence:
+          default: false
+          type: boolean
+        nfServices:
+          items:
+            $ref: '#/components/schemas/NFService'
+          minItems: 1
+          type: array
+      required:
+      - nfInstanceId
+      - nfStatus
+      - nfType
+      type: object
+    NFService:
+      example:
+        recoveryTime: 2000-01-23T04:56:07.000+00:00
+        supportedFeatures: supportedFeatures
+        fqdn: fqdn
+        serviceInstanceId: serviceInstanceId
+        priority: 23697
+        capacity: 46276
+        defaultNotificationSubscriptions:
+        - callbackUri: callbackUri
+        - callbackUri: callbackUri
+        load: 93
+        versions:
+        - apiFullVersion: apiFullVersion
+          apiVersionInUri: apiVersionInUri
+          expiry: 2000-01-23T04:56:07.000+00:00
+        - apiFullVersion: apiFullVersion
+          apiVersionInUri: apiVersionInUri
+          expiry: 2000-01-23T04:56:07.000+00:00
+        ipEndPoints:
+        - ipv6Address: 2001:db8:85a3::8a2e:370:7334
+          port: 15087
+          ipv4Address: 198.51.100.1
+        - ipv6Address: 2001:db8:85a3::8a2e:370:7334
+          port: 15087
+          ipv4Address: 198.51.100.1
+        apiPrefix: apiPrefix
+        chfServiceInfo:
+          primaryChfServiceInstance: primaryChfServiceInstance
+          secondaryChfServiceInstance: secondaryChfServiceInstance
+      properties:
+        serviceInstanceId:
+          type: string
+        serviceName:
+          $ref: '#/components/schemas/ServiceName'
+        versions:
+          items:
+            $ref: '#/components/schemas/NFServiceVersion'
+          minItems: 1
+          type: array
+        scheme:
+          $ref: '#/components/schemas/UriScheme'
+        nfServiceStatus:
+          $ref: '#/components/schemas/NFServiceStatus'
+        fqdn:
+          type: string
+        ipEndPoints:
+          items:
+            $ref: '#/components/schemas/IpEndPoint'
+          minItems: 1
+          type: array
+        apiPrefix:
+          type: string
+        defaultNotificationSubscriptions:
+          items:
+            $ref: '#/components/schemas/DefaultNotificationSubscription'
+          minItems: 1
+          type: array
+        capacity:
+          format: int32
+          maximum: 65535
+          minimum: 0
+          type: integer
+        load:
+          format: int32
+          maximum: 100
+          minimum: 0
+          type: integer
+        priority:
+          format: int32
+          maximum: 65535
+          minimum: 0
+          type: integer
+        recoveryTime:
+          format: date-time
+          type: string
+        chfServiceInfo:
+          $ref: '#/components/schemas/ChfServiceInfo'
+        supportedFeatures:
+          pattern: ^[A-Fa-f0-9]*$
+          type: string
+      required:
+      - nfServiceStatus
+      - scheme
+      - serviceInstanceId
+      - serviceName
+      - versions
+      type: object
+    NFType:
+      enum:
+      - NRF
+      - UDM
+      - AMF
+      - SMF
+      - AUSF
+      - NEF
+      - PCF
+      - SMSF
+      - NSSF
+      - UDR
+      - LMF
+      - GMLC
+      - 5G_EIR
+      - SEPP
+      - UPF
+      - N3IWF
+      - AF
+      - UDSF
+      - BSF
+      - CHF
+      - NWDAF
+      type: string
+    Fqdn:
+      type: string
+    NfInstanceId:
+      format: uuid
+      type: string
+    Uri:
+      type: string
+    Dnn:
+      type: string
+    Guami:
+      example:
+        plmnId:
+          mnc: mnc
+          mcc: mcc
+        amfId: amfId
+      properties:
+        plmnId:
+          $ref: '#/components/schemas/PlmnId'
+        amfId:
+          pattern: ^[A-Fa-f0-9]{6}$
+          type: string
+      required:
+      - amfId
+      - plmnId
+      type: object
+    PlmnId:
+      example:
+        mnc: mnc
+        mcc: mcc
+      properties:
+        mcc:
+          pattern: ^\d{3}$
+          type: string
+        mnc:
+          pattern: ^\d{2,3}$
+          type: string
+      required:
+      - mcc
+      - mnc
+      type: object
+    Mcc:
+      pattern: ^\d{3}$
+      type: string
+    Mnc:
+      pattern: ^\d{2,3}$
+      type: string
+    AmfId:
+      pattern: ^[A-Fa-f0-9]{6}$
+      type: string
+    Supi:
+      pattern: ^(imsi-[0-9]{5,15}|nai-.+|.+)$
+      type: string
+    Ipv4Addr:
+      example: 198.51.100.1
+      pattern: ^(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])$
+      type: string
+    Ipv6Prefix:
+      allOf:
+      - pattern: ^((:|(0?|([1-9a-f][0-9a-f]{0,3}))):)((0?|([1-9a-f][0-9a-f]{0,3})):){0,6}(:|(0?|([1-9a-f][0-9a-f]{0,3})))(\/(([0-9])|([0-9]{2})|(1[0-1][0-9])|(12[0-8])))$
+      - pattern: ^((([^:]+:){7}([^:]+))|((([^:]+:)*[^:]+)?::(([^:]+:)*[^:]+)?))(\/.+)$
+      example: 2001:db8:abcd:12::0/64
+      type: string
+    Gpsi:
+      pattern: ^(msisdn-[0-9]{5,15}|extid-[^@]+@[^@]+|.+)$
+      type: string
+    DataSetId:
+      enum:
+      - SUBSCRIPTION
+      - POLICY
+      - EXPOSURE
+      - APPLICATION
+      type: string
+    NfGroupId:
+      type: string
+    Dnai:
+      type: string
+    SupportedFeatures:
+      pattern: ^[A-Fa-f0-9]*$
+      type: string
+    AccessType:
+      enum:
+      - 3GPP_ACCESS
+      - NON_3GPP_ACCESS
+      type: string
+    ProblemDetails:
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          format: int32
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+        cause:
+          type: string
+        invalidParams:
+          items:
+            $ref: '#/components/schemas/InvalidParam'
+          minItems: 1
+          type: array
+      type: object
+    InvalidParam:
+      properties:
+        param:
+          type: string
+        reason:
+          type: string
+      required:
+      - param
+      type: object
+    NFStatus:
+      enum:
+      - REGISTERED
+      - SUSPENDED
+      type: string
+    Snssai:
+      example:
+        sd: sd
+        sst: 153
+      properties:
+        sst:
+          format: int32
+          maximum: 255
+          minimum: 0
+          type: integer
+        sd:
+          pattern: ^[A-Fa-f0-9]{6}$
+          type: string
+      required:
+      - sst
+      type: object
+    Ipv6Addr:
+      allOf:
+      - pattern: ^((:|(0?|([1-9a-f][0-9a-f]{0,3}))):)((0?|([1-9a-f][0-9a-f]{0,3})):){0,6}(:|(0?|([1-9a-f][0-9a-f]{0,3})))$
+      - pattern: ^((([^:]+:){7}([^:]+))|((([^:]+:)*[^:]+)?::(([^:]+:)*[^:]+)?))$
+      example: 2001:db8:85a3::8a2e:370:7334
+      type: string
+    UdrInfo:
+      example:
+        supportedDataSets:
+        - null
+        - null
+        groupId: groupId
+        externalGroupIdentifiersRanges:
+        - start: start
+          pattern: pattern
+          end: end
+        - start: start
+          pattern: pattern
+          end: end
+        supiRanges:
+        - start: start
+          pattern: pattern
+          end: end
+        - start: start
+          pattern: pattern
+          end: end
+        gpsiRanges:
+        - start: start
+          pattern: pattern
+          end: end
+        - start: start
+          pattern: pattern
+          end: end
+      properties:
+        groupId:
+          type: string
+        supiRanges:
+          items:
+            $ref: '#/components/schemas/SupiRange'
+          minItems: 1
+          type: array
+        gpsiRanges:
+          items:
+            $ref: '#/components/schemas/IdentityRange'
+          minItems: 1
+          type: array
+        externalGroupIdentifiersRanges:
+          items:
+            $ref: '#/components/schemas/IdentityRange'
+          minItems: 1
+          type: array
+        supportedDataSets:
+          items:
+            $ref: '#/components/schemas/DataSetId'
+          minItems: 1
+          type: array
+      type: object
+    SupiRange:
+      example:
+        start: start
+        pattern: pattern
+        end: end
+      properties:
+        start:
+          pattern: ^[0-9]+$
+          type: string
+        end:
+          pattern: ^[0-9]+$
+          type: string
+        pattern:
+          type: string
+      type: object
+    IdentityRange:
+      example:
+        start: start
+        pattern: pattern
+        end: end
+      properties:
+        start:
+          pattern: ^[0-9]+$
+          type: string
+        end:
+          pattern: ^[0-9]+$
+          type: string
+        pattern:
+          type: string
+      type: object
+    UdmInfo:
+      example:
+        routingIndicators:
+        - routingIndicators
+        - routingIndicators
+        groupId: groupId
+        externalGroupIdentifiersRanges:
+        - start: start
+          pattern: pattern
+          end: end
+        - start: start
+          pattern: pattern
+          end: end
+        supiRanges:
+        - start: start
+          pattern: pattern
+          end: end
+        - start: start
+          pattern: pattern
+          end: end
+        gpsiRanges:
+        - start: start
+          pattern: pattern
+          end: end
+        - start: start
+          pattern: pattern
+          end: end
+      properties:
+        groupId:
+          type: string
+        supiRanges:
+          items:
+            $ref: '#/components/schemas/SupiRange'
+          minItems: 1
+          type: array
+        gpsiRanges:
+          items:
+            $ref: '#/components/schemas/IdentityRange'
+          minItems: 1
+          type: array
+        externalGroupIdentifiersRanges:
+          items:
+            $ref: '#/components/schemas/IdentityRange'
+          minItems: 1
+          type: array
+        routingIndicators:
+          items:
+            pattern: ^[0-9]{1,4}$
+            type: string
+          minItems: 1
+          type: array
+      type: object
+    AusfInfo:
+      example:
+        routingIndicators:
+        - routingIndicators
+        - routingIndicators
+        groupId: groupId
+        supiRanges:
+        - start: start
+          pattern: pattern
+          end: end
+        - start: start
+          pattern: pattern
+          end: end
+      properties:
+        groupId:
+          type: string
+        supiRanges:
+          items:
+            $ref: '#/components/schemas/SupiRange'
+          minItems: 1
+          type: array
+        routingIndicators:
+          items:
+            pattern: ^[0-9]{1,4}$
+            type: string
+          minItems: 1
+          type: array
+      type: object
+    AmfInfo:
+      example:
+        backupInfoAmfRemoval:
+        - plmnId:
+            mnc: mnc
+            mcc: mcc
+          amfId: amfId
+        - plmnId:
+            mnc: mnc
+            mcc: mcc
+          amfId: amfId
+        guamiList:
+        - plmnId:
+            mnc: mnc
+            mcc: mcc
+          amfId: amfId
+        - plmnId:
+            mnc: mnc
+            mcc: mcc
+          amfId: amfId
+        taiRangeList:
+        - tacRangeList:
+          - start: start
+            pattern: pattern
+            end: end
+          - start: start
+            pattern: pattern
+            end: end
+          plmnId:
+            mnc: mnc
+            mcc: mcc
+        - tacRangeList:
+          - start: start
+            pattern: pattern
+            end: end
+          - start: start
+            pattern: pattern
+            end: end
+          plmnId:
+            mnc: mnc
+            mcc: mcc
+        backupInfoAmfFailure:
+        - plmnId:
+            mnc: mnc
+            mcc: mcc
+          amfId: amfId
+        - plmnId:
+            mnc: mnc
+            mcc: mcc
+          amfId: amfId
+        amfSetId: amfSetId
+        amfRegionId: amfRegionId
+        n2InterfaceAmfInfo:
+          ipv4EndpointAddress:
+          - 198.51.100.1
+          - 198.51.100.1
+          amfName: amfName
+          ipv6EndpointAddress:
+          - 2001:db8:85a3::8a2e:370:7334
+          - 2001:db8:85a3::8a2e:370:7334
+        taiList:
+        - tac: tac
+          plmnId:
+            mnc: mnc
+            mcc: mcc
+        - tac: tac
+          plmnId:
+            mnc: mnc
+            mcc: mcc
+      properties:
+        amfSetId:
+          type: string
+        amfRegionId:
+          type: string
+        guamiList:
+          items:
+            $ref: '#/components/schemas/Guami'
+          minItems: 1
+          type: array
+        taiList:
+          items:
+            $ref: '#/components/schemas/Tai'
+          minItems: 1
+          type: array
+        taiRangeList:
+          items:
+            $ref: '#/components/schemas/TaiRange'
+          minItems: 1
+          type: array
+        backupInfoAmfFailure:
+          items:
+            $ref: '#/components/schemas/Guami'
+          minItems: 1
+          type: array
+        backupInfoAmfRemoval:
+          items:
+            $ref: '#/components/schemas/Guami'
+          minItems: 1
+          type: array
+        n2InterfaceAmfInfo:
+          $ref: '#/components/schemas/N2InterfaceAmfInfo'
+      required:
+      - amfRegionId
+      - amfSetId
+      - guamiList
+      type: object
+    TaiRange:
+      example:
+        tacRangeList:
+        - start: start
+          pattern: pattern
+          end: end
+        - start: start
+          pattern: pattern
+          end: end
+        plmnId:
+          mnc: mnc
+          mcc: mcc
+      properties:
+        plmnId:
+          $ref: '#/components/schemas/PlmnId'
+        tacRangeList:
+          items:
+            $ref: '#/components/schemas/TacRange'
+          minItems: 1
+          type: array
+      required:
+      - plmnId
+      - tacRangeList
+      type: object
+    TacRange:
+      example:
+        start: start
+        pattern: pattern
+        end: end
+      properties:
+        start:
+          pattern: ^([A-Fa-f0-9]{4}|[A-Fa-f0-9]{6})$
+          type: string
+        end:
+          pattern: ^([A-Fa-f0-9]{4}|[A-Fa-f0-9]{6})$
+          type: string
+        pattern:
+          type: string
+      type: object
+    N2InterfaceAmfInfo:
+      example:
+        ipv4EndpointAddress:
+        - 198.51.100.1
+        - 198.51.100.1
+        amfName: amfName
+        ipv6EndpointAddress:
+        - 2001:db8:85a3::8a2e:370:7334
+        - 2001:db8:85a3::8a2e:370:7334
+      properties:
+        ipv4EndpointAddress:
+          items:
+            $ref: '#/components/schemas/Ipv4Addr'
+          minItems: 1
+          type: array
+        ipv6EndpointAddress:
+          items:
+            $ref: '#/components/schemas/Ipv6Addr'
+          minItems: 1
+          type: array
+        amfName:
+          type: string
+      type: object
+    SmfInfo:
+      example:
+        accessType:
+        - null
+        - null
+        sNssaiSmfInfoList:
+        - dnnSmfInfoList:
+          - dnn: dnn
+          - dnn: dnn
+          sNssai:
+            sd: sd
+            sst: 153
+        - dnnSmfInfoList:
+          - dnn: dnn
+          - dnn: dnn
+          sNssai:
+            sd: sd
+            sst: 153
+        taiRangeList:
+        - tacRangeList:
+          - start: start
+            pattern: pattern
+            end: end
+          - start: start
+            pattern: pattern
+            end: end
+          plmnId:
+            mnc: mnc
+            mcc: mcc
+        - tacRangeList:
+          - start: start
+            pattern: pattern
+            end: end
+          - start: start
+            pattern: pattern
+            end: end
+          plmnId:
+            mnc: mnc
+            mcc: mcc
+        taiList:
+        - tac: tac
+          plmnId:
+            mnc: mnc
+            mcc: mcc
+        - tac: tac
+          plmnId:
+            mnc: mnc
+            mcc: mcc
+        pgwFqdn: pgwFqdn
+      properties:
+        sNssaiSmfInfoList:
+          items:
+            $ref: '#/components/schemas/SnssaiSmfInfoItem'
+          minItems: 1
+          type: array
+        taiList:
+          items:
+            $ref: '#/components/schemas/Tai'
+          minItems: 1
+          type: array
+        taiRangeList:
+          items:
+            $ref: '#/components/schemas/TaiRange'
+          minItems: 1
+          type: array
+        pgwFqdn:
+          type: string
+        accessType:
+          items:
+            $ref: '#/components/schemas/AccessType'
+          minItems: 1
+          type: array
+      required:
+      - sNssaiSmfInfoList
+      type: object
+    SnssaiSmfInfoItem:
+      example:
+        dnnSmfInfoList:
+        - dnn: dnn
+        - dnn: dnn
+        sNssai:
+          sd: sd
+          sst: 153
+      properties:
+        sNssai:
+          $ref: '#/components/schemas/Snssai'
+        dnnSmfInfoList:
+          items:
+            $ref: '#/components/schemas/DnnSmfInfoItem'
+          minItems: 1
+          type: array
+      required:
+      - dnnSmfInfoList
+      - sNssai
+      type: object
+    DnnSmfInfoItem:
+      example:
+        dnn: dnn
+      properties:
+        dnn:
+          type: string
+      required:
+      - dnn
+      type: object
+    UpfInfo:
+      example:
+        iwkEpsInd: false
+        interfaceUpfInfoList:
+        - networkInstance: networkInstance
+          ipv4EndpointAddresses:
+          - 198.51.100.1
+          - 198.51.100.1
+          ipv6EndpointAddresses:
+          - 2001:db8:85a3::8a2e:370:7334
+          - 2001:db8:85a3::8a2e:370:7334
+          endpointFqdn: endpointFqdn
+        - networkInstance: networkInstance
+          ipv4EndpointAddresses:
+          - 198.51.100.1
+          - 198.51.100.1
+          ipv6EndpointAddresses:
+          - 2001:db8:85a3::8a2e:370:7334
+          - 2001:db8:85a3::8a2e:370:7334
+          endpointFqdn: endpointFqdn
+        smfServingArea:
+        - smfServingArea
+        - smfServingArea
+        sNssaiUpfInfoList:
+        - dnnUpfInfoList:
+          - dnaiList:
+            - null
+            - null
+            dnn: dnn
+          - dnaiList:
+            - null
+            - null
+            dnn: dnn
+          sNssai:
+            sd: sd
+            sst: 153
+        - dnnUpfInfoList:
+          - dnaiList:
+            - null
+            - null
+            dnn: dnn
+          - dnaiList:
+            - null
+            - null
+            dnn: dnn
+          sNssai:
+            sd: sd
+            sst: 153
+      properties:
+        sNssaiUpfInfoList:
+          items:
+            $ref: '#/components/schemas/SnssaiUpfInfoItem'
+          minItems: 1
+          type: array
+        smfServingArea:
+          items:
+            type: string
+          minItems: 1
+          type: array
+        interfaceUpfInfoList:
+          items:
+            $ref: '#/components/schemas/InterfaceUpfInfoItem'
+          minItems: 1
+          type: array
+        iwkEpsInd:
+          default: false
+          type: boolean
+      required:
+      - sNssaiUpfInfoList
+      type: object
+    SnssaiUpfInfoItem:
+      example:
+        dnnUpfInfoList:
+        - dnaiList:
+          - null
+          - null
+          dnn: dnn
+        - dnaiList:
+          - null
+          - null
+          dnn: dnn
+        sNssai:
+          sd: sd
+          sst: 153
+      properties:
+        sNssai:
+          $ref: '#/components/schemas/Snssai'
+        dnnUpfInfoList:
+          items:
+            $ref: '#/components/schemas/DnnUpfInfoItem'
+          minItems: 1
+          type: array
+      required:
+      - dnnUpfInfoList
+      - sNssai
+      type: object
+    DnnUpfInfoItem:
+      example:
+        dnaiList:
+        - null
+        - null
+        dnn: dnn
+      properties:
+        dnn:
+          type: string
+        dnaiList:
+          items:
+            $ref: '#/components/schemas/Dnai'
+          minItems: 1
+          type: array
+      required:
+      - dnn
+      type: object
+    InterfaceUpfInfoItem:
+      example:
+        networkInstance: networkInstance
+        ipv4EndpointAddresses:
+        - 198.51.100.1
+        - 198.51.100.1
+        ipv6EndpointAddresses:
+        - 2001:db8:85a3::8a2e:370:7334
+        - 2001:db8:85a3::8a2e:370:7334
+        endpointFqdn: endpointFqdn
+      properties:
+        interfaceType:
+          $ref: '#/components/schemas/UPInterfaceType'
+        ipv4EndpointAddresses:
+          items:
+            $ref: '#/components/schemas/Ipv4Addr'
+          minItems: 1
+          type: array
+        ipv6EndpointAddresses:
+          items:
+            $ref: '#/components/schemas/Ipv6Addr'
+          minItems: 1
+          type: array
+        endpointFqdn:
+          type: string
+        networkInstance:
+          type: string
+      required:
+      - interfaceType
+      type: object
+    UPInterfaceType:
+      enum:
+      - N3
+      - N6
+      - N9
+      type: string
+    PcfInfo:
+      example:
+        rxDiamHost: rxDiamHost
+        dnnList:
+        - null
+        - null
+        rxDiamRealm: rxDiamRealm
+        supiRanges:
+        - start: start
+          pattern: pattern
+          end: end
+        - start: start
+          pattern: pattern
+          end: end
+      properties:
+        dnnList:
+          items:
+            $ref: '#/components/schemas/Dnn'
+          minItems: 1
+          type: array
+        supiRanges:
+          items:
+            $ref: '#/components/schemas/SupiRange'
+          minItems: 1
+          type: array
+        rxDiamHost:
+          pattern: ^([A-Za-z0-9]+(-[A-Za-z0-9]+).)+[a-z]{2,}$
+          type: string
+        rxDiamRealm:
+          pattern: ^([A-Za-z0-9]+(-[A-Za-z0-9]+).)+[a-z]{2,}$
+          type: string
+      type: object
+    BsfInfo:
+      example:
+        dnnList:
+        - null
+        - null
+        ipv6PrefixRanges:
+        - start: 2001:db8:abcd:12::0/64
+          end: 2001:db8:abcd:12::0/64
+        - start: 2001:db8:abcd:12::0/64
+          end: 2001:db8:abcd:12::0/64
+        ipDomainList:
+        - ipDomainList
+        - ipDomainList
+        ipv4AddressRanges:
+        - start: 198.51.100.1
+          end: 198.51.100.1
+        - start: 198.51.100.1
+          end: 198.51.100.1
+      properties:
+        dnnList:
+          items:
+            $ref: '#/components/schemas/Dnn'
+          minItems: 1
+          type: array
+        ipDomainList:
+          items:
+            type: string
+          minItems: 1
+          type: array
+        ipv4AddressRanges:
+          items:
+            $ref: '#/components/schemas/Ipv4AddressRange'
+          minItems: 1
+          type: array
+        ipv6PrefixRanges:
+          items:
+            $ref: '#/components/schemas/Ipv6PrefixRange'
+          minItems: 1
+          type: array
+      type: object
+    Ipv4AddressRange:
+      example:
+        start: 198.51.100.1
+        end: 198.51.100.1
+      properties:
+        start:
+          example: 198.51.100.1
+          pattern: ^(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])$
+          type: string
+        end:
+          example: 198.51.100.1
+          pattern: ^(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])$
+          type: string
+      type: object
+    Ipv6PrefixRange:
+      example:
+        start: 2001:db8:abcd:12::0/64
+        end: 2001:db8:abcd:12::0/64
+      properties:
+        start:
+          $ref: '#/components/schemas/Ipv6Prefix'
+        end:
+          $ref: '#/components/schemas/Ipv6Prefix'
+      type: object
+    ChfInfo:
+      example:
+        gpsiRangeList:
+        - start: start
+          pattern: pattern
+          end: end
+        - start: start
+          pattern: pattern
+          end: end
+        plmnRangeList:
+        - start: start
+          pattern: pattern
+          end: end
+        - start: start
+          pattern: pattern
+          end: end
+        supiRangeList:
+        - start: start
+          pattern: pattern
+          end: end
+        - start: start
+          pattern: pattern
+          end: end
+      properties:
+        supiRangeList:
+          items:
+            $ref: '#/components/schemas/SupiRange'
+          minItems: 1
+          type: array
+        gpsiRangeList:
+          items:
+            $ref: '#/components/schemas/IdentityRange'
+          minItems: 1
+          type: array
+        plmnRangeList:
+          items:
+            $ref: '#/components/schemas/PlmnRange'
+          minItems: 1
+          type: array
+      type: object
+    PlmnRange:
+      example:
+        start: start
+        pattern: pattern
+        end: end
+      properties:
+        start:
+          pattern: ^[0-9]{3}[0-9]{2,3}$
+          type: string
+        end:
+          pattern: ^[0-9]{3}[0-9]{2,3}$
+          type: string
+        pattern:
+          type: string
+      type: object
+    DateTime:
+      format: date-time
+      type: string
+    ServiceName:
+      enum:
+      - nnrf-nfm
+      - nnrf-disc
+      - nudm-sdm
+      - nudm-uecm
+      - nudm-ueau
+      - nudm-ee
+      - nudm-pp
+      - namf-comm
+      - namf-evts
+      - namf-mt
+      - namf-loc
+      - nsmf-pdusession
+      - nsmf-event-exposure
+      - nausf-auth
+      - nausf-sorprotection
+      - nnef-pfdmanagement
+      - npcf-am-policy-control
+      - npcf-smpolicycontrol
+      - npcf-policyauthorization
+      - npcf-bdtpolicycontrol
+      - npcf-eventexposure
+      - npcf-ue-policy-control
+      - nsmsf-sms
+      - nnssf-nsselection
+      - nnssf-nssaiavailability
+      - nudr-dr
+      - nlmf-loc
+      - n5g-eir-eic
+      - nbsf-management
+      - nchf-spendinglimitcontrol
+      - nchf-convergedcharging
+      - nnwdaf-eventssubscription
+      - nnwdaf-analyticsinfo
+      type: string
+    NFServiceVersion:
+      example:
+        apiFullVersion: apiFullVersion
+        apiVersionInUri: apiVersionInUri
+        expiry: 2000-01-23T04:56:07.000+00:00
+      properties:
+        apiVersionInUri:
+          type: string
+        apiFullVersion:
+          type: string
+        expiry:
+          format: date-time
+          type: string
+      required:
+      - apiFullVersion
+      - apiVersionInUri
+      type: object
+    UriScheme:
+      enum:
+      - http
+      - https
+      type: string
+    NFServiceStatus:
+      enum:
+      - REGISTERED
+      - SUSPENDED
+      type: string
+    IpEndPoint:
+      example:
+        ipv6Address: 2001:db8:85a3::8a2e:370:7334
+        port: 15087
+        ipv4Address: 198.51.100.1
+      properties:
+        ipv4Address:
+          example: 198.51.100.1
+          pattern: ^(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])$
+          type: string
+        ipv6Address:
+          $ref: '#/components/schemas/Ipv6Addr'
+        transport:
+          $ref: '#/components/schemas/TransportProtocol'
+        port:
+          format: int32
+          maximum: 65535
+          minimum: 0
+          type: integer
+      type: object
+    TransportProtocol:
+      enum:
+      - TCP
+      type: string
+    DefaultNotificationSubscription:
+      example:
+        callbackUri: callbackUri
+      properties:
+        notificationType:
+          $ref: '#/components/schemas/NotificationType'
+        callbackUri:
+          type: string
+        n1MessageClass:
+          $ref: '#/components/schemas/N1MessageClass'
+        n2InformationClass:
+          $ref: '#/components/schemas/N2InformationClass'
+      required:
+      - callbackUri
+      - notificationType
+      type: object
+    NotificationType:
+      enum:
+      - N1_MESSAGES
+      - N2_INFORMATION
+      - LOCATION_NOTIFICATION
+      - DATA_REMOVAL_NOTIFICATION
+      - DATA_CHANGE_NOTIFICATION
+      type: string
+    ChfServiceInfo:
+      example:
+        primaryChfServiceInstance: primaryChfServiceInstance
+        secondaryChfServiceInstance: secondaryChfServiceInstance
+      not:
+        required:
+        - primaryChfServiceInstance
+        - secondaryChfServiceInstance
+      properties:
+        primaryChfServiceInstance:
+          type: string
+        secondaryChfServiceInstance:
+          type: string
+      type: object
+    Tai:
+      example:
+        tac: tac
+        plmnId:
+          mnc: mnc
+          mcc: mcc
+      properties:
+        plmnId:
+          $ref: '#/components/schemas/PlmnId'
+        tac:
+          pattern: (^[A-Fa-f0-9]{4}$)|(^[A-Fa-f0-9]{6}$)
+          type: string
+      required:
+      - plmnId
+      - tac
+      type: object
+    Tac:
+      pattern: (^[A-Fa-f0-9]{4}$)|(^[A-Fa-f0-9]{6}$)
+      type: string
+    AmfName:
+      type: string
+    DiameterIdentity:
+      pattern: ^([A-Za-z0-9]+(-[A-Za-z0-9]+).)+[a-z]{2,}$
+      type: string
+    N1MessageClass:
+      enum:
+      - 5GMM
+      - SM
+      - LPP
+      - SMS
+      - UPDP
+      type: string
+    N2InformationClass:
+      enum:
+      - SM
+      - NRPPa
+      - PWS
+      - PWS-BCAL
+      - PWS-RF
+      - RAN
+      type: string
+    nulltargetnftype:
+      enum:
+      - NRF
+      - UDM
+      - AMF
+      - SMF
+      - AUSF
+      - NEF
+      - PCF
+      - SMSF
+      - NSSF
+      - UDR
+      - LMF
+      - GMLC
+      - 5G_EIR
+      - SEPP
+      - UPF
+      - N3IWF
+      - AF
+      - UDSF
+      - BSF
+      - CHF
+      - NWDAF
+      type: string
+    nullrequesternftype:
+      enum:
+      - NRF
+      - UDM
+      - AMF
+      - SMF
+      - AUSF
+      - NEF
+      - PCF
+      - SMSF
+      - NSSF
+      - UDR
+      - LMF
+      - GMLC
+      - 5G_EIR
+      - SEPP
+      - UPF
+      - N3IWF
+      - AF
+      - UDSF
+      - BSF
+      - CHF
+      - NWDAF
+      type: string
+    nulldataset:
+      enum:
+      - SUBSCRIPTION
+      - POLICY
+      - EXPOSURE
+      - APPLICATION
+      type: string
+  securitySchemes:
+    oAuth2ClientCredentials:
+      flows:
+        clientCredentials:
+          scopes:
+            nnrf-disc: Access to the Nnrf_NFDiscovery API
+          tokenUrl: /oauth2/token
+      type: oauth2

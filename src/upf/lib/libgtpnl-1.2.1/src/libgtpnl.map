@@ -1,0 +1,40 @@
+LIBGTPNL_1.0 {
+global:
+  genl_socket_open;
+  genl_socket_close;
+  genl_nlmsg_build_hdr;
+  genl_socket_talk;
+  genl_lookup_family;
+
+  gtp_dev_create;
+  gtp_dev_create_sgsn;
+  gtp_dev_config;
+  gtp_dev_destroy;
+
+  gtp_add_tunnel;
+  gtp_del_tunnel;
+  gtp_list_tunnel;
+
+  gtp_tunnel_alloc;
+  gtp_tunnel_free;
+  gtp_tunnel_set_ifns;
+  gtp_tunnel_set_ifidx;
+  gtp_tunnel_set_ms_ip4;
+  gtp_tunnel_set_sgsn_ip4;
+  gtp_tunnel_set_version;
+  gtp_tunnel_set_tid;
+  gtp_tunnel_set_flowid;
+  gtp_tunnel_set_i_tei;
+  gtp_tunnel_set_o_tei;
+  gtp_tunnel_get_ifns;
+  gtp_tunnel_get_ifidx;
+  gtp_tunnel_get_ms_ip4;
+  gtp_tunnel_get_sgsn_ip4;
+  gtp_tunnel_get_version;
+  gtp_tunnel_get_tid;
+  gtp_tunnel_get_flowid;
+  gtp_tunnel_get_i_tei;
+  gtp_tunnel_get_o_tei;
+
+local: *;
+};
