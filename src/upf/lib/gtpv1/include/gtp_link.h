@@ -21,7 +21,7 @@ Status GtpLinkCreate(Gtpv1TunDevNode *node);
 Status GtpLinkFree(Gtpv1TunDevNode *node);
 
 Status GtpTunnelAdd(const char *ifname, int iteid, int oteid, const char *destIP, const char *tunIP);
-Status GtpTunnelDel(const char *ifname, int iteid, int oteid);
+Status GtpTunnelDel(const char *ifname, int iteid);
 Status GtpTunnelList();
 
 Status Gtpv1DevPoolInit();

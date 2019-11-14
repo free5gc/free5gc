@@ -102,7 +102,15 @@ func (smf *SMF) Start() {
 	initLog.Infoln("Server started")
 	router := gin.Default()
 
-	smf_consumer.SendNFRegistration()
+	err := smf_consumer.SendNFRegistration()
+
+	if err != nil {
+		retry_err := smf_consumer.RetrySendNFRegistration(10)
+		if retry_err != nil {
+			logger.InitLog.Errorln(retry_err)
+			return
+		}
+	}
 
 	for _, serviceName := range factory.SmfConfig.Configuration.ServiceNameList {
 		switch models.ServiceName(serviceName) {

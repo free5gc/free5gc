@@ -43,6 +43,7 @@ func SendHttpResponseMessage(channel chan HttpResponseMessage, header http.Heade
 	channel <- responseMsg
 }
 
+/*
 type EventCreateBDTPolicyCreateValue struct {
 	Request    models.BdtReqData
 	RequestUri string
@@ -61,7 +62,7 @@ type EventPostAppSessionsCreateValue struct {
 	Request    models.AppSessionContext
 	RequestUri string
 }
-
+*/
 type EventGetAppSessionCreateValue struct {
 	RequestUri string
 }

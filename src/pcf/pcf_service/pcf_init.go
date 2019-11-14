@@ -3,23 +3,27 @@ package pcf_service
 import (
 	"bufio"
 	"fmt"
+	"free5gc/lib/Nnrf_NFDiscovery"
 	"free5gc/lib/http2_util"
+	"free5gc/lib/openapi/models"
+	"free5gc/lib/path_util"
 	"free5gc/src/app"
 	"free5gc/src/pcf/AMPolicy"
-	"free5gc/src/pcf/pcf_context"
-	"free5gc/src/pcf/pcf_handler"
-	"free5gc/src/pcf/pcf_util"
-
 	"free5gc/src/pcf/BDTPolicy"
 	"free5gc/src/pcf/PolicyAuthorization"
 	"free5gc/src/pcf/SMPolicy"
 	"free5gc/src/pcf/UEPolicy"
 	"free5gc/src/pcf/logger"
+	"free5gc/src/pcf/pcf_consumer"
+	"free5gc/src/pcf/pcf_context"
+	"free5gc/src/pcf/pcf_handler"
+	"free5gc/src/pcf/pcf_util"
 	"os/exec"
 	"sync"
 
 	"free5gc/src/pcf/factory"
 
+	"github.com/antihax/optional"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
@@ -63,10 +67,9 @@ func (*PCF) Initialize(c *cli.Context) {
 		pcfcfg: c.String("pcfcfg"),
 	}
 	if config.pcfcfg != "" {
-		factory.InitConfigFactory(config.pcfcfg)
+		factory.InitConfigFactory(path_util.Gofree5gcPath(config.pcfcfg))
 	} else {
-		DefaultPcfConfigPath := pcf_util.PCF_CONFIG_PATH
-		factory.InitConfigFactory(DefaultPcfConfigPath)
+		factory.InitConfigFactory(pcf_util.PCF_CONFIG_PATH)
 	}
 
 	initLog.Traceln("PCF debug level(string):", app.ContextSelf().Logger.PCF.DebugLevel)
@@ -104,10 +107,35 @@ func (pcf *PCF) Start() {
 	UEPolicy.AddService(router)
 	PolicyAuthorization.AddService(router)
 
-	go pcf_handler.Handle()
 	self := pcf_context.PCF_Self()
 	pcf_util.InitpcfContext(self)
+
 	addr := fmt.Sprintf("%s:%d", self.HttpIPv4Address, self.HttpIpv4Port)
+
+	profile, err := pcf_consumer.BuildNFInstance(self)
+	if err != nil {
+		initLog.Error("Build PCF Profile Error")
+	}
+	_, err = pcf_consumer.SendRegisterNFInstance(self.NrfUri, self.NfId, profile)
+	if err != nil {
+		initLog.Errorf("PCF register to NRF Error[%s]", err.Error())
+	}
+
+	go pcf_handler.Handle()
+	param := Nnrf_NFDiscovery.SearchNFInstancesParamOpts{
+		ServiceNames: optional.NewInterface([]models.ServiceName{models.ServiceName_NUDR_DR}),
+	}
+	resp, err := pcf_consumer.SendSearchNFInstances(self.NrfUri, models.NfType_UDR, models.NfType_PCF, param)
+	for _, nfProfile := range resp.NfInstances {
+		udruri := pcf_util.SearchNFServiceUri(nfProfile, models.ServiceName_NUDR_DR, models.NfServiceStatus_REGISTERED)
+		if udruri != "" {
+			self.UdrUri = udruri
+			break
+		}
+	}
+	if err != nil {
+		initLog.Errorln(err)
+	}
 	server, err := http2_util.NewServer(addr, pcf_util.PCF_LOG_PATH, router)
 	if err == nil && server != nil {
 		initLog.Infoln(server.ListenAndServeTLS(pcf_util.PCF_PEM_PATH, pcf_util.PCF_KEY_PATH))

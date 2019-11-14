@@ -85,9 +85,9 @@ func TestUeAuthenticationAuthenticateRequest(t *testing.T) {
 	Init()
 	defer MongoDBLibrary.RestfulAPIDeleteMany(collName, filter)
 	ue := TestAmf.TestAmf.UePool["imsi-2089300007487"]
-	ausfUri := "https://localhost:29509"
+	// ausfUri := "https://localhost:29509"
 
-	response, _, err := amf_consumer.SendUEAuthenticationAuthenticateRequest(ue, ausfUri, nil)
+	response, _, err := amf_consumer.SendUEAuthenticationAuthenticateRequest(ue, nil)
 	if response != nil {
 		fmt.Printf("response: %+v\n", response)
 	} else if err != nil {
@@ -108,7 +108,7 @@ func TestEapConfirm(t *testing.T) {
 	ausfUeAdd(ausfUe)
 
 	ue := TestAmf.TestAmf.UePool["imsi-2089300007487"]
-	ausfUri := "https://localhost:29509"
+	// ausfUri := "https://localhost:29509"
 
 	var eapPkt radius.EapPacket
 
@@ -139,7 +139,7 @@ func TestEapConfirm(t *testing.T) {
 		Buffer: encodedPktAfterMAC,
 	}
 
-	response, problemDetails, err := amf_consumer.SendEapAuthConfirmRequest(ue, ausfUri, eapMsg)
+	response, problemDetails, err := amf_consumer.SendEapAuthConfirmRequest(ue, eapMsg)
 	if err != nil {
 		t.Error(err)
 	} else if problemDetails != nil {
@@ -159,10 +159,10 @@ func Test5gAkaConfirm(t *testing.T) {
 	ausfUeAdd(ausfUe)
 
 	ue := TestAmf.TestAmf.UePool["imsi-2089300007487"]
-	ausfUri := "https://localhost:29509"
+	// ausfUri := "https://localhost:29509"
 
 	resStar := TestUEAuth.TestUe5gAuthTable[TestUEAuth.SUCCESS_CASE].ResStar
-	response, problemDetails, err := amf_consumer.SendAuth5gAkaConfirmRequest(ue, ausfUri, resStar)
+	response, problemDetails, err := amf_consumer.SendAuth5gAkaConfirmRequest(ue, resStar)
 	if err != nil {
 		t.Error(err)
 	} else if problemDetails != nil {

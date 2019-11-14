@@ -54,8 +54,14 @@ type ForwardingParameters struct {
 	OuterHeaderCreation  *pfcpType.OuterHeaderCreation
 }
 
-// Buffering Action Rule
+// Buffering Action Rule 7.5.2.6-1
 type BAR struct {
+	BARID uint8
+
+	DownlinkDataNotificationDelay  pfcpType.DownlinkDataNotificationDelay
+	SuggestedBufferingPacketsCount pfcpType.SuggestedBufferingPacketsCount
+
+	State RuleState
 }
 
 // QoS Enhancement Rule

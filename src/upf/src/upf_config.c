@@ -5,6 +5,7 @@
 #include "gtp_link.h"
 
 static int SetProtocolIter(YamlIter *protoList, YamlIter *protoIter);
+// static Status ReadAddrList(YamlIter *protoIter, const char **hostname, int *num);
 static void DeleteYamlDocument();
 
 static Status AddGtpv1Endpoint(const char *host); // host: hostname or ip address
@@ -62,6 +63,9 @@ Status UpfConfigParse() {
                     YamlIterChild(&upfIter, &gtpuList);
 
                     do {
+                        // int family = AF_INET;
+                        // int i, hostCount = 0;
+                        // const char *hostname[MAX_NUM_OF_HOSTNAME];
                         const char *host;
                         int port;
                         const char *ifname = NULL;
@@ -75,6 +79,8 @@ Status UpfConfigParse() {
                             UTLT_Assert(gtpuKey, return STATUS_ERROR, "The gtpuKey is NULL");
 
                             if (!strcmp(gtpuKey, "addr") || !strcmp(gtpuKey, "name")) {
+                                /* UTLT_Assert(ReadAddrList(&gtpuIter, hostname, &hostCount) == STATUS_OK, 
+                                            return STATUS_ERROR, "Failed to read gtpu address");*/
                                 host = YamlIterGet(&gtpuIter, GET_VALUE);
                             } else if (!strcmp(gtpuKey, "family")) {
                                 // TODO: support IPv6
@@ -105,6 +111,8 @@ Status UpfConfigParse() {
                     YamlIterChild(&upfIter, &pfcpList);
 
                     do {
+                        // int i, hostCount = 0;
+                        // const char *hostname[MAX_NUM_OF_HOSTNAME];
                         const char *host;
                         
                         if (SetProtocolIter(&pfcpList, &pfcpIter))
@@ -115,6 +123,8 @@ Status UpfConfigParse() {
                             UTLT_Assert(pfcpKey, return STATUS_ERROR, "The pfcpKey is NULL");
 
                             if (!strcmp(pfcpKey, "addr") || !strcmp(pfcpKey, "name")) {
+                                /* UTLT_Assert(ReadAddrList(&pfcpIter, hostname, &hostCount) == STATUS_OK, 
+                                            return STATUS_ERROR, "Failed to read pfcp address"); */
                                 host = YamlIterGet(&pfcpIter, GET_VALUE);
                             } else {
                                 UTLT_Warning("Unknown key \"%s\" of pfcp", pfcpKey);
@@ -188,6 +198,24 @@ static int SetProtocolIter(YamlIter *protoList, YamlIter *protoIter) {
 
     return 0;
 }
+
+/* static Status ReadAddrList(YamlIter *protoIter, const char **hostname, int *num) {
+    YamlIter hostnameIter;
+    YamlIterChild(protoIter, &hostnameIter);
+    UTLT_Assert(YamlIterType(&hostnameIter) != YAML_MAPPING_NODE, return STATUS_ERROR, "hostnameIter is type YAML_MAPPING_NODE");
+    
+    do {
+        if (YamlIterType(&hostnameIter) == YAML_SEQUENCE_NODE) {
+            if (!YamlIterNext(&hostnameIter))
+                break;
+        }
+        UTLT_Assert(*num <= MAX_NUM_OF_HOSTNAME, return STATUS_ERROR, "hostnameIter is type YAML_MAPPING_NODE");
+        
+        hostname[(*num)++] = YamlIterGet(&hostnameIter, GET_VALUE);
+    } while(YamlIterType(&hostnameIter) == YAML_SEQUENCE_NODE);
+
+    return STATUS_OK;
+} */
 
 static void DeleteYamlDocument() {
     yaml_document_delete(document);

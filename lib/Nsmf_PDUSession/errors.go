@@ -19,4 +19,11 @@ var (
 		Cause:         "DNN_DENIED",
 		InvalidParams: nil,
 	}
+	DnnNotSupported = models.ProblemDetails{
+		Title:         "DNN Not Supported",
+		Status:        http.StatusForbidden,
+		Detail:        "The DNN is not supported by the SMF.",
+		Cause:         "DNN_NOT_SUPPORTED",
+		InvalidParams: nil,
+	}
 )

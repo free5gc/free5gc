@@ -1330,11 +1330,10 @@ func HandleServiceRequest(ue *amf_context.AmfUe, anType models.AccessType, proce
 	var targetPduSessionId int32
 	suList := ngapType.PDUSessionResourceSetupListSUReq{}
 	ctxList := ngapType.PDUSessionResourceSetupListCxtReq{}
-	initCxt := false
+	initCxt := procedureCode == ngapType.ProcedureCodeInitialUEMessage
 	if serviceType == nasMessage.ServiceTypeSignalling {
-		gmm_message.SendServiceAccept(ue.RanUe[anType], nil, nil, nil, nil)
-	} else if serviceType == nasMessage.ServiceTypeData && procedureCode == ngapType.ProcedureCodeInitialUEMessage {
-		initCxt = true
+		err = sendServiceAccept(initCxt, ue, anType, ctxList, suList, nil, nil, nil, nil)
+		return
 	}
 	if ue.N1N2Message != nil {
 		requestData := ue.N1N2Message.Request.JsonData
@@ -1413,14 +1412,9 @@ func HandleServiceRequest(ue *amf_context.AmfUe, anType models.AccessType, proce
 
 			// downlink signalling
 			if n2Info == nil {
-				if len(suList.List) != 0 {
-					nasPdu, err := gmm_message.BuildServiceAccept(ue, acceptPduSessionPsi, reactivationResult, errPduSessionId, errCause)
-					if err != nil {
-						return err
-					}
-					ngap_message.SendPDUSessionResourceSetupRequest(ue.RanUe[anType], nasPdu, suList)
-				} else {
-					gmm_message.SendServiceAccept(ue.RanUe[anType], acceptPduSessionPsi, reactivationResult, errPduSessionId, errCause)
+				err = sendServiceAccept(initCxt, ue, anType, ctxList, suList, acceptPduSessionPsi, reactivationResult, errPduSessionId, errCause)
+				if err != nil {
+					return
 				}
 				switch requestData.N1MessageContainer.N1MessageClass {
 				case models.N1MessageClass_SM:
@@ -1470,7 +1464,11 @@ func HandleServiceRequest(ue *amf_context.AmfUe, anType models.AccessType, proce
 							smContext.UserLocation = deepcopy.Copy(ue.Location).(models.UserLocation)
 							smContext.PduSessionContext.AccessType = models.AccessType__3_GPP_ACCESS
 							if response.BinaryDataN2SmInformation != nil && response.JsonData.N2SmInfoType == models.N2SmInfoType_PDU_RES_SETUP_REQ {
-								ngap_message.AppendPDUSessionResourceSetupListSUReq(&suList, requestData.PduSessionId, *smContext.PduSessionContext.SNssai, nil, response.BinaryDataN2SmInformation)
+								if initCxt {
+									ngap_message.AppendPDUSessionResourceSetupListCxtReq(&ctxList, requestData.PduSessionId, *smContext.PduSessionContext.SNssai, nil, response.BinaryDataN2SmInformation)
+								} else {
+									ngap_message.AppendPDUSessionResourceSetupListSUReq(&suList, requestData.PduSessionId, *smContext.PduSessionContext.SNssai, nil, response.BinaryDataN2SmInformation)
+								}
 							}
 						}
 					} else {
@@ -1487,47 +1485,23 @@ func HandleServiceRequest(ue *amf_context.AmfUe, anType models.AccessType, proce
 						return err
 					}
 				}
-				ngap_message.AppendPDUSessionResourceSetupListSUReq(&suList, smInfo.PduSessionId, *smInfo.SNssai, nasPdu, n2Info)
-			}
-			if len(suList.List) != 0 {
-				nasPdu, err := gmm_message.BuildServiceAccept(ue, acceptPduSessionPsi, reactivationResult, errPduSessionId, errCause)
-				if err != nil {
-					return err
+				if initCxt {
+					ngap_message.AppendPDUSessionResourceSetupListCxtReq(&ctxList, smInfo.PduSessionId, *smInfo.SNssai, nasPdu, n2Info)
+				} else {
+					ngap_message.AppendPDUSessionResourceSetupListSUReq(&suList, smInfo.PduSessionId, *smInfo.SNssai, nasPdu, n2Info)
 				}
-				ngap_message.SendPDUSessionResourceSetupRequest(ue.RanUe[anType], nasPdu, suList)
-			} else {
-				gmm_message.SendServiceAccept(ue.RanUe[anType], acceptPduSessionPsi, reactivationResult, errPduSessionId, errCause)
+			}
+			err = sendServiceAccept(initCxt, ue, anType, ctxList, suList, acceptPduSessionPsi, reactivationResult, errPduSessionId, errCause)
+			if err != nil {
+				return
 			}
 
 		}
 	case nasMessage.ServiceTypeData:
 		// TODO: Add Service Reject for Ue is not in allowed Area or in non-allowed Area with Cause #28 Service area restrictions
-		// UE is in CM_IDLE (initial context setup)
-		if procedureCode == ngapType.ProcedureCodeInitialUEMessage {
-			// update Kgnb/Kn3iwf
-			ue.UpdateSecurityContext(anType)
-
-			// send response
-			nasPdu, err := gmm_message.BuildServiceAccept(ue, acceptPduSessionPsi, reactivationResult, errPduSessionId, errCause)
-			if err != nil {
-				return err
-			}
-			if len(ctxList.List) != 0 {
-				ngap_message.SendInitialContextSetupRequest(ue, anType, nasPdu, nil, &ctxList, nil, nil, nil, nil)
-			} else {
-				ngap_message.SendInitialContextSetupRequest(ue, anType, nasPdu, nil, nil, nil, nil, nil, nil)
-			}
-		} else {
-			// UE is in CM_CONNECTED
-			if len(suList.List) != 0 {
-				nasPdu, err := gmm_message.BuildServiceAccept(ue, acceptPduSessionPsi, reactivationResult, errPduSessionId, errCause)
-				if err != nil {
-					return err
-				}
-				ngap_message.SendPDUSessionResourceSetupRequest(ue.RanUe[anType], nasPdu, suList)
-			} else {
-				gmm_message.SendServiceAccept(ue.RanUe[anType], acceptPduSessionPsi, reactivationResult, errPduSessionId, errCause)
-			}
+		err = sendServiceAccept(initCxt, ue, anType, ctxList, suList, acceptPduSessionPsi, reactivationResult, errPduSessionId, errCause)
+		if err != nil {
+			return
 		}
 	default:
 		return fmt.Errorf("Service Type[%d] is not supported", serviceType)
@@ -1536,6 +1510,32 @@ func HandleServiceRequest(ue *amf_context.AmfUe, anType models.AccessType, proce
 		logger.GmmLog.Info(errPduSessionId, errCause)
 	}
 	ue.N1N2Message = nil
+	return nil
+}
+
+func sendServiceAccept(initCxt bool, ue *amf_context.AmfUe, anType models.AccessType, ctxList ngapType.PDUSessionResourceSetupListCxtReq, suList ngapType.PDUSessionResourceSetupListSUReq, pDUSessionStatus *[16]bool, reactivationResult *[16]bool, errPduSessionId, errCause []uint8) error {
+	if initCxt {
+		// update Kgnb/Kn3iwf
+		ue.UpdateSecurityContext(anType)
+
+		nasPdu, err := gmm_message.BuildServiceAccept(ue, pDUSessionStatus, reactivationResult, errPduSessionId, errCause)
+		if err != nil {
+			return err
+		}
+		if len(ctxList.List) != 0 {
+			ngap_message.SendInitialContextSetupRequest(ue, anType, nasPdu, nil, &ctxList, nil, nil, nil, nil)
+		} else {
+			ngap_message.SendInitialContextSetupRequest(ue, anType, nasPdu, nil, nil, nil, nil, nil, nil)
+		}
+	} else if len(suList.List) != 0 {
+		nasPdu, err := gmm_message.BuildServiceAccept(ue, pDUSessionStatus, reactivationResult, errPduSessionId, errCause)
+		if err != nil {
+			return err
+		}
+		ngap_message.SendPDUSessionResourceSetupRequest(ue.RanUe[anType], nasPdu, suList)
+	} else {
+		gmm_message.SendServiceAccept(ue.RanUe[anType], pDUSessionStatus, reactivationResult, errPduSessionId, errCause)
+	}
 	return nil
 }
 

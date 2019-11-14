@@ -79,6 +79,10 @@ func pdrToCreatePDR(pdr *smf_context.PDR) *pfcp.CreatePDR {
 
 	createPDR.OuterHeaderRemoval = pdr.OuterHeaderRemoval
 
+	createPDR.FARID = &pfcpType.FARID{
+		FarIdValue: pdr.FAR.FARID,
+	}
+
 	return createPDR
 }
 
@@ -91,12 +95,31 @@ func farToCreateFAR(far *smf_context.FAR) *pfcp.CreateFAR {
 	createFAR.ApplyAction = new(pfcpType.ApplyAction)
 	createFAR.ApplyAction.Forw = true
 
+	if far.BAR != nil {
+		createFAR.BARID = new(pfcpType.BARID)
+		createFAR.BARID.BarIdValue = far.BAR.BARID
+	}
+
 	createFAR.ForwardingParameters = new(pfcp.ForwardingParametersIEInFAR)
 	createFAR.ForwardingParameters.DestinationInterface = &far.ForwardingParameters.DestinationInterface
 	createFAR.ForwardingParameters.NetworkInstance = &far.ForwardingParameters.NetworkInstance
 	createFAR.ForwardingParameters.OuterHeaderCreation = far.ForwardingParameters.OuterHeaderCreation
 
 	return createFAR
+}
+
+func barToCreateBAR(bar *smf_context.BAR) *pfcp.CreateBAR {
+
+	createBAR := new(pfcp.CreateBAR)
+
+	createBAR.BARID = new(pfcpType.BARID)
+	createBAR.BARID.BarIdValue = bar.BARID
+
+	createBAR.DownlinkDataNotificationDelay = new(pfcpType.DownlinkDataNotificationDelay)
+
+	//createBAR.SuggestedBufferingPacketsCount = new(pfcpType.SuggestedBufferingPacketsCount)
+
+	return createBAR
 }
 
 func pdrToUpdatePDR(pdr *smf_context.PDR) *pfcp.UpdatePDR {
@@ -117,6 +140,14 @@ func pdrToUpdatePDR(pdr *smf_context.PDR) *pfcp.UpdatePDR {
 
 	updatePDR.OuterHeaderRemoval = pdr.OuterHeaderRemoval
 
+	updatePDR.FARID = &pfcpType.FARID{
+		FarIdValue: pdr.FAR.FARID,
+	}
+
+	updatePDR.FARID = &pfcpType.FARID{
+		FarIdValue: pdr.FAR.FARID,
+	}
+
 	return updatePDR
 }
 
@@ -126,8 +157,17 @@ func farToUpdateFAR(far *smf_context.FAR) *pfcp.UpdateFAR {
 	updateFAR.FARID = new(pfcpType.FARID)
 	updateFAR.FARID.FarIdValue = far.FARID
 
+	if far.BAR != nil {
+		updateFAR.BARID = new(pfcpType.BARID)
+		updateFAR.BARID.BarIdValue = far.BAR.BARID
+	}
+
 	updateFAR.ApplyAction = new(pfcpType.ApplyAction)
-	updateFAR.ApplyAction.Forw = true
+	updateFAR.ApplyAction.Forw = far.ApplyAction.Forw
+	updateFAR.ApplyAction.Buff = far.ApplyAction.Buff
+	updateFAR.ApplyAction.Nocp = far.ApplyAction.Nocp
+	updateFAR.ApplyAction.Dupl = far.ApplyAction.Dupl
+	updateFAR.ApplyAction.Drop = far.ApplyAction.Drop
 
 	updateFAR.UpdateForwardingParameters = new(pfcp.UpdateForwardingParametersIEInFAR)
 	updateFAR.UpdateForwardingParameters.DestinationInterface = &far.ForwardingParameters.DestinationInterface
@@ -202,7 +242,7 @@ func BuildPfcpSessionEstablishmentResponse() (pfcp.PFCPSessionEstablishmentRespo
 }
 
 // TODO: Replace dummy value in PFCP message
-func BuildPfcpSessionModificationRequest(smContext *smf_context.SMContext, pdr_list []*smf_context.PDR, far_list []*smf_context.FAR) (pfcp.PFCPSessionModificationRequest, error) {
+func BuildPfcpSessionModificationRequest(smContext *smf_context.SMContext, pdr_list []*smf_context.PDR, far_list []*smf_context.FAR, bar_list []*smf_context.BAR) (pfcp.PFCPSessionModificationRequest, error) {
 	msg := pfcp.PFCPSessionModificationRequest{}
 
 	msg.UpdatePDR = make([]*pfcp.UpdatePDR, 0, 2)
@@ -230,6 +270,13 @@ func BuildPfcpSessionModificationRequest(smContext *smf_context.SMContext, pdr_l
 			msg.CreateFAR = append(msg.CreateFAR, farToCreateFAR(far))
 		case smf_context.RULE_UPDATE:
 			msg.UpdateFAR = append(msg.UpdateFAR, farToUpdateFAR(far))
+		}
+	}
+
+	for _, bar := range bar_list {
+		switch bar.State {
+		case smf_context.RULE_INITIAL:
+			msg.CreateBAR = append(msg.CreateBAR, barToCreateBAR(bar))
 		}
 	}
 
@@ -282,6 +329,14 @@ func BuildPfcpSessionDeletionResponse() (pfcp.PFCPSessionDeletionResponse, error
 	msg.OffendingIE = &pfcpType.OffendingIE{
 		TypeOfOffendingIe: 12345,
 	}
+
+	return msg, nil
+}
+
+func BuildPfcpSessionReportResponse(cause pfcpType.Cause) (pfcp.PFCPSessionReportResponse, error) {
+	msg := pfcp.PFCPSessionReportResponse{}
+
+	msg.Cause = &cause
 
 	return msg, nil
 }

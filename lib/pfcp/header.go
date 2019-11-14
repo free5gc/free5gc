@@ -11,6 +11,11 @@ import (
 
 const PfcpVersion uint8 = 1
 
+const (
+	SEID_NOT_PRESENT = 0
+	SEID_PRESENT     = 1
+)
+
 var (
 	sequenceCount uint32
 )

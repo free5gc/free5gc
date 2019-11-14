@@ -14,6 +14,7 @@ import (
 	"free5gc/lib/http_wrapper"
 	"free5gc/lib/openapi"
 	"free5gc/lib/openapi/models"
+	"free5gc/src/smf/logger"
 	"free5gc/src/smf/smf_handler/smf_message"
 	"log"
 	"net/http"
@@ -22,6 +23,7 @@ import (
 
 // ReleaseSmContext - Release SM Context
 func ReleaseSmContext(c *gin.Context) {
+	logger.PduSessLog.Info("Recieve Release SM Context Request")
 	var request models.ReleaseSmContextRequest
 	request.JsonData = new(models.SmContextReleaseData)
 
@@ -57,6 +59,7 @@ func RetrieveSmContext(c *gin.Context) {
 
 // UpdateSmContext - Update SM Context
 func UpdateSmContext(c *gin.Context) {
+	logger.PduSessLog.Info("Recieve Update SM Context Request")
 	var request models.UpdateSmContextRequest
 	request.JsonData = new(models.SmContextUpdateData)
 

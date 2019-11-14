@@ -73,7 +73,7 @@ Status UpfN4BuildSessionModificationResponse(
     response->cause.len = 1;
 
     /* TODO: Set Offending IE, Create PDR, Load Control Information, Overload Control Information, Usage Report, Failed Rule ID, Additional Usage Reports Information, Created/Updated Traffic Endpoint */
-    
+
     pfcpMessage.header.type = type;
     pfcpMessage.header.seidP = 1;
     pfcpMessage.header.seid = session->smfSeid;
@@ -110,8 +110,7 @@ Status UpfN4BuildSessionDeletionResponse(
 }
 
 Status UpfN4BuildSessionReportRequestDownlinkDataReport (
-        Bufblk **bufBlkPtr, uint8_t type, UpfSession *session, uint16_t pdrId,
-        PFCPSessionReportRequest *sessionReportRequest) {
+        Bufblk **bufBlkPtr, uint8_t type, UpfSession *session, uint16_t pdrId) {
     Status status;
     PfcpMessage pfcpMessage;
     PFCPSessionReportRequest *request = NULL;
@@ -134,10 +133,13 @@ Status UpfN4BuildSessionReportRequestDownlinkDataReport (
     downlinkDataReport->presence = 1;
 
     downlinkDataReport->pDRID.presence = 1;
+    pdrId = htons(pdrId);
     downlinkDataReport->pDRID.value = &pdrId;
     downlinkDataReport->pDRID.len = sizeof(pdrId);
+    downlinkDataReport->downlinkDataServiceInformation.presence = 0; // not support yet, TODO
 
     /* fill in downlinkDataServiceInformation in downlinkDataReport */
+    /*
     DownlinkDataServiceInformation *downlinkDataServiceInformation = &downlinkDataReport->downlinkDataServiceInformation;
     // fill in value of downlinkDataServiceInformation
     downlinkDataServiceInformationValue.ppi = 0;
@@ -148,6 +150,7 @@ Status UpfN4BuildSessionReportRequestDownlinkDataReport (
     downlinkDataServiceInformation->presence = 1;
     downlinkDataServiceInformation->value = &downlinkDataServiceInformationValue;
     downlinkDataServiceInformation->len = PfcpDownlinkDataServiceInformationLen(downlinkDataServiceInformationValue);
+    */
 
     pfcpMessage.header.type = type;
     status = PfcpBuildMessage(bufBlkPtr, &pfcpMessage);
@@ -177,7 +180,7 @@ Status UpfN4BuildAssociationSetupResponse(
     nodeId.addr4 = Self()->pfcpAddr->s4.sin_addr;
     response->nodeID.len = 1+4;
     response->nodeID.value = &nodeId;
-    
+
     /* cause */
     cause = PFCP_CAUSE_REQUEST_ACCEPTED;
     response->cause.presence = 1;

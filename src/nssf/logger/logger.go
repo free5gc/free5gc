@@ -11,7 +11,8 @@ import (
 
 var log *logrus.Logger
 var AppLog *logrus.Entry
-var Factory *logrus.Entry
+var ContextLog *logrus.Entry
+var FactoryLog *logrus.Entry
 var HandlerLog *logrus.Entry
 var InitLog *logrus.Entry
 var Nsselection *logrus.Entry
@@ -45,7 +46,8 @@ func init() {
 	}
 
 	AppLog = log.WithFields(logrus.Fields{"NSSF": "app"})
-	Factory = log.WithFields(logrus.Fields{"NSSF": "factory"})
+	ContextLog = log.WithFields(logrus.Fields{"NSSF": "context"})
+	FactoryLog = log.WithFields(logrus.Fields{"NSSF": "factory"})
 	HandlerLog = log.WithFields(logrus.Fields{"NSSF": "handler"})
 	InitLog = log.WithFields(logrus.Fields{"NSSF": "init"})
 	Nsselection = log.WithFields(logrus.Fields{"NSSF": "nsselection"})

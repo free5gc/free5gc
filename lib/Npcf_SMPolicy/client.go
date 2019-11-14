@@ -24,6 +24,7 @@ type APIClient struct {
 
 	// API Services
 	DefaultApi *DefaultApiService
+	NotifyApi  *SMNotification
 }
 
 type service struct {
@@ -46,6 +47,7 @@ func NewAPIClient(cfg *Configuration) *APIClient {
 
 	// API Services
 	c.DefaultApi = (*DefaultApiService)(&c.common)
+	c.NotifyApi = (*SMNotification)(&c.common)
 
 	return c
 }

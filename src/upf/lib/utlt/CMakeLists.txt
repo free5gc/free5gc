@@ -16,3 +16,4 @@ add_custom_target(utlt_logger ALL
     DEPENDS ${LOGGER_DST}
     VERBATIM
 )
+link_directories(${LOGGER_DST})

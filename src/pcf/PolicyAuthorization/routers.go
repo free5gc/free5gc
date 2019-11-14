@@ -10,11 +10,11 @@
 package PolicyAuthorization
 
 import (
+	"github.com/google/uuid"
 	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	uuid "github.com/satori/go.uuid"
 )
 
 // Route is the information for every URI.
@@ -60,9 +60,9 @@ func AddService(engine *gin.Engine) *gin.RouterGroup {
 
 // Index is the index handler.
 func Index(c *gin.Context) {
-	rid := uuid.NewV4()
-	c.Writer.Header().Set("X-Request-Id", rid.String())
-	c.String(http.StatusOK, rid.String())
+	rid := uuid.New().String()
+	c.Writer.Header().Set("X-Request-Id", rid)
+	c.String(http.StatusOK, rid)
 }
 
 var routes = Routes{

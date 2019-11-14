@@ -58,7 +58,7 @@ func AmfInit() {
 					Mcc: "208",
 					Mnc: "93",
 				},
-				Tac: "001122",
+				Tac: "000001",
 			},
 			Ncgi: &models.Ncgi{
 				PlmnId: &models.PlmnId{

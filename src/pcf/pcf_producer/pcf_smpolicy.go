@@ -1,10 +1,9 @@
 package pcf_producer
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
+	"free5gc/lib/Npcf_SMPolicy"
 	"free5gc/lib/Nudr_DataRepository"
 	"free5gc/lib/openapi/models"
 	"free5gc/src/pcf/logger"
@@ -32,7 +31,7 @@ func CreateSmPolicyContext(httpChannel chan pcf_message.HttpResponseMessage, Req
 	var applicationDataInfluenceDataGetParamOpts Nudr_DataRepository.ApplicationDataInfluenceDataGetParamOpts
 	var policyDataSubscription models.PolicyDataSubscription
 	var sid int32
-	pcfUeContext := pcf_context.GetPCFUeContext()
+	pcfUeContext := pcf_context.PCF_Self().UePool
 
 	if (smPolicyContextData.PduSessionId != 0) && (smPolicyContextData.Dnn != "") && (smPolicyContextData.NotificationUri != "") && (smPolicyContextData.PduSessionType != "") && (smPolicyContextData.SliceInfo.Sd != "") && (smPolicyContextData.SliceInfo.Sst != 0) {
 		supi := smPolicyContextData.Supi
@@ -54,7 +53,7 @@ func CreateSmPolicyContext(httpChannel chan pcf_message.HttpResponseMessage, Req
 				return
 			}
 		}
-		policyDataSubscription.NotificationUri = pcf_context.NotifiUri
+		policyDataSubscription.NotificationUri = pcf_context.NotifiUri + smPolicyContextData.Supi
 		policyDataSubscription.MonitoredResourceUris = []string{"A", "B"}
 		policyDataSubscription.SupportedFeatures = smPolicyContextData.SuppFeat
 		policyDataUesUeIdSmDataGetParamOpts.Snssai = optional.NewInterface(smPolicyContextData.SliceInfo)
@@ -86,11 +85,12 @@ func CreateSmPolicyContext(httpChannel chan pcf_message.HttpResponseMessage, Req
 		} else {
 			logger.SMpolicylog.Warnln("Npcf_SMPolicy Subscribe fail error message is : ", err)
 		}
+		snssai := fmt.Sprint(smPolicyContextData.SliceInfo.Sst) + smPolicyContextData.SliceInfo.Sd
 		switch smPolicyContextData.PduSessionType {
 		case "IPV4":
 			if smPolicyContextData.Ipv4Address == "" {
-				if smPolicyData.SmPolicySnssaiData[smPolicyContextData.SliceInfo.Sd].SmPolicyDnnData[smPolicyContextData.Dnn].Ipv4Index != 0 {
-					ipv4index := smPolicyData.SmPolicySnssaiData[smPolicyContextData.SliceInfo.Sd].SmPolicyDnnData[smPolicyContextData.Dnn].Ipv4Index
+				if smPolicyData.SmPolicySnssaiData[snssai].SmPolicyDnnData[smPolicyContextData.Dnn].Ipv4Index != 0 {
+					ipv4index := smPolicyData.SmPolicySnssaiData[snssai].SmPolicyDnnData[smPolicyContextData.Dnn].Ipv4Index
 					smPolicyDecision.Ipv4Index = ipv4index
 				} else {
 					smPolicyDecision.Ipv4Index = pcf_context.Ipv4Index()
@@ -98,8 +98,8 @@ func CreateSmPolicyContext(httpChannel chan pcf_message.HttpResponseMessage, Req
 			}
 		case "IPV6":
 			if smPolicyContextData.Ipv6AddressPrefix == "" {
-				if smPolicyData.SmPolicySnssaiData[smPolicyContextData.SliceInfo.Sd].SmPolicyDnnData[smPolicyContextData.Dnn].Ipv6Index != 0 {
-					ipv6index := smPolicyData.SmPolicySnssaiData[smPolicyContextData.SliceInfo.Sd].SmPolicyDnnData[smPolicyContextData.Dnn].Ipv6Index
+				if smPolicyData.SmPolicySnssaiData[snssai].SmPolicyDnnData[smPolicyContextData.Dnn].Ipv6Index != 0 {
+					ipv6index := smPolicyData.SmPolicySnssaiData[snssai].SmPolicyDnnData[smPolicyContextData.Dnn].Ipv6Index
 					smPolicyDecision.Ipv6Index = ipv6index
 				} else {
 					smPolicyDecision.Ipv6Index = pcf_context.Ipv6Index()
@@ -107,16 +107,16 @@ func CreateSmPolicyContext(httpChannel chan pcf_message.HttpResponseMessage, Req
 			}
 		case "IPV4V6":
 			if smPolicyContextData.Ipv4Address == "" {
-				if smPolicyData.SmPolicySnssaiData[smPolicyContextData.SliceInfo.Sd].SmPolicyDnnData[smPolicyContextData.Dnn].Ipv4Index != 0 {
-					ipv4index := smPolicyData.SmPolicySnssaiData[smPolicyContextData.SliceInfo.Sd].SmPolicyDnnData[smPolicyContextData.Dnn].Ipv4Index
+				if smPolicyData.SmPolicySnssaiData[snssai].SmPolicyDnnData[smPolicyContextData.Dnn].Ipv4Index != 0 {
+					ipv4index := smPolicyData.SmPolicySnssaiData[snssai].SmPolicyDnnData[smPolicyContextData.Dnn].Ipv4Index
 					smPolicyDecision.Ipv4Index = ipv4index
 				} else {
 					smPolicyDecision.Ipv4Index = pcf_context.Ipv4Index()
 				}
 			}
 			if smPolicyContextData.Ipv6AddressPrefix == "" {
-				if smPolicyData.SmPolicySnssaiData[smPolicyContextData.SliceInfo.Sd].SmPolicyDnnData[smPolicyContextData.Dnn].Ipv6Index != 0 {
-					ipv6index := smPolicyData.SmPolicySnssaiData[smPolicyContextData.SliceInfo.Sd].SmPolicyDnnData[smPolicyContextData.Dnn].Ipv6Index
+				if smPolicyData.SmPolicySnssaiData[snssai].SmPolicyDnnData[smPolicyContextData.Dnn].Ipv6Index != 0 {
+					ipv6index := smPolicyData.SmPolicySnssaiData[snssai].SmPolicyDnnData[smPolicyContextData.Dnn].Ipv6Index
 					smPolicyDecision.Ipv6Index = ipv6index
 				} else {
 					smPolicyDecision.Ipv6Index = pcf_context.Ipv6Index()
@@ -167,16 +167,15 @@ func DeleteSmPolicyContext(httpChannel chan pcf_message.HttpResponseMessage, Req
 	var problemDetails models.ProblemDetails
 	var policyDataUesUeIdSmDataPatchParamOpts Nudr_DataRepository.PolicyDataUesUeIdSmDataPatchParamOpts
 	var usageMonData models.UsageMonData
-	URL := ReqURI
-	logger.SMpolicylog.Traceln("URL: ", URL)
-	pcfUeContext := pcf_context.GetPCFUeContext()
+	logger.SMpolicylog.Traceln("URL: ", ReqURI)
+	pcfUeContext := pcf_context.PCF_Self().UePool
 
 	for key := range pcfUeContext {
 		if pcfUeContext[key].SmPolicyControlStore == nil {
 			continue
 		}
-		PduSessionIDTemp := pcf_context.SmpolicyUri + fmt.Sprint(pcfUeContext[key].SmPolicyControlStore.Context.PduSessionId) + "/delete"
-		if URL == PduSessionIDTemp {
+		PduSessionIDTemp := fmt.Sprint(pcfUeContext[key].SmPolicyControlStore.Context.PduSessionId)
+		if ReqURI == PduSessionIDTemp {
 			ueid := fmt.Sprint(pcfUeContext[key].SmPolicyControlStore.Context.Supi)
 			snssai := pcfUeContext[key].SmPolicyControlStore.Context.SliceInfo
 			ipv4index := pcfUeContext[key].SmPolicyControlStore.Policy.Ipv4Index
@@ -186,10 +185,10 @@ func DeleteSmPolicyContext(httpChannel chan pcf_message.HttpResponseMessage, Req
 			pcfUeContext[key].SmPolicyControlStore = nil
 			pcf_message.SendHttpResponseMessage(httpChannel, nil, 204, gin.H{})
 			//notify policyAuthorization
-			//PolicyAuthorizationNotification(URL, terminate)
+			Npcf_PolicyAuthorization_Notify(fmt.Sprint(pcfUeContext[key].SmPolicyControlStore.Context.PduSessionId), "terminate")
 			for i := 0; i < len(smPolicyDataStore); i++ {
 				if snssai == smPolicyDataStore[i].SmPolicySnssaiData["Snssai"].Snssai {
-					usageMonData.LimitId = fmt.Sprint(smPolicyDataStore[i].UmDataLimits["LimitId"])
+					usageMonData.LimitId = fmt.Sprint(smPolicyDataStore[i].UmDataLimits["LimitId"].LimitId)
 				}
 			}
 			policyDataUesUeIdSmDataPatchParamOpts.RequestBody = optional.NewInterface(usageMonData)
@@ -217,15 +216,14 @@ func DeleteSmPolicyContext(httpChannel chan pcf_message.HttpResponseMessage, Req
 // SmPoliciesSmPolicyIdGet -
 func GetSmPolicyContext(httpChannel chan pcf_message.HttpResponseMessage, ReqURI string) {
 	var problemDetails models.ProblemDetails
-	URL := ReqURI
-	logger.SMpolicylog.Traceln("URL: ", URL)
-	pcfUeContext := pcf_context.GetPCFUeContext()
+	logger.SMpolicylog.Traceln("URL: ", ReqURI)
+	pcfUeContext := pcf_context.PCF_Self().UePool
 	for key := range pcfUeContext {
 		if pcfUeContext[key].SmPolicyControlStore == nil {
 			continue
 		}
-		PduSessionIDTemp := pcf_context.SmpolicyUri + fmt.Sprint(pcfUeContext[key].SmPolicyControlStore.Context.PduSessionId)
-		if URL == PduSessionIDTemp {
+		PduSessionIDTemp := fmt.Sprint(pcfUeContext[key].SmPolicyControlStore.Context.PduSessionId)
+		if ReqURI == PduSessionIDTemp {
 			pcf_message.SendHttpResponseMessage(httpChannel, nil, 200, pcfUeContext[key].SmPolicyControlStore)
 			return
 		}
@@ -241,15 +239,14 @@ func UpdateSmPolicyContext(httpChannel chan pcf_message.HttpResponseMessage, Req
 	var problemDetails models.ProblemDetails
 	var policyDataUesUeIdSmDataGetParamOpts Nudr_DataRepository.PolicyDataUesUeIdSmDataGetParamOpts
 	var formatTimeStrAdd string
-	pcfUeContext := pcf_context.GetPCFUeContext()
-	URL := ReqURI
+	pcfUeContext := pcf_context.PCF_Self().UePool
 	if len(smPolicyUpdateContextData.RepPolicyCtrlReqTriggers) > 0 {
 		for key := range pcfUeContext {
 			if pcfUeContext[key].SmPolicyControlStore == nil {
 				continue
 			}
-			PduSessionIDTemp := pcf_context.SmpolicyUri + fmt.Sprint(pcfUeContext[key].SmPolicyControlStore.Context.PduSessionId) + "/update"
-			if URL == PduSessionIDTemp {
+			PduSessionIDTemp := fmt.Sprint(pcfUeContext[key].SmPolicyControlStore.Context.PduSessionId)
+			if ReqURI == PduSessionIDTemp {
 				policyDataUesUeIdSmDataGetParamOpts.Snssai = optional.NewInterface(pcfUeContext[key].SmPolicyControlStore.Context.SliceInfo)
 				ueid := fmt.Sprint(pcfUeContext[key].Supi)
 				//Query
@@ -259,11 +256,11 @@ func UpdateSmPolicyContext(httpChannel chan pcf_message.HttpResponseMessage, Req
 					smPolicyDataStore = append(smPolicyDataStore, smPolicyData)
 				} else {
 					//PolicyAuthorization Terminate Notify
-					//PolicyAuthorizationNotification(NotifuID, terminate)
+					Npcf_PolicyAuthorization_Notify(fmt.Sprint(pcfUeContext[key].SmPolicyControlStore.Context.PduSessionId), "terminate")
 					logger.SMpolicylog.Warnln("Nudr Query fail error message is : ", err)
 				}
 				//PolicyAuthorization Update Notify
-				//PolicyAuthorizationNotification(NotifuID, update)
+				Npcf_PolicyAuthorization_Notify(fmt.Sprint(pcfUeContext[key].SmPolicyControlStore.Context.PduSessionId), "update")
 				suppfeat := fmt.Sprint(pcfUeContext[key].SmPolicyControlStore.Context.SuppFeat)
 
 				smPolicyDecision.ChargingInfo = &models.ChargingInformation{
@@ -338,12 +335,14 @@ func UpdateSmPolicyContext(httpChannel chan pcf_message.HttpResponseMessage, Req
 }
 
 // SmPoliciesSmPolicyUpdateNotify -
-func CreateSmPolicyNotifyContext(id string, send_type string) {
+func CreateSmPolicyNotifyContext(id string, send_type string, policydecision *models.SmPolicyDecision) {
 	resourceURI := pcf_util.PCF_BASIC_PATH + pcf_context.SmpolicyUri + id
 	var smPolicyNotification models.SmPolicyNotification
 	var terminationNotification models.TerminationNotification
 	var url string
-	pcfUeContext := pcf_context.GetPCFUeContext()
+	pcfUeContext := pcf_context.PCF_Self().UePool
+	configuration := Npcf_SMPolicy.NewConfiguration()
+	client := Npcf_SMPolicy.NewAPIClient(configuration)
 	for key := range pcfUeContext {
 		if pcfUeContext[key].SmPolicyControlStore == nil {
 			continue
@@ -354,72 +353,26 @@ func CreateSmPolicyNotifyContext(id string, send_type string) {
 			url = pcfUeContext[key].SmPolicyControlStore.Context.NotificationUri
 			if send_type == "update" {
 				smPolicyNotification.ResourceUri = resourceURI + "/update"
-				smPolicyNotification.SmPolicyDecision = pcfUeContext[key].SmPolicyControlStore.Policy
+				smPolicyNotification.SmPolicyDecision = policydecision
+				_, err := client.NotifyApi.SMNotificationUri(context.Background(), url, smPolicyNotification)
 
-				bs, err := json.Marshal(&smPolicyNotification)
-				if err != nil {
-					logger.SMpolicylog.Warnln("JSON Marshal error: ", err)
-				}
-				req2 := bytes.NewBuffer([]byte(bs))
-
-				req, err := http.NewRequest("POST", url, req2)
 				if err != nil {
 					logger.SMpolicylog.Warnln("SMPolicy UpdateNotify POST error: ", err)
-				}
-				req.Header.Set("X-Custom-Header", "myvalue")
-				req.Header.Set("Content-Type", "application/json")
-
-				client := &http.Client{}
-				_, err = client.Do(req)
-				if err != nil {
-					logger.SMpolicylog.Warnln("Nsmf Update fail error message is : ", err)
 				}
 				return
 
 			} else if send_type == "terminate" {
 				terminationNotification.ResourceUri = resourceURI + "/delete"
 				terminationNotification.Cause = "UNSPECIFIED"
+				_, err := client.NotifyApi.SMTerminationUri(context.Background(), url, terminationNotification)
 
-				bs, err := json.Marshal(&terminationNotification)
-				if err != nil {
-					logger.SMpolicylog.Warnln("JSON Marshal error: ", err)
-				}
-				req2 := bytes.NewBuffer([]byte(bs))
-				req, err := http.NewRequest("POST", url, req2)
 				if err != nil {
 					logger.SMpolicylog.Warnln("SMPolicy UpdateNotify POST error: ", err)
-				}
-				req.Header.Set("X-Custom-Header", "myvalue")
-				req.Header.Set("Content-Type", "application/json")
-
-				client := &http.Client{}
-				_, err = client.Do(req)
-				if err != nil {
-					logger.SMpolicylog.Warnln("Nsmf Delete fail error message is : ", err)
 				}
 				return
 			} else {
 				return
 			}
 		}
-	}
-}
-
-// Nudr_Notify
-func NotifySmPolicy(httpChannel chan pcf_message.HttpResponseMessage, ReqURI string, body models.PolicyDataChangeNotification) {
-	var policyDataChangeNotification models.PolicyDataChangeNotification = body
-	pcfUeContext := pcf_context.GetPCFUeContext()
-	URL := ReqURI
-	//logger.SMpolicylog.Traceln("URL: ", URL)
-	for key := range pcfUeContext {
-
-		SupiTemp := pcf_context.CheckNotifiUri + fmt.Sprint(pcfUeContext[key].Supi)
-		if URL == SupiTemp {
-			pcfUeContext[key].PolicyDataChangeStore = &policyDataChangeNotification
-			pcf_message.SendHttpResponseMessage(httpChannel, nil, 204, gin.H{})
-			sid := fmt.Sprint(pcfUeContext[key].SmPolicyControlStore.Context.PduSessionId)
-			CreateSmPolicyNotifyContext(sid, "update")
-		}
-
 	}
 }

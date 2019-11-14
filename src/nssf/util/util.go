@@ -30,6 +30,9 @@ var (
 	NSSF_KEY_PATH = path_util.Gofree5gcPath("free5gc/support/TLS/nssf.key")
 )
 
+// Default configuration file
+var DEFAULT_CONFIG string = "free5gc/config/nssfcfg.conf"
+
 // Check if a slice contains an element
 func Contain(target interface{}, slice interface{}) bool {
 	arr := reflect.ValueOf(slice)

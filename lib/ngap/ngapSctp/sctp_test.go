@@ -3,11 +3,13 @@
 package ngapSctp_test
 
 import (
-	"github.com/stretchr/testify/assert"
+	"encoding/binary"
 	"net"
 	"runtime"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/ishidawataru/sctp"
 

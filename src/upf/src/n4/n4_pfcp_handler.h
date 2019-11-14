@@ -11,6 +11,10 @@ extern "C" {
 
 void UpfN4HandleCreatePdr(UpfSession *session, CreatePDR *createPdr, UpfPdr **upfPdr);
 void UpfN4HandleCreateFar(CreateFAR *createFar, UpfFar **upfFar);
+void UpfN4HandleUpdatePdr(UpdatePDR *updatePdr, UpfPdr **upfPdr);
+void UpfN4HandleUpdateFar(UpdateFAR *updateFar, UpfFar **upfFar);
+Status UpfN4HandleRemovePdr(uint16_t pdrId);
+Status UpfN4HandleRemoveFar(uint32_t farId);
 void UpfN4HandleSessionEstablishmentRequest(
         UpfSession *session, PfcpXact *pfcpXact, PFCPSessionEstablishmentRequest *request);
 void UpfN4HandleSessionModificationRequest(

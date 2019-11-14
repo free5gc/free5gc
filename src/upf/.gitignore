@@ -18,13 +18,6 @@ lib/gtpv1/test
 # All of bin directory
 **/bin/
 
-# mac
-.DS_Store
-
-# toolchain
-.vscode
-*.el
-
 # Copy from repo libgtpnl
 ## Dependency and object files
 .*.d

@@ -85,11 +85,4 @@ var routes = Routes{
 		"/sm-policies/:smPolicyId/update",
 		UpdateSmPolicy,
 	},
-
-	{
-		"NudrNotify",
-		strings.ToUpper("Post"),
-		"/nudr-notify/:supi",
-		NudrNotify,
-	},
 }

@@ -24,14 +24,13 @@ func Handle() {
 			if ok {
 				switch msg.Event {
 				case pcf_message.EventBDTPolicyCreate:
-					ReqURI := msg.HTTPRequest.Params["ReqURI"]
-					pcf_producer.CreateBDTPolicyContext(msg.HttpChannel, ReqURI, msg.HTTPRequest.Body.(models.BdtReqData))
+					pcf_producer.CreateBDTPolicyContext(msg.HttpChannel, msg.HTTPRequest.Body.(models.BdtReqData))
 				case pcf_message.EventBDTPolicyGet:
-					ReqURI := msg.HTTPRequest.Params["ReqURI"]
-					pcf_producer.GetBDTPolicyContext(msg.HttpChannel, ReqURI)
+					BdtPolicyId := msg.HTTPRequest.Params["bdtPolicyId"]
+					pcf_producer.GetBDTPolicyContext(msg.HttpChannel, BdtPolicyId)
 				case pcf_message.EventBDTPolicyUpdate:
-					ReqURI := msg.HTTPRequest.Params["ReqURI"]
-					pcf_producer.UpdateBDTPolicyContext(msg.HttpChannel, ReqURI, msg.HTTPRequest.Body.(models.BdtPolicyDataPatch))
+					BdtPolicyId := msg.HTTPRequest.Params["bdtPolicyId"]
+					pcf_producer.UpdateBDTPolicyContext(msg.HttpChannel, BdtPolicyId, msg.HTTPRequest.Body.(models.BdtPolicyDataPatch))
 				case pcf_message.EventPostAppSessions:
 					ReqURI := msg.HTTPRequest.Params["ReqURI"]
 					pcf_producer.PostAppSessionsContext(msg.HttpChannel, ReqURI, msg.HTTPRequest.Body.(models.AppSessionContext))
@@ -51,17 +50,18 @@ func Handle() {
 					ReqURI := msg.HTTPRequest.Params["ReqURI"]
 					pcf_producer.UpdateEventsSubscContext(msg.HttpChannel, ReqURI, msg.HTTPRequest.Body.(models.EventsSubscReqData))
 				case pcf_message.EventAMPolicyGet:
-					ReqURI := msg.HTTPRequest.Params["ReqURI"]
-					pcf_producer.GetPoliciesPolAssoId(msg.HttpChannel, ReqURI)
+					PolAssoId := msg.HTTPRequest.Params["polAssoId"]
+					pcf_producer.GetPoliciesPolAssoId(msg.HttpChannel, PolAssoId)
 				case pcf_message.EventAMPolicyDelete:
-					ReqURI := msg.HTTPRequest.Params["ReqURI"]
-					pcf_producer.DeletePoliciesPolAssoId(msg.HttpChannel, ReqURI)
+					PolAssoId := msg.HTTPRequest.Params["polAssoId"]
+					pcf_producer.DeletePoliciesPolAssoId(msg.HttpChannel, PolAssoId)
 				case pcf_message.EventAMPolicyCreate:
 					ReqURI := msg.HTTPRequest.Params["ReqURI"]
 					pcf_producer.PostPolicies(msg.HttpChannel, ReqURI, msg.HTTPRequest.Body.(models.PolicyAssociationRequest))
 				case pcf_message.EventAMPolicyUpdate:
 					ReqURI := msg.HTTPRequest.Params["ReqURI"]
-					pcf_producer.UpdatePostPoliciesPolAssoId(msg.HttpChannel, ReqURI, msg.HTTPRequest.Body.(models.PolicyAssociationUpdateRequest))
+					PolAssoId := msg.HTTPRequest.Params["polAssoId"]
+					pcf_producer.UpdatePostPoliciesPolAssoId(msg.HttpChannel, ReqURI, PolAssoId, msg.HTTPRequest.Body.(models.PolicyAssociationUpdateRequest))
 				case pcf_message.EventSMPolicyCreate:
 					ReqURI := msg.HTTPRequest.Params["ReqURI"]
 					pcf_producer.CreateSmPolicyContext(msg.HttpChannel, ReqURI, msg.HTTPRequest.Body.(models.SmPolicyContextData))
@@ -76,7 +76,7 @@ func Handle() {
 					pcf_producer.DeleteSmPolicyContext(msg.HttpChannel, ReqURI)
 				case pcf_message.EventSMPolicyNotify:
 					ReqURI := msg.HTTPRequest.Params["ReqURI"]
-					pcf_producer.NotifySmPolicy(msg.HttpChannel, ReqURI, msg.HTTPRequest.Body.(models.PolicyDataChangeNotification))
+					pcf_producer.HandleSmPolicyNotify(msg.HttpChannel, ReqURI, msg.HTTPRequest.Body.(models.PolicyDataChangeNotification))
 				// TODO: http event dispatcher
 				default:
 					HandlerLog.Warnf("Event[%s] has not implemented", msg.Event)

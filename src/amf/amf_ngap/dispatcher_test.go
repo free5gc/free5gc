@@ -241,7 +241,7 @@ func TestDispatchUEContextReleaseComplete(t *testing.T) {
 	TestAmf.AmfInit()
 	TestAmf.UeAttach(models.AccessType__3_GPP_ACCESS)
 
-	message := ngapTestpacket.BuildUEContextReleaseComplete(1, 2)
+	message := ngapTestpacket.BuildUEContextReleaseComplete(1, 2, nil)
 	msg, err := ngap.Encoder(message)
 	if err != nil {
 		amf_ngap.Ngaplog.Errorln(err)
@@ -477,7 +477,7 @@ func TestDispatchUEContextReleaseRequest(t *testing.T) {
 
 	ranUe := ran.RanUeList[0]
 	ranUe.RanUeNgapId = 123
-	message := ngapTestpacket.BuildUEContextReleaseRequest(1, 123)
+	message := ngapTestpacket.BuildUEContextReleaseRequest(1, 123, nil)
 	msg, err := ngap.Encoder(message)
 	if err != nil {
 		amf_ngap.Ngaplog.Errorln(err)
@@ -542,7 +542,7 @@ func TestDispatchHandoverNotify(t *testing.T) {
 	TestAmf.AmfInit()
 	TestAmf.UeAttach(models.AccessType__3_GPP_ACCESS)
 
-	message := ngapTestpacket.BuildHandoverNotify()
+	message := ngapTestpacket.BuildHandoverNotify(0, 0)
 	msg, err := ngap.Encoder(message)
 	if err != nil {
 		amf_ngap.Ngaplog.Errorln(err)
@@ -825,7 +825,7 @@ func TestDispatchHandoverRequired(t *testing.T) {
 	ran.RanId.GNbId = new(models.GNbId)
 	ran.RanId.GNbId.GNBValue = "454647"
 
-	message := ngapTestpacket.BuildHandoverRequired()
+	message := ngapTestpacket.BuildHandoverRequired(1, 2, []byte{0x45, 0x46, 0x47}, []byte{0x01, 0x20})
 	msg, err := ngap.Encoder(message)
 	if err != nil {
 		amf_ngap.Ngaplog.Errorln(err)

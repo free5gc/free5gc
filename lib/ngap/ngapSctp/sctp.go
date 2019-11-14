@@ -3,14 +3,21 @@
 package ngapSctp
 
 import (
+	"encoding/binary"
 	"flag"
 	"net"
 	"strings"
+	"unsafe"
 
 	"github.com/ishidawataru/sctp"
 
 	"free5gc/lib/ngap/logger"
 )
+
+var clientNum int
+var NGAP_PPID uint32 = 60
+
+func init() {}
 
 // ConnData structure that pair the connection and data together
 type ConnData struct {
@@ -18,8 +25,6 @@ type ConnData struct {
 	data       []byte
 	err        error
 }
-
-var clientNum int
 
 // GetError Return the Error of ConnData structure
 func (cd ConnData) GetError() error {}
@@ -34,10 +39,10 @@ func (cd ConnData) GetData() []byte {}
 func Server(addrStr string) *sctp.SCTPListener {}
 
 // Accept - Accepting SCTP socket
-func Accept(sctpLn *sctp.SCTPListener) (conn net.Conn, err error) {}
+func Accept(sctpLn *sctp.SCTPListener) (*sctp.SCTPConn, error) {}
 
 // Start - Start SCTP read channel
-func Start(conn net.Conn, readChan chan ConnData) {}
+func Start(conn *sctp.SCTPConn, readChan chan ConnData) {}
 
 // SendMsg - used to send out message to SCTP connection
 func SendMsg(conn net.Conn, msg []byte) {}

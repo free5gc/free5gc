@@ -238,3 +238,19 @@ func CreateTestData12345() models.SmPolicyContextData {
 	}
 	return smReqDataTest12345
 }
+
+func ChangeTestData() models.PolicyDataChangeNotification {
+	changeDataTest12345 := models.PolicyDataChangeNotification{
+		SmPolicyData: &models.SmPolicyData{
+			SmPolicySnssaiData: map[string]models.SmPolicySnssaiData{
+				"Snssai": {Snssai: &models.Snssai{
+					Sd: "string",
+				}},
+				"1string": {SmPolicyDnnData: map[string]models.SmPolicyDnnData{
+					"string": {Ipv4Index: 1, Online: false, Offline: false},
+				}},
+			},
+		},
+	}
+	return changeDataTest12345
+}

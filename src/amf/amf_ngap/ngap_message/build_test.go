@@ -1055,7 +1055,7 @@ func TestBuildDownlinkRanConfigurationTransfer(t *testing.T) {
 					Value: aper.OctetString("\x02\xf8\x39"),
 				},
 				TAC: ngapType.TAC{
-					Value: aper.OctetString("\x00\x11\x22"),
+					Value: aper.OctetString("\x00\x00\x01"),
 				},
 			},
 		},
@@ -1080,7 +1080,7 @@ func TestBuildDownlinkRanConfigurationTransfer(t *testing.T) {
 					Value: aper.OctetString("\x02\xf8\x39"),
 				},
 				TAC: ngapType.TAC{
-					Value: aper.OctetString("\x00\x11\x22"),
+					Value: aper.OctetString("\x00\x00\x01"),
 				},
 			},
 		},
@@ -1186,7 +1186,7 @@ func TestBuildLocationReportingControl(t *testing.T) {
 				Value: aper.OctetString("\x02\xf8\x39"),
 			},
 			TAC: ngapType.TAC{
-				Value: aper.OctetString("\x00\x11\x22"),
+				Value: aper.OctetString("\x00\x00\x01"),
 			},
 		},
 	}

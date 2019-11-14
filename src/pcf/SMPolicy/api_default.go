@@ -42,9 +42,8 @@ func CreateSmPolicy(c *gin.Context) {
 // SmPoliciesSmPolicyIdDeletePost -
 func DeleteSmPolicy(c *gin.Context) {
 	req := http_wrapper.NewRequest(c.Request, nil)
-	req.Params["ReqURI"] = c.Request.RequestURI
+	req.Params["ReqURI"] = c.Params.ByName("smPolicyId")
 	channelMsg := pcf_message.NewHttpChannelMessage(pcf_message.EventSMPolicyDelete, req)
-
 	pcf_message.SendMessage(channelMsg)
 	recvMsg := <-channelMsg.HttpChannel
 	HTTPResponse := recvMsg.HTTPResponse
@@ -56,7 +55,7 @@ func DeleteSmPolicy(c *gin.Context) {
 func GetSmPolicy(c *gin.Context) {
 
 	req := http_wrapper.NewRequest(c.Request, nil)
-	req.Params["ReqURI"] = c.Request.RequestURI
+	req.Params["ReqURI"] = c.Params.ByName("smPolicyId")
 	channelMsg := pcf_message.NewHttpChannelMessage(pcf_message.EventSMPolicyGet, req)
 
 	pcf_message.SendMessage(channelMsg)
@@ -71,28 +70,11 @@ func UpdateSmPolicy(c *gin.Context) {
 	var smPolicyUpdateContextData models.SmPolicyUpdateContextData
 	c.BindJSON(&smPolicyUpdateContextData)
 	req := http_wrapper.NewRequest(c.Request, smPolicyUpdateContextData)
-	req.Params["ReqURI"] = c.Request.RequestURI
+	req.Params["ReqURI"] = c.Params.ByName("smPolicyId")
 	channelMsg := pcf_message.NewHttpChannelMessage(pcf_message.EventSMPolicyUpdate, req)
 
 	pcf_message.SendMessage(channelMsg)
 	recvMsg := <-channelMsg.HttpChannel
 	HTTPResponse := recvMsg.HTTPResponse
 	c.JSON(HTTPResponse.Status, HTTPResponse.Body)
-
-}
-
-// Nudr-Notify-smpolicy
-func NudrNotify(c *gin.Context) {
-	var policyDataChangeNotification models.PolicyDataChangeNotification
-	c.BindJSON(&policyDataChangeNotification)
-
-	req := http_wrapper.NewRequest(c.Request, policyDataChangeNotification)
-	req.Params["ReqURI"] = c.Request.RequestURI
-	channelMsg := pcf_message.NewHttpChannelMessage(pcf_message.EventSMPolicyNotify, req)
-
-	pcf_message.SendMessage(channelMsg)
-	recvMsg := <-channelMsg.HttpChannel
-	HTTPResponse := recvMsg.HTTPResponse
-	c.JSON(HTTPResponse.Status, HTTPResponse.Body)
-
 }

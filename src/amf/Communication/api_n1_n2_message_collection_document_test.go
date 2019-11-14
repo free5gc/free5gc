@@ -116,7 +116,7 @@ func TestN1N2MessageTransfer(t *testing.T) {
 				Mcc: "208",
 				Mnc: "93",
 			},
-			Tac: "001122",
+			Tac: "000001",
 		},
 	}
 

@@ -3,8 +3,10 @@
 
 #include <stdint.h>
 #include <netinet/in.h>
+#include <pthread.h>
 
 #include "utlt_list.h"
+#include "utlt_buff.h"
 #include "utlt_event.h"
 #include "utlt_thread.h"
 #include "utlt_network.h"
@@ -30,16 +32,17 @@ typedef struct _UpfUrr      UpfUrr;
 typedef enum _UpfEvent {
 
     UPF_EVENT_N4_MESSAGE,
+    UPF_EVENT_SESSION_REPORT,
     UPF_EVENT_N4_T3_RESPONSE,
     UPF_EVENT_N4_T3_HOLDING,
-    
+
     UPF_EVENT_TOP,
 
 } UpfEvent;
 
 typedef struct {
     const char      *gtpDevNamePrefix;   // Default : "free5GCgtp"
-    
+
     // Add context related to GTP-U here
     uint16_t        gtpv1Port;           // Default : GTP_V1_PORT
     int             gtpv1DevSN;          // Serial number for naming gtpv1Dev, gtpv1v6Dev
@@ -49,7 +52,7 @@ typedef struct {
     SockAddr        *gtpv1Addr6;         // GTPv1 IPv6 Address
 
     // Add context related to PFCP here
-    uint16_t        pfcpPort;            // Default : 
+    uint16_t        pfcpPort;            // Default : PFCP_PORT
     ListNode        pfcpIPList;          // PFCP IPv4 Server List (SockNode)
     ListNode        pfcpIPv6List;        // PFCP IPv6 Server List (SockNode)
     Sock            *pfcpSock;           // IPv4 Socket
@@ -68,6 +71,7 @@ typedef struct {
     ListNode        apnList;
 
     // Different list of policy rule
+    ListNode        pdrList;
     ListNode        farList;
     ListNode        qerList;
     ListNode        urrList;
@@ -115,7 +119,7 @@ typedef struct _UpfSession {
     int             hashKeylen;
 
     /* GTP, PFCP context */
-    SockNode        *gtpNode;
+    //SockNode        *gtpNode;
     PfcpNode        *pfcpNode;
     ListNode        dlPdrList;
     ListNode        ulPdrList;
@@ -123,7 +127,8 @@ typedef struct _UpfSession {
     /* Buff the un-tunnel packet */
 #define MAX_NUM_OF_PACKET_BUFFER_SIZE 0xff
     int             pktBufIdx;
-    void            *packetBuffer[MAX_NUM_OF_PACKET_BUFFER_SIZE];
+    Bufblk          *packetBuffer[MAX_NUM_OF_PACKET_BUFFER_SIZE];
+    pthread_mutex_t bufLock;
 } UpfSession;
 
 typedef struct _UpfPdr {
@@ -131,11 +136,12 @@ typedef struct _UpfPdr {
     int             index;
 
     uint32_t        upfGtpUTeid;
-    uint8_t         ulDl;               // UL or DL PDR
+    uint8_t         ulDl;               // UL(0) or DL(1) PDR
     uint16_t        pdrId;
 
 #define SMF_TEID_IP_DESC_IPV4   1
 #define SMF_TEID_IP_DESC_IPV6   2
+    // Upf Ip (with upfGtpUTeid conbine to F-TEID)
     union {
         /* IPV4 */
         struct in_addr      addr4;
@@ -148,7 +154,9 @@ typedef struct _UpfPdr {
         } dualStack;
     };
 
-    uint32_t        presence;
+    UpfUeIp         ueIp;
+
+    uint32_t        precedence;
     uint8_t         outerHeaderRemove;
     uint8_t         sourceInterface;
 
@@ -168,14 +176,15 @@ typedef struct _UpfFar {
     uint8_t         applyAction;
     uint8_t         destinationInterface;
 
-    uint16_t        referenceCount;
+    uint16_t        referenceCount; // for reported usage
     uint8_t         created;
 
     uint32_t        upfN3Teid;
+    Ip              ranIp;
 
     UpfBar          *bar;
     PfcpNode        *pfcpNode;
-    SockNode        *gtpNode;
+    //SockNode        *gtpNode; // TODO: check if can used
 } UpfFar;
 
 typedef struct _UpfUrr {
@@ -224,7 +233,8 @@ UpfApn *UpfApnAdd(const char *apnName, const char *ip, const char *prefix);
 Status UpfApnRemoveAll();
 UpfPdr *UpfPdrAdd(UpfSession *session);
 Status UpfPdrRemove(UpfPdr *pdr);
-UpfPdr *UpfPdrFindByPdrId(PacketDetectionRuleID *pdrId);
+UpfPdr *UpfPdrFindByPdrId(uint16_t pdrId);
+UpfPdr *UpfPdrFindByFarId(uint32_t farId);
 UpfPdr *UpfPdrFidByUpfGtpUTeid(uint32_t teid);
 UpfFar *UpfFarAdd();
 Status UpfFarRemove(UpfFar *far);
@@ -241,7 +251,11 @@ Status UpfSessionRemoveAll();
 UpfSession *UpfSessionFind(uint32_t idx);
 UpfSession *UpfSessionFindBySeid(uint64_t seid);
 UpfSession *UpfSessionAddByMessage(PfcpMessage *message);
-UpfSession *UpfSessionFindByTeid(uint32_t teid);
+UpfSession *UpfSessionFindByPdrTeid(uint32_t teid);
+
+Status UpfSessionPacketSend(UpfSession *session, Sock *sock);
+Status UpfSessionPacketRecv(UpfSession *session, Bufblk *pktBuf);
+Status UpfSessionPacketClear(UpfSession *session);
 
 #ifdef __cplusplus
 }

@@ -24,7 +24,7 @@ const (
 	SUCCESS_CASE                 = "success"
 	FAILURE_CASE                 = "failure"
 	SUPI                         = "1111222233334444"
-	SUCCESS_SERVING_NETWORK_NAME = "gofree5gc"
+	SUCCESS_SERVING_NETWORK_NAME = "free5gc"
 	TESTSET_SERVING_NETWORK_NAME = "WLAN"
 )
 

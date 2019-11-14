@@ -25,7 +25,7 @@ func BuildPDUSessionResourceSetupRequestTransfer(ctx *SMContext) (buf []byte, er
 				TransportLayerAddress: ngapType.TransportLayerAddress{
 					Value: aper.BitString{
 						Bytes:     UpNode.UPIPInfo.Ipv4Address,
-						BitLength: uint64(len(UpNode.UPIPInfo.Ipv4Address)),
+						BitLength: uint64(len(UpNode.UPIPInfo.Ipv4Address) * 8),
 					},
 				},
 				GTPTEID: ngapType.GTPTEID{Value: teidOct},

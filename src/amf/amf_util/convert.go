@@ -48,3 +48,9 @@ func PlmnIdStringToModels(plmnId string) (plmnID models.PlmnId) {
 	plmnID.Mnc = plmnId[3:]
 	return
 }
+
+func TACConfigToModels(intString string) (hexString string) {
+	tmp, _ := strconv.ParseUint(intString, 10, 32)
+	hexString = fmt.Sprintf("%06x", tmp)
+	return
+}

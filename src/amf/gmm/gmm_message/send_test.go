@@ -173,7 +173,7 @@ func TestSendRegistrationAccept(t *testing.T) {
 			Mcc: "208",
 			Mnc: "93",
 		},
-		Tac: "001122",
+		Tac: "000001",
 	})
 	gmm_message.SendRegistrationAccept(ue, models.AccessType__3_GPP_ACCESS, nil, nil, nil, nil, nil)
 	time.Sleep(10 * time.Millisecond)
@@ -204,7 +204,7 @@ func TestSendConfigurationUpdateCommand(t *testing.T) {
 			Mcc: "208",
 			Mnc: "93",
 		},
-		Tac: "001122",
+		Tac: "000001",
 	})
 	gmm_message.SendConfigurationUpdateCommand(ue, models.AccessType__3_GPP_ACCESS, nil)
 }

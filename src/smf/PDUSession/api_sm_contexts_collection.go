@@ -22,6 +22,7 @@ import (
 
 // PostSmContexts - Create SM Context
 func PostSmContexts(c *gin.Context) {
+	logger.PduSessLog.Info("Recieve Create SM Context Request")
 	var request models.PostSmContextsRequest
 
 	request.JsonData = new(models.SmContextCreateData)

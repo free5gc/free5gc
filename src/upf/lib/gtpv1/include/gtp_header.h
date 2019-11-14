@@ -12,7 +12,7 @@ extern "C" {
 #define GTPV1_HEADER_LEN 8
 #define GTPV1_OPT_HEADER_LEN 4
 
-// TODO: Handle ntohl and ntohs for non-uint8_t type
+// TODO : Handle ntohl and ntohs for non-uint8_t type
 typedef struct _Gtpv1Header {
     struct {
         ENDIAN6(

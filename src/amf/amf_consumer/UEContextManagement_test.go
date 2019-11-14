@@ -10,7 +10,7 @@ import (
 	"free5gc/lib/path_util"
 	"free5gc/src/amf/amf_consumer"
 	"free5gc/src/amf/logger"
-	"free5gc/src/udm/udm_context"
+	// "free5gc/src/udm/udm_context"
 	"net/http"
 	"testing"
 	"time"
@@ -48,15 +48,15 @@ func TestUeCmRegistration(t *testing.T) {
 	}()
 	udminit()
 
-	udm_context.Init()
+	// udm_context.Init()
 
 	time.Sleep(100 * time.Millisecond)
 	TestAmf.AmfInit()
 	TestAmf.UeAttach(models.AccessType__3_GPP_ACCESS)
 	ue := TestAmf.TestAmf.UePool["imsi-2089300007487"]
 
-	udmUri := "https://localhost:29503"
-	problemDetails, err := amf_consumer.UeCmRegistration(ue, udmUri, models.AccessType__3_GPP_ACCESS, true)
+	// udmUri := "https://localhost:29503"
+	problemDetails, err := amf_consumer.UeCmRegistration(ue, models.AccessType__3_GPP_ACCESS, true)
 	if err != nil {
 		fmt.Println(err.Error())
 	} else if problemDetails != nil {

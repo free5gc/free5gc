@@ -488,7 +488,7 @@ func TestServiceRequest(t *testing.T) {
 				Mcc: "208",
 				Mnc: "93",
 			},
-			Tac: "001122",
+			Tac: "000001",
 		},
 	}
 	configuration := Namf_Communication.NewConfiguration()
@@ -739,7 +739,7 @@ func TestSecurityModeComplete(t *testing.T) {
 			Mcc: "208",
 			Mnc: "93",
 		},
-		Tac: "001122",
+		Tac: "000001",
 	}
 
 	err := ue.Sm[models.AccessType__3_GPP_ACCESS].Transfer(gmm_state.SECURITY_MODE, nil)

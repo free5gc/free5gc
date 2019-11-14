@@ -2,29 +2,32 @@ package AMPolicy_test
 
 import (
 	"context"
+	"flag"
 	"free5gc/lib/CommonConsumerTestData/PCF/TestAMPolicy"
 	"free5gc/lib/Npcf_AMPolicy"
-	"free5gc/lib/http2_util"
-	AMPolicy "free5gc/src/pcf/AMPolicy"
-	"free5gc/src/pcf/pcf_handler"
+	"free5gc/src/pcf/pcf_context"
+	"free5gc/src/pcf/pcf_service"
 	"free5gc/src/pcf/pcf_util"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/urfave/cli"
 )
 
+func pcfInit() {
+	flags := flag.FlagSet{}
+	c := cli.NewContext(nil, &flags, nil)
+	pcf := &pcf_service.PCF{}
+	pcf.Initialize(c)
+	go pcf.Start()
+	time.Sleep(100 * time.Millisecond)
+}
 func TestCreateAMPolicy(t *testing.T) {
-	go func() {
-		pcfrouter := AMPolicy.NewRouter()
-		pcfserver, err := http2_util.NewServer(":29507", pcf_util.PCF_LOG_PATH, pcfrouter)
-		if err == nil && pcfserver != nil {
-			err := pcfserver.ListenAndServeTLS(pcf_util.PCF_PEM_PATH, pcf_util.PCF_KEY_PATH)
-			assert.True(t, err == nil)
-		}
-	}()
-	go pcf_handler.Handle()
+	pcfInit()
+
 	configuration := Npcf_AMPolicy.NewConfiguration()
-	configuration.SetBasePath("https://localhost:29507/npcf-am-policy-control/v1")
+	configuration.SetBasePath(pcf_util.PCF_BASIC_PATH + pcf_context.AmpolicyUri)
 	client := Npcf_AMPolicy.NewAPIClient(configuration)
 
 	//Test PostPolicies

@@ -2,30 +2,34 @@ package PolicyAuthorization_test
 
 import (
 	"context"
-	TestPolicyAuthorization "free5gc/lib/CommonConsumerTestData/PCF/TestPolicyAuthorization"
+	"flag"
+	"free5gc/lib/CommonConsumerTestData/PCF/TestPolicyAuthorization"
+	"free5gc/lib/CommonConsumerTestData/PCF/TestSMPolicy"
 	"free5gc/lib/Npcf_PolicyAuthorization"
-	"free5gc/lib/http2_util"
-	"free5gc/lib/path_util"
-	"free5gc/src/pcf/PolicyAuthorization"
+	"free5gc/lib/Npcf_SMPolicy"
 	"free5gc/src/pcf/pcf_context"
-	"free5gc/src/pcf/pcf_handler"
+	"free5gc/src/pcf/pcf_service"
+	"free5gc/src/pcf/pcf_util"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/urfave/cli"
 )
 
+func pcfInit() {
+	flags := flag.FlagSet{}
+	c := cli.NewContext(nil, &flags, nil)
+	pcf := &pcf_service.PCF{}
+	pcf.Initialize(c)
+	go pcf.Start()
+	time.Sleep(100 * time.Millisecond)
+}
+
 func TestApplicationSessionsCollection(t *testing.T) {
-	go func() {
-		pcfrouter := PolicyAuthorization.NewRouter()
-		pcfserver, err := http2_util.NewServer(":29507", path_util.Gofree5gcPath("free5gc/pcfsslkey.log"), pcfrouter)
-		if err == nil && pcfserver != nil {
-			err := pcfserver.ListenAndServeTLS(path_util.Gofree5gcPath("free5gc/support/TLS/pcf.pem"), path_util.Gofree5gcPath("free5gc/support/TLS/pcf.key"))
-			assert.True(t, err == nil)
-		}
-	}()
-	go pcf_handler.Handle()
+	pcfInit()
 	configuration := Npcf_PolicyAuthorization.NewConfiguration()
-	configuration.SetBasePath("https://localhost:29507/npcf-policyauthorization/v1")
+	configuration.SetBasePath(pcf_util.PCF_BASIC_PATH + pcf_context.PolicyAuthorizationUri)
 	client := Npcf_PolicyAuthorization.NewAPIClient(configuration)
 
 	//Get Test Data
@@ -33,10 +37,16 @@ func TestApplicationSessionsCollection(t *testing.T) {
 	PostAppSessions403Data := TestPolicyAuthorization.GetPostAppSessions403Data()
 
 	//Create UE
-	pcf_context.NewPCFUe("123")
+	// pcf_context.NewPCFUe("123")
+	pcf_context.PCF_Self().NewPCFUe("string1")
+	smReqData := TestSMPolicy.CreateTestData()
+	configuration2 := Npcf_SMPolicy.NewConfiguration()
+	configuration2.SetBasePath(pcf_util.PCF_BASIC_PATH + pcf_context.SmUri)
+	client2 := Npcf_SMPolicy.NewAPIClient(configuration2)
+	_, httpRsp, err := client2.DefaultApi.SmPoliciesPost(context.Background(), smReqData)
 
 	//Test PostAppSessions 201
-	_, httpRsp, err := client.ApplicationSessionsCollectionApi.PostAppSessions(context.Background(), PostAppSessions201Data)
+	_, httpRsp, err = client.ApplicationSessionsCollectionApi.PostAppSessions(context.Background(), PostAppSessions201Data)
 	assert.True(t, err == nil)
 	assert.True(t, httpRsp != nil)
 	assert.Equal(t, "201 Created", httpRsp.Status)

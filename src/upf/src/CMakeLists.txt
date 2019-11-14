@@ -2,11 +2,7 @@ cmake_minimum_required(VERSION 3.5)
 
 project(free5GC_UPF_main C)
 
-link_directories(
-    "${CMAKE_SOURCE_DIR}/lib"
-    "${LIBGTPNL_DST}/lib"
-    ${LOGGER_DST}
-)
+link_directories("${CMAKE_SOURCE_DIR}/lib" "${LIBGTPNL_DST}/lib" ${LOGGER_DST})
 
 # Sources
 file(GLOB SRC_FILES

@@ -19,7 +19,7 @@ import (
 
 func PoliciesPolAssoIdDelete(c *gin.Context) {
 	req := http_wrapper.NewRequest(c.Request, nil)
-	req.Params["ReqURI"] = c.Request.RequestURI
+	req.Params["polAssoId"], _ = c.Params.Get("polAssoId")
 	channelMsg := pcf_message.NewHttpChannelMessage(pcf_message.EventAMPolicyDelete, req)
 
 	pcf_message.SendMessage(channelMsg)
@@ -31,7 +31,7 @@ func PoliciesPolAssoIdDelete(c *gin.Context) {
 // PoliciesPolAssoIdGet -
 func PoliciesPolAssoIdGet(c *gin.Context) {
 	req := http_wrapper.NewRequest(c.Request, nil)
-	req.Params["ReqURI"] = c.Request.RequestURI
+	req.Params["polAssoId"], _ = c.Params.Get("polAssoId")
 	channelMsg := pcf_message.NewHttpChannelMessage(pcf_message.EventAMPolicyGet, req)
 
 	pcf_message.SendMessage(channelMsg)
@@ -47,6 +47,7 @@ func PoliciesPolAssoIdUpdatePost(c *gin.Context) {
 	c.BindJSON(&policyAssociationUpdateRequest)
 	req := http_wrapper.NewRequest(c.Request, policyAssociationUpdateRequest)
 	req.Params["ReqURI"] = c.Request.RequestURI
+	req.Params["polAssoId"], _ = c.Params.Get("polAssoId")
 	channelMsg := pcf_message.NewHttpChannelMessage(pcf_message.EventAMPolicyUpdate, req)
 
 	pcf_message.SendMessage(channelMsg)

@@ -1,13 +1,12 @@
 package pfcp_message
 
 import (
-	"net"
-
 	"free5gc/lib/pfcp"
 	"free5gc/lib/pfcp/pfcpType"
 	"free5gc/src/smf/logger"
 	"free5gc/src/smf/smf_context"
 	"free5gc/src/smf/smf_pfcp/pfcp_udp"
+	"net"
 )
 
 var seq uint32
@@ -28,7 +27,7 @@ func SendPfcpAssociationSetupRequest(addr *net.UDPAddr) {
 		Header: pfcp.Header{
 			Version:        pfcp.PfcpVersion,
 			MP:             0,
-			S:              0,
+			S:              pfcp.SEID_NOT_PRESENT,
 			MessageType:    pfcp.PFCP_ASSOCIATION_SETUP_REQUEST,
 			SequenceNumber: getSeqNumber(),
 		},
@@ -49,7 +48,7 @@ func SendPfcpAssociationSetupResponse(addr *net.UDPAddr, cause pfcpType.Cause) {
 		Header: pfcp.Header{
 			Version:        pfcp.PfcpVersion,
 			MP:             0,
-			S:              0,
+			S:              pfcp.SEID_NOT_PRESENT,
 			MessageType:    pfcp.PFCP_ASSOCIATION_SETUP_RESPONSE,
 			SequenceNumber: 1,
 		},
@@ -70,7 +69,7 @@ func SendPfcpAssociationReleaseRequest(addr *net.UDPAddr) {
 		Header: pfcp.Header{
 			Version:        pfcp.PfcpVersion,
 			MP:             0,
-			S:              0,
+			S:              pfcp.SEID_NOT_PRESENT,
 			MessageType:    pfcp.PFCP_ASSOCIATION_RELEASE_REQUEST,
 			SequenceNumber: 1,
 		},
@@ -92,7 +91,7 @@ func SendPfcpAssociationReleaseResponse(addr *net.UDPAddr, cause pfcpType.Cause)
 		Header: pfcp.Header{
 			Version:        pfcp.PfcpVersion,
 			MP:             0,
-			S:              0,
+			S:              pfcp.SEID_NOT_PRESENT,
 			MessageType:    pfcp.PFCP_ASSOCIATION_RELEASE_RESPONSE,
 			SequenceNumber: 1,
 		},
@@ -113,7 +112,7 @@ func SendPfcpSessionEstablishmentRequest(raddr *net.UDPAddr, ctx *smf_context.SM
 		Header: pfcp.Header{
 			Version:         pfcp.PfcpVersion,
 			MP:              1,
-			S:               1,
+			S:               pfcp.SEID_PRESENT,
 			MessageType:     pfcp.PFCP_SESSION_ESTABLISHMENT_REQUEST,
 			SEID:            0,
 			SequenceNumber:  getSeqNumber(),
@@ -137,7 +136,7 @@ func SendPfcpSessionEstablishmentResponse(addr *net.UDPAddr) {
 		Header: pfcp.Header{
 			Version:         pfcp.PfcpVersion,
 			MP:              1,
-			S:               1,
+			S:               pfcp.SEID_PRESENT,
 			MessageType:     pfcp.PFCP_SESSION_ESTABLISHMENT_RESPONSE,
 			SEID:            123456789123456789,
 			SequenceNumber:  1,
@@ -149,26 +148,31 @@ func SendPfcpSessionEstablishmentResponse(addr *net.UDPAddr) {
 	pfcp_udp.SendPfcp(message, addr)
 }
 
-func SendPfcpSessionModificationRequest(raddr *net.UDPAddr, ctx *smf_context.SMContext, pdr_list []*smf_context.PDR, far_list []*smf_context.FAR) {
-	pfcpMsg, err := BuildPfcpSessionModificationRequest(ctx, pdr_list, far_list)
+func SendPfcpSessionModificationRequest(raddr *net.UDPAddr, ctx *smf_context.SMContext, pdr_list []*smf_context.PDR, far_list []*smf_context.FAR, bar_list []*smf_context.BAR) (seqNum uint32) {
+
+	pfcpMsg, err := BuildPfcpSessionModificationRequest(ctx, pdr_list, far_list, bar_list)
+
 	if err != nil {
 		logger.PfcpLog.Errorf("Build PFCP Session Modification Request failed: %v", err)
 		return
 	}
+
+	seqNum = getSeqNumber()
 	message := pfcp.Message{
 		Header: pfcp.Header{
 			Version:         pfcp.PfcpVersion,
 			MP:              1,
-			S:               1,
+			S:               pfcp.SEID_PRESENT,
 			MessageType:     pfcp.PFCP_SESSION_MODIFICATION_REQUEST,
 			SEID:            ctx.SEID,
-			SequenceNumber:  getSeqNumber(),
+			SequenceNumber:  seqNum,
 			MessagePriority: 12,
 		},
 		Body: pfcpMsg,
 	}
 
 	pfcp_udp.SendPfcp(message, raddr)
+	return seqNum
 }
 
 // Deprecated: PFCP Session Modification Procedure should be initiated by the CP function
@@ -183,7 +187,7 @@ func SendPfcpSessionModificationResponse(addr *net.UDPAddr) {
 		Header: pfcp.Header{
 			Version:         pfcp.PfcpVersion,
 			MP:              1,
-			S:               1,
+			S:               pfcp.SEID_PRESENT,
 			MessageType:     pfcp.PFCP_SESSION_MODIFICATION_RESPONSE,
 			SEID:            123456789123456789,
 			SequenceNumber:  1,
@@ -205,7 +209,7 @@ func SendPfcpSessionDeletionRequest(addr *net.UDPAddr, ctx *smf_context.SMContex
 		Header: pfcp.Header{
 			Version:         pfcp.PfcpVersion,
 			MP:              1,
-			S:               1,
+			S:               pfcp.SEID_PRESENT,
 			MessageType:     pfcp.PFCP_SESSION_DELETION_REQUEST,
 			SEID:            ctx.SEID,
 			SequenceNumber:  getSeqNumber(),
@@ -229,11 +233,33 @@ func SendPfcpSessionDeletionResponse(addr *net.UDPAddr) {
 		Header: pfcp.Header{
 			Version:         pfcp.PfcpVersion,
 			MP:              1,
-			S:               1,
+			S:               pfcp.SEID_PRESENT,
 			MessageType:     pfcp.PFCP_SESSION_DELETION_RESPONSE,
 			SEID:            123456789123456789,
 			SequenceNumber:  1,
 			MessagePriority: 12,
+		},
+		Body: pfcpMsg,
+	}
+
+	pfcp_udp.SendPfcp(message, addr)
+}
+
+func SendPfcpSessionReportResponse(addr *net.UDPAddr, cause pfcpType.Cause, seqFromUPF uint32, SEID uint64) {
+	pfcpMsg, err := BuildPfcpSessionReportResponse(cause)
+	if err != nil {
+		logger.PfcpLog.Errorf("Build PFCP Session Report Response failed: %v", err)
+		return
+	}
+
+	message := pfcp.Message{
+		Header: pfcp.Header{
+			Version:        pfcp.PfcpVersion,
+			MP:             0,
+			S:              pfcp.SEID_PRESENT,
+			MessageType:    pfcp.PFCP_SESSION_REPORT_RESPONSE,
+			SequenceNumber: seqFromUPF,
+			SEID:           SEID,
 		},
 		Body: pfcpMsg,
 	}

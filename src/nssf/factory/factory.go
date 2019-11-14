@@ -14,11 +14,16 @@ import (
 )
 
 var NssfConfig Config
+var Configured bool
+
+func init() {
+	Configured = false
+}
 
 func checkErr(err error) {
 	if err != nil {
 		err = fmt.Errorf("[Configuration] %s", err.Error())
-		logger.Factory.Fatal(err)
+		logger.FactoryLog.Fatal(err)
 	}
 }
 
@@ -32,5 +37,7 @@ func InitConfigFactory(f string) {
 	err = yaml.Unmarshal([]byte(content), &NssfConfig)
 	checkErr(err)
 
-	logger.Factory.Infof("Successfully initialize configuration %s", f)
+	Configured = true
+
+	logger.FactoryLog.Infof("Successfully initialize configuration %s", f)
 }

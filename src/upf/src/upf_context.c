@@ -1,14 +1,18 @@
 #define TRACE_MODULE _upf_context
 
 #include "upf_context.h"
+
 #include <string.h>
 #include <stdlib.h>
 #include <arpa/inet.h>
+#include <pthread.h>
+#include <netinet/in.h>
 
 #include "utlt_debug.h"
 #include "utlt_index.h"
 #include "utlt_hash.h"
 #include "utlt_network.h"
+#include "gtp_header.h"
 #include "gtp_link.h"
 #include "upf.h"
 #include "pfcp_message.h"
@@ -42,13 +46,16 @@ Status UpfContextInit() {
 
     memset(&self, 0, sizeof(UpfContext));
 
+    // TODO : Add GTPv1 init here
     ListInit(&self.gtpv1DevList);
     ListInit(&self.gtpv1v6DevList);
 
+    // TODO : Add PFCP init here
     ListInit(&self.pfcpIPList);
     ListInit(&self.pfcpIPv6List);
 
-    // TODO: Add by self if context has been updated
+    // TODO : Add by self if context has been updated
+    // TODO: check if gtp node need to init?
     ListInit(&self.gtpv1DevList);
     ListInit(&self.gtpv1v6DevList);
     ListInit(&self.pfcpIPList);
@@ -56,6 +63,7 @@ Status UpfContextInit() {
     ListInit(&self.ranS1uList);
     ListInit(&self.upfN4List);
     ListInit(&self.apnList);
+    ListInit(&self.pdrList);
     ListInit(&self.farList);
     ListInit(&self.qerList);
     ListInit(&self.urrList);
@@ -86,6 +94,7 @@ Status UpfContextInit() {
     return STATUS_OK;
 }
 
+// TODO : Need to Remove List Members iterativelyatively
 Status UpfContextTerminate() {
     UTLT_Assert(upfContextInitialized == 1, return STATUS_ERROR, "UPF context has been terminated!");
 
@@ -96,7 +105,7 @@ Status UpfContextTerminate() {
     UTLT_Assert(self.sessionHash, , "Hash Table missing?!");
     HashDestroy(self.sessionHash);
 
-    // Terminate resources
+    // Terminate resource
     IndexTerminate(&upfBarPool);
     IndexTerminate(&upfUrrPool);
     IndexTerminate(&upfQerPool);
@@ -107,6 +116,7 @@ Status UpfContextTerminate() {
     PfcpRemoveAllNodes(&self.upfN4List);
     PfcpNodeTerminate();
 
+    // // TODO: remove gtpv1TunnelList, ranS1uList, upfN4LIst, apnList, pdrList, farList, qerList, urrLIist
     Gtpv1DevListFree(&self.gtpv1DevList);
     Gtpv1DevListFree(&self.gtpv1v6DevList);
     SockNodeListFree(&self.pfcpIPList);
@@ -144,6 +154,7 @@ Status UpfApnRemoveAll() {
     return STATUS_OK;
 }
 
+// TODO: check this function
 UpfPdr *UpfPdrAdd(UpfSession *session) {
     UpfPdr *pdr = NULL;
 
@@ -186,14 +197,24 @@ Status UpfPdrRemove(UpfPdr *pdr) {
     return STATUS_OK;
 }
 
-UpfPdr *UpfPdrFindByPdrId(PacketDetectionRuleID *pdrId) {
-    if (pdrId->presence) {
-        int idx;
-        for (idx = 0; idx < IndexSize(&upfPdrPool); ++idx) {
-            UpfPdr *pdr = IndexFind(&upfPdrPool, idx);
-            if (pdr->pdrId == *((uint16_t *)pdrId->value)) {
-                return pdr;
-            }
+UpfPdr *UpfPdrFindByPdrId(uint16_t pdrId) {
+    int idx;
+    for (idx = 0; idx < IndexSize(&upfPdrPool); ++idx) {
+        UpfPdr *pdr = IndexFind(&upfPdrPool, idx);
+        if (pdr->pdrId == pdrId) {
+            return pdr;
+        }
+    }
+
+    return NULL;
+}
+
+UpfPdr *UpfPdrFindByFarId(uint32_t farId) {
+    int idx;
+    for (idx = 0; idx < IndexSize(&upfPdrPool); ++idx) {
+        UpfPdr *pdr = IndexFind(&upfPdrPool, idx);
+        if (pdr->far && pdr->far->farId == farId) {
+            return pdr;
         }
     }
 
@@ -217,7 +238,7 @@ UpfPdr *UpfPdrFidByUpfGtpUTeid(uint32_t teid) {
 
         /* Find */
         pdr = defaultPdr;
-        for (; pdr; pdr = ListNext(&session->ulPdrList)) {
+        for (; pdr; pdr = ListNext(pdr)) {
             if (pdr->sourceInterface != PFCP_SRC_INTF_ACCESS) {
                 continue;
             }
@@ -240,7 +261,8 @@ UpfFar *UpfFarAdd() {
     far->farId = far->index;
 
     far->pfcpNode = NULL;
-    far->gtpNode = NULL;
+    far->bar = NULL;
+    //far->gtpNode = NULL;
 
     ListAppend(&self.farList, far);
 
@@ -268,7 +290,7 @@ UpfFar *UpfFarFindByFarId(uint32_t farId) {
         far = ListNext(far);
     }
 
-    // return NULL if there is no farId field in FAR
+    // if return NULL, no FAR has the farId
     return far;
 }
 
@@ -301,7 +323,7 @@ UpfSession *UpfSessionAdd(PfcpUeIpAddr *ueIp, uint8_t *apn, uint8_t pdnType) {
     IndexAlloc(&upfSessionPool, session);
     UTLT_Assert(session, return NULL, "session alloc error");
 
-    session->gtpNode = NULL;
+    //session->gtpNode = NULL;
 
     if (self.pfcpAddr) {
         session->upfSeid = ((uint64_t)self.pfcpAddr->s4.sin_addr.s_addr << 32) | session->index;
@@ -310,7 +332,8 @@ UpfSession *UpfSessionAdd(PfcpUeIpAddr *ueIp, uint8_t *apn, uint8_t pdnType) {
         session->upfSeid = (((uint64_t)(*ptr)) << 32) | session->index; // TODO: check if correct
     }
     session->upfSeid = htobe64(session->upfSeid);
-    session->upfSeid = 0;
+    //UTLT_Info()
+    session->upfSeid = 0; // TODO: check why
 
     /* IMSI APN Hash */
     /* APN */
@@ -349,6 +372,7 @@ UpfSession *UpfSessionAdd(PfcpUeIpAddr *ueIp, uint8_t *apn, uint8_t pdnType) {
 
     /* initial the session's packIdx to 0 */
     session->pktBufIdx = 0;
+    pthread_mutex_init(&session->bufLock, 0);
 
     return session;
 }
@@ -358,6 +382,7 @@ Status UpfSessionRemove(UpfSession *session) {
     UTLT_Assert(self.sessionHash, return STATUS_ERROR, "sessionHash error");
     UTLT_Assert(session, return STATUS_ERROR, "session error");
 
+    pthread_mutex_destroy(&session->bufLock);
     HashSet(self.sessionHash, session->hashKey, session->hashKeylen, NULL);
 
     // if (session->ueIpv4) {
@@ -397,7 +422,7 @@ Status UpfSessionRemoveAll() {
 }
 
 UpfSession *UpfSessionFind(uint32_t idx) {
-    // UTLT_Assert(idx, return NULL, "index error");
+    //UTLT_Assert(idx, return NULL, "index error");
     return IndexFind(&upfSessionPool, idx);
 }
 
@@ -455,6 +480,102 @@ UpfSession *UpfSessionAddByMessage(PfcpMessage *message) {
     return session;
 }
 
-UpfSession *UpfSessionFindByTeid(uint32_t teid) {
-    return UpfSessionFind(teid);
+UpfSession *UpfSessionFindByPdrTeid(uint32_t teid) {
+    UpfPdr *pdr = NULL;
+    for (pdr = ListFirst(&Self()->pdrList); pdr; pdr = ListNext(pdr)) {
+        if (pdr->upfGtpUTeid == teid) {
+            return pdr->session;
+        }
+    }
+    return NULL;
+}
+
+Status UpfSessionPacketSend(UpfSession *session, Sock *sock) {
+    UTLT_Assert(session, return STATUS_ERROR, "UPF session is NULL");
+    UTLT_Assert(sock, return STATUS_ERROR, "Socket is NULL");
+
+    UpfPdr *pdr = ListFirst(&session->dlPdrList);
+    UTLT_Assert(pdr, return STATUS_ERROR, "There is no PDR in this session");
+
+    uint32_t teid = pdr->upfGtpUTeid;
+    Gtpv1Header gtpv1Hdr = {
+        .version = 1,
+        .type = GTPV1_T_PDU,
+        ._teid = htons(teid),
+    };
+
+    pthread_mutex_lock(&session->bufLock);
+    // Set RAN IP and Port
+    sock->remoteAddr._family = sock->localAddr._family;
+    sock->remoteAddr._port = sock->localAddr._port;    // Default : 2152
+    if (sock->localAddr._family == AF_INET)
+        sock->remoteAddr.s4.sin_addr = pdr->far->ranIp.addr4;
+    else
+        sock->remoteAddr.s6.sin6_addr = pdr->far->ranIp.addr6;
+
+    Bufblk *sendBuf = BufblkAlloc(1, 0x40);
+    for (int i = 0; i < session->pktBufIdx; i++) {
+        gtpv1Hdr._length = htons(session->packetBuffer[i]->len);
+        BufblkBytes(sendBuf, (void *) &gtpv1Hdr, GTPV1_HEADER_LEN);
+        BufblkBuf(sendBuf, session->packetBuffer[i]);
+
+        Status status = GtpSend(sock, sendBuf);
+        UTLT_Assert(status == STATUS_OK, , "GTP Send Error");
+        BufblkClear(sendBuf);
+        BufblkFree(session->packetBuffer[i]);
+    }
+    BufblkFree(sendBuf);
+    pthread_mutex_unlock(&session->bufLock);
+
+    return STATUS_OK;
+}
+
+Status UpfSessionPacketRecv(UpfSession *session, Bufblk *pktBuf) {
+    Status status = STATUS_OK;
+
+    UTLT_Assert(session, return STATUS_ERROR, "UPF session is NULL");
+    UTLT_Assert(pktBuf, return STATUS_ERROR, "Packet buffer is NULL");
+
+    UpfPdr *pdr = ListFirst(&session->dlPdrList);
+    // TODO : Find rule for UE packet
+    /*
+    for (; pdr; pdr = ListNext(pdr)) {
+
+    }
+    */
+    UTLT_Assert(pdr, return STATUS_ERROR, "There is no PDR in this session");
+
+    pthread_mutex_lock(&session->bufLock);
+    if (session->pktBufIdx <= 0 && (pdr->far->applyAction & PFCP_FAR_APPLY_ACTION_NOCP)) {
+        // Trigger DL data notification
+        status = EventSend(Self()->eventQ, UPF_EVENT_SESSION_REPORT, 2, &session->upfSeid, &pdr->pdrId);
+        UTLT_Assert(status == STATUS_OK, , "DL data message event send to N4 fail");
+    }
+
+    uint32_t pktBufIdx = (status != STATUS_OK ? session->pktBufIdx * -1 : session->pktBufIdx);
+    uint32_t teid = pdr->upfGtpUTeid;
+    UTLT_Assert(pktBufIdx < MAX_NUM_OF_PACKET_BUFFER_SIZE, return STATUS_ERROR,
+                "The buffer in this session is full : DL TEID[0x%x]", teid);
+
+    Bufblk *recvBuf = BufblkAlloc(1, 0x40);
+    BufblkBuf(recvBuf, pktBuf);
+    session->packetBuffer[pktBufIdx] = recvBuf;
+
+    session->pktBufIdx = (status != STATUS_OK ? session->pktBufIdx - 1 : session->pktBufIdx + 1);
+    pthread_mutex_unlock(&session->bufLock);
+
+    return STATUS_OK;
+}
+
+Status UpfSessionPacketClear(UpfSession *session) {
+    UTLT_Assert(session, return STATUS_ERROR, "UPF session is NULL");
+    
+    pthread_mutex_lock(&session->bufLock);
+    uint32_t pktBufIdx = (session->pktBufIdx < 0 ? session->pktBufIdx * -1 : session->pktBufIdx);
+    for (int i = 0; i < pktBufIdx; i++) {
+        BufblkFree(session->packetBuffer[i]);
+    }
+    pthread_mutex_unlock(&session->bufLock);
+
+    return STATUS_OK;
 }

@@ -99,15 +99,15 @@ var plmnId = []models.PlmnId{
 var tai = []models.Tai{
 	{
 		PlmnId: &plmnId[0],
-		Tac:    "001122",
+		Tac:    "000001",
 	},
 	{
 		PlmnId: &plmnId[0],
-		Tac:    "0102",
+		Tac:    "000102",
 	},
 	{
 		PlmnId: &plmnId[1],
-		Tac:    "0201",
+		Tac:    "000201",
 	},
 }
 var guami = []models.Guami{
