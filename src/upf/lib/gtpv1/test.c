@@ -70,9 +70,9 @@ Status testGtpv1_2() {
         return STATUS_ERROR;
     }
     
-    status = GtpTunnelDel(node.ifname, iteid, oteid);
+    status = GtpTunnelDel(node.ifname, iteid);
     if (status != STATUS_OK) {
-        UTLT_Assert(0, , "GtpTunnelDel ifname[%s], iteid[%d], oteid[%d]fail", node.ifname, iteid, oteid);
+        UTLT_Assert(0, , "GtpTunnelDel ifname[%s], iteid[%d] fail", node.ifname, iteid);
         status = GtpLinkFree(&node);
         UTLT_Assert(status == STATUS_OK, , "GtpLinkFree ifdev[%s] fail", node.ifname);
         return STATUS_ERROR;

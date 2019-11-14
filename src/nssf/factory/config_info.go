@@ -4,16 +4,8 @@
 
 package factory
 
-import (
-	. "free5gc/lib/openapi/models"
-)
-
 type Info struct {
-	Version string `yaml:"version,omitempty"`
+	Version string `yaml:"version"`
 
 	Description string `yaml:"description,omitempty"`
-
-	Host string `yaml:"host"`
-
-	ServingPlmnIdList []PlmnId `yaml:"servingPlmnIdList"`
 }

@@ -7,9 +7,23 @@ import (
 func GetPostAppSessions201Data() models.AppSessionContext {
 	PostAppSessions201Data := models.AppSessionContext{
 		AscReqData: &models.AppSessionContextReqData{
-			Supi:     "123",
+			AfRoutReq: &models.AfRoutingRequirement{},
+			MedComponents: map[string]models.MediaComponent{
+				"mediacomponent1": {
+					FStatus: models.FlowStatus_ENABLED,
+				},
+			},
+			EvSubsc: &models.EventsSubscReqData{
+				Events: []models.AfEventSubscription{
+					{
+						Event:       "ACCESS_TYPE_CHANGE",
+						NotifMethod: "EVENT_DETECTION",
+					},
+				},
+			},
 			NotifUri: "NotifUri",
 			SuppFeat: "0",
+			Supi:     "string1",
 		},
 		AscRespData: &models.AppSessionContextRespData{},
 		EvsNotif: &models.EventsNotification{
@@ -89,17 +103,47 @@ func GetUpdateEventsSubsc403Data() models.EventsSubscReqData {
 
 func GetModAppSession200Data() models.AppSessionContextUpdateData {
 	ModAppSession200Data := models.AppSessionContextUpdateData{
-		AfAppId:  "string",
+		AfAppId:  "AfAppId",
 		AspId:    "AspId",
 		BdtRefId: "BdtRefId",
+		AfRoutReq: &models.AfRoutingRequirementRm{
+			AppReloc: true,
+			RouteToLocs: []models.RouteToLocation{
+				{
+					Dnai: "Dnai",
+					RouteInfo: &models.RouteInformation{
+						Ipv4Addr:   "111.11.11.1",
+						Ipv6Addr:   "222.22.22.2",
+						PortNumber: 9999,
+					},
+					RouteProfId: "RouteProfId",
+				},
+			},
+			SpVal: &models.SpatialValidityRm{
+				PresenceInfoList: map[string]models.PresenceInfo{
+					"additionalProp1": {
+						PraId: "11",
+					},
+				},
+			},
+			TempVals: []models.TemporalValidity{
+				{},
+			},
+			UpPathChgSub: &models.UpPathChgEvent{},
+		},
 		EvSubsc: &models.EventsSubscReqDataRm{
-			NotifUri: "evSubsc_notifUri",
+			NotifUri: "EvSubsc_NotifUri",
 			Events: []models.AfEventSubscription{
 				{
 					Event:       "ACCESS_TYPE_CHANGE",
 					NotifMethod: "EVENT_DETECTION",
 				},
 			},
+			UsgThres: &models.UsageThresholdRm{
+				Duration:       1,
+				TotalVolume:    1,
+				DownlinkVolume: 1,
+				UplinkVolume:   1},
 		},
 		MedComponents: map[string]models.MediaComponentRm{
 			"additionalProp1": {

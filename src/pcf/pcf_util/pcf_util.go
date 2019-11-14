@@ -22,7 +22,8 @@ var (
 
 func GetNudrClient() *Nudr_DataRepository.APIClient {
 	configuration := Nudr_DataRepository.NewConfiguration()
-	configuration.SetBasePath("https://localhost:29504")
+	BasePath := pcf_context.PCF_Self().UdrUri
+	configuration.SetBasePath(BasePath)
 	client := Nudr_DataRepository.NewAPIClient(configuration)
 	return client
 }
@@ -50,7 +51,6 @@ func GetDefaultTime() models.TimeWindow {
 
 func TimeParse(timeParse time.Time) (time.Time, error) {
 	timeParse, err := time.Parse(pcf_context.GetTimeformat(), timeParse.Format(pcf_context.GetTimeformat()))
-	fmt.Println(pcf_context.GetTimeformat())
 	if err == nil {
 		return timeParse, nil
 	} else {

@@ -20,7 +20,7 @@ import (
 // GetBDTPolicy - Read an Individual BDT policy
 func GetBDTPolicy(c *gin.Context) {
 	req := http_wrapper.NewRequest(c.Request, nil)
-	req.Params["ReqURI"] = c.Request.RequestURI
+	req.Params["bdtPolicyId"] = c.Params.ByName("bdtPolicyId")
 	channelMsg := pcf_message.NewHttpChannelMessage(pcf_message.EventBDTPolicyGet, req)
 
 	pcf_message.SendMessage(channelMsg)
@@ -35,7 +35,7 @@ func UpdateBDTPolicy(c *gin.Context) {
 	c.BindJSON(&bdtPolicyDataPatch)
 
 	req := http_wrapper.NewRequest(c.Request, bdtPolicyDataPatch)
-	req.Params["ReqURI"] = c.Request.RequestURI
+	req.Params["bdtPolicyId"] = c.Params.ByName("bdtPolicyId")
 	channelMsg := pcf_message.NewHttpChannelMessage(pcf_message.EventBDTPolicyUpdate, req)
 
 	pcf_message.SendMessage(channelMsg)

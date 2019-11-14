@@ -38,6 +38,9 @@ func InitAmfContext(context *amf_context.AMFContext) {
 	context.InitNFService(serviceNameList, config.Info.Version)
 	context.ServedGuamiList = configuration.ServedGumaiList
 	context.SupportTaiLists = configuration.SupportTAIList
+	for i := range context.SupportTaiLists {
+		context.SupportTaiLists[i].Tac = TACConfigToModels(context.SupportTaiLists[i].Tac)
+	}
 	context.PlmnSupportList = configuration.PlmnSupportList
 	context.SupportDnnLists = configuration.SupportDnnList
 	if configuration.NrfUri != "" {

@@ -24,9 +24,9 @@ func BuildInitialUEMessage(ranUeNgapID int64, nasPdu []byte, fiveGSTmsi string) 
 
 func BuildErrorIndication() (pdu ngapType.NGAPPDU) {}
 
-func BuildUEContextReleaseRequest(amfUeNgapID, ranUeNgapID int64) (pdu ngapType.NGAPPDU) {}
+func BuildUEContextReleaseRequest(amfUeNgapID, ranUeNgapID int64, pduSessionIDList []int64) (pdu ngapType.NGAPPDU) {}
 
-func BuildUEContextReleaseComplete(amfUeNgapID, ranUeNgapID int64) (pdu ngapType.NGAPPDU) {}
+func BuildUEContextReleaseComplete(amfUeNgapID, ranUeNgapID int64, pduSessionIDList []int64) (pdu ngapType.NGAPPDU) {}
 
 func BuildUEContextModificationResponse(amfUeNgapID, ranUeNgapID int64) (pdu ngapType.NGAPPDU) {}
 
@@ -53,6 +53,8 @@ func BuildLocationReportingFailureIndication() (pdu ngapType.NGAPPDU) {}
 
 func BuildPDUSessionResourceSetupResponse(amfUeNgapID, ranUeNgapID int64) (pdu ngapType.NGAPPDU) {}
 
+func BuildPDUSessionResourceSetupResponseForPaging(amfUeNgapID, ranUeNgapID int64) (pdu ngapType.NGAPPDU) {}
+
 func BuildPDUSessionResourceModifyResponse(amfUeNgapID, ranUeNgapID int64) (pdu ngapType.NGAPPDU) {}
 
 func BuildPDUSessionResourceNotify() (pdu ngapType.NGAPPDU) {}
@@ -63,7 +65,7 @@ func BuildUEContextModificationFailure(amfUeNgapID, ranUeNgapID int64) (pdu ngap
 
 func BuildRRCInactiveTransitionReport() (pdu ngapType.NGAPPDU) {}
 
-func BuildHandoverNotify() (pdu ngapType.NGAPPDU) {}
+func BuildHandoverNotify(amfUeNgapID int64, ranUeNgapID int64) (pdu ngapType.NGAPPDU) {}
 
 func BuildUplinkRanStatusTransfer(amfUeNgapID, ranUeNgapID int64) (pdu ngapType.NGAPPDU) {}
 
@@ -87,7 +89,7 @@ func BuildUERadioCapabilityInfoIndication() (pdu ngapType.NGAPPDU) {}
 
 func BuildAMFConfigurationUpdateAcknowledge() (pdu ngapType.NGAPPDU) {}
 
-func BuildHandoverRequired() (pdu ngapType.NGAPPDU) {}
+func BuildHandoverRequired(amfUeNgapID, ranUeNgapID int64, targetGNBID []byte, targetCellID []byte) (pdu ngapType.NGAPPDU) {}
 
 func BuildCellTrafficTrace(amfUeNgapID, ranUeNgapID int64) (pdu ngapType.NGAPPDU) {}
 
@@ -111,6 +113,10 @@ func buildHandoverRequestAcknowledgeTransfer() (data ngapType.HandoverRequestAck
 
 func buildHandoverResourceAllocationUnsuccessfulTransfer() (data ngapType.HandoverResourceAllocationUnsuccessfulTransfer) {}
 
+func buildHandoverRequiredTransfer() (data ngapType.HandoverRequiredTransfer) {}
+
+func buildSourceToTargetTransparentTransfer(targetGNBID []byte, targetCellID []byte) (data ngapType.SourceNGRANNodeToTargetNGRANNodeTransparentContainer) {}
+
 func GetPDUSessionResourceSetupResponseTransfer() []byte {}
 
 func GetPDUSessionResourceModifyResponseTransfer() []byte {}
@@ -130,6 +136,10 @@ func GetPDUSessionResourceReleaseResponseTransfer() []byte {}
 func GetHandoverRequestAcknowledgeTransfer() []byte {}
 
 func GetHandoverResourceAllocationUnsuccessfulTransfer() []byte {}
+
+func GetHandoverRequiredTransfer() []byte {}
+
+func GetSourceToTargetTransparentTransfer(targetGNBID []byte, targetCellID []byte) []byte {}
 
 func BuildInitialContextSetupResponseForRegistraionTest(amfUeNgapID, ranUeNgapID int64) (pdu ngapType.NGAPPDU) {}
 

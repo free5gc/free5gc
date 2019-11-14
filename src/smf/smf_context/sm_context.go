@@ -2,12 +2,11 @@ package smf_context
 
 import (
 	"fmt"
+	"github.com/google/uuid"
 	"free5gc/lib/Namf_Communication"
 	"free5gc/lib/Npcf_SMPolicy"
 	"free5gc/lib/openapi/models"
 	"net"
-
-	"github.com/google/uuid"
 )
 
 var smContextPool map[string]*SMContext
@@ -66,9 +65,9 @@ type SMContext struct {
 	SMPolicyClient      *Npcf_SMPolicy.APIClient
 	CommunicationClient *Namf_Communication.APIClient
 
-	SMState SMState
-
 	AMFProfile models.NfProfile
+
+	SMState SMState
 
 	Tunnel *UPTunnel
 }

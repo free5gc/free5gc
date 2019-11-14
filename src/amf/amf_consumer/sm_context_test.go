@@ -183,7 +183,7 @@ func TestSMContextUpdate(t *testing.T) {
 		},
 		Tai: &models.Tai{
 			PlmnId: ue.Location.NrLocation.Tai.PlmnId,
-			Tac:    "001122",
+			Tac:    "000001",
 		},
 	}
 	response, _, _, err = amf_consumer.SendUpdateSmContextN2HandoverPreparing(ue, 10, models.N2SmInfoType_HANDOVER_REQUIRED, n2SmInfo, handoverAmfId, targetId)

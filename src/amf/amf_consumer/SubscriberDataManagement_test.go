@@ -43,10 +43,10 @@ func TestPutUpuAck(t *testing.T) {
 	TestAmf.UeAttach(models.AccessType__3_GPP_ACCESS)
 	ue := TestAmf.TestAmf.UePool["imsi-2089300007487"]
 
-	udmUri := "https://localhost:29503"
+	// udmUri := "https://localhost:29503"
 
 	upuMacIue := strings.Repeat("1", 32)
-	err := amf_consumer.PutUpuAck(udmUri, ue.Supi, upuMacIue)
+	err := amf_consumer.PutUpuAck(ue, upuMacIue)
 	if err != nil {
 		t.Errorf("[ERROR] " + err.Error())
 	}
@@ -92,8 +92,8 @@ func TestSDMGetAmData(t *testing.T) {
 	TestAmf.UeAttach(models.AccessType__3_GPP_ACCESS)
 	ue := TestAmf.TestAmf.UePool["imsi-2089300007487"]
 
-	udmUri := "https://localhost:29503"
-	problemDetails, err := amf_consumer.SDMGetAmData(ue, udmUri)
+	// udmUri := "https://localhost:29503"
+	problemDetails, err := amf_consumer.SDMGetAmData(ue)
 	if err != nil {
 		t.Error(err.Error())
 	} else if problemDetails != nil {
@@ -116,8 +116,8 @@ func TestSDMGetSmfSelectData(t *testing.T) {
 	TestAmf.UeAttach(models.AccessType__3_GPP_ACCESS)
 	ue := TestAmf.TestAmf.UePool["imsi-2089300007487"]
 
-	udmUri := "https://localhost:29503"
-	problemDetails, err := amf_consumer.SDMGetSmfSelectData(ue, udmUri)
+	// udmUri := "https://localhost:29503"
+	problemDetails, err := amf_consumer.SDMGetSmfSelectData(ue)
 	if err != nil {
 		t.Error(err.Error())
 	} else if problemDetails != nil {
@@ -136,8 +136,8 @@ func TestSDMGetUeContextInSmfData(t *testing.T) {
 	TestAmf.UeAttach(models.AccessType__3_GPP_ACCESS)
 	ue := TestAmf.TestAmf.UePool["imsi-2089300007487"]
 
-	udmUri := "https://localhost:29503"
-	problemDetails, err := amf_consumer.SDMGetUeContextInSmfData(ue, udmUri)
+	// udmUri := "https://localhost:29503"
+	problemDetails, err := amf_consumer.SDMGetUeContextInSmfData(ue)
 	if err != nil {
 		t.Error(err.Error())
 	} else if problemDetails != nil {
@@ -156,8 +156,8 @@ func TestSDMSubscribe(t *testing.T) {
 	TestAmf.UeAttach(models.AccessType__3_GPP_ACCESS)
 	ue := TestAmf.TestAmf.UePool["imsi-2089300007487"]
 
-	udmUri := "https://localhost:29503"
-	problemDetails, err := amf_consumer.SDMSubscribe(ue, udmUri)
+	// udmUri := "https://localhost:29503"
+	problemDetails, err := amf_consumer.SDMSubscribe(ue)
 	if err != nil {
 		t.Error(err.Error())
 	} else if problemDetails != nil {

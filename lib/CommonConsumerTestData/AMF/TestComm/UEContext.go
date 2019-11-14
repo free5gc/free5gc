@@ -61,7 +61,7 @@ func init() {
 						Mcc: "208",
 						Mnc: "93",
 					},
-					Tac: "001122",
+					Tac: "000001",
 				},
 			},
 			SourceToTargetData: &models.N2InfoContent{

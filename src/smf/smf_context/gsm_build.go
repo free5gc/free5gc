@@ -47,3 +47,26 @@ func BuildGSMPDUSessionReleaseCommand(smContext *SMContext) ([]byte, error) {
 
 	return m.PlainNasEncode()
 }
+
+func BuildGSMPDUSessionModificationCommand(smContext *SMContext) ([]byte, error) {
+	m := nas.NewMessage()
+	m.GsmMessage = nas.NewGsmMessage()
+	m.GsmHeader.SetMessageType(nas.MsgTypePDUSessionModificationCommand)
+	m.GsmHeader.SetExtendedProtocolDiscriminator(nasMessage.Epd5GSSessionManagementMessage)
+	m.PDUSessionModificationCommand = nasMessage.NewPDUSessionModificationCommand(0x0)
+	pDUSessionModificationCommand := m.PDUSessionModificationCommand
+
+	pDUSessionModificationCommand.SetExtendedProtocolDiscriminator(nasMessage.Epd5GSSessionManagementMessage)
+	pDUSessionModificationCommand.SetPDUSessionID(uint8(smContext.PDUSessionID))
+	pDUSessionModificationCommand.SetPTI(0x00)
+	pDUSessionModificationCommand.SetMessageType(nas.MsgTypePDUSessionModificationCommand)
+	// pDUSessionModificationCommand.SetQosRule()
+	// pDUSessionModificationCommand.AuthorizedQosRules.SetLen()
+	// pDUSessionModificationCommand.SessionAMBR.SetSessionAMBRForDownlink([2]uint8{0x11, 0x11})
+	// pDUSessionModificationCommand.SessionAMBR.SetSessionAMBRForUplink([2]uint8{0x11, 0x11})
+	// pDUSessionModificationCommand.SessionAMBR.SetUnitForSessionAMBRForDownlink(10)
+	// pDUSessionModificationCommand.SessionAMBR.SetUnitForSessionAMBRForUplink(10)
+	// pDUSessionModificationCommand.SessionAMBR.SetLen(uint8(len(pDUSessionModificationCommand.SessionAMBR.Octet)))
+
+	return m.PlainNasEncode()
+}

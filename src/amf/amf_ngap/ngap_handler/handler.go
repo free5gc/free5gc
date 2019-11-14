@@ -161,7 +161,6 @@ func HandleUplinkNasTransport(ran *amf_context.AmfRan, message *ngapType.NGAPPDU
 	var rANUENGAPID *ngapType.RANUENGAPID
 	var nASPDU *ngapType.NASPDU
 	var userLocationInformation *ngapType.UserLocationInformation
-	var ranUe *amf_context.RanUe
 
 	if ran == nil {
 		logger.NgapLog.Error("ran is nil")
@@ -221,13 +220,18 @@ func HandleUplinkNasTransport(ran *amf_context.AmfRan, message *ngapType.NGAPPDU
 
 	printRanInfo(ran)
 
-	for i := range ran.RanUeList {
-		if ran.RanUeList[i].RanUeNgapId == rANUENGAPID.Value {
-			ranUe = ran.RanUeList[i]
-		}
-	}
+	ranUe := ran.RanUeFindByRanUeNgapID(rANUENGAPID.Value)
 	if ranUe == nil {
 		logger.NgapLog.Errorf("No UE Context[RanUeNgapID: %d]", rANUENGAPID.Value)
+		return
+	}
+	amfUe := ranUe.AmfUe
+	if amfUe == nil {
+		err := ranUe.Remove()
+		if err != nil {
+			logger.NgapLog.Errorf(err.Error())
+		}
+		logger.NgapLog.Errorf("No UE Context of RanUe with RANUENGAPID[%d] AMFUENGAPID[%d] ", rANUENGAPID.Value, aMFUENGAPID.Value)
 		return
 	}
 
@@ -458,10 +462,6 @@ func HandleUEContextReleaseComplete(ran *amf_context.AmfRan, message *ngapType.N
 		case ngapType.ProtocolIEIDPDUSessionResourceListCxtRelCpl:
 			pDUSessionResourceList = ie.Value.PDUSessionResourceListCxtRelCpl
 			logger.NgapLog.Trace("[NGAP] Decode IE PDUSessionResourceList")
-			if pDUSessionResourceList == nil {
-				logger.NgapLog.Error("PDUSessionResourceList is nil")
-				return
-			}
 		case ngapType.ProtocolIEIDCriticalityDiagnostics:
 			criticalityDiagnostics = ie.Value.CriticalityDiagnostics
 			logger.NgapLog.Trace("[NGAP] Decode IE CriticalityDiagnostics")
@@ -555,13 +555,15 @@ func HandleUEContextReleaseComplete(ran *amf_context.AmfRan, message *ngapType.N
 	}
 	if amfUe.Sm[ran.AnType].Check(gmm_state.REGISTERED) {
 		Ngaplog.Info("[NGAP] Rel Ue Context in GMM-Registered")
-		for _, pduSessionReourceItem := range pDUSessionResourceList.List {
-			pduSessionID := int32(pduSessionReourceItem.PDUSessionID.Value)
-			response, _, _, err := amf_consumer.SendUpdateSmContextDeactivateUpCnxState(amfUe, pduSessionID, cause)
-			if err != nil {
-				logger.NgapLog.Errorf("Send Update SmContextDeactivate UpCnxState Error[%s]", err.Error())
-			} else if response == nil {
-				logger.NgapLog.Errorln("Send Update SmContextDeactivate UpCnxState Error")
+		if pDUSessionResourceList != nil {
+			for _, pduSessionReourceItem := range pDUSessionResourceList.List {
+				pduSessionID := int32(pduSessionReourceItem.PDUSessionID.Value)
+				response, _, _, err := amf_consumer.SendUpdateSmContextDeactivateUpCnxState(amfUe, pduSessionID, cause)
+				if err != nil {
+					logger.NgapLog.Errorf("Send Update SmContextDeactivate UpCnxState Error[%s]", err.Error())
+				} else if response == nil {
+					logger.NgapLog.Errorln("Send Update SmContextDeactivate UpCnxState Error")
+				}
 			}
 		}
 	}
@@ -571,6 +573,7 @@ func HandleUEContextReleaseComplete(ran *amf_context.AmfRan, message *ngapType.N
 	switch ranUe.ReleaseAction {
 	case amf_context.UeContextN2NormalRelease:
 		logger.NgapLog.Infof("Release UE[%s] Context : N2 Connection Release", amfUe.Supi)
+		// amfUe.DetachRanUe(ran.AnType)
 		err := ranUe.Remove()
 		if err != nil {
 			logger.NgapLog.Errorln(err.Error())
@@ -940,6 +943,13 @@ func HandleInitialUEMessage(ran *amf_context.AmfRan, message *ngapType.NGAPPDU) 
 	printRanInfo(ran)
 
 	ranUe := ran.RanUeFindByRanUeNgapID(rANUENGAPID.Value)
+	if ranUe != nil && ranUe.AmfUe == nil {
+		err := ranUe.Remove()
+		if err != nil {
+			Ngaplog.Errorln(err.Error())
+		}
+		ranUe = nil
+	}
 	if ranUe == nil {
 		ranUe = ran.NewRanUe()
 		ranUe.RanUeNgapId = rANUENGAPID.Value
@@ -985,6 +995,8 @@ func HandleInitialUEMessage(ran *amf_context.AmfRan, message *ngapType.NGAPPDU) 
 			}
 			ranUe.AmfUe.AttachRanUe(ranUe)
 		}
+	} else {
+		ranUe.AmfUe.AttachRanUe(ranUe)
 	}
 
 	if userLocationInformation != nil {
@@ -1905,10 +1917,6 @@ func HandleUEContextReleaseRequest(ran *amf_context.AmfRan, message *ngapType.NG
 		case ngapType.ProtocolIEIDPDUSessionResourceListCxtRelReq:
 			pDUSessionResourceList = ie.Value.PDUSessionResourceListCxtRelReq
 			Ngaplog.Trace("[NGAP] Decode IE Pdu Session Resource List")
-			if pDUSessionResourceList == nil {
-				Ngaplog.Error("PDU Session Resource List is nil")
-				return
-			}
 		case ngapType.ProtocolIEIDCause:
 			cause = ie.Value.Cause
 			Ngaplog.Trace("[NGAP] Decode IE Cause")
@@ -1951,13 +1959,15 @@ func HandleUEContextReleaseRequest(ran *amf_context.AmfRan, message *ngapType.NG
 		}
 		if amfUe.Sm[ran.AnType].Check(gmm_state.REGISTERED) {
 			Ngaplog.Info("[NGAP] Ue Context in GMM-Registered")
-			for _, pduSessionReourceItem := range pDUSessionResourceList.List {
-				pduSessionID := int32(pduSessionReourceItem.PDUSessionID.Value)
-				response, _, _, err := amf_consumer.SendUpdateSmContextDeactivateUpCnxState(amfUe, pduSessionID, causeAll)
-				if err != nil {
-					logger.NgapLog.Errorf("Send Update SmContextDeactivate UpCnxState Error[%s]", err.Error())
-				} else if response == nil {
-					logger.NgapLog.Errorln("Send Update SmContextDeactivate UpCnxState Error")
+			if pDUSessionResourceList != nil {
+				for _, pduSessionReourceItem := range pDUSessionResourceList.List {
+					pduSessionID := int32(pduSessionReourceItem.PDUSessionID.Value)
+					response, _, _, err := amf_consumer.SendUpdateSmContextDeactivateUpCnxState(amfUe, pduSessionID, causeAll)
+					if err != nil {
+						logger.NgapLog.Errorf("Send Update SmContextDeactivate UpCnxState Error[%s]", err.Error())
+					} else if response == nil {
+						logger.NgapLog.Errorln("Send Update SmContextDeactivate UpCnxState Error")
+					}
 				}
 			}
 		} else {

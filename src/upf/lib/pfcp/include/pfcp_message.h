@@ -20,7 +20,7 @@ typedef struct _TlvOctet {
 
 typedef struct _IeDescription {
     uint16_t msgType;
-    uint16_t msgLen;
+    uint16_t msgLen; // msg struct size
     _Bool isTlvObj;
     int numToParse;
     int next[35];
@@ -163,7 +163,7 @@ typedef struct _PfcpHeader {
 #define PFCP_DownlinkDataReport_TYPE 83
 #define PFCP_OuterHeaderCreation_TYPE 84
 #define PFCP_CreateBAR_TYPE 85
-#define PFCP_UpdateBARSessionModificationRequest_TYPE 86
+#define PFCP_UpdateBARPFCPSessionModificationRequest_TYPE 86
 #define PFCP_RemoveBAR_TYPE 87
 #define PFCP_BARID_TYPE 88
 #define PFCP_CPFunctionFeatures_TYPE 89
@@ -235,11 +235,6 @@ typedef struct _PfcpHeader {
 #define PFCP_FramedIPv6Route_TYPE 155
 
 typedef TlvOctet Reserved;
-typedef TlvOctet ForwardingParameters;
-typedef TlvOctet DuplicatingParameters;
-typedef TlvOctet UpdateForwardingParameters;
-typedef TlvOctet UpdateBARPFCPSessionReportResponse;
-typedef TlvOctet RemoveQER;
 typedef TlvOctet Cause;
 typedef TlvOctet SourceInterface;
 typedef TlvOctet FTEID;
@@ -277,7 +272,7 @@ typedef TlvOctet Metric;
 typedef TlvOctet Timer;
 typedef TlvOctet PacketDetectionRuleID;
 typedef TlvOctet FSEID;
-typedef TlvOctet PFDContext;
+//typedef TlvOctet PFDContext;
 typedef TlvOctet NodeID;
 typedef TlvOctet PFDContents;
 typedef TlvOctet MeasurementMethod;
@@ -297,7 +292,6 @@ typedef TlvOctet EndTime;
 typedef TlvOctet URRID;
 typedef TlvOctet LinkedURRID;
 typedef TlvOctet OuterHeaderCreation;
-typedef TlvOctet UpdateBARSessionModificationRequest;
 typedef TlvOctet BARID;
 typedef TlvOctet CPFunctionFeatures;
 typedef TlvOctet UsageInformation;
@@ -311,10 +305,9 @@ typedef TlvOctet DLFlowLevelMarking;
 typedef TlvOctet HeaderEnrichment;
 typedef TlvOctet MeasurementInformation;
 typedef TlvOctet NodeReportType;
-typedef TlvOctet UserPlanePathFailureReport;
+//typedef TlvOctet UserPlanePathFailureReport;
 typedef TlvOctet RemoteGTPUPeer;
 typedef TlvOctet URSEQN;
-typedef TlvOctet UpdateDuplicatingParameters;
 typedef TlvOctet ActivatePredefinedRules;
 typedef TlvOctet DeactivatePredefinedRules;
 typedef TlvOctet FARID;
@@ -365,10 +358,10 @@ typedef struct _HeartbeatResponse {
     RecoveryTimeStamp recoveryTimeStamp;
 } __attribute__((packed)) HeartbeatResponse;
 
-typedef struct _PFD {
+typedef struct _PFDContext {
     unsigned long presence;
     PFDContents pFDContents;
-} __attribute__((packed)) PFD;
+} __attribute__((packed)) PFDContext;
 
 typedef struct _PFCPPFDManagementResponse {
     unsigned long presence;
@@ -414,17 +407,17 @@ typedef struct _PFCPAssociationReleaseResponse {
     Cause cause;
 } __attribute__((packed)) PFCPAssociationReleaseResponse;
 
+typedef struct _UserPlanePathFailureReport {
+    unsigned long presence;
+    RemoteGTPUPeer remoteGTPUPeer;
+} __attribute__((packed)) UserPlanePathFailureReport;
+
 typedef struct _PFCPNodeReportRequest {
     unsigned long presence;
     NodeID nodeID;
     NodeReportType nodeReportType;
     UserPlanePathFailureReport userPlanePathFailureReport;
 } __attribute__((packed)) PFCPNodeReportRequest;
-
-typedef struct _UserPlanePathFailure {
-    unsigned long presence;
-    RemoteGTPUPeer remoteGTPUPeer;
-} __attribute__((packed)) UserPlanePathFailure;
 
 typedef struct _PFCPNodeReportResponse {
     unsigned long presence;
@@ -463,7 +456,7 @@ typedef struct _EthernetPacketFilter {
     SDFFilter sDFFilter;
 } __attribute__((packed)) EthernetPacketFilter;
 
-typedef struct _ForwardingParametersIEInFAR {
+typedef struct _ForwardingParameters {
     unsigned long presence;
     DestinationInterface destinationInterface;
     NetworkInstance networkInstance;
@@ -474,15 +467,15 @@ typedef struct _ForwardingParametersIEInFAR {
     HeaderEnrichment headerEnrichment;
     TrafficEndpointID linkedTrafficEndpointID;
     Proxying proxying;
-} __attribute__((packed)) ForwardingParametersIEInFAR;
+} __attribute__((packed)) ForwardingParameters;
 
-typedef struct _DuplicatingParametersIEInFAR {
+typedef struct _DuplicatingParameters {
     unsigned long presence;
     DestinationInterface destinationInterface;
     OuterHeaderCreation outerHeaderCreation;
     TransportLevelMarking transportLevelMarking;
     ForwardingPolicy forwardingPolicy;
-} __attribute__((packed)) DuplicatingParametersIEInFAR;
+} __attribute__((packed)) DuplicatingParameters;
 
 typedef struct _AggregatedURRs {
     unsigned long presence;
@@ -557,7 +550,7 @@ typedef struct _CreatedTrafficEndpoint {
     FTEID localFTEID;
 } __attribute__((packed)) CreatedTrafficEndpoint;
 
-typedef struct _UpdateForwardingParametersIEInFAR {
+typedef struct _UpdateForwardingParameters {
     unsigned long presence;
     DestinationInterface destinationInterface;
     NetworkInstance networkInstance;
@@ -568,15 +561,15 @@ typedef struct _UpdateForwardingParametersIEInFAR {
     HeaderEnrichment headerEnrichment;
     PFCPSMReqFlags pFCPSMReqFlags;
     TrafficEndpointID linkedTrafficEndpointID;
-} __attribute__((packed)) UpdateForwardingParametersIEInFAR;
+} __attribute__((packed)) UpdateForwardingParameters;
 
-typedef struct _UpdateDuplicatingParametersIEInFAR {
+typedef struct _UpdateDuplicatingParameters {
     unsigned long presence;
     DestinationInterface destinationInterface;
     OuterHeaderCreation outerHeaderCreation;
     TransportLevelMarking transportLevelMarking;
     ForwardingPolicy forwardingPolicy;
-} __attribute__((packed)) UpdateDuplicatingParametersIEInFAR;
+} __attribute__((packed)) UpdateDuplicatingParameters;
 
 typedef struct _UpdateURR {
     unsigned long presence;
@@ -629,10 +622,10 @@ typedef struct _RemoveURR {
     URRID uRRID;
 } __attribute__((packed)) RemoveURR;
 
-typedef struct _RemoveQERIEPFCPSessionModificationRequest {
+typedef struct _RemoveQER {
     unsigned long presence;
     QERID qERID;
-} __attribute__((packed)) RemoveQERIEPFCPSessionModificationRequest;
+} __attribute__((packed)) RemoveQER;
 
 typedef struct _QueryURR {
     unsigned long presence;
@@ -690,14 +683,14 @@ typedef struct _ErrorIndicationReport {
     FTEID remoteFTEID;
 } __attribute__((packed)) ErrorIndicationReport;
 
-typedef struct _UpdateBARIEInPFCPSessionReportResponse {
+typedef struct _UpdateBARPFCPSessionReportResponse {
     unsigned long presence;
     BARID bARID;
     DownlinkDataNotificationDelay downlinkDataNotificationDelay;
     DLBufferingDuration dLBufferingDuration;
     DLBufferingSuggestedPacketCount dLBufferingSuggestedPacketCount;
     SuggestedBufferingPacketsCount suggestedBufferingPacketsCount;
-} __attribute__((packed)) UpdateBARIEInPFCPSessionReportResponse;
+} __attribute__((packed)) UpdateBARPFCPSessionReportResponse;
 
 typedef struct _ApplicationIDsPFDs {
     unsigned long presence;
@@ -736,8 +729,8 @@ typedef struct _CreateFAR {
     unsigned long presence;
     FARID fARID;
     ApplyAction applyAction;
-    ForwardingParametersIEInFAR forwardingParameters;
-    DuplicatingParametersIEInFAR duplicatingParameters;
+    ForwardingParameters forwardingParameters;
+    DuplicatingParameters duplicatingParameters;
     BARID bARID;
 } __attribute__((packed)) CreateFAR;
 
@@ -792,8 +785,8 @@ typedef struct _UpdateFAR {
     unsigned long presence;
     FARID fARID;
     ApplyAction applyAction;
-    UpdateForwardingParametersIEInFAR updateForwardingParameters;
-    UpdateDuplicatingParametersIEInFAR updateDuplicatingParameters;
+    UpdateForwardingParameters updateForwardingParameters;
+    UpdateDuplicatingParameters updateDuplicatingParameters;
     BARID bARID;
 } __attribute__((packed)) UpdateFAR;
 

@@ -27,36 +27,7 @@ func HandlePDUSessionSMContextCreate(rspChan chan smf_message.HandlerResponseMes
 
 	smContext.PDUAddress = smf_context.AllocUEIP()
 
-	if request.BinaryDataN1SmMessage != nil {
-		m := nas.NewMessage()
-		err := m.GsmMessageDecode(&request.BinaryDataN1SmMessage)
-		if err != nil || m.GsmHeader.GetMessageType() != nas.MsgTypePDUSessionEstablishmentRequest {
-			rspChan <- smf_message.HandlerResponseMessage{
-				HTTPResponse: &http_wrapper.Response{
-					Header: nil,
-					Status: http.StatusForbidden,
-					Body: models.PostSmContextsErrorResponse{
-						JsonData: &models.SmContextCreateError{
-							Error: &Nsmf_PDUSession.N1SmError,
-						},
-					},
-				},
-			}
-		}
-
-		establishmentRequest := m.PDUSessionEstablishmentRequest
-
-		smContext.PDUSessionID = int32(establishmentRequest.PDUSessionID.Octet)
-		smContext.SetCreateData(createData)
-		response.JsonData = smContext.BuildCreatedData()
-		rspChan <- smf_message.HandlerResponseMessage{HTTPResponse: &http_wrapper.Response{
-			Header: http.Header{
-				"Location": {smContext.Ref},
-			},
-			Status: http.StatusCreated,
-			Body:   response,
-		}}
-	} else {
+	if request.BinaryDataN1SmMessage == nil {
 		rspChan <- smf_message.HandlerResponseMessage{
 			HTTPResponse: &http_wrapper.Response{
 				Header: nil,
@@ -71,11 +42,57 @@ func HandlePDUSessionSMContextCreate(rspChan chan smf_message.HandlerResponseMes
 		return
 	}
 
+	selectedUPF := smf_context.SelectUPFByDnn(createData.Dnn)
+	if selectedUPF == nil {
+		logger.PduSessLog.Errorf("UPF for serve DNN[%s] not found\n", createData.Dnn)
+		rspChan <- smf_message.HandlerResponseMessage{
+			HTTPResponse: &http_wrapper.Response{
+				Header: nil,
+				Status: http.StatusForbidden,
+				Body: models.PostSmContextsErrorResponse{
+					JsonData: &models.SmContextCreateError{
+						Error:   &Nsmf_PDUSession.DnnNotSupported,
+						N1SmMsg: &models.RefToBinaryData{ContentId: "N1Msg"},
+					},
+				},
+			},
+		}
+	}
+
+	m := nas.NewMessage()
+	err := m.GsmMessageDecode(&request.BinaryDataN1SmMessage)
+	if err != nil || m.GsmHeader.GetMessageType() != nas.MsgTypePDUSessionEstablishmentRequest {
+		rspChan <- smf_message.HandlerResponseMessage{
+			HTTPResponse: &http_wrapper.Response{
+				Header: nil,
+				Status: http.StatusForbidden,
+				Body: models.PostSmContextsErrorResponse{
+					JsonData: &models.SmContextCreateError{
+						Error: &Nsmf_PDUSession.N1SmError,
+					},
+				},
+			},
+		}
+		return
+	}
+
+	establishmentRequest := m.PDUSessionEstablishmentRequest
+
+	smContext.PDUSessionID = int32(establishmentRequest.PDUSessionID.Octet)
+	smContext.SetCreateData(createData)
+	response.JsonData = smContext.BuildCreatedData()
+	rspChan <- smf_message.HandlerResponseMessage{HTTPResponse: &http_wrapper.Response{
+		Header: http.Header{
+			"Location": {smContext.Ref},
+		},
+		Status: http.StatusCreated,
+		Body:   response,
+	}}
+
 	// TODO: UECM registration
 
 	smContext.Tunnel = new(smf_context.UPTunnel)
-
-	smContext.Tunnel.Node = smf_context.SelectUPFByDnn(smContext.Dnn)
+	smContext.Tunnel.Node = selectedUPF
 	tunnel := smContext.Tunnel
 	// Establish UP
 
@@ -142,7 +159,7 @@ func HandlePDUSessionSMContextCreate(rspChan chan smf_message.HandlerResponseMes
 	}
 }
 
-func HandlePDUSessionSMContextUpdate(rspChan chan smf_message.HandlerResponseMessage, smContextRef string, body models.UpdateSmContextRequest) {
+func HandlePDUSessionSMContextUpdate(rspChan chan smf_message.HandlerResponseMessage, smContextRef string, body models.UpdateSmContextRequest) (seqNum uint32, resBody models.UpdateSmContextResponse) {
 	smContext := smf_context.GetSMContext(smContextRef)
 
 	if smContext == nil {
@@ -194,6 +211,11 @@ func HandlePDUSessionSMContextUpdate(rspChan chan smf_message.HandlerResponseMes
 
 	}
 
+	tunnel := smContext.Tunnel
+	pdr_list := []*smf_context.PDR{}
+	far_list := []*smf_context.FAR{}
+	bar_list := []*smf_context.BAR{}
+
 	switch smContextUpdateData.UpCnxState {
 	case models.UpCnxState_ACTIVATING:
 		response.JsonData.N2SmInfo = &models.RefToBinaryData{ContentId: "PDUSessionResourceSetupRequestTransfer"}
@@ -211,13 +233,34 @@ func HandlePDUSessionSMContextUpdate(rspChan chan smf_message.HandlerResponseMes
 		smContext.UpCnxState = body.JsonData.UpCnxState
 		smContext.UeLocation = body.JsonData.UeLocation
 		// TODO: Deactivate N2 downlink tunnel
+		//Set FAR and An, N3 Release Info
+		if tunnel.DLPDR == nil {
+			logger.PduSessLog.Errorf("Release Error")
+		} else {
+			tunnel.DLPDR.FAR.State = smf_context.RULE_UPDATE
+			tunnel.DLPDR.FAR.ApplyAction.Forw = false
+			tunnel.DLPDR.FAR.ApplyAction.Buff = true
+			tunnel.DLPDR.FAR.ApplyAction.Nocp = true
+
+			if tunnel.DLPDR.FAR.BAR == nil {
+				tunnel.DLPDR.FAR.BAR = smContext.Tunnel.Node.AddBAR()
+				bar_list = []*smf_context.BAR{tunnel.DLPDR.FAR.BAR}
+			}
+
+		}
+
+		far_list = []*smf_context.FAR{tunnel.DLPDR.FAR}
 	}
 
 	var err error
-	tunnel := smContext.Tunnel
+
 	switch smContextUpdateData.N2SmInfoType {
 	case models.N2SmInfoType_PDU_RES_SETUP_RSP:
-		tunnel.DLPDR = smContext.Tunnel.Node.AddPDR()
+		if tunnel.DLPDR == nil {
+			tunnel.DLPDR = smContext.Tunnel.Node.AddPDR()
+		} else {
+			tunnel.DLPDR.State = smf_context.RULE_UPDATE
+		}
 		tunnel.DLPDR.Precedence = 32
 		tunnel.DLPDR.PDI = smf_context.PDI{
 			SourceInterface: pfcpType.SourceInterface{
@@ -238,6 +281,10 @@ func HandlePDUSessionSMContextUpdate(rspChan chan smf_message.HandlerResponseMes
 		}
 
 		tunnel.DLPDR.FAR.ApplyAction.Forw = true
+		tunnel.DLPDR.FAR.ApplyAction.Nocp = false
+		tunnel.DLPDR.FAR.ApplyAction.Drop = false
+		tunnel.DLPDR.FAR.ApplyAction.Buff = false
+		tunnel.DLPDR.FAR.ApplyAction.Dupl = false
 		tunnel.DLPDR.FAR.ForwardingParameters = &smf_context.ForwardingParameters{
 			DestinationInterface: pfcpType.DestinationInterface{
 				InterfaceValue: pfcpType.DestinationInterfaceAccess,
@@ -247,6 +294,10 @@ func HandlePDUSessionSMContextUpdate(rspChan chan smf_message.HandlerResponseMes
 			},
 		}
 		err = smf_context.HandlePDUSessionResourceSetupResponseTransfer(body.BinaryDataN2SmInformation, smContext)
+
+		pdr_list = []*smf_context.PDR{tunnel.DLPDR}
+		far_list = []*smf_context.FAR{tunnel.DLPDR.FAR}
+
 	case models.N2SmInfoType_PATH_SWITCH_REQ:
 		err = smf_context.HandlePathSwitchRequestTransfer(body.BinaryDataN2SmInformation, smContext)
 		n2Buf, err := smf_context.BuildPathSwitchRequestAcknowledgeTransfer(smContext)
@@ -259,6 +310,10 @@ func HandlePDUSessionSMContextUpdate(rspChan chan smf_message.HandlerResponseMes
 		response.JsonData.N2SmInfo = &models.RefToBinaryData{
 			ContentId: "PATH_SWITCH_REQ_ACK",
 		}
+
+		pdr_list = []*smf_context.PDR{tunnel.DLPDR}
+		far_list = []*smf_context.FAR{tunnel.DLPDR.FAR}
+
 	case models.N2SmInfoType_PATH_SWITCH_SETUP_FAIL:
 		err = smf_context.HandlePathSwitchRequestSetupFailedTransfer(body.BinaryDataN2SmInformation, smContext)
 	}
@@ -271,15 +326,10 @@ func HandlePDUSessionSMContextUpdate(rspChan chan smf_message.HandlerResponseMes
 		IP:   smContext.Tunnel.Node.NodeID.NodeIdValue,
 		Port: pfcpUdp.PFCP_PORT,
 	}
-	pdr_list := []*smf_context.PDR{tunnel.DLPDR}
-	far_list := []*smf_context.FAR{tunnel.DLPDR.FAR}
-	pfcp_message.SendPfcpSessionModificationRequest(&addr, smContext, pdr_list, far_list)
 
-	rspChan <- smf_message.HandlerResponseMessage{HTTPResponse: &http_wrapper.Response{
-		Header: nil,
-		Status: http.StatusOK,
-		Body:   response,
-	}}
+	seqNum = pfcp_message.SendPfcpSessionModificationRequest(&addr, smContext, pdr_list, far_list, bar_list)
+
+	return seqNum, response
 }
 
 func HandlePDUSessionSMContextRelease(rspChan chan smf_message.HandlerResponseMessage, smContextRef string, body models.ReleaseSmContextRequest) {

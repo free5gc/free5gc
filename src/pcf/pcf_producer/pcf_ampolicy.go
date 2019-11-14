@@ -18,13 +18,12 @@ import (
 	"github.com/antihax/optional"
 )
 
-func DeletePoliciesPolAssoId(httpChannel chan pcf_message.HttpResponseMessage, ReqURI string) {
+func DeletePoliciesPolAssoId(httpChannel chan pcf_message.HttpResponseMessage, polAssoId string) {
 	var problem models.ProblemDetails
-	URI := ReqURI
-	pcfUeContext := pcf_context.GetPCFUeContext()
+	ID := polAssoId
+	pcfUeContext := pcf_context.PCF_Self().UePool
 	for key := range pcfUeContext {
-		var URITemp = pcf_context.AmpolicyUri + pcfUeContext[key].PolAssociationIDStore.PolAssoId
-		if URI == URITemp {
+		if ID == pcfUeContext[key].PolAssociationIDStore.PolAssoId {
 			var subsId = pcfUeContext[key].PolAssociationIDStore.PolAssoId
 			delete(pcfUeContext, key)
 			pcf_message.SendHttpResponseMessage(httpChannel, nil, 204, nil)
@@ -45,17 +44,15 @@ func DeletePoliciesPolAssoId(httpChannel chan pcf_message.HttpResponseMessage, R
 }
 
 // PoliciesPolAssoIdGet -
-func GetPoliciesPolAssoId(httpChannel chan pcf_message.HttpResponseMessage, ReqURI string) {
+func GetPoliciesPolAssoId(httpChannel chan pcf_message.HttpResponseMessage, polAssoId string) {
 	var problem models.ProblemDetails
-	URI := ReqURI
-	pcfUeContext := pcf_context.GetPCFUeContext()
-	logger.AMpolicylog.Traceln("ampolicy request uri", URI)
+	ID := polAssoId
+	pcfUeContext := pcf_context.PCF_Self().UePool
 	for key := range pcfUeContext {
 		if pcfUeContext[key].PolAssociationIDStore == nil {
 			continue
 		}
-		var URITemp = pcf_context.AmpolicyUri + pcfUeContext[key].PolAssociationIDStore.PolAssoId
-		if URI == URITemp {
+		if ID == pcfUeContext[key].PolAssociationIDStore.PolAssoId {
 			pcf_message.SendHttpResponseMessage(httpChannel, nil, 200, pcfUeContext[key].PolAssociationIDStore.PolAssoidTemp)
 			return
 		}
@@ -66,15 +63,15 @@ func GetPoliciesPolAssoId(httpChannel chan pcf_message.HttpResponseMessage, ReqU
 	}
 
 }
-func UpdatePostPoliciesPolAssoId(httpChannel chan pcf_message.HttpResponseMessage, ReqURI string, body models.PolicyAssociationUpdateRequest) {
+func UpdatePostPoliciesPolAssoId(httpChannel chan pcf_message.HttpResponseMessage, ReqURI string, polAssoId string, body models.PolicyAssociationUpdateRequest) {
 	var policyAssociationUpdateRequest models.PolicyAssociationUpdateRequest = body
 	var policyUpdate models.PolicyUpdate
 	var problem models.ProblemDetails
-	URI := ReqURI
-	pcfUeContext := pcf_context.GetPCFUeContext()
+	ID := polAssoId
+	pcfUeContext := pcf_context.PCF_Self().UePool
+
 	for key := range pcfUeContext {
-		var URITemp = pcf_context.AmpolicyUri + pcfUeContext[key].PolAssociationIDStore.PolAssoId + "/update"
-		if URI == URITemp {
+		if ID == pcfUeContext[key].PolAssociationIDStore.PolAssoId {
 			for triggersindex := range policyAssociationUpdateRequest.Triggers {
 				if policyAssociationUpdateRequest.Triggers[triggersindex] == "LOC_CH" {
 					if err := copier.Copy(&pcfUeContext[key].PolAssociationIDStore.PolAssoidTemp.Request.UserLoc, &policyAssociationUpdateRequest.UserLoc); err != nil {
@@ -99,12 +96,12 @@ func UpdatePostPoliciesPolAssoId(httpChannel chan pcf_message.HttpResponseMessag
 				}
 			}
 			policyUpdate.Triggers = &policyAssociationUpdateRequest.Triggers
-			policyUpdate.ResourceUri = URI
+			policyUpdate.ResourceUri = ReqURI
 			pcfUeContext[key].PolAssociationIDStore.PolAssoidUpdateTemp = policyUpdate
 			pcf_message.SendHttpResponseMessage(httpChannel, nil, 200, policyUpdate)
 			return
 		}
-		if URI != URITemp {
+		if ID != pcfUeContext[key].PolAssociationIDStore.PolAssoId {
 			problem.Status = 404
 			problem.Cause = "CONTEXT_NOT_FOUND"
 			pcf_message.SendHttpResponseMessage(httpChannel, nil, 404, problem)
@@ -121,7 +118,8 @@ func PostPolicies(httpChannel chan pcf_message.HttpResponseMessage, ReqURI strin
 	var subscriptiondata models.SubscriptionData
 	var guami models.Guami
 	var problem models.ProblemDetails
-	pcfUeContext := pcf_context.GetPCFUeContext()
+	pcfSelf := pcf_context.PCF_Self()
+	pcfUeContext := pcfSelf.UePool
 	if policyAssociationRequest.NotificationUri != "" && policyAssociationRequest.Supi != "" && policyAssociationRequest.SuppFeat != "" {
 		for key := range pcfUeContext {
 			if pcfUeContext[key].PolAssociationIDStore.PolAssoidDataSubscriptionTemp.NotificationUri == "" {
@@ -152,8 +150,10 @@ func PostPolicies(httpChannel chan pcf_message.HttpResponseMessage, ReqURI strin
 			pcfUeContext[policyAssociationRequest.Supi].PolAssociationIDStore.PolAssoidDataSubscriptionTemp = policydatasubscription
 		}
 		supi := policyAssociationRequest.Supi
-		if err := pcf_context.NewPCFUe(supi); err != nil {
-			logger.AMpolicylog.Warnln("Create pcf ue context fail")
+		ue, err1 := pcfSelf.NewPCFUe(supi)
+		if err1 != nil {
+			logger.AMpolicylog.Errorln(err1.Error())
+			return
 		}
 
 		polAssociationContext := pcf_context.PolAssociationIDStore{
@@ -164,13 +164,13 @@ func PostPolicies(httpChannel chan pcf_message.HttpResponseMessage, ReqURI strin
 			},
 		}
 
-		pcfUeContext[supi].PolAssociationIDStore = &polAssociationContext
+		ue.PolAssociationIDStore = &polAssociationContext
 
 		if policyAssociationRequest.Guami != guami {
 			client := pcf_util.GetNamfClient()
 			subscriptiondata, _, err := client.SubscriptionsCollectionDocumentApi.AMFStatusChangeSubscribe(context.Background(), subscriptiondata)
 			if err == nil {
-				pcfUeContext[supi].PolAssociationIDStore.PolAssoidSubscriptiondataTemp = subscriptiondata
+				ue.PolAssociationIDStore.PolAssoidSubscriptiondataTemp = subscriptiondata
 			}
 		}
 
@@ -189,7 +189,7 @@ func PostPolicies(httpChannel chan pcf_message.HttpResponseMessage, ReqURI strin
 func AMPolicyUpdateNotification(id string, send_type string) {
 	var policyUpdate models.PolicyUpdate
 	var terminationNotification models.TerminationNotification
-	pcfUeContext := pcf_context.GetPCFUeContext()
+	pcfUeContext := pcf_context.PCF_Self().UePool
 	for key := range pcfUeContext {
 		idTemp := fmt.Sprint(pcfUeContext[key].PolAssociationIDStore.PolAssoId)
 		if id == idTemp {
@@ -238,7 +238,7 @@ func AMPolicyUpdateNotification(id string, send_type string) {
 				client := &http.Client{}
 				_, err = client.Do(req)
 				if err != nil {
-					fmt.Println("Nsmf Delete fail error message is : ", err)
+					fmt.Println("Namf Delete fail error message is : ", err)
 				}
 				return
 			} else {

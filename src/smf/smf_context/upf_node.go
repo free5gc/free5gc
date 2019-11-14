@@ -106,6 +106,11 @@ func (upf *UPF) farID() uint32 {
 	return upf.farCount
 }
 
+func (upf *UPF) barID() uint32 {
+	upf.barCount++
+	return upf.barCount
+}
+
 func (upf *UPF) AddPDR() (pdr *PDR) {
 	pdr = new(PDR)
 	pdr.PDRID = uint16(upf.pdrID())
@@ -119,4 +124,11 @@ func (upf *UPF) AddFAR() (far *FAR) {
 	far.FARID = upf.farID()
 	upf.farPool[len(upf.farPool)] = far
 	return far
+}
+
+func (upf *UPF) AddBAR() (bar *BAR) {
+	bar = new(BAR)
+	bar.BARID = uint8(upf.barID())
+	upf.barPool[len(upf.barPool)] = bar
+	return bar
 }

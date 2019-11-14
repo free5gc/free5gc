@@ -21,7 +21,7 @@ import (
 func DeleteAppSession(c *gin.Context) {
 
 	req := http_wrapper.NewRequest(c.Request, nil)
-	req.Params["ReqURI"] = c.Request.RequestURI
+	req.Params["appSessionId"], _ = c.Params.Get("appSessionId")
 	channelMsg := pcf_message.NewHttpChannelMessage(pcf_message.EventDeleteAppSession, req)
 
 	pcf_message.SendMessage(channelMsg)
@@ -35,7 +35,7 @@ func DeleteAppSession(c *gin.Context) {
 func GetAppSession(c *gin.Context) {
 
 	req := http_wrapper.NewRequest(c.Request, nil)
-	req.Params["ReqURI"] = c.Request.RequestURI
+	req.Params["appSessionId"], _ = c.Params.Get("appSessionId")
 	channelMsg := pcf_message.NewHttpChannelMessage(pcf_message.EventGetAppSession, req)
 
 	pcf_message.SendMessage(channelMsg)
@@ -51,7 +51,7 @@ func ModAppSession(c *gin.Context) {
 	c.BindJSON(&appSessionContextUpdateData)
 
 	req := http_wrapper.NewRequest(c.Request, appSessionContextUpdateData)
-	req.Params["ReqURI"] = c.Request.RequestURI
+	req.Params["appSessionId"], _ = c.Params.Get("appSessionId")
 	channelMsg := pcf_message.NewHttpChannelMessage(pcf_message.EventModAppSession, req)
 
 	pcf_message.SendMessage(channelMsg)

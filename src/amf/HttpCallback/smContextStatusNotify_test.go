@@ -10,6 +10,7 @@ import (
 	"free5gc/lib/CommonConsumerTestData/AMF/TestAmf"
 	"free5gc/lib/MongoDBLibrary"
 	"free5gc/lib/http2_util"
+	"free5gc/lib/nas"
 	"free5gc/lib/nas/nasMessage"
 	"free5gc/lib/nas/nasTestpacket"
 	"free5gc/lib/ngap/ngapType"

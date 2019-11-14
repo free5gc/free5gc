@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"free5gc/lib/ngap"
+	"free5gc/lib/ngap/ngapSctp"
 	"free5gc/src/amf/amf_service"
 	"free5gc/src/app"
 	"free5gc/src/ausf/ausf_service"
@@ -76,7 +77,17 @@ func conntectToAmf(amfIP, ranIP string, amfPort, ranPort int) (*sctp.SCTPConn, e
 	if err != nil {
 		return nil, err
 	}
-	return sctp.DialSCTP("sctp", ranAddr, amfAddr)
+	conn, err := sctp.DialSCTP("sctp", ranAddr, amfAddr)
+	if err != nil {
+		return nil, err
+	}
+	info, _ := conn.GetDefaultSentParam()
+	info.PPID = ngapSctp.NGAP_PPID
+	err = conn.SetDefaultSentParam(info)
+	if err != nil {
+		return nil, err
+	}
+	return conn, nil
 }
 
 func TestNGSetup(t *testing.T) {

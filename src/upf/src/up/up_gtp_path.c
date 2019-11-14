@@ -10,12 +10,14 @@
 Status GTPv1ServerInit() {
     Status status;
 
+    // TODO : One IP mapping to one dev, need to discuss
     status = GtpDevListCreate(Self()->epfd, AF_INET, &Self()->gtpv1DevList, GtpHandler, NULL);
     UTLT_Assert(status == STATUS_OK, return STATUS_ERROR, "GtpLinkListCreate fail");
 
     return STATUS_OK;
 }
 
+// TODO : GTPv1 Server Terminate
 Status GTPv1ServerTerminate() {
     Status status = STATUS_OK;
 
@@ -25,6 +27,7 @@ Status GTPv1ServerTerminate() {
     return status;
 }
 
+// TODO : Need to handle buffer and drop (Rule will be set at far)
 Status GtpHandler(Sock *sock, void *data) {
     UTLT_Assert(sock, return STATUS_ERROR, "GTP socket not found");
     Status status = STATUS_ERROR;
@@ -33,7 +36,7 @@ Status GtpHandler(Sock *sock, void *data) {
     int readNum = GtpRecv(sock, pktbuf);
     UTLT_Assert(readNum >= 0, goto FREEBUFBLK, "GTP receive fail");
 
-    // TODO: Need to handle buffering and reject, including GTP and general packet
+    // TODO : Need to handle buffering and reject, including GTP and general packet
     // Not only GTP packet
     Gtpv1Header *gtpHdr = pktbuf->buf;
     UTLT_Assert(gtpHdr->version == 1, goto FREEBUFBLK,
@@ -50,10 +53,12 @@ Status GtpHandler(Sock *sock, void *data) {
 
             break;
         case GTPV1_END_MARK :
+            // TODO : Need to deal with the UE packet that does not have tunnel yet
             status = GtpHandleEndMark(sock, gtpHdr);
             break;
         case GTPV1_T_PDU :
-            status = GtpHandleTPDU(sock, gtpHdr);
+            // TODO : Check PDR, FAR to forward packet, or maybe do paging and buffer UE packet
+            status = GtpHandleTPDU(sock, pktbuf);
             break;
         default : 
             UTLT_Warning("This type[%d] of GTPv1 header does not implement yet", gtpHdr->type);
@@ -121,27 +126,52 @@ Status GtpHandleEchoResponse(void *data) {
     UTLT_Assert(gtpHdr->type == GTPV1_ECHO_RESPONSE, return STATUS_ERROR, 
                 "The type of GTP data is not 'Echo Response'");
 
-    // TODO: Check the peer device exists, and ....
+    // TODO : Check the peer device exists, and ....
     // 29.281 says the restart conter shall be ignore by the receiver
 
     return STATUS_OK;
 }
 
+// TODO : Need to check fepc code
 Status GtpHandleEndMark(Sock *sock, void *data) {
     UTLT_Assert(sock && data, return STATUS_ERROR, "GTP data is NULL");
     Status status = STATUS_ERROR;
+    /*
+    Gtpv1Header *gtpHdr = data;
+    int teid = ntohl(gtpHdr->_teid);
+    int gtpPayloadLen = GTPV1_HEADER_LEN + (gtpHdr->seqFlag ? GTPV1_OPT_HEADER_LEN : 0);
+    
+    */
 
-    // TODO
+    // TODO : Check PDR, FAR to forward packet, or maybe do paging and buffer UE packet
+    /*
+    UTLT_Assert(GtpSend(sock, pktbuf) == STATUS_OK, goto FREEBUFBLK, "GTP Send fail");
 
+    status = STATUS_OK;
+
+FREEBUFBLK:
+    UTLT_Assert(BufblkFree(pktbuf) == STATUS_OK, status = STATUS_ERROR, "Bufblk free fail");
+*/
     status = STATUS_OK;
     return status;
 }
 
-Status GtpHandleTPDU(Sock *sock, void *data) {
+Status GtpHandleTPDU(Sock *sock, Bufblk *data) {
     UTLT_Assert(sock && data, return STATUS_ERROR, "GTP data is NULL");
     Status status = STATUS_ERROR;
+
+    Gtpv1Header *gtpHdr = data->buf;
+    int teid = ntohl(gtpHdr->_teid);
+
+    UpfSession *sess = UpfSessionFindByPdrTeid(teid);
+    if (sess == NULL) {
+        UTLT_Warning("The TEID[0x%x] does not match any session", teid);
+        return STATUS_OK;
+    }
     
-    // TODO
+    // Store the packet and trigger Data Notification
+    UTLT_Assert(UpfSessionPacketRecv(sess, data) == STATUS_OK, return STATUS_ERROR,
+                "UPF Store non-tunnel UE packet fail : TEID[0x%x]", teid);
 
     status = STATUS_OK;
     return status;

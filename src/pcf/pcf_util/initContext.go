@@ -1,6 +1,7 @@
 package pcf_util
 
 import (
+	"fmt"
 	"free5gc/lib/openapi/models"
 	"free5gc/src/pcf/factory"
 	"free5gc/src/pcf/logger"
@@ -18,6 +19,7 @@ func InitpcfContext(context *pcf_context.PCFContext) {
 		context.Name = configuration.PcfName
 	}
 	sbi := configuration.Sbi
+	context.NrfUri = configuration.NrfUri
 	context.UriScheme = models.UriScheme(sbi.Scheme)
 	context.HttpIPv4Address = "127.0.0.1" // default localhost
 	context.HttpIpv4Port = 29507          // default port
@@ -28,8 +30,22 @@ func InitpcfContext(context *pcf_context.PCFContext) {
 		if sbi.Port != 0 {
 			context.HttpIpv4Port = sbi.Port
 		}
+		if sbi.Scheme == "https" {
+			context.UriScheme = models.UriScheme_HTTPS
+		} else {
+			context.UriScheme = models.UriScheme_HTTP
+		}
 	}
-
+	serviceNameList := configuration.ServiceNameList
+	nfService := context.InitNFService(serviceNameList, config.Info.Version)
 	context.TimeFormat = configuration.TimeFormat
 	context.DefaultBdtRefId = configuration.DefaultBdtRefId
+	pcfServiceUris := make(map[models.ServiceName]string, len(serviceNameList))
+	for index, nameString := range serviceNameList {
+		name := models.ServiceName(nameString)
+		version := *nfService[index].Versions
+		if name == nfService[index].ServiceName {
+			pcfServiceUris[name] = nfService[index].ApiPrefix + "/" + fmt.Sprint(nfService[index].ServiceName) + "/" + version[0].ApiVersionInUri
+		}
+	}
 }

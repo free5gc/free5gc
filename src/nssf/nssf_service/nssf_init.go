@@ -15,11 +15,14 @@ import (
 	"github.com/urfave/cli"
 
 	"free5gc/lib/http2_util"
+	"free5gc/lib/path_util"
 	"free5gc/src/app"
 	"free5gc/src/nssf/NSSAIAvailability"
 	"free5gc/src/nssf/NSSelection"
 	"free5gc/src/nssf/factory"
 	"free5gc/src/nssf/logger"
+	"free5gc/src/nssf/nssf_consumer"
+	"free5gc/src/nssf/nssf_context"
 	"free5gc/src/nssf/nssf_handler"
 	"free5gc/src/nssf/util"
 )
@@ -63,8 +66,14 @@ func (*NSSF) Initialize(c *cli.Context) {
 	}
 
 	if config.nssfcfg != "" {
-		factory.InitConfigFactory(config.nssfcfg)
+		initLog.Infof("Read configuration file %s", config.nssfcfg)
+		factory.InitConfigFactory(path_util.Gofree5gcPath(config.nssfcfg))
+	} else {
+		initLog.Warnln("No configuration file is provided")
+		factory.InitConfigFactory(path_util.Gofree5gcPath(util.DEFAULT_CONFIG))
 	}
+
+	nssf_context.InitNssfContext()
 
 	initLog.Traceln("NSSF debug level(string):", app.ContextSelf().Logger.NSSF.DebugLevel)
 	if app.ContextSelf().Logger.NSSF.DebugLevel != "" {
@@ -101,7 +110,20 @@ func (nssf *NSSF) Start() {
 
 	go nssf_handler.Handle()
 
-	server, err := http2_util.NewServer(":29531", util.NSSF_LOG_PATH, router)
+	self := nssf_context.NSSF_Self()
+	addr := fmt.Sprintf("%s:%d", self.HttpIpv4Address, self.Port)
+
+	// Register to NRF
+	profile, err := nssf_consumer.BuildNFProfile(self)
+	if err != nil {
+		initLog.Error("Failed to build NSSF profile")
+	}
+	_, err = nssf_consumer.SendRegisterNFInstance(self.NrfUri, self.NfId, profile)
+	if err != nil {
+		initLog.Errorf("Failed to register NSSF to NRF: %s", err.Error())
+	}
+
+	server, err := http2_util.NewServer(addr, util.NSSF_LOG_PATH, router)
 	if err == nil && server != nil {
 		initLog.Infoln(server.ListenAndServeTLS(util.NSSF_PEM_PATH, util.NSSF_KEY_PATH))
 	}

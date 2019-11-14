@@ -24,6 +24,7 @@ static void SignalHandler(int sigval);
 
 void UpThread(ThreadID id, void *data);
 
+// TODO : Add other init in this part for UPF
 Status UpfInit(char *configPath) {
     Status status;
 
@@ -180,6 +181,7 @@ void UpThread(ThreadID id, void *data) {
         for (int i = 0; i < nfds; i++) {
             sockPtr = events[i].data.ptr;
             status = sockPtr->handler(sockPtr, sockPtr->data);
+            // TODO : Log may show which socket
             UTLT_Assert(status == STATUS_OK, , "Error handling UP socket");
         }
     }

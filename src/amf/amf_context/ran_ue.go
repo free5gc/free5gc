@@ -15,7 +15,7 @@ import (
 type RelAction int
 
 const (
-	RanUeNgapIdUnspecified int64 = 0xffffffff
+	RanUeNgapIdUnspecified int64 = 4294967296
 )
 const (
 	UeContextN2NormalRelease RelAction = iota

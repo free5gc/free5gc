@@ -1,9 +1,10 @@
 package pcf_context
 
 import (
-	"errors"
 	"fmt"
 	"free5gc/lib/openapi/models"
+	"strconv"
+	"strings"
 )
 
 var pcfContext = PCFContext{}
@@ -13,6 +14,9 @@ func init() {
 	PCF_Self().UriScheme = models.UriScheme_HTTPS
 	PCF_Self().TimeFormat = "2006-01-02 15:04:05"
 	PCF_Self().DefaultBdtRefId = "BdtPolicyId-"
+	PCF_Self().NfService = make(map[models.ServiceName]models.NfService)
+	PCF_Self().PcfServiceUris = make(map[models.ServiceName]string)
+	PCF_Self().UePool = make(map[string]*PCFUeContext)
 }
 
 type PCFContext struct {
@@ -24,10 +28,13 @@ type PCFContext struct {
 	TimeFormat      string
 	DefaultBdtRefId string
 	NfService       map[models.ServiceName]models.NfService
-	AmpolicyUri     string
+	PcfServiceUris  map[models.ServiceName]string
+	NrfUri          string
+	UdrUri          string
 	NotifiUri       string
 	BdtPolicyUri    string
 	BdtUri          string
+	UePool          map[string]*PCFUeContext
 }
 
 // Create new PCF context
@@ -37,12 +44,20 @@ func PCF_Self() *PCFContext {
 func GetTimeformat() string {
 	return pcfContext.TimeFormat
 }
-func Getampolicyuri() string {
-	return pcfContext.AmpolicyUri
+func GetPcfContext() PCFContext {
+	return pcfContext
 }
 
-var AmpolicyUri = "/npcf-am-policy-control/v1/policies/"
+// func GetAmpolicyUri() string {
+// 	return pcfContext.AmpolicyUri
+// }
+func GetUri(name models.ServiceName) string {
+	return pcfContext.PcfServiceUris[name]
+}
+
+var AmpolicyUri = "/npcf-am-policy-control/v1"
 var SmpolicyUri = "/npcf-smpolicycontrol/v1/sm-policies/"
+var PolicyAuthorizationUri = "/npcf-policyauthorization/v1/app-sessions/"
 var SmUri = "/npcf-smpolicycontrol/v1"
 var IPv4Address = "192.168."
 var IPv6Address = "ffab::"
@@ -57,77 +72,68 @@ const DefaultBdtRefId = "BdtPolicyId-"
 var BdtPolicyUri = "/npcf-bdtpolicycontrol/v1/bdtpolicies/"
 var BdtUri = "/npcf-bdtpolicycontrol/v1"
 
-// key is supi
-var pcfUeContext = make(map[string]*PCFUeContext)
-
-type PCFUeContext struct {
-	Supi                        string
-	AspId                       string
-	AppSessionIdStore           *AppSessionIdStore
-	PolAssociationIDStore       *PolAssociationIDStore
-	SmPolicyControlStore        *models.SmPolicyControl
-	PolicyDataSubscriptionStore *models.PolicyDataSubscription
-	BdtPolicyTimeout            bool
-	BdtPolicyStore              *models.BdtPolicy
-	PolicyDataChangeStore       *models.PolicyDataChangeNotification
+func (context *PCFContext) GetIPv4Uri() string {
+	return fmt.Sprintf("%s://%s:%d", context.UriScheme, context.HttpIPv4Address, context.HttpIpv4Port)
 }
 
-func CheckAspidOnPcfUeContext(aspId string) (key string, err error) {
-	for key := range pcfUeContext {
-		if aspId == pcfUeContext[key].AspId {
-			return key, nil
+func (context *PCFContext) InitNFService(serviceName []string, version string) []models.NfService {
+	tmpVersion := strings.Split(version, ".")
+	versionUri := "v" + tmpVersion[0]
+	NFServices := make([]models.NfService, len(serviceName))
+	for index, nameString := range serviceName {
+		name := models.ServiceName(nameString)
+		NFServices[index] = models.NfService{
+			ServiceInstanceId: strconv.Itoa(index),
+			ServiceName:       name,
+			Versions: &[]models.NfServiceVersion{
+				{
+					ApiFullVersion:  version,
+					ApiVersionInUri: versionUri,
+				},
+			},
+			Scheme:          context.UriScheme,
+			NfServiceStatus: models.NfServiceStatus_REGISTERED,
+			ApiPrefix:       context.GetIPv4Uri(),
+			IpEndPoints: &[]models.IpEndPoint{
+				{
+					Ipv4Address: context.HttpIPv4Address,
+					Transport:   models.TransportProtocol_TCP,
+					Port:        int32(context.HttpIpv4Port),
+				},
+			},
 		}
 	}
-	return "", errors.New(" Not found Aspid on PcfUeContext ")
+	return NFServices
 }
 
-func GetPCFUeContext() (make map[string]*PCFUeContext) {
-	return pcfUeContext
-}
-
-func NewPCFUe(Supi string) error {
+func (context *PCFContext) NewPCFUe(Supi string) (*PCFUeContext, error) {
 	if Supi != "" {
-		pcfUeContext[Supi] = &PCFUeContext{}
-		pcfUeContext[Supi].Supi = Supi
-		return nil
+		context.UePool[Supi] = &PCFUeContext{}
+		context.UePool[Supi].Pras = make(map[string]models.PresenceInfoRm)
+		context.UePool[Supi].SmPolicyData = make(map[string]*PCFUeSmPolicyData)
+		context.UePool[Supi].Supi = Supi
+		return context.UePool[Supi], nil
 	} else {
-		return errors.New(" add Ue context fail ")
+		return nil, fmt.Errorf(" add Ue context fail ")
 	}
 }
 
-func AddAspIdToUe(Supi string, aspId string) error {
-	if Supi != "" {
-		pcfUeContext[Supi] = &PCFUeContext{}
-		pcfUeContext[Supi].AspId = aspId
-		return nil
-	} else {
-		return errors.New(" add aspId to Ue context fail ")
+func (context *PCFContext) PCFUeFindByIPv4(v4 string) *PCFUeContext {
+	for _, ue := range context.UePool {
+		if ue.SmPolicyControlStore.Context.Ipv4Address == v4 {
+			return ue
+		}
 	}
+	return nil
 }
-
-// polAssoidTemp -
-type PolAssociationIDStore struct {
-	PolAssoId                     string
-	PolAssoidTemp                 models.PolicyAssociation
-	PolAssoidUpdateTemp           models.PolicyUpdate
-	PolAssoidSubcCatsTemp         models.AmPolicyData
-	PolAssoidDataSubscriptionTemp models.PolicyDataSubscription
-	PolAssoidSubscriptiondataTemp models.SubscriptionData
+func (context *PCFContext) PCFUeFindByIPv6(v6 string) *PCFUeContext {
+	for _, ue := range context.UePool {
+		if ue.SmPolicyControlStore.Context.Ipv6AddressPrefix == v6 {
+			return ue
+		}
+	}
+	return nil
 }
-
-//var polAssociationContextStore []PolAssociationIDStore
-
-// AppSessionIdStore -
-type AppSessionIdStore struct {
-	AppSessionId      string
-	AppSessionContext models.AppSessionContext
-}
-
-var AppSessionContextStore []AppSessionIdStore
-
-// BdtPolicyData_store -
-var BdtPolicyData_store []models.BdtPolicyData
-var CreateFailBdtDateStore []models.BdtData
 
 func Ipv4Pool(ipindex int32) string {
 	ipv4address := IPv4Address + fmt.Sprint((int(ipindex)/255)+1) + "." + fmt.Sprint(int(ipindex)%255)

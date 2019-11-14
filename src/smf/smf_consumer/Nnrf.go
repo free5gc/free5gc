@@ -2,16 +2,18 @@ package smf_consumer
 
 import (
 	"context"
-	"github.com/antihax/optional"
-	"github.com/mohae/deepcopy"
+	"fmt"
 	"free5gc/lib/Nnrf_NFDiscovery"
 	"free5gc/lib/openapi/models"
 	"free5gc/src/smf/logger"
 	"free5gc/src/smf/smf_context"
 	"net/http"
+
+	"github.com/antihax/optional"
+	"github.com/mohae/deepcopy"
 )
 
-func SendNFRegistration() {
+func SendNFRegistration() error {
 
 	//set nfProfile
 	profile := models.NfProfile{
@@ -27,19 +29,35 @@ func SendNFRegistration() {
 	rep, res, err := smf_context.SMF_Self().NFManagementClient.NFInstanceIDDocumentApi.RegisterNFInstance(context.TODO(), smf_context.SMF_Self().NfInstanceID, profile)
 
 	if err != nil {
-		logger.AppLog.Panic(err)
+		return err
 	}
 
 	if res != nil {
 		if status := res.StatusCode; status != http.StatusOK {
 			if status != http.StatusCreated {
-				logger.AppLog.Info("handler returned wrong status code", status)
+				logger.AppLog.Infof("handler returned wrong status code %d", status)
+				return fmt.Errorf("NRF return wrong status code %d", status)
 			}
 		}
 	}
 
 	logger.InitLog.Infof("SMF Registration to NRF %v", rep)
+	return nil
+}
 
+func RetrySendNFRegistration(MaxRetry int) error {
+
+	retryCount := 0
+	for retryCount < MaxRetry {
+		err := SendNFRegistration()
+		if err == nil {
+			return nil
+		}
+		logger.AppLog.Warnf("Send NFRegistration Failed by %v", err)
+		retryCount++
+	}
+
+	return fmt.Errorf("[SMF] Retry NF Registration has meet maximum")
 }
 
 func SendNFDeregistration() {
@@ -67,7 +85,7 @@ func SendNFDiscoveryUDM() {
 	// Check data
 	rep, res, err := smf_context.SMF_Self().NFDiscoveryClient.NFInstancesStoreApi.SearchNFInstances(context.TODO(), targetNfType, requesterNfType, &localVarOptionals)
 	if err != nil {
-		logger.AppLog.Panic(err)
+		return
 	}
 	if res != nil {
 		if status := res.StatusCode; status != http.StatusOK {
@@ -90,7 +108,7 @@ func SendNFDiscoveryPCF() {
 	// Check data
 	rep, res, err := smf_context.SMF_Self().NFDiscoveryClient.NFInstancesStoreApi.SearchNFInstances(context.TODO(), targetNfType, requesterNfType, &localVarOptionals)
 	if err != nil {
-		logger.AppLog.Panic(err)
+		return
 	}
 	if res != nil {
 		if status := res.StatusCode; status != http.StatusOK {

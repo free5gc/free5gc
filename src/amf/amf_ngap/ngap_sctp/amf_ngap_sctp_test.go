@@ -1,6 +1,7 @@
 package amf_ngap_sctp_test
 
 import (
+	"encoding/binary"
 	"encoding/hex"
 	"free5gc/src/amf/amf_handler"
 	"net"
@@ -10,7 +11,7 @@ import (
 
 	"github.com/ishidawataru/sctp"
 
-	"free5gc/src/amf/amf_ngap/ngap_sctp"
+	amf_ngap_sctp "free5gc/src/amf/amf_ngap/ngap_sctp"
 	"free5gc/src/amf/logger"
 )
 
@@ -56,13 +57,14 @@ func testClient(clientOrder int) {
 	}
 	logger.NgapLog.Printf("Dail LocalAddr: %s; RemoteAddr: %s", conn.LocalAddr(), conn.RemoteAddr())
 	time.Sleep(time.Millisecond)
-	ppid := 0
 	for {
+		bs := make([]byte, 4)
+		binary.BigEndian.PutUint32(bs, 60)
+		ppid := binary.LittleEndian.Uint32(bs)
 		info := &sctp.SndRcvInfo{
 			Stream: uint16(ppid),
 			PPID:   uint32(ppid),
 		}
-		ppid += 1
 		err := conn.SubscribeEvents(sctp.SCTP_EVENT_DATA_IO)
 		if err != nil {
 			logger.NgapLog.Fatalf("Connection Error %v", err)

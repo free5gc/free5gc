@@ -21,7 +21,7 @@ import (
 func DeleteEventsSubsc(c *gin.Context) {
 
 	req := http_wrapper.NewRequest(c.Request, nil)
-	req.Params["ReqURI"] = c.Request.RequestURI
+	req.Params["appSessionId"],_ = c.Params.Get("appSessionId")
 	channelMsg := pcf_message.NewHttpChannelMessage(pcf_message.EventDeleteEventsSubsc, req)
 
 	pcf_message.SendMessage(channelMsg)
@@ -37,7 +37,7 @@ func UpdateEventsSubsc(c *gin.Context) {
 	c.BindJSON(&eventsSubscReqData)
 
 	req := http_wrapper.NewRequest(c.Request, eventsSubscReqData)
-	req.Params["ReqURI"] = c.Request.RequestURI
+	req.Params["appSessionId"],_ = c.Params.Get("appSessionId")
 	channelMsg := pcf_message.NewHttpChannelMessage(pcf_message.EventUpdateEventsSubsc, req)
 
 	pcf_message.SendMessage(channelMsg)

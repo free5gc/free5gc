@@ -82,7 +82,7 @@ func TestHandlePfcpAssociationSetupRequest(t *testing.T) {
 	}
 	dstAddr := &net.UDPAddr{
 		IP:   net.ParseIP("127.0.0.1"),
-		Port: pfcpUdp.PfcpUdpDestinationPort,
+		Port: pfcpUdp.PFCP_PORT,
 	}
 
 	err := pfcpUdp.SendPfcpMessage(testReq, srcAddr, dstAddr)

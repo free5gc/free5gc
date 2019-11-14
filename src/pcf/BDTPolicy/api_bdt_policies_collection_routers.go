@@ -23,7 +23,7 @@ func CreateBDTPolicy(c *gin.Context) {
 	c.BindJSON(&bdtReqData)
 
 	req := http_wrapper.NewRequest(c.Request, bdtReqData)
-	req.Params["ReqURI"] = c.Request.RequestURI
+	req.Params["bdtPolicyId"] = c.Params.ByName("bdtPolicyId")
 	channelMsg := pcf_message.NewHttpChannelMessage(pcf_message.EventBDTPolicyCreate, req)
 
 	pcf_message.SendMessage(channelMsg)

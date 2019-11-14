@@ -304,7 +304,7 @@ func TestSendHandoverCommand(t *testing.T) {
 	pduSessionResourceToReleaseList.List = append(pduSessionResourceToReleaseList.List, item2)
 
 	container := ngapType.TargetToSourceTransparentContainer{
-		Value: []byte{0x11, 0x22},
+		Value: []byte{0x00, 0x01, 0x00, 0x00},
 	}
 
 	ngap_message.SendHandoverCommand(ue.RanUe[models.AccessType__3_GPP_ACCESS], pduSessionResourceHandoverList, pduSessionResourceToReleaseList, container, nil)
@@ -500,7 +500,7 @@ func TestSendPaging(t *testing.T) {
 			Mcc: "208",
 			Mnc: "93",
 		},
-		Tac: "001122",
+		Tac: "000001",
 	}
 	ue.RegistrationArea[models.AccessType__3_GPP_ACCESS] = append(ue.RegistrationArea[models.AccessType__3_GPP_ACCESS], tai2)
 
@@ -677,7 +677,7 @@ func TestSendDownlinkRanConfigurationTransfer(t *testing.T) {
 					Value: aper.OctetString("\x02\xf8\x39"),
 				},
 				TAC: ngapType.TAC{
-					Value: aper.OctetString("\x00\x11\x22"),
+					Value: aper.OctetString("\x00\x00\x01"),
 				},
 			},
 		},
@@ -702,7 +702,7 @@ func TestSendDownlinkRanConfigurationTransfer(t *testing.T) {
 					Value: aper.OctetString("\x02\xf8\x39"),
 				},
 				TAC: ngapType.TAC{
-					Value: aper.OctetString("\x00\x11\x22"),
+					Value: aper.OctetString("\x00\x00\x01"),
 				},
 			},
 		},
