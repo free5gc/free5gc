@@ -446,10 +446,6 @@ func TestServiceRequest(t *testing.T) {
 	assert.True(t, err == nil)
 	ue.NCC = 5
 	ue.NH, _ = hex.DecodeString("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")
-	ue.UEAMBR = &models.Ambr{
-		Uplink:   "800",
-		Downlink: "1000",
-	}
 	ue.SecurityContextAvailable = true
 	sNssai := models.Snssai{
 		Sst: 1,

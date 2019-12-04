@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"free5gc/lib/ngap"
 	"free5gc/lib/ngap/ngapSctp"
+	"free5gc/lib/path_util"
 	"free5gc/src/amf/amf_service"
 	"free5gc/src/app"
 	"free5gc/src/ausf/ausf_service"
@@ -15,6 +16,7 @@ import (
 	"free5gc/src/test"
 	"free5gc/src/udm/udm_service"
 	"free5gc/src/udr/udr_service"
+	"log"
 	"net"
 	"testing"
 	"time"
@@ -37,8 +39,14 @@ var NFs = []app.NetworkFunction{
 
 func init() {
 	app.AppInitializeWillInitialize("")
-	flag := flag.FlagSet{}
-	cli := cli.NewContext(nil, &flag, nil)
+	flagSet := flag.NewFlagSet("free5gc", 0)
+	flagSet.String("smfcfg", "", "SMF Config Path")
+	cli := cli.NewContext(nil, flagSet, nil)
+	err := cli.Set("smfcfg", path_util.Gofree5gcPath("free5gc/config/smfcfg.test.conf"))
+	if err != nil {
+		log.Fatal("SMF test config error")
+		return
+	}
 	for _, service := range NFs {
 		service.Initialize(cli)
 		go service.Start()

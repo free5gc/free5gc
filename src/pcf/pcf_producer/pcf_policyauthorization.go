@@ -424,7 +424,7 @@ func Npcf_PolicyAuthorization_Notify(id string, send_type string) {
 }
 
 // GateControl - Add FlowStatus into PccRule
-func GateControl(pcfUeContext *pcf_context.PCFUeContext, appSessionContext models.AppSessionContext) {
+func GateControl(pcfUeContext *pcf_context.UeContext, appSessionContext models.AppSessionContext) {
 	type Status string
 	const (
 		Enabled         Status = "ENABLED"
@@ -545,7 +545,7 @@ func GateControl(pcfUeContext *pcf_context.PCFUeContext, appSessionContext model
 	}
 }
 
-func InitialBackgroundDataTransferPolicyIndication(pcfUeContext *pcf_context.PCFUeContext, appSessionContext models.AppSessionContext) {
+func InitialBackgroundDataTransferPolicyIndication(pcfUeContext *pcf_context.UeContext, appSessionContext models.AppSessionContext) {
 	if !zero.IsZero(pcfUeContext.BdtPolicyStore) {
 		if pcfUeContext.BdtPolicyStore.TransfPolicies[pcfUeContext.BdtPolicyStore.SelTransPolicyId].RecTimeInt.StopTime.Before(time.Now()) {
 			appSessionContext.AscRespData.ServAuthInfo = "TP_EXPIRED"
@@ -554,7 +554,7 @@ func InitialBackgroundDataTransferPolicyIndication(pcfUeContext *pcf_context.PCF
 			appSessionContext.AscRespData.ServAuthInfo = "TP_NOT_YET_OCCURRED"
 		}
 	} else {
-		client := pcf_util.GetNudrClient()
+		client := pcf_util.GetNudrClient("https://localhost:29504")
 		bdtdata, _, err := client.DefaultApi.PolicyDataBdtDataGet(context.Background())
 		if bdtdata != nil && err == nil {
 			for index := range bdtdata {
@@ -574,7 +574,7 @@ func InitialBackgroundDataTransferPolicyIndication(pcfUeContext *pcf_context.PCF
 	}
 }
 
-func InitialProvisioningOfTrafficRoutingInformation(pcfUeContext *pcf_context.PCFUeContext, appSessionContext models.AppSessionContext) {
+func InitialProvisioningOfTrafficRoutingInformation(pcfUeContext *pcf_context.UeContext, appSessionContext models.AppSessionContext) {
 	for pccRulesindex := range pcfUeContext.SmPolicyControlStore.Policy.PccRules {
 		pccRuleTemp := pcfUeContext.SmPolicyControlStore.Policy.PccRules[pccRulesindex]
 		if pccRuleTemp.RefTcData == nil {

@@ -1,0 +1,74 @@
+.card {
+  border: 1px solid $light-gray;
+  border-radius: 4px;
+  margin-bottom: 30px;
+  background: white;
+  .title {
+    margin: 0;
+    color: $primary-color;
+    font-weight: 300;
+    margin-bottom: 10px;
+  }
+  .header {
+    padding: 15px 30px 0px;
+    font-weight: 600;
+    font-size: 22px;
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      margin: 15px 0;
+      color: darken($primary-color, 10);
+      letter-spacing: 1px;
+      line-height: 17px;
+      font-weight: 300;
+    }
+    p {
+      color: $black-color;
+      font-size: 12px;
+      line-height: 17px;
+      font-weight: 300;
+    }
+  }
+  .content {
+    padding: 10px 10px 20px 30px;
+  }
+  .footer {
+    padding: 0 30px 5px;
+    background-color: transparent;
+    line-height: 30px;
+    .legend {
+      padding: 5px 0;
+      display: flex;
+      align-items: center;
+      .item {
+        margin-right: 10px;
+      }
+    }
+    .stats {
+      color: $medium-dark-gray;
+    }
+    hr {
+      margin-top: 5px;
+      margin-bottom: 5px;
+      border-color: $medium-gray;
+    }
+  }
+  .form-group label,
+  fieldset label {
+    font-size: 12px;
+    line-height: 18px;
+    font-weight: 300;
+    &.control-label {
+      color: #25265F;
+      text-transform: uppercase;
+    }
+    &.error {
+      text-transform: none;
+      color: #FB404B;
+      margin-top: 5px;
+    }
+  }
+}

@@ -1,35 +1,66 @@
 package pcf_util
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"free5gc/lib/Namf_Communication"
+	"free5gc/lib/Npcf_AMPolicy"
+	"free5gc/lib/Npcf_SMPolicyControl"
 	"free5gc/lib/Nudr_DataRepository"
 	"free5gc/lib/openapi/models"
 	"free5gc/lib/path_util"
 	"free5gc/src/pcf/pcf_context"
+	"net/http"
+	"reflect"
 	"time"
 )
 
 // Path of HTTP2 key and log file
 var (
-	PCF_LOG_PATH    = path_util.Gofree5gcPath("free5gc/pcfsslkey.log")
-	PCF_PEM_PATH    = path_util.Gofree5gcPath("free5gc/support/TLS/pcf.pem")
-	PCF_KEY_PATH    = path_util.Gofree5gcPath("free5gc/support/TLS/pcf.key")
-	PCF_CONFIG_PATH = path_util.Gofree5gcPath("free5gc/config/pcfcfg.conf")
-	PCF_BASIC_PATH  = "https://localhost:29507"
+	PCF_LOG_PATH                        = path_util.Gofree5gcPath("free5gc/pcfsslkey.log")
+	PCF_PEM_PATH                        = path_util.Gofree5gcPath("free5gc/support/TLS/pcf.pem")
+	PCF_KEY_PATH                        = path_util.Gofree5gcPath("free5gc/support/TLS/pcf.key")
+	PCF_CONFIG_PATH                     = path_util.Gofree5gcPath("free5gc/config/pcfcfg.conf")
+	PCF_BASIC_PATH                      = "https://localhost:29507"
+	ERROR_REQUEST_PARAMETERS            = "ERROR_REQUEST_PARAMETERS"
+	USER_UNKNOWN                        = "USER_UNKNOWN"
+	CONTEXT_NOT_FOUND                   = "CONTEXT_NOT_FOUND"
+	ERROR_INITIAL_PARAMETERS            = "ERROR_INITIAL_PARAMETERS"
+	POLICY_CONTEXT_DENIED               = "POLICY_CONTEXT_DENIED"
+	ERROR_TRIGGER_EVENT                 = "ERROR_TRIGGER_EVENT"
+	ERROR_TRAFFIC_MAPPING_INFO_REJECTED = "ERROR_TRAFFIC_MAPPING_INFO_REJECTED"
+	PcpErrHttpStatusMap                 = map[string]int32{
+		ERROR_REQUEST_PARAMETERS:            http.StatusBadRequest,
+		USER_UNKNOWN:                        http.StatusBadRequest,
+		CONTEXT_NOT_FOUND:                   http.StatusNotFound,
+		ERROR_INITIAL_PARAMETERS:            http.StatusBadRequest,
+		POLICY_CONTEXT_DENIED:               http.StatusForbidden,
+		ERROR_TRIGGER_EVENT:                 http.StatusBadRequest,
+		ERROR_TRAFFIC_MAPPING_INFO_REJECTED: http.StatusForbidden,
+	}
 )
 
-func GetNudrClient() *Nudr_DataRepository.APIClient {
+func GetNpcfAMPolicyCallbackClient() *Npcf_AMPolicy.APIClient {
+	configuration := Npcf_AMPolicy.NewConfiguration()
+	client := Npcf_AMPolicy.NewAPIClient(configuration)
+	return client
+}
+func GetNpcfSMPolicyCallbackClient() *Npcf_SMPolicyControl.APIClient {
+	configuration := Npcf_SMPolicyControl.NewConfiguration()
+	client := Npcf_SMPolicyControl.NewAPIClient(configuration)
+	return client
+}
+
+func GetNudrClient(uri string) *Nudr_DataRepository.APIClient {
 	configuration := Nudr_DataRepository.NewConfiguration()
-	BasePath := pcf_context.PCF_Self().UdrUri
-	configuration.SetBasePath(BasePath)
+	configuration.SetBasePath(uri)
 	client := Nudr_DataRepository.NewAPIClient(configuration)
 	return client
 }
-func GetNamfClient() *Namf_Communication.APIClient {
+func GetNamfClient(uri string) *Namf_Communication.APIClient {
 	configuration := Namf_Communication.NewConfiguration()
-	configuration.SetBasePath("https://localhost:29518")
+	configuration.SetBasePath(uri)
 	client := Namf_Communication.NewAPIClient(configuration)
 	return client
 }
@@ -77,4 +108,46 @@ func Convert(bytes int64) (DateRate string) {
 		DateRate = fmt.Sprintf("%.2f", BitDateRate) + " bps"
 	}
 	return DateRate
+}
+
+func GetProblemDetail(errString, cause string) models.ProblemDetails {
+	return models.ProblemDetails{
+		Status: PcpErrHttpStatusMap[cause],
+		Detail: errString,
+		Cause:  cause,
+	}
+}
+
+func GetSMPolicyDnnData(data models.SmPolicyData, snssai *models.Snssai, dnn string) (result *models.SmPolicyDnnData) {
+	if snssai == nil || dnn == "" || data.SmPolicySnssaiData == nil {
+		return
+	}
+	snssaiString := SnssaiModelsToHex(*snssai)
+	if snssaiData, exist := data.SmPolicySnssaiData[snssaiString]; exist {
+		if snssaiData.SmPolicyDnnData == nil {
+			return
+		}
+		if dnnInfo, exist := snssaiData.SmPolicyDnnData[dnn]; exist {
+			result = &dnnInfo
+			return
+		}
+	}
+	return
+
+}
+
+func MarshToJsonString(v interface{}) (result []string) {
+	types := reflect.TypeOf(v)
+	val := reflect.ValueOf(v)
+	if types.Kind() == reflect.Slice {
+		for i := 0; i < val.Len(); i++ {
+			tmp, _ := json.Marshal(val.Index(i).Interface())
+			result = append(result, string(tmp))
+
+		}
+	} else {
+		tmp, _ := json.Marshal(v)
+		result = append(result, string(tmp))
+	}
+	return
 }

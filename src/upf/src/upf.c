@@ -12,6 +12,7 @@
 #include "n4/n4_dispatcher.h"
 
 static Status parseArgs(int argc, char *argv[]);
+static Status checkPermission();
 static void eventConsumer();
 
 char configPath[MAX_FILE_PATH_STRLEN] = "./config/upfcfg.yaml";
@@ -21,6 +22,10 @@ int main(int argc, char *argv[]) {
 
     UTLT_Assert(parseArgs(argc, argv) == STATUS_OK, return STATUS_ERROR, 
                 "Error parsing args");
+
+    if (checkPermission() != STATUS_OK) {
+        return STATUS_ERROR;
+    }
 
     status = UpfInit(configPath);
     UTLT_Assert(status == STATUS_OK, returnStatus = STATUS_ERROR,
@@ -58,6 +63,16 @@ static Status parseArgs(int argc, char *argv[]) {
 
     return STATUS_OK;
 }
+
+static Status checkPermission() {
+    if (geteuid() != 0) {
+        UTLT_Error("Please run UPF as root in order to enable route management "
+                   "and communication with gtp5g kernel module.");
+        return STATUS_ERROR;
+    }
+    return STATUS_OK;
+}
+
 
 static void eventConsumer() {
     Status status;

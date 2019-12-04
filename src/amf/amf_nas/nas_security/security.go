@@ -92,7 +92,9 @@ func Encode(ue *amf_context.AmfUe, msg *nas.Message) (payload []byte, err error)
 
 		ue.SecurityContextAvailable = true
 	} else {
-		return msg.PlainNasEncode()
+		err = fmt.Errorf("NEA0 & NIA0 are illegal.")
+		//  err = msg.PlainNasEncode()
+		return
 	}
 	return
 }

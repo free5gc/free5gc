@@ -2,7 +2,10 @@
 
 package pfcp
 
-import "free5gc/lib/pfcp/pfcpType"
+import (
+	"free5gc/lib/pfcp/pfcpType"
+	"free5gc/lib/util_3gpp"
+)
 
 type Message struct {
 	Header Header
@@ -144,7 +147,7 @@ type CreatePDR struct {
 type PDI struct {
 	SourceInterface               *pfcpType.SourceInterface               `tlv:"20"`
 	LocalFTEID                    *pfcpType.FTEID                         `tlv:"21"`
-	NetworkInstance               *pfcpType.NetworkInstance               `tlv:"22"`
+	NetworkInstance               *util_3gpp.Dnn                          `tlv:"22"`
 	UEIPAddress                   *pfcpType.UEIPAddress                   `tlv:"93"`
 	TrafficEndpointID             *pfcpType.TrafficEndpointID             `tlv:"131"`
 	SDFFilter                     *pfcpType.SDFFilter                     `tlv:"23"`
@@ -177,7 +180,7 @@ type CreateFAR struct {
 
 type ForwardingParametersIEInFAR struct {
 	DestinationInterface    *pfcpType.DestinationInterface  `tlv:"42"`
-	NetworkInstance         *pfcpType.NetworkInstance       `tlv:"22"`
+	NetworkInstance         *util_3gpp.Dnn                  `tlv:"22"`
 	RedirectInformation     *pfcpType.RedirectInformation   `tlv:"38"`
 	OuterHeaderCreation     *pfcpType.OuterHeaderCreation   `tlv:"84"`
 	TransportLevelMarking   *pfcpType.TransportLevelMarking `tlv:"30"`
@@ -260,7 +263,7 @@ type CreateBAR struct {
 type CreateTrafficEndpoint struct {
 	TrafficEndpointID             *pfcpType.TrafficEndpointID             `tlv:"131"`
 	LocalFTEID                    *pfcpType.FTEID                         `tlv:"21"`
-	NetworkInstance               *pfcpType.NetworkInstance               `tlv:"22"`
+	NetworkInstance               *util_3gpp.Dnn                          `tlv:"22"`
 	UEIPAddress                   *pfcpType.UEIPAddress                   `tlv:"93"`
 	EthernetPDUSessionInformation *pfcpType.EthernetPDUSessionInformation `tlv:"142"`
 	FramedRoute                   *pfcpType.FramedRoute                   `tlv:"153"`
@@ -358,7 +361,7 @@ type UpdateFAR struct {
 
 type UpdateForwardingParametersIEInFAR struct {
 	DestinationInterface    *pfcpType.DestinationInterface  `tlv:"42"`
-	NetworkInstance         *pfcpType.NetworkInstance       `tlv:"22"`
+	NetworkInstance         *util_3gpp.Dnn                  `tlv:"22"`
 	RedirectInformation     *pfcpType.RedirectInformation   `tlv:"38"`
 	OuterHeaderCreation     *pfcpType.OuterHeaderCreation   `tlv:"84"`
 	TransportLevelMarking   *pfcpType.TransportLevelMarking `tlv:"30"`
@@ -447,7 +450,7 @@ type RemoveBAR struct {
 type UpdateTrafficEndpoint struct {
 	TrafficEndpointID *pfcpType.TrafficEndpointID `tlv:"131"`
 	LocalFTEID        *pfcpType.FTEID             `tlv:"21"`
-	NetworkInstance   *pfcpType.NetworkInstance   `tlv:"22"`
+	NetworkInstance   *util_3gpp.Dnn              `tlv:"22"`
 	UEIPAddress       *pfcpType.UEIPAddress       `tlv:"93"`
 	FramedRoute       *pfcpType.FramedRoute       `tlv:"153"`
 	FramedRouting     *pfcpType.FramedRouting     `tlv:"154"`
@@ -535,7 +538,7 @@ type UsageReportPFCPSessionReportRequest struct {
 	DurationMeasurement             *pfcpType.DurationMeasurement    `tlv:"67"`
 	ApplicationDetectionInformation *ApplicationDetectionInformation `tlv:"68"`
 	UEIPAddress                     *pfcpType.UEIPAddress            `tlv:"93"`
-	NetworkInstance                 *pfcpType.NetworkInstance        `tlv:"22"`
+	NetworkInstance                 *util_3gpp.Dnn                   `tlv:"22"`
 	TimeOfFirstPacket               *pfcpType.TimeOfFirstPacket      `tlv:"69"`
 	TimeOfLastPacket                *pfcpType.TimeOfLastPacket       `tlv:"70"`
 	UsageInformation                *pfcpType.UsageInformation       `tlv:"90"`

@@ -1,6 +1,7 @@
 package udr_handler
 
 import (
+	"encoding/json"
 	"github.com/sirupsen/logrus"
 	"free5gc/lib/openapi/models"
 	"free5gc/src/udr/logger"
@@ -362,7 +363,24 @@ func Handle() {
 					// TODO
 					ueId := msg.HTTPRequest.Params["ueId"]
 					servingPlmnId := msg.HTTPRequest.Params["servingPlmnId"]
-					udr_producer.HandleQuerySmData(msg.ResponseChan, ueId, servingPlmnId)
+
+					singleNssai := models.Snssai{}
+					dnn := ""
+					if len(msg.HTTPRequest.Query) != 0 {
+						// Query for single-nssai
+						if len(msg.HTTPRequest.Query["single-nssai"]) != 0 {
+							singleNssaiQuery := msg.HTTPRequest.Query["single-nssai"][0]
+							err := json.Unmarshal([]byte(singleNssaiQuery), &singleNssai)
+							if err != nil {
+								HandlerLog.Warnln(err)
+							}
+						}
+						// Query for dnn
+						if len(msg.HTTPRequest.Query["dnn"]) != 0 {
+							dnn = msg.HTTPRequest.Query["dnn"][0]
+						}
+					}
+					udr_producer.HandleQuerySmData(msg.ResponseChan, ueId, servingPlmnId, singleNssai, dnn)
 				case udr_message.EventCreateSmfContextNon3gpp:
 					// TODO
 					ueId := msg.HTTPRequest.Params["ueId"]

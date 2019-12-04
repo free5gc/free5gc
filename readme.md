@@ -175,4 +175,10 @@ Program your SIM card information
 
 You can get your SIM card from [**sysmocom**](http://shop.sysmocom.de/products/sysmousim-sjs1-4ff). You also need a card reader to write your SIM card. You can get a card reader from [**here**](https://24h.pchome.com.tw/prod/DCAD59-A9009N6WF) or use other similar devices.
 
+# Release Note
+## v2.0.1
++ Add buffering and paging
 
+## v2.0.2
++ Add handover feature
++ Add webui

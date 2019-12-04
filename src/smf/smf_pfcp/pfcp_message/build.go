@@ -187,7 +187,7 @@ func BuildPfcpSessionEstablishmentRequest(smContext *smf_context.SMContext) (pfc
 	msg.CPFSEID = &pfcpType.FSEID{
 		V4:          isv4,
 		V6:          !isv4,
-		Seid:        smContext.SEID,
+		Seid:        smContext.LocalSEID,
 		Ipv4Address: smf_context.SMF_Self().CPNodeID.NodeIdValue,
 	}
 
@@ -251,7 +251,7 @@ func BuildPfcpSessionModificationRequest(smContext *smf_context.SMContext, pdr_l
 	msg.CPFSEID = &pfcpType.FSEID{
 		V4:          true,
 		V6:          false,
-		Seid:        smContext.SEID,
+		Seid:        smContext.LocalSEID,
 		Ipv4Address: smf_context.SMF_Self().CPNodeID.NodeIdValue,
 	}
 

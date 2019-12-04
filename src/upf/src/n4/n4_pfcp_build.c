@@ -210,9 +210,11 @@ Status UpfN4BuildAssociationSetupResponse(
 
     // network instence
     upIpResourceInformation.assoni = 1;
-    UpfApn *apn = (UpfApn*)ListFirst(&Self()->apnList);
+    ApnNode *apn = (ApnNode*)ListFirst(&Self()->apnList);
     size_t apnLen = strlen(apn->apn);
-    memcpy(upIpResourceInformation.networkInstance, apn->apn, apnLen);
+    unsigned char lenByte = apnLen;
+    memcpy(upIpResourceInformation.networkInstance, &lenByte, 1);
+    memcpy(upIpResourceInformation.networkInstance + 1, apn->apn, apnLen + 1);
 
     // TODO: better algo. to select establish IP
     Gtpv1TunDevNode *gtpDev4 = (Gtpv1TunDevNode *)ListFirst(&Self()->gtpv1DevList);
@@ -232,7 +234,7 @@ Status UpfN4BuildAssociationSetupResponse(
     response->userPlaneIPResourceInformation.presence = 1;
     response->userPlaneIPResourceInformation.value = &upIpResourceInformation;
     // TODO: this is only IPv4, no network instence, no source interface
-    response->userPlaneIPResourceInformation.len = 2+4+apnLen; // TODO: sizeof(Internet) == 8, hardcord
+    response->userPlaneIPResourceInformation.len = 2+4+1+apnLen; // TODO: sizeof(Internet) == 8, hardcord
     //response->userPlaneIPResourceInformation.len = sizeof(PfcpUserPlaneIpResourceInformation);
 
     pfcpMessage.header.type = type;

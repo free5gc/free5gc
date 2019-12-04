@@ -109,9 +109,7 @@ func HandlePDUSessionSMContextCreate(rspChan chan smf_message.HandlerResponseMes
 			Teid:        tunnel.ULTEID,
 			Ipv4Address: tunnel.Node.UPIPInfo.Ipv4Address,
 		},
-		NetworkInstance: pfcpType.NetworkInstance{
-			NetworkInstance: []byte(smContext.Dnn),
-		},
+		NetworkInstance: []byte(smContext.Dnn),
 		UEIPAddress: &pfcpType.UEIPAddress{
 			V4:          true,
 			Ipv4Address: smContext.PDUAddress.To4(),
@@ -125,9 +123,7 @@ func HandlePDUSessionSMContextCreate(rspChan chan smf_message.HandlerResponseMes
 		DestinationInterface: pfcpType.DestinationInterface{
 			InterfaceValue: pfcpType.DestinationInterfaceCore,
 		},
-		NetworkInstance: pfcpType.NetworkInstance{
-			NetworkInstance: []byte(smContext.Dnn),
-		},
+		NetworkInstance: []byte(smContext.Dnn),
 	}
 
 	// TODO: PCF Selection
@@ -271,9 +267,7 @@ func HandlePDUSessionSMContextUpdate(rspChan chan smf_message.HandlerResponseMes
 				Teid:        tunnel.ULTEID,
 				Ipv4Address: tunnel.Node.UPIPInfo.Ipv4Address,
 			},
-			NetworkInstance: pfcpType.NetworkInstance{
-				NetworkInstance: []byte(smContext.Dnn),
-			},
+			NetworkInstance: []byte(smContext.Dnn),
 			UEIPAddress: &pfcpType.UEIPAddress{
 				V4:          true,
 				Ipv4Address: smContext.PDUAddress.To4(),
@@ -289,9 +283,7 @@ func HandlePDUSessionSMContextUpdate(rspChan chan smf_message.HandlerResponseMes
 			DestinationInterface: pfcpType.DestinationInterface{
 				InterfaceValue: pfcpType.DestinationInterfaceAccess,
 			},
-			NetworkInstance: pfcpType.NetworkInstance{
-				NetworkInstance: []byte(smContext.Dnn),
-			},
+			NetworkInstance: []byte(smContext.Dnn),
 		}
 		err = smf_context.HandlePDUSessionResourceSetupResponseTransfer(body.BinaryDataN2SmInformation, smContext)
 
@@ -316,6 +308,43 @@ func HandlePDUSessionSMContextUpdate(rspChan chan smf_message.HandlerResponseMes
 
 	case models.N2SmInfoType_PATH_SWITCH_SETUP_FAIL:
 		err = smf_context.HandlePathSwitchRequestSetupFailedTransfer(body.BinaryDataN2SmInformation, smContext)
+	case models.N2SmInfoType_HANDOVER_REQUIRED:
+		response.JsonData.N2SmInfo = &models.RefToBinaryData{ContentId: "Handover"}
+	}
+
+	switch smContextUpdateData.HoState {
+	case models.HoState_PREPARING:
+		smContext.HoState = models.HoState_PREPARING
+		err = smf_context.HandleHandoverRequiredTransfer(body.BinaryDataN2SmInformation, smContext)
+		response.JsonData.N2SmInfoType = models.N2SmInfoType_PDU_RES_SETUP_REQ
+
+		n2Buf, err := smf_context.BuildPDUSessionResourceSetupRequestTransfer(smContext)
+		if err != nil {
+			logger.PduSessLog.Errorf("Build PDUSession Resource Setup Request Transfer Error(%s)", err.Error())
+		}
+		response.BinaryDataN2SmInformation = n2Buf
+		response.JsonData.N2SmInfoType = models.N2SmInfoType_PDU_RES_SETUP_REQ
+		response.JsonData.N2SmInfo = &models.RefToBinaryData{
+			ContentId: "PDU_RES_SETUP_REQ",
+		}
+		response.JsonData.HoState = models.HoState_PREPARING
+	case models.HoState_PREPARED:
+		smContext.HoState = models.HoState_PREPARED
+		response.JsonData.HoState = models.HoState_PREPARED
+		err = smf_context.HandleHandoverRequestAcknowledgeTransfer(body.BinaryDataN2SmInformation, smContext)
+		n2Buf, err := smf_context.BuildHandoverCommandTransfer(smContext)
+		if err != nil {
+			logger.PduSessLog.Errorf("Build PDUSession Resource Setup Request Transfer Error(%s)", err.Error())
+		}
+		response.BinaryDataN2SmInformation = n2Buf
+		response.JsonData.N2SmInfoType = models.N2SmInfoType_HANDOVER_CMD
+		response.JsonData.N2SmInfo = &models.RefToBinaryData{
+			ContentId: "HANDOVER_CMD",
+		}
+		response.JsonData.HoState = models.HoState_PREPARING
+	case models.HoState_COMPLETED:
+		smContext.HoState = models.HoState_COMPLETED
+		response.JsonData.HoState = models.HoState_COMPLETED
 	}
 
 	if err != nil {

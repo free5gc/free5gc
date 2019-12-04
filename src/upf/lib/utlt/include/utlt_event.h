@@ -32,7 +32,7 @@ typedef struct {
 #define EVTQ_O_NONBLOCK     O_NONBLOCK
 
 /**
- * @param option either EVTQ_O_BLOCK or EVTQ_O_NONBLOCK.
+ * @param  option: either EVTQ_O_BLOCK or EVTQ_O_NONBLOCK.
  * @return eqId or NULL on error.
  */
 EvtQId EventQueueCreate(int option);
@@ -42,17 +42,17 @@ Status EventQueueDelete(EvtQId eqId);
 /**
  * Push an event with parameters(0 to 8) into event queue.
  * 
- * @param eqId
- * @param eventType
- * @param argc        number of event parameters (0 <= argc <= 8)
- * @param (uintptr_t) event parameter1
- * @param (uintptr_t) event parameter2 ...
+ * @param  eqId:
+ * @param  eventType:
+ * @param  argc:        number of event parameters (0 <= argc <= 8)
+ * @param  (uintptr_t): event parameter1
+ * @param  (uintptr_t): event parameter2 ...
  * @return STATUS_OK or STATUS_EAGAIN if the queue is full and the oflag EVTQ_O_NONBLOCK was set.
  */
 Status EventSend(EvtQId eqId, uintptr_t eventType, int argc, ...);
 
 /**
- * @return STATUS_OK or STATUS_EAGAIN if the queue is empty and the oflag O_NONBLOCK was set.
+ * @return  STATUS_OK or STATUS_EAGAIN if the queue is empty and the oflag O_NONBLOCK was set.
  */
 Status EventRecv(EvtQId eqId, Event *event);
 

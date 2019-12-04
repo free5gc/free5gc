@@ -90,8 +90,8 @@ type NetworkName struct {
 }
 
 type SecurityAlgorithm struct {
-	IntegrityOrder []uint8 // 8bits(NIA1, NIA2, NIA3 , EIA1, EIA2, EIA3, ..)
-	CipheringOrder []uint8 // 8bits(NEA1, NEA2, NEA3 , EEA1, EEA2, EEA3, ..)
+	IntegrityOrder []uint8 // 8bits(NIA1, NIA2, NIA3 , EIA0, EIA1, EIA2, EIA3, ..)
+	CipheringOrder []uint8 // 8bits(NEA1, NEA2, NEA3 , EEA0, EEA1, EEA2, EEA3, ..)
 }
 
 func NewPlmnSupportItem() (item PlmnSupportItem) {

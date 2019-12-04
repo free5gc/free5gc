@@ -57,7 +57,7 @@ func UpdateBDTPolicyContext(httpChannel chan pcf_message.HttpResponseMessage, Re
 					transPolicy := BdtPolicyStore[key].BdtPolData.TransfPolicies[i]
 					BdtPolicyStore[key].BdtPolData.SelTransPolicyId = bdtPolicyDataPatch.SelTransPolicyId
 					// update bdtdata to udr
-					client := pcf_util.GetNudrClient()
+					client := pcf_util.GetNudrClient("https://localhost:29504")
 					var bdtData models.BdtData
 					bdtData.AspId = key
 					bdtData.BdtRefId = BdtPolicyStore[key].BdtPolData.BdtRefId
@@ -91,7 +91,7 @@ func CreateBDTPolicyContext(httpChannel chan pcf_message.HttpResponseMessage, bo
 	var bdtPolicyData models.BdtPolicyData
 	var problem models.ProblemDetails
 	var bdtPolicy models.BdtPolicy
-	client := pcf_util.GetNudrClient()
+	client := pcf_util.GetNudrClient("https://localhost:29504")
 	NeedPolicy := true
 	// check request essential IE
 	if (bdtReqData.AspId != "") && (bdtReqData.NumOfUes != 0) {
@@ -183,7 +183,7 @@ func CreateBDTPolicyContext(httpChannel chan pcf_message.HttpResponseMessage, bo
 		pcf_message.SendHttpResponseMessage(httpChannel, nil, 201, bdtPolicyData)
 
 		// Udr Create bdtpolicy
-		client := pcf_util.GetNudrClient()
+		client := pcf_util.GetNudrClient("https://localhost:29504")
 		var bdtData models.BdtData
 		bdtData.AspId = bdtReqData.AspId
 		bdtData.BdtRefId = BdtPolicyStore[key].BdtPolData.BdtRefId

@@ -1,0 +1,31 @@
+
+.subscribers__header {
+  h4 {
+    display: inline-block;
+  }
+  .subscribers__button {
+    float: right;
+    margin-top: 10px;
+  }
+}
+
+.subscribers__content {
+  padding: 10px 30px 20px 30px !important;
+}
+
+.subscribers__table {
+  & > thead > tr {
+    cursor: auto;
+    font-size: 17px;
+  }
+
+  & > tbody > tr > td {
+    //cursor: pointer;
+    font-size: 20px;
+    padding: 6px;
+    & > i {
+      cursor: pointer;
+      color: rgba(0, 0, 0, 0.55);
+    }
+  }
+}

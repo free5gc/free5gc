@@ -13,6 +13,7 @@ import (
 	"free5gc/src/ausf/ausf_consumer"
 	"free5gc/src/ausf/ausf_context"
 	"free5gc/src/ausf/ausf_handler"
+	"free5gc/src/ausf/ausf_util"
 	"free5gc/src/ausf/factory"
 	"free5gc/src/ausf/logger"
 	"os/exec"
@@ -103,14 +104,14 @@ func (ausf *AUSF) Start() {
 	if err != nil {
 		initLog.Error("Build AUSF Profile Error")
 	}
-	_, err = ausf_consumer.SendRegisterNFInstance(self.NrfUri, self.NfId, profile)
+	_, self.NfId, err = ausf_consumer.SendRegisterNFInstance(self.NrfUri, self.NfId, profile)
 	if err != nil {
 		initLog.Errorf("AUSF register to NRF Error[%s]", err.Error())
 	}
 
-	ausfLogPath := path_util.Gofree5gcPath("free5gc/ausfsslkey.log")
-	ausfPemPath := path_util.Gofree5gcPath("free5gc/support/TLS/ausf.pem")
-	ausfKeyPath := path_util.Gofree5gcPath("free5gc/support/TLS/ausf.key")
+	ausfLogPath := ausf_util.AusfLogPath
+	ausfPemPath := ausf_util.AusfPemPath
+	ausfKeyPath := ausf_util.AusfKeyPath
 
 	go ausf_handler.Handle()
 	server, err := http2_util.NewServer(":29509", ausfLogPath, router)

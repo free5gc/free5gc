@@ -1,7 +1,6 @@
 package pcf_util
 
 import (
-	"fmt"
 	"free5gc/lib/openapi/models"
 	"free5gc/src/pcf/factory"
 	"free5gc/src/pcf/logger"
@@ -37,15 +36,10 @@ func InitpcfContext(context *pcf_context.PCFContext) {
 		}
 	}
 	serviceNameList := configuration.ServiceNameList
-	nfService := context.InitNFService(serviceNameList, config.Info.Version)
+	context.InitNFService(serviceNameList, config.Info.Version)
 	context.TimeFormat = configuration.TimeFormat
 	context.DefaultBdtRefId = configuration.DefaultBdtRefId
-	pcfServiceUris := make(map[models.ServiceName]string, len(serviceNameList))
-	for index, nameString := range serviceNameList {
-		name := models.ServiceName(nameString)
-		version := *nfService[index].Versions
-		if name == nfService[index].ServiceName {
-			pcfServiceUris[name] = nfService[index].ApiPrefix + "/" + fmt.Sprint(nfService[index].ServiceName) + "/" + version[0].ApiVersionInUri
-		}
+	for _, service := range context.NfService {
+		context.PcfServiceUris[service.ServiceName] = service.ApiPrefix + "/" + string(service.ServiceName) + "/" + (*service.Versions)[0].ApiVersionInUri
 	}
 }

@@ -6,7 +6,6 @@ import (
 	"free5gc/lib/openapi/models"
 	"free5gc/src/pcf/pcf_context"
 	"free5gc/src/pcf/pcf_handler/pcf_message"
-	"free5gc/src/pcf/pcf_producer/pcf_producer_callback"
 	"free5gc/src/pcf/pcf_util"
 
 	"github.com/gin-gonic/gin"
@@ -18,7 +17,7 @@ func HandleSmPolicyNotify(httpChannel chan pcf_message.HttpResponseMessage, supi
 	var smPolicyDecision models.SmPolicyDecision
 	pcfUeContext := pcf_context.PCF_Self().UePool
 	counter := false
-	client := pcf_util.GetNudrClient()
+	client := pcf_util.GetNudrClient("https://localhost:29504")
 	UeContext := pcf_context.PCF_Self().UePool
 	if UeContext[supi] == nil {
 		problem.Status = 404
@@ -33,7 +32,7 @@ func HandleSmPolicyNotify(httpChannel chan pcf_message.HttpResponseMessage, supi
 	}
 	if resp.StatusCode == 204 {
 		UeContext[supi].SmPolicyControlStore = nil
-		pcf_producer_callback.CreateSmPolicyNotifyContext(fmt.Sprint(UeContext[supi].SmPolicyControlStore.Context.PduSessionId), "terminate", nil)
+		// pcf_producer_callback.CreateSmPolicyNotifyContext(fmt.Sprint(UeContext[supi].SmPolicyControlStore.Context.PduSessionId), "terminate", nil)
 		pcf_message.SendHttpResponseMessage(httpChannel, nil, 204, nil)
 	}
 	if resp.StatusCode == 200 {
@@ -65,7 +64,7 @@ func HandleSmPolicyNotify(httpChannel chan pcf_message.HttpResponseMessage, supi
 				}
 				pcf_message.SendHttpResponseMessage(httpChannel, nil, 204, gin.H{})
 				if counter {
-					pcf_producer_callback.CreateSmPolicyNotifyContext(fmt.Sprint(UeContext[supi].SmPolicyControlStore.Context.PduSessionId), "update", &smPolicyDecision)
+					// pcf_producer_callback.CreateSmPolicyNotifyContext(fmt.Sprint(UeContext[supi].SmPolicyControlStore.Context.PduSessionId), "update", &smPolicyDecision)
 					pcf_message.SendHttpResponseMessage(httpChannel, nil, 204, nil)
 				}
 

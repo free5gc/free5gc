@@ -23,12 +23,13 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     "${LIBGTPNL_DST}/include"
     "${CMAKE_SOURCE_DIR}/src"
     "${CMAKE_SOURCE_DIR}/lib/gtpv1/include"
+    "${CMAKE_SOURCE_DIR}/lib/knet/include"
     "${CMAKE_SOURCE_DIR}/lib/pfcp/include"
     "${CMAKE_SOURCE_DIR}/lib/utlt/include"
     "${CMAKE_SOURCE_DIR}/lib/utlt/logger/include"
 )
 target_link_libraries(${PROJECT_NAME} PRIVATE 
-    free5GC_lib rt pthread gtpnl logger yaml
+    free5GC_lib rt pthread gtpnl mnl logger yaml
 )
 target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Werror)
 add_dependencies(${PROJECT_NAME} utlt_logger libgtpnl)

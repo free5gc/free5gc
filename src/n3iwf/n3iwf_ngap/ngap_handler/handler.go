@@ -8,7 +8,9 @@ import (
 	"free5gc/lib/ngap/ngapType"
 	"free5gc/src/n3iwf/logger"
 	"free5gc/src/n3iwf/n3iwf_context"
+	"free5gc/src/n3iwf/n3iwf_handler/n3iwf_message"
 	"free5gc/src/n3iwf/n3iwf_ngap/ngap_message"
+	"time"
 )
 
 var ngapLog *logrus.Entry
@@ -17,12 +19,190 @@ func init() {
 	ngapLog = logger.NgapLog
 }
 
-func HandleNGSetupResponse(message *ngapType.NGAPPDU) {
-	ngapLog.Infoln("[N3IWF] Handle NG Setup Response")
+func HandleEventSCTPConnect(sctpSessionID string) {
+	ngapLog.Infoln("[N3IWF] Handle SCTP connect event")
+	ngap_message.SendNGSetupRequest(sctpSessionID)
 }
 
-func HandleNGSetupFailure(message *ngapType.NGAPPDU) {
+func HandleNGSetupResponse(sctpSessionID string, message *ngapType.NGAPPDU) {
+	ngapLog.Infoln("[N3IWF] Handle NG Setup Response")
+
+	var amfName *ngapType.AMFName
+	var servedGUAMIList *ngapType.ServedGUAMIList
+	var relativeAMFCapacity *ngapType.RelativeAMFCapacity
+	var plmnSupportList *ngapType.PLMNSupportList
+	var criticalityDiagnostics *ngapType.CriticalityDiagnostics
+
+	var iesCriticalityDiagnostics ngapType.CriticalityDiagnosticsIEList
+
+	n3iwfSelf := n3iwf_context.N3IWFSelf()
+
+	if message == nil {
+		ngapLog.Error("NGAP Message is nil")
+		return
+	}
+
+	successfulOutcome := message.SuccessfulOutcome
+	if successfulOutcome == nil {
+		ngapLog.Error("Successful Outcome is nil")
+		return
+	}
+
+	ngSetupResponse := successfulOutcome.Value.NGSetupResponse
+	if ngSetupResponse == nil {
+		ngapLog.Error("ngSetupResponse is nil")
+		return
+	}
+
+	for _, ie := range ngSetupResponse.ProtocolIEs.List {
+		switch ie.Id.Value {
+		case ngapType.ProtocolIEIDAMFName:
+			ngapLog.Traceln("[NGAP] Decode IE AMFName")
+			amfName = ie.Value.AMFName
+			if amfName == nil {
+				ngapLog.Errorf("AMFName is nil")
+				item := buildCriticalityDiagnosticsIEItem(ngapType.CriticalityPresentReject, ie.Id.Value, ngapType.TypeOfErrorPresentMissing)
+				iesCriticalityDiagnostics.List = append(iesCriticalityDiagnostics.List, item)
+			}
+		case ngapType.ProtocolIEIDServedGUAMIList:
+			ngapLog.Traceln("[NGAP] Decode IE ServedGUAMIList")
+			servedGUAMIList = ie.Value.ServedGUAMIList
+			if servedGUAMIList == nil {
+				ngapLog.Errorf("ServedGUAMIList is nil")
+				item := buildCriticalityDiagnosticsIEItem(ngapType.CriticalityPresentReject, ie.Id.Value, ngapType.TypeOfErrorPresentMissing)
+				iesCriticalityDiagnostics.List = append(iesCriticalityDiagnostics.List, item)
+			}
+		case ngapType.ProtocolIEIDRelativeAMFCapacity:
+			ngapLog.Traceln("[NGAP] Decode IE RelativeAMFCapacity")
+			relativeAMFCapacity = ie.Value.RelativeAMFCapacity
+		case ngapType.ProtocolIEIDPLMNSupportList:
+			ngapLog.Traceln("[NGAP] Decode IE PLMNSupportList")
+			plmnSupportList = ie.Value.PLMNSupportList
+			if plmnSupportList == nil {
+				ngapLog.Errorf("PLMNSupportList is nil")
+				item := buildCriticalityDiagnosticsIEItem(ngapType.CriticalityPresentReject, ie.Id.Value, ngapType.TypeOfErrorPresentMissing)
+				iesCriticalityDiagnostics.List = append(iesCriticalityDiagnostics.List, item)
+			}
+		case ngapType.ProtocolIEIDCriticalityDiagnostics:
+			ngapLog.Traceln("[NGAP] Decode IE CriticalityDiagnostics")
+			criticalityDiagnostics = ie.Value.CriticalityDiagnostics
+		}
+	}
+
+	if len(iesCriticalityDiagnostics.List) != 0 {
+		// TODO: Send error indication
+	}
+
+	amfInfo := n3iwfSelf.NewN3iwfAmf(sctpSessionID)
+
+	if amfName != nil {
+		amfInfo.AMFName = *amfName
+	}
+
+	if servedGUAMIList != nil {
+		amfInfo.ServedGUAMIList = *servedGUAMIList
+	}
+
+	if relativeAMFCapacity != nil {
+		amfInfo.RelativeAMFCapacity = *relativeAMFCapacity
+	}
+
+	if plmnSupportList != nil {
+		amfInfo.PLMNSupportList = *plmnSupportList
+	}
+
+	if criticalityDiagnostics != nil {
+		// TODO: handle criticalityDiagnostics
+	}
+}
+
+func HandleNGSetupFailure(sctpSessionID string, message *ngapType.NGAPPDU) {
 	ngapLog.Infoln("[N3IWF] Handle NG Setup Failure")
+
+	var cause *ngapType.Cause
+	var timeToWait *ngapType.TimeToWait
+	var criticalityDiagnostics *ngapType.CriticalityDiagnostics
+	var iesCriticalityDiagnostics ngapType.CriticalityDiagnosticsIEList
+
+	if message == nil {
+		ngapLog.Error("NGAP Message is nil")
+		return
+	}
+
+	unsuccessfulOutcome := message.UnsuccessfulOutcome
+	if unsuccessfulOutcome == nil {
+		ngapLog.Error("Unseccessful Message is nil")
+		return
+	}
+
+	ngSetupFailure := unsuccessfulOutcome.Value.NGSetupFailure
+	if ngSetupFailure == nil {
+		ngapLog.Error("NGSetupFailure is nil")
+		return
+	}
+
+	for _, ie := range ngSetupFailure.ProtocolIEs.List {
+		switch ie.Id.Value {
+		case ngapType.ProtocolIEIDCause:
+			ngapLog.Traceln("[NGAP] Decode IE Cause")
+			cause = ie.Value.Cause
+			if cause == nil {
+				ngapLog.Error("Cause is nil")
+				item := buildCriticalityDiagnosticsIEItem(ngapType.CriticalityPresentReject, ie.Id.Value, ngapType.TypeOfErrorPresentMissing)
+				iesCriticalityDiagnostics.List = append(iesCriticalityDiagnostics.List, item)
+			}
+		case ngapType.ProtocolIEIDTimeToWait:
+			ngapLog.Traceln("[NGAP] Decode IE TimeToWait")
+			timeToWait = ie.Value.TimeToWait
+		case ngapType.ProtocolIEIDCriticalityDiagnostics:
+			ngapLog.Traceln("[NGAP] Decode IE CriticalityDiagnostics")
+			criticalityDiagnostics = ie.Value.CriticalityDiagnostics
+		}
+	}
+
+	if len(iesCriticalityDiagnostics.List) > 0 {
+		// TODO: Send error indication
+	}
+
+	if cause != nil {
+		printAndGetCause(cause)
+	}
+
+	if criticalityDiagnostics != nil {
+		// TODO: Handle criticalityDiagnostics
+	}
+
+	var waittingTime time.Duration
+
+	if timeToWait != nil {
+
+		switch timeToWait.Value {
+		case ngapType.TimeToWaitPresentV1s:
+			waittingTime = 1
+		case ngapType.TimeToWaitPresentV2s:
+			waittingTime = 2
+		case ngapType.TimeToWaitPresentV5s:
+			waittingTime = 5
+		case ngapType.TimeToWaitPresentV10s:
+			waittingTime = 10
+		case ngapType.TimeToWaitPresentV20s:
+			waittingTime = 20
+		case ngapType.TimeToWaitPresentV60s:
+			waittingTime = 60
+		}
+
+	}
+
+	if waittingTime != 0 {
+		time.Sleep(waittingTime * time.Second)
+	}
+
+	// TODO: Limited retry mechanism
+	handlerMessage := n3iwf_message.HandlerMessage{
+		Event:         n3iwf_message.EventSCTPConnectMessage,
+		SCTPSessionID: sctpSessionID,
+	}
+	n3iwf_message.SendMessage(handlerMessage)
 }
 
 func HandleNGReset(message *ngapType.NGAPPDU) {
@@ -33,7 +213,7 @@ func HandleNGResetAcknowledge(message *ngapType.NGAPPDU) {
 	ngapLog.Infoln("[N3IWF] Handle NG Reset Acknowledge")
 }
 
-func HandleInitialContextSetupRequest(message *ngapType.NGAPPDU) {
+func HandleInitialContextSetupRequest(sctpSessionID string, message *ngapType.NGAPPDU) {
 	ngapLog.Infoln("[N3IWF] Handle Initial Context Setup Request")
 
 	var amfUeNgapID *ngapType.AMFUENGAPID
@@ -215,7 +395,7 @@ func HandleInitialContextSetupRequest(message *ngapType.NGAPPDU) {
 				ngap_message.AppendPDUSessionResourceFailedToSetupListCxtfail(failedListCxtFail, item.PDUSessionID.Value, transfer)
 			}
 
-			ngap_message.SendInitialContextSetupFailure(n3iwfUe, cause, failedListCxtFail, &criticalityDiagnostics)
+			ngap_message.SendInitialContextSetupFailure(sctpSessionID, n3iwfUe, cause, failedListCxtFail, &criticalityDiagnostics)
 			return
 		}
 
@@ -304,7 +484,7 @@ func HandleInitialContextSetupRequest(message *ngapType.NGAPPDU) {
 		// TODO: Send NAS to UE
 	}
 
-	ngap_message.SendInitialContextSetupResponse(n3iwfUe, responseList, failedListCxtRes, nil)
+	ngap_message.SendInitialContextSetupResponse(sctpSessionID, n3iwfUe, responseList, failedListCxtRes, nil)
 }
 
 // TODO: finish handle PDUSessionResourceSetupRequestTransfer
@@ -383,7 +563,7 @@ func handlePDUSessionResourceSetupRequestTransfer(pduSession *n3iwf_context.PDUS
 	return
 }
 
-func HandleUEContextModificationRequest(message *ngapType.NGAPPDU) {
+func HandleUEContextModificationRequest(sctpSessionID string, message *ngapType.NGAPPDU) {
 	ngapLog.Infoln("[N3IWF] Handle UE Context Modification Request")
 
 	var amfUeNgapID *ngapType.AMFUENGAPID
@@ -499,10 +679,10 @@ func HandleUEContextModificationRequest(message *ngapType.NGAPPDU) {
 		n3iwfUe.IndexToRfsp = indexToRFSP.Value
 	}
 
-	ngap_message.SendUEContextModificationResponse(n3iwfUe, nil)
+	ngap_message.SendUEContextModificationResponse(sctpSessionID, n3iwfUe, nil)
 }
 
-func HandleUEContextReleaseCommand(message *ngapType.NGAPPDU) {
+func HandleUEContextReleaseCommand(sctpSessionID string, message *ngapType.NGAPPDU) {
 	ngapLog.Infoln("[N3IWF] Handle UE Context Release Command")
 
 	var ueNgapIDs *ngapType.UENGAPIDs
@@ -572,7 +752,7 @@ func HandleUEContextReleaseCommand(message *ngapType.NGAPPDU) {
 	// TODO: release pdu session and gtp info for ue
 	n3iwfUe.Remove()
 
-	ngap_message.SendUEContextReleaseComplete(n3iwfUe, nil)
+	ngap_message.SendUEContextReleaseComplete(sctpSessionID, n3iwfUe, nil)
 }
 
 func HandleDownlinkNASTransport(message *ngapType.NGAPPDU) {

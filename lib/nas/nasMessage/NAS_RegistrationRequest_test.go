@@ -65,9 +65,9 @@ var nasMessageRegistrationRequestTable = []nasMessageRegistrationRequestData{
 			Octet: [13]uint8{0x01},
 		},
 		inUESecurityCapability: nasType.UESecurityCapability{
-			Iei:   nasMessage.RegistrationRequestUESecurityCapabilityType,
-			Len:   8,
-			Octet: [8]uint8{0x01, 0x01},
+			Iei:    nasMessage.RegistrationRequestUESecurityCapabilityType,
+			Len:    8,
+			Buffer: []uint8{0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01},
 		},
 		inRequestedNSSAI: nasType.RequestedNSSAI{
 			Iei:    nasMessage.RegistrationRequestRequestedNSSAIType,

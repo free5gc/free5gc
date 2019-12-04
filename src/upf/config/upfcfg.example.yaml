@@ -11,8 +11,13 @@ configuration:
 
   gtpu:
     - addr: 127.0.0.8
+    # [optional] gtpu.name
     # - name: upf.5gc.nctu.me
+    # [optional] gtpu.ifname
+    # - ifname: gtpif
 
   apn_list:
-    - cidr: 60.60.0.0/24
-      apn: internet
+    - apn: internet
+      cidr: 60.60.0.0/24
+      # [optional] apn_list[*].natifname
+      # natifname: eth0

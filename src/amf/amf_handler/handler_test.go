@@ -3,11 +3,11 @@ package amf_handler_test
 import (
 	"free5gc/lib/CommonConsumerTestData/AMF/TestAmf"
 	"free5gc/lib/ngap"
-	"free5gc/lib/ngap/ngapTestpacket"
 	"free5gc/lib/openapi/models"
 	"free5gc/src/amf/amf_handler"
 	"free5gc/src/amf/amf_handler/amf_message"
 	"free5gc/src/amf/amf_ngap"
+	"free5gc/src/test/ngapTestpacket"
 	"testing"
 	"time"
 )

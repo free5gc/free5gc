@@ -18,8 +18,7 @@ const char *UTLT_StrStatus(Status status);
 int UTLT_LogPrint(int level, const char *filename, const int line,
                   const char *funcname, const char *fmt, ...);
 
-#define __FILENAME__ (strstr(__FILE__, "/free5gc/src/upf/") ? strstr(__FILE__, "/free5gc/src/upf/") + 9 : \
-    strstr(__FILE__, "/gofree5gc/src/upf/") ? strstr(__FILE__, "/gofree5gc/src/upf/") + 11 : __FILE__)
+#define __FILENAME__ (strstr(__FILE__, "/free5gc/src/upf/") ? strstr(__FILE__, "/free5gc/src/upf/") + 11 : __FILE__)
 
 #define UTLT_Panic(fmt, ...) \
     UTLT_LogPrint(0, __FILENAME__, __LINE__, __func__, fmt, ## __VA_ARGS__)

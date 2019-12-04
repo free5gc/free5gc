@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
+	"free5gc/src/nrf/nrf_util"
 )
 
 var testingNotification = test.TestingNssaiavailability{
@@ -42,13 +43,6 @@ func generateNotificationRequest() NotificationData {
 
 	return n
 }
-
-// Path of HTTP2 key and log file
-var (
-	NRF_LOG_PATH = path_util.Gofree5gcPath("free5gc/src/nrf/Management/sslkeylog.log")
-	NRF_PEM_PATH = path_util.Gofree5gcPath("free5gc/support/TLS/nrf.pem")
-	NRF_KEY_PATH = path_util.Gofree5gcPath("free5gc/support/TLS/nrf.key")
-)
 
 func TestNotificationPost(t *testing.T) {
 	var (
@@ -73,13 +67,13 @@ func TestNotificationPost(t *testing.T) {
 		c.JSON(http.StatusNoContent, gin.H{})
 	})
 
-	srv, err := http2_util.NewServer(":29510", NRF_LOG_PATH, router)
+	srv, err := http2_util.NewServer(":29510", (nrf_util.NrfLogPath, router)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	go func() {
-		err := srv.ListenAndServeTLS(NRF_PEM_PATH, NRF_KEY_PATH)
+		err := srv.ListenAndServeTLS((nrf_util.NrfPemPath, (nrf_util.NrfKeyPath)
 		if err != nil && err != http.ErrServerClosed {
 			t.Fatal(err)
 		}

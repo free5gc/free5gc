@@ -32,7 +32,7 @@ var nasMessageSecurityModeCompleteTable = []nasMessageSecurityModeCompleteData{
 		inIMEISV: nasType.IMEISV{
 			Iei:   nasMessage.SecurityModeCompleteIMEISVType,
 			Len:   2,
-			Octet: [2]uint8{0x01, 0x01},
+			Octet: [9]uint8{0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01},
 		},
 		inNASMessageContainer: nasType.NASMessageContainer{
 			Iei:    nasMessage.SecurityModeCompleteNASMessageContainerType,

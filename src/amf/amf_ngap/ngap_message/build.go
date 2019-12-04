@@ -10,7 +10,6 @@ import (
 	"free5gc/lib/openapi/models"
 	"free5gc/src/amf/amf_context"
 	"free5gc/src/amf/logger"
-	"strconv"
 	"strings"
 )
 
@@ -830,7 +829,6 @@ func BuildInitialContextSetupRequest(
 	pduSessionResourceSetupRequestList *ngapType.PDUSessionResourceSetupListCxtReq,
 	rrcInactiveTransitionReportRequest *ngapType.RRCInactiveTransitionReportRequest,
 	coreNetworkAssistanceInfo *ngapType.CoreNetworkAssistanceInformation,
-	mobilityRestrictionList *ngapType.MobilityRestrictionList,
 	emergencyFallbackIndicator *ngapType.EmergencyFallbackIndicator) ([]byte, error) {
 
 	// Old AMF: new amf sould get old amf's amf name
@@ -920,8 +918,8 @@ func BuildInitialContextSetupRequest(
 		ie.Value.Present = ngapType.InitialContextSetupRequestIEsPresentUEAggregateMaximumBitRate
 		ie.Value.UEAggregateMaximumBitRate = new(ngapType.UEAggregateMaximumBitRate)
 
-		ueAmbrUL, _ := strconv.ParseInt(amfUe.AccessAndMobilitySubscriptionData.SubscribedUeAmbr.Uplink, 10, 64)
-		ueAmbrDL, _ := strconv.ParseInt(amfUe.AccessAndMobilitySubscriptionData.SubscribedUeAmbr.Downlink, 10, 64)
+		ueAmbrUL := ngapConvert.UEAmbrToInt64(amfUe.AccessAndMobilitySubscriptionData.SubscribedUeAmbr.Uplink)
+		ueAmbrDL := ngapConvert.UEAmbrToInt64(amfUe.AccessAndMobilitySubscriptionData.SubscribedUeAmbr.Downlink)
 		ie.Value.UEAggregateMaximumBitRate.UEAggregateMaximumBitRateUL.Value = ueAmbrUL
 		ie.Value.UEAggregateMaximumBitRate.UEAggregateMaximumBitRateDL.Value = ueAmbrDL
 
@@ -959,7 +957,7 @@ func BuildInitialContextSetupRequest(
 	initialContextSetupRequestIEs.List = append(initialContextSetupRequestIEs.List, ie)
 
 	// PDU Session Resource Setup Request List
-	if pduSessionResourceSetupRequestList != nil {
+	if pduSessionResourceSetupRequestList != nil && len(pduSessionResourceSetupRequestList.List) > 0 {
 		ie = ngapType.InitialContextSetupRequestIEs{}
 		ie.Id.Value = ngapType.ProtocolIEIDPDUSessionResourceSetupListCxtReq
 		ie.Criticality.Value = ngapType.CriticalityPresentReject
@@ -1032,12 +1030,68 @@ func BuildInitialContextSetupRequest(
 	}
 
 	// Mobility Restriction List (optional)
-	if mobilityRestrictionList != nil {
+	if anType == models.AccessType__3_GPP_ACCESS {
 		ie = ngapType.InitialContextSetupRequestIEs{}
 		ie.Id.Value = ngapType.ProtocolIEIDMobilityRestrictionList
 		ie.Criticality.Value = ngapType.CriticalityPresentIgnore
 		ie.Value.Present = ngapType.InitialContextSetupRequestIEsPresentMobilityRestrictionList
-		ie.Value.MobilityRestrictionList = mobilityRestrictionList
+		ie.Value.MobilityRestrictionList = new(ngapType.MobilityRestrictionList)
+
+		mobilityRestrictionList := ie.Value.MobilityRestrictionList
+		mobilityRestrictionList.ServingPLMN = ngapConvert.PlmnIdToNgap(amfUe.PlmnId)
+
+		if len(amfUe.AccessAndMobilitySubscriptionData.RatRestrictions) > 0 {
+			mobilityRestrictionList.RATRestrictions = new(ngapType.RATRestrictions)
+			ratRestrictions := mobilityRestrictionList.RATRestrictions
+			for _, ratType := range amfUe.AccessAndMobilitySubscriptionData.RatRestrictions {
+				item := ngapType.RATRestrictionsItem{}
+				item.PLMNIdentity = ngapConvert.PlmnIdToNgap(amfUe.PlmnId)
+				item.RATRestrictionInformation = ngapConvert.RATRestrictionInformationToNgap(ratType)
+				ratRestrictions.List = append(ratRestrictions.List, item)
+			}
+		}
+
+		if len(amfUe.AccessAndMobilitySubscriptionData.ForbiddenAreas) > 0 {
+			mobilityRestrictionList.ForbiddenAreaInformation = new(ngapType.ForbiddenAreaInformation)
+			forbiddenAreaInformation := mobilityRestrictionList.ForbiddenAreaInformation
+			for _, info := range amfUe.AccessAndMobilitySubscriptionData.ForbiddenAreas {
+				item := ngapType.ForbiddenAreaInformationItem{}
+				item.PLMNIdentity = ngapConvert.PlmnIdToNgap(amfUe.PlmnId)
+				for _, tac := range info.Tacs {
+					tacBytes, _ := hex.DecodeString(tac)
+					tacNgap := ngapType.TAC{}
+					tacNgap.Value = tacBytes
+					item.ForbiddenTACs.List = append(item.ForbiddenTACs.List, tacNgap)
+				}
+				forbiddenAreaInformation.List = append(forbiddenAreaInformation.List, item)
+			}
+		}
+
+		if amfUe.AmPolicyAssociation.ServAreaRes != nil {
+			mobilityRestrictionList.ServiceAreaInformation = new(ngapType.ServiceAreaInformation)
+			serviceAreaInformation := mobilityRestrictionList.ServiceAreaInformation
+
+			item := ngapType.ServiceAreaInformationItem{}
+			item.PLMNIdentity = ngapConvert.PlmnIdToNgap(amfUe.PlmnId)
+			var tacList []ngapType.TAC
+			for _, area := range amfUe.AmPolicyAssociation.ServAreaRes.Areas {
+				for _, tac := range area.Tacs {
+					tacBytes, _ := hex.DecodeString(tac)
+					tacNgap := ngapType.TAC{}
+					tacNgap.Value = tacBytes
+					tacList = append(tacList, tacNgap)
+				}
+			}
+			if amfUe.AmPolicyAssociation.ServAreaRes.RestrictionType == models.RestrictionType_ALLOWED_AREAS {
+				item.AllowedTACs = new(ngapType.AllowedTACs)
+				item.AllowedTACs.List = append(item.AllowedTACs.List, tacList...)
+			} else {
+				item.NotAllowedTACs = new(ngapType.NotAllowedTACs)
+				item.NotAllowedTACs.List = append(item.NotAllowedTACs.List, tacList...)
+			}
+			serviceAreaInformation.List = append(serviceAreaInformation.List, item)
+		}
+
 		initialContextSetupRequestIEs.List = append(initialContextSetupRequestIEs.List, ie)
 	}
 
@@ -1053,14 +1107,14 @@ func BuildInitialContextSetupRequest(
 	}
 
 	// Index to RAT/Frequency Selection Priority (optional)
-	if amfUe.SubscribedData.RfspIndex != 0 {
+	if amfUe.AmPolicyAssociation != nil && amfUe.AmPolicyAssociation.Rfsp != 0 {
 		ie = ngapType.InitialContextSetupRequestIEs{}
 		ie.Id.Value = ngapType.ProtocolIEIDIndexToRFSP
 		ie.Criticality.Value = ngapType.CriticalityPresentIgnore
 		ie.Value.Present = ngapType.InitialContextSetupRequestIEsPresentIndexToRFSP
 		ie.Value.IndexToRFSP = new(ngapType.IndexToRFSP)
 
-		ie.Value.IndexToRFSP.Value = int64(amfUe.SubscribedData.RfspIndex)
+		ie.Value.IndexToRFSP.Value = int64(amfUe.AmPolicyAssociation.Rfsp)
 
 		initialContextSetupRequestIEs.List = append(initialContextSetupRequestIEs.List, ie)
 	}
@@ -1218,29 +1272,30 @@ func BuildUEContextModificationRequest(
 	// Security Key (optional)
 
 	// Index to RAT/Frequency Selection Priority (optional)
-	if amfUe.SubscribedData.RfspIndex != 0 {
+	if amfUe.AmPolicyAssociation != nil && amfUe.AmPolicyAssociation.Rfsp != 0 {
 		ie = ngapType.UEContextModificationRequestIEs{}
 		ie.Id.Value = ngapType.ProtocolIEIDIndexToRFSP
 		ie.Criticality.Value = ngapType.CriticalityPresentIgnore
 		ie.Value.Present = ngapType.UEContextModificationRequestIEsPresentIndexToRFSP
 		ie.Value.IndexToRFSP = new(ngapType.IndexToRFSP)
 
-		ie.Value.IndexToRFSP.Value = int64(amfUe.SubscribedData.RfspIndex)
+		ie.Value.IndexToRFSP.Value = int64(amfUe.AmPolicyAssociation.Rfsp)
 
 		uEContextModificationRequestIEs.List = append(uEContextModificationRequestIEs.List, ie)
 	}
 
 	// UE Aggregate Maximum Bit Rate (optional)
-	if amfUe.UEAMBR != nil {
+	if amfUe.AccessAndMobilitySubscriptionData != nil && amfUe.AccessAndMobilitySubscriptionData.SubscribedUeAmbr != nil {
 		ie = ngapType.UEContextModificationRequestIEs{}
 		ie.Id.Value = ngapType.ProtocolIEIDUEAggregateMaximumBitRate
 		ie.Criticality.Value = ngapType.CriticalityPresentIgnore
 		ie.Value.Present = ngapType.UEContextModificationRequestIEsPresentUEAggregateMaximumBitRate
 		ie.Value.UEAggregateMaximumBitRate = new(ngapType.UEAggregateMaximumBitRate)
 
-		ueAMBRUL, ueAMBRDL := ngapConvert.UEAmbrToInt64(*amfUe.UEAMBR)
-		ie.Value.UEAggregateMaximumBitRate.UEAggregateMaximumBitRateUL.Value = ueAMBRUL
-		ie.Value.UEAggregateMaximumBitRate.UEAggregateMaximumBitRateDL.Value = ueAMBRDL
+		ueAmbrUL := ngapConvert.UEAmbrToInt64(amfUe.AccessAndMobilitySubscriptionData.SubscribedUeAmbr.Uplink)
+		ueAmbrDL := ngapConvert.UEAmbrToInt64(amfUe.AccessAndMobilitySubscriptionData.SubscribedUeAmbr.Downlink)
+		ie.Value.UEAggregateMaximumBitRate.UEAggregateMaximumBitRateUL.Value = ueAmbrUL
+		ie.Value.UEAggregateMaximumBitRate.UEAggregateMaximumBitRateDL.Value = ueAmbrDL
 
 		uEContextModificationRequestIEs.List = append(uEContextModificationRequestIEs.List, ie)
 	}
@@ -1487,6 +1542,11 @@ func BuildHandoverRequest(ue *amf_context.RanUe, cause ngapType.Cause, pduSessio
 	sourceToTargetTransparentContainer ngapType.SourceToTargetTransparentContainer, nsci bool) ([]byte, error) {
 
 	amfSelf := amf_context.AMF_Self()
+	amfUe := ue.AmfUe
+	if amfUe == nil {
+		return nil, fmt.Errorf("AmfUe is nil")
+	}
+
 	var pdu ngapType.NGAPPDU
 
 	pdu.Present = ngapType.NGAPPDUPresentInitiatingMessage
@@ -1542,9 +1602,10 @@ func BuildHandoverRequest(ue *amf_context.RanUe, cause ngapType.Cause, pduSessio
 	ie.Value.Present = ngapType.HandoverRequestIEsPresentUEAggregateMaximumBitRate
 	ie.Value.UEAggregateMaximumBitRate = new(ngapType.UEAggregateMaximumBitRate)
 
-	ueAMBRUL, ueAMBRDL := ngapConvert.UEAmbrToInt64(*ue.AmfUe.UEAMBR)
-	ie.Value.UEAggregateMaximumBitRate.UEAggregateMaximumBitRateUL.Value = ueAMBRUL
-	ie.Value.UEAggregateMaximumBitRate.UEAggregateMaximumBitRateDL.Value = ueAMBRDL
+	ueAmbrUL := ngapConvert.UEAmbrToInt64(amfUe.AccessAndMobilitySubscriptionData.SubscribedUeAmbr.Uplink)
+	ueAmbrDL := ngapConvert.UEAmbrToInt64(amfUe.AccessAndMobilitySubscriptionData.SubscribedUeAmbr.Downlink)
+	ie.Value.UEAggregateMaximumBitRate.UEAggregateMaximumBitRateUL.Value = ueAmbrUL
+	ie.Value.UEAggregateMaximumBitRate.UEAggregateMaximumBitRateDL.Value = ueAmbrDL
 
 	handoverRequestIEs.List = append(handoverRequestIEs.List, ie)
 

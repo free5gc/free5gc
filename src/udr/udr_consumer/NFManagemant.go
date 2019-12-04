@@ -9,6 +9,7 @@ import (
 	"free5gc/src/udr/factory"
 	"net/http"
 	"strings"
+	"time"
 )
 
 func BuildNFInstance() (profile models.NfProfile) {
@@ -60,7 +61,7 @@ func BuildNFInstance() (profile models.NfProfile) {
 	return
 }
 
-func SendRegisterNFInstance(nrfUri, nfInstanceId string, profile models.NfProfile) (resouceNrfUri string, err error) {
+func SendRegisterNFInstance(nrfUri, nfInstanceId string, profile models.NfProfile) (resouceNrfUri string, retrieveNfInstanceId string, err error) {
 
 	// Set client and set url
 	configuration := Nnrf_NFManagement.NewConfiguration()
@@ -68,19 +69,27 @@ func SendRegisterNFInstance(nrfUri, nfInstanceId string, profile models.NfProfil
 	client := Nnrf_NFManagement.NewAPIClient(configuration)
 
 	var res *http.Response
-	_, res, err = client.NFInstanceIDDocumentApi.RegisterNFInstance(context.TODO(), nfInstanceId, profile)
-	if err != nil {
-		return
-	}
-	if res != nil {
+	for {
+		_, res, err = client.NFInstanceIDDocumentApi.RegisterNFInstance(context.TODO(), nfInstanceId, profile)
+		if err != nil || res == nil {
+			//TODO : add log
+			fmt.Println(fmt.Errorf("UDR register to NRF Error[%s]", err.Error()))
+			time.Sleep(2 * time.Second)
+			continue
+		}
 		status := res.StatusCode
 		if status == http.StatusOK {
 			// NFUpdate
-			resouceNrfUri = nrfUri
+			break
 		} else if status == http.StatusCreated {
 			// NFRegister
 			resourceUri := res.Header.Get("Location")
 			resouceNrfUri = resourceUri[:strings.Index(resourceUri, "/nnrf-nfm/")]
+			retrieveNfInstanceId = resourceUri[strings.LastIndex(resourceUri, "/")+1:]
+			break
+		} else {
+			fmt.Println("handler returned wrong status code", status)
+			fmt.Println("NRF return wrong status code", status)
 		}
 	}
 	return

@@ -11,7 +11,6 @@ import (
 
 	"github.com/google/uuid"
 	"free5gc/lib/openapi/models"
-	"free5gc/lib/path_util"
 	"free5gc/lib/pfcp/pfcpType"
 	"free5gc/lib/pfcp/pfcpUdp"
 )
@@ -29,10 +28,6 @@ type SMFContext struct {
 	URIScheme   models.UriScheme
 	HTTPAddress string
 	HTTPPort    int
-
-	TLSKeyLogPath string
-	TLSPEMPath    string
-	TLSKeyPath    string
 
 	CPNodeID pfcpType.NodeID
 
@@ -119,10 +114,6 @@ func InitSmfContext(config *factory.Config) {
 	NFDiscovryConfig := Nnrf_NFDiscovery.NewConfiguration()
 	NFDiscovryConfig.SetBasePath(SMF_Self().NrfUri)
 	smfContext.NFDiscoveryClient = Nnrf_NFDiscovery.NewAPIClient(NFDiscovryConfig)
-
-	smfContext.TLSKeyLogPath = path_util.Gofree5gcPath("free5gc/smfsslkey.log")
-	smfContext.TLSPEMPath = path_util.Gofree5gcPath("free5gc/support/TLS/smf.pem")
-	smfContext.TLSKeyPath = path_util.Gofree5gcPath("free5gc/support/TLS/smf.key")
 
 	SetupNFProfile()
 }

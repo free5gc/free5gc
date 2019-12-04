@@ -39,8 +39,8 @@ func init() {
 			},
 		},
 		SubscribedUeAmbr: &models.AmbrRm{
-			Uplink:   "1000",
-			Downlink: "1000",
+			Uplink:   "1000 Kbps",
+			Downlink: "1000 Kbps",
 		},
 	}
 

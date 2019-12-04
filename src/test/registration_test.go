@@ -2,6 +2,7 @@ package test_test
 
 import (
 	"encoding/hex"
+	"github.com/mohae/deepcopy"
 	"free5gc/lib/CommonConsumerTestData/UDM/TestGenAuthData"
 	"free5gc/lib/CommonConsumerTestData/UDR/TestRegistrationProcedure"
 	"free5gc/lib/nas/nasMessage"
@@ -24,6 +25,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 )
+
+const ranIpAddr string = "10.200.200.1"
 
 func getAuthSubscription() (authSubs models.AuthenticationSubscription) {
 	authSubs.PermanentKey = &models.PermanentKey{
@@ -63,7 +66,7 @@ func TestRegistration(t *testing.T) {
 	assert.Nil(t, err)
 
 	// RAN connect to UPF
-	upfConn, err := connectToUpf("10.200.200.1", "10.200.200.102", 2152, 2152)
+	upfConn, err := connectToUpf(ranIpAddr, "10.200.200.102", 2152, 2152)
 	assert.Nil(t, err)
 
 	// send NGSetupRequest Msg
@@ -80,6 +83,7 @@ func TestRegistration(t *testing.T) {
 
 	// New UE
 	ue := test.NewRanUeContext("imsi-2089300007487", 1, test.ALG_CIPHERING_128_NEA2, test.ALG_INTEGRITY_128_NIA2)
+	// ue := test.NewRanUeContext("imsi-2089300007487", 1, test.ALG_CIPHERING_128_NEA0, test.ALG_INTEGRITY_128_NIA0)
 	ue.AmfUeNgapId = 1
 	ue.AuthenticationSubs = getAuthSubscription()
 	// insert UE data to MongoDB
@@ -106,7 +110,7 @@ func TestRegistration(t *testing.T) {
 		Len:    12, // suci
 		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
 	}
-	pdu := nasTestpacket.GetRegistrationRequest(nasMessage.RegistrationType5GSInitialRegistration, mobileIdentity5GS, nil)
+	pdu := nasTestpacket.GetRegistrationRequest(nasMessage.RegistrationType5GSInitialRegistration, mobileIdentity5GS, nil, nil)
 	sendMsg, err = test.GetInitialUEMessage(ue.RanUeNgapId, pdu, "")
 	assert.Nil(t, err)
 	_, err = conn.Write(sendMsg)
@@ -189,7 +193,7 @@ func TestRegistration(t *testing.T) {
 	assert.Nil(t, err)
 
 	// send 14. NGAP-PDU Session Resource Setup Response
-	sendMsg, err = test.GetPDUSessionResourceSetupResponse(ue.AmfUeNgapId, ue.RanUeNgapId)
+	sendMsg, err = test.GetPDUSessionResourceSetupResponse(ue.AmfUeNgapId, ue.RanUeNgapId, ranIpAddr)
 	assert.Nil(t, err)
 	_, err = conn.Write(sendMsg)
 	assert.Nil(t, err)
@@ -295,7 +299,7 @@ func TestDeregistration(t *testing.T) {
 		Len:    12, // suci
 		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
 	}
-	pdu := nasTestpacket.GetRegistrationRequest(nasMessage.RegistrationType5GSInitialRegistration, mobileIdentity5GS, nil)
+	pdu := nasTestpacket.GetRegistrationRequest(nasMessage.RegistrationType5GSInitialRegistration, mobileIdentity5GS, nil, nil)
 	sendMsg, err = test.GetInitialUEMessage(ue.RanUeNgapId, pdu, "")
 	assert.Nil(t, err)
 	_, err = conn.Write(sendMsg)
@@ -446,7 +450,7 @@ func TestServiceRequest(t *testing.T) {
 		Len:    12, // suci
 		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
 	}
-	pdu := nasTestpacket.GetRegistrationRequest(nasMessage.RegistrationType5GSInitialRegistration, mobileIdentity5GS, nil)
+	pdu := nasTestpacket.GetRegistrationRequest(nasMessage.RegistrationType5GSInitialRegistration, mobileIdentity5GS, nil, nil)
 	sendMsg, err = test.GetInitialUEMessage(ue.RanUeNgapId, pdu, "")
 	assert.Nil(t, err)
 	_, err = conn.Write(sendMsg)
@@ -528,7 +532,7 @@ func TestServiceRequest(t *testing.T) {
 	assert.Nil(t, err)
 
 	// send 14. NGAP-PDU Session Resource Setup Response
-	sendMsg, err = test.GetPDUSessionResourceSetupResponse(ue.AmfUeNgapId, ue.RanUeNgapId)
+	sendMsg, err = test.GetPDUSessionResourceSetupResponse(ue.AmfUeNgapId, ue.RanUeNgapId, ranIpAddr)
 	assert.Nil(t, err)
 	_, err = conn.Write(sendMsg)
 	assert.Nil(t, err)
@@ -572,7 +576,7 @@ func TestServiceRequest(t *testing.T) {
 	assert.Nil(t, err)
 
 	// Send Initial Context Setup Response
-	sendMsg, err = test.GetInitialContextSetupResponseForServiceRequest(ue.AmfUeNgapId, ue.RanUeNgapId)
+	sendMsg, err = test.GetInitialContextSetupResponseForServiceRequest(ue.AmfUeNgapId, ue.RanUeNgapId, ranIpAddr)
 	assert.Nil(t, err)
 	_, err = conn.Write(sendMsg)
 	assert.Nil(t, err)
@@ -638,7 +642,7 @@ func TestPDUSessionReleaseRequest(t *testing.T) {
 		Len:    12, // suci
 		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
 	}
-	pdu := nasTestpacket.GetRegistrationRequest(nasMessage.RegistrationType5GSInitialRegistration, mobileIdentity5GS, nil)
+	pdu := nasTestpacket.GetRegistrationRequest(nasMessage.RegistrationType5GSInitialRegistration, mobileIdentity5GS, nil, nil)
 	sendMsg, err = test.GetInitialUEMessage(ue.RanUeNgapId, pdu, "")
 	assert.Nil(t, err)
 	_, err = conn.Write(sendMsg)
@@ -720,7 +724,7 @@ func TestPDUSessionReleaseRequest(t *testing.T) {
 	assert.Nil(t, err)
 
 	// send 14. NGAP-PDU Session Resource Setup Response
-	sendMsg, err = test.GetPDUSessionResourceSetupResponse(ue.AmfUeNgapId, ue.RanUeNgapId)
+	sendMsg, err = test.GetPDUSessionResourceSetupResponse(ue.AmfUeNgapId, ue.RanUeNgapId, ranIpAddr)
 	assert.Nil(t, err)
 	_, err = conn.Write(sendMsg)
 	assert.Nil(t, err)
@@ -833,7 +837,7 @@ func TestXnHandover(t *testing.T) {
 		Len:    12, // suci
 		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
 	}
-	pdu := nasTestpacket.GetRegistrationRequest(nasMessage.RegistrationType5GSInitialRegistration, mobileIdentity5GS, nil)
+	pdu := nasTestpacket.GetRegistrationRequest(nasMessage.RegistrationType5GSInitialRegistration, mobileIdentity5GS, nil, nil)
 	sendMsg, err = test.GetInitialUEMessage(ue.RanUeNgapId, pdu, "")
 	assert.Nil(t, err)
 	_, err = conn.Write(sendMsg)
@@ -915,12 +919,12 @@ func TestXnHandover(t *testing.T) {
 	assert.Nil(t, err)
 
 	// send 14. NGAP-PDU Session Resource Setup Response
-	sendMsg, err = test.GetPDUSessionResourceSetupResponse(ue.AmfUeNgapId, ue.RanUeNgapId)
+	sendMsg, err = test.GetPDUSessionResourceSetupResponse(ue.AmfUeNgapId, ue.RanUeNgapId, ranIpAddr)
 	assert.Nil(t, err)
 	_, err = conn.Write(sendMsg)
 	assert.Nil(t, err)
 
-	time.Sleep(10 * time.Millisecond)
+	time.Sleep(2000 * time.Millisecond)
 	// send Path Switch Request (XnHandover)
 	sendMsg, err = test.GetPathSwitchRequest(ue.AmfUeNgapId, ue.RanUeNgapId)
 	assert.Nil(t, err)
@@ -995,7 +999,7 @@ func TestPaging(t *testing.T) {
 		Len:    12, // suci
 		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
 	}
-	pdu := nasTestpacket.GetRegistrationRequest(nasMessage.RegistrationType5GSInitialRegistration, mobileIdentity5GS, nil)
+	pdu := nasTestpacket.GetRegistrationRequest(nasMessage.RegistrationType5GSInitialRegistration, mobileIdentity5GS, nil, nil)
 	sendMsg, err = test.GetInitialUEMessage(ue.RanUeNgapId, pdu, "")
 	assert.Nil(t, err)
 	_, err = conn.Write(sendMsg)
@@ -1076,7 +1080,7 @@ func TestPaging(t *testing.T) {
 	assert.Nil(t, err)
 
 	// send 14. NGAP-PDU Session Resource Setup Response
-	sendMsg, err = test.GetPDUSessionResourceSetupResponse(ue.AmfUeNgapId, ue.RanUeNgapId)
+	sendMsg, err = test.GetPDUSessionResourceSetupResponse(ue.AmfUeNgapId, ue.RanUeNgapId, ranIpAddr)
 	assert.Nil(t, err)
 	_, err = conn.Write(sendMsg)
 	assert.Nil(t, err)
@@ -1107,7 +1111,7 @@ func TestPaging(t *testing.T) {
 	// send downlink data
 	go func() {
 		// RAN connect to UPF
-		upfConn, err := connectToUpf("10.200.200.1", "10.200.200.102", 2152, 2152)
+		upfConn, err := connectToUpf(ranIpAddr, "10.200.200.102", 2152, 2152)
 		assert.Nil(t, err)
 		_, _ = upfConn.Read(recvMsg)
 		// fmt.Println(string(recvMsg))
@@ -1144,7 +1148,7 @@ func TestPaging(t *testing.T) {
 	assert.Nil(t, err)
 
 	//send Initial Context Setup Response
-	sendMsg, err = test.GetInitialContextSetupResponseForServiceRequest(ue.AmfUeNgapId, ue.RanUeNgapId)
+	sendMsg, err = test.GetInitialContextSetupResponseForServiceRequest(ue.AmfUeNgapId, ue.RanUeNgapId, ranIpAddr)
 	assert.Nil(t, err)
 	_, err = conn.Write(sendMsg)
 	assert.Nil(t, err)
@@ -1170,7 +1174,7 @@ func TestN2Handover(t *testing.T) {
 	assert.Nil(t, err)
 
 	// RAN1 connect to UPF
-	upfConn, err := connectToUpf("10.200.200.1", "10.200.200.102", 2152, 2152)
+	upfConn, err := connectToUpf(ranIpAddr, "10.200.200.102", 2152, 2152)
 	assert.Nil(t, err)
 
 	// RAN1 send NGSetupRequest Msg
@@ -1235,7 +1239,7 @@ func TestN2Handover(t *testing.T) {
 		Len:    12, // suci
 		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
 	}
-	pdu := nasTestpacket.GetRegistrationRequest(nasMessage.RegistrationType5GSInitialRegistration, mobileIdentity5GS, nil)
+	pdu := nasTestpacket.GetRegistrationRequest(nasMessage.RegistrationType5GSInitialRegistration, mobileIdentity5GS, nil, nil)
 	sendMsg, err = test.GetInitialUEMessage(ue.RanUeNgapId, pdu, "")
 	assert.Nil(t, err)
 	_, err = conn.Write(sendMsg)
@@ -1316,7 +1320,7 @@ func TestN2Handover(t *testing.T) {
 	assert.Nil(t, err)
 
 	// send 14. NGAP-PDU Session Resource Setup Response
-	sendMsg, err = test.GetPDUSessionResourceSetupResponse(ue.AmfUeNgapId, ue.RanUeNgapId)
+	sendMsg, err = test.GetPDUSessionResourceSetupResponse(ue.AmfUeNgapId, ue.RanUeNgapId, ranIpAddr)
 	assert.Nil(t, err)
 	_, err = conn.Write(sendMsg)
 	assert.Nil(t, err)
@@ -1378,8 +1382,12 @@ func TestN2Handover(t *testing.T) {
 	_, err = ngap.Decoder(recvMsg[:n])
 	assert.Nil(t, err)
 
+	// Target RAN create New UE
+	targetUe := deepcopy.Copy(ue).(*test.RanUeContext)
+	targetUe.AmfUeNgapId = 2
+
 	// Target RAN send ngap Handover Request Acknowledge Msg
-	sendMsg, err = test.GetHandoverRequestAcknowledge(ue.AmfUeNgapId, ue.RanUeNgapId)
+	sendMsg, err = test.GetHandoverRequestAcknowledge(targetUe.AmfUeNgapId, targetUe.RanUeNgapId)
 	assert.Nil(t, err)
 	_, err = conn2.Write(sendMsg)
 	assert.Nil(t, err)
@@ -1396,7 +1404,7 @@ func TestN2Handover(t *testing.T) {
 	assert.Nil(t, err)
 
 	// Target RAN send ngap Handover Notify
-	sendMsg, err = test.GetHandoverNotify(ue.AmfUeNgapId, ue.RanUeNgapId)
+	sendMsg, err = test.GetHandoverNotify(targetUe.AmfUeNgapId, targetUe.RanUeNgapId)
 	assert.Nil(t, err)
 	_, err = conn2.Write(sendMsg)
 	assert.Nil(t, err)
@@ -1419,8 +1427,11 @@ func TestN2Handover(t *testing.T) {
 		Len:    11, // 5g-guti
 		Buffer: []uint8{0x02, 0x02, 0xf8, 0x39, 0xca, 0xfe, 0x00, 0x00, 0x00, 0x00, 0x01},
 	}
-	pdu = nasTestpacket.GetRegistrationRequest(nasMessage.RegistrationType5GSMobilityRegistrationUpdating, mobileIdentity5GS, nil)
-	sendMsg, err = test.GetInitialUEMessage(ue.RanUeNgapId, pdu, "")
+	uplinkDataStatus := nasType.NewUplinkDataStatus(nasMessage.RegistrationRequestUplinkDataStatusType)
+	uplinkDataStatus.SetLen(2)
+	uplinkDataStatus.SetPSI10(1)
+	pdu = nasTestpacket.GetRegistrationRequest(nasMessage.RegistrationType5GSMobilityRegistrationUpdating, mobileIdentity5GS, nil, uplinkDataStatus)
+	sendMsg, err = test.GetInitialUEMessage(targetUe.RanUeNgapId, pdu, "")
 	assert.Nil(t, err)
 	_, err = conn2.Write(sendMsg)
 	assert.Nil(t, err)
@@ -1432,22 +1443,22 @@ func TestN2Handover(t *testing.T) {
 	assert.Nil(t, err)
 
 	// Target RAN send ngap Initial Context Setup Response Msg
-	sendMsg, err = test.GetInitialContextSetupResponse(ue.AmfUeNgapId, ue.RanUeNgapId)
+	sendMsg, err = test.GetInitialContextSetupResponseForServiceRequest(targetUe.AmfUeNgapId, targetUe.RanUeNgapId, "10.200.200.2")
 	assert.Nil(t, err)
 	_, err = conn2.Write(sendMsg)
 	assert.Nil(t, err)
 
 	// Target RAN send NAS Registration Complete Msg
 	pdu = nasTestpacket.GetRegistrationComplete(nil)
-	pdu, err = test.EncodeNasPduWithSecurity(ue, pdu)
+	pdu, err = test.EncodeNasPduWithSecurity(targetUe, pdu)
 	assert.Nil(t, err)
-	sendMsg, err = test.GetUplinkNASTransport(ue.AmfUeNgapId, ue.RanUeNgapId, pdu)
+	sendMsg, err = test.GetUplinkNASTransport(targetUe.AmfUeNgapId, targetUe.RanUeNgapId, pdu)
 	assert.Nil(t, err)
 	_, err = conn2.Write(sendMsg)
 	assert.Nil(t, err)
 
-	// wait 10 ms
-	time.Sleep(10 * time.Millisecond)
+	// wait 1000 ms
+	time.Sleep(1000 * time.Millisecond)
 
 	// Send the dummy packet
 	// ping IP(tunnel IP) from 60.60.0.2(127.0.0.1) to 60.60.0.20(127.0.0.8)

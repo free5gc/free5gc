@@ -11,6 +11,7 @@ import (
 	"free5gc/src/udr/logger"
 	"free5gc/src/udr/udr_consumer"
 	"free5gc/src/udr/udr_handler"
+	"free5gc/src/udr/udr_util"
 	"os/exec"
 	"sync"
 
@@ -108,9 +109,9 @@ func (udr *UDR) Start() {
 
 	DataRepository.AddService(router)
 
-	udrLogPath := path_util.Gofree5gcPath("free5gc/udrsslkey.log")
-	udrPemPath := path_util.Gofree5gcPath("free5gc/support/TLS/udr.pem")
-	udrKeyPath := path_util.Gofree5gcPath("free5gc/support/TLS/udr.key")
+	udrLogPath := udr_util.UdrLogPath
+	udrPemPath := udr_util.UdrPemPath
+	udrKeyPath := udr_util.UdrKeyPath
 	if sbi.Tls != nil {
 		udrLogPath = path_util.Gofree5gcPath(sbi.Tls.Log)
 		udrPemPath = path_util.Gofree5gcPath(sbi.Tls.Pem)
@@ -119,7 +120,9 @@ func (udr *UDR) Start() {
 
 	addr := fmt.Sprintf("%s:%d", sbi.IPv4Addr, sbi.Port)
 	profile := udr_consumer.BuildNFInstance()
-	newNrfUri, err := udr_consumer.SendRegisterNFInstance(nrfUri, profile.NfInstanceId, profile)
+	var newNrfUri string
+	var err error
+	newNrfUri, profile.NfInstanceId, err = udr_consumer.SendRegisterNFInstance(nrfUri, profile.NfInstanceId, profile)
 	if err == nil {
 		config.Configuration.NrfUri = newNrfUri
 	} else {

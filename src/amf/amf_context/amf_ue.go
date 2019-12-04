@@ -68,7 +68,6 @@ type AmfUe struct {
 	SubscribedData                    models.SubscribedData
 	SmfSelectionData                  *models.SmfSelectionSubscriptionData
 	UeContextInSmfData                *models.UeContextInSmfData
-	UEAMBR                            *models.Ambr
 	TraceData                         *models.TraceData
 	UdmGroupId                        string
 	SubscribedNssai                   []models.SubscribedSnssai
@@ -83,6 +82,10 @@ type AmfUe struct {
 	ABBA                              []uint8
 	Kseaf                             string
 	Kamf                              string
+	/* context about PCF */
+	PcfUri              string
+	PolicyAssociationId string
+	AmPolicyAssociation *models.PolicyAssociation
 	/* UeContextForHandover*/
 	HandoverNotifyUri string
 	/* N1N2Message */
@@ -450,6 +453,9 @@ func (ue *AmfUe) SelectSecurityAlg(intOrder, encOrder []uint8) {
 	ue.CipheringAlg = ALG_CIPHERING_128_NEA0
 	ue.IntegrityAlg = ALG_INTEGRITY_128_NIA0
 	for _, intAlg := range intOrder {
+		if intAlg == 0 && ue.NasUESecurityCapability.GetIA0_5G() == 1 {
+			break
+		}
 		match := ue.SecurityCapabilities.NRIntegrityProtectionAlgorithms[0] & intAlg
 		if match > 0 {
 			switch match {
@@ -464,6 +470,9 @@ func (ue *AmfUe) SelectSecurityAlg(intOrder, encOrder []uint8) {
 		}
 	}
 	for _, encAlg := range encOrder {
+		if encAlg == 0 && ue.NasUESecurityCapability.GetEA0_5G() == 1 {
+			break
+		}
 		match := ue.SecurityCapabilities.NREncryptionAlgorithms[0] & encAlg
 		if match > 0 {
 			switch match {

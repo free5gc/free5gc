@@ -14,7 +14,7 @@ func init() {
 	Ngaplog = logger.NgapLog
 }
 
-func Dispatch(msg []byte) {
+func Dispatch(sessionID string, msg []byte) {
 	pdu, err := ngap.Decoder(msg)
 	if err != nil {
 		Ngaplog.Errorf("NGAP decode error: %+v\n", err)
@@ -33,11 +33,11 @@ func Dispatch(msg []byte) {
 		case ngapType.ProcedureCodeNGReset:
 			ngap_handler.HandleNGReset(pdu)
 		case ngapType.ProcedureCodeInitialContextSetup:
-			ngap_handler.HandleInitialContextSetupRequest(pdu)
+			ngap_handler.HandleInitialContextSetupRequest(sessionID, pdu)
 		case ngapType.ProcedureCodeUEContextModification:
-			ngap_handler.HandleUEContextModificationRequest(pdu)
+			ngap_handler.HandleUEContextModificationRequest(sessionID, pdu)
 		case ngapType.ProcedureCodeUEContextRelease:
-			ngap_handler.HandleUEContextReleaseCommand(pdu)
+			ngap_handler.HandleUEContextReleaseCommand(sessionID, pdu)
 		case ngapType.ProcedureCodeDownlinkNASTransport:
 			ngap_handler.HandleDownlinkNASTransport(pdu)
 		case ngapType.ProcedureCodePDUSessionResourceSetup:
@@ -78,7 +78,7 @@ func Dispatch(msg []byte) {
 
 		switch successfulOutcome.ProcedureCode.Value {
 		case ngapType.ProcedureCodeNGSetup:
-			ngap_handler.HandleNGSetupResponse(pdu)
+			ngap_handler.HandleNGSetupResponse(sessionID, pdu)
 		case ngapType.ProcedureCodeNGReset:
 			ngap_handler.HandleNGResetAcknowledge(pdu)
 		case ngapType.ProcedureCodePDUSessionResourceModifyIndication:
@@ -97,7 +97,7 @@ func Dispatch(msg []byte) {
 
 		switch unsuccessfulOutcome.ProcedureCode.Value {
 		case ngapType.ProcedureCodeNGSetup:
-			ngap_handler.HandleNGSetupFailure(pdu)
+			ngap_handler.HandleNGSetupFailure(sessionID, pdu)
 		case ngapType.ProcedureCodeRANConfigurationUpdate:
 			ngap_handler.HandleRANConfigurationUpdateFailure(pdu)
 		default:

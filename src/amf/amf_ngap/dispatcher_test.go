@@ -17,7 +17,6 @@ import (
 	"free5gc/lib/nas/nasTestpacket"
 	"free5gc/lib/nas/nasType"
 	"free5gc/lib/ngap"
-	"free5gc/lib/ngap/ngapTestpacket"
 	"free5gc/lib/openapi/models"
 	"free5gc/lib/path_util"
 	"free5gc/src/amf/amf_consumer"
@@ -31,6 +30,7 @@ import (
 	"free5gc/src/ausf/ausf_handler"
 	"free5gc/src/nrf/nrf_service"
 	"free5gc/src/smf/smf_service"
+	"free5gc/src/test/ngapTestpacket"
 	Nudm_UEAU "free5gc/src/udm/UEAuthentication"
 	"free5gc/src/udm/udm_handler"
 	"net/http"
@@ -324,7 +324,7 @@ func TestDispatchInitialUEMessage(t *testing.T) {
 		Len:    5,
 		Buffer: []uint8{0x04, 0x01, 0x01, 0x02, 0x03},
 	}
-	nasPdu := nasTestpacket.GetRegistrationRequest(nasMessage.RegistrationType5GSInitialRegistration, mobileIdentity5GS, requestedNSSAI)
+	nasPdu := nasTestpacket.GetRegistrationRequest(nasMessage.RegistrationType5GSInitialRegistration, mobileIdentity5GS, requestedNSSAI, nil)
 
 	message := ngapTestpacket.BuildInitialUEMessage(1, nasPdu, "")
 	msg, err := ngap.Encoder(message)
@@ -356,7 +356,7 @@ func TestDispatchInitialUEMessageWithGuti(t *testing.T) {
 		Buffer: []uint8{0x02, 0x02, 0xf8, 0x39, 0xca, 0xfe, 0x00, 0x00, 0x00, 0x00, 0x01},
 	}
 
-	nasPdu := nasTestpacket.GetRegistrationRequest(nasMessage.RegistrationType5GSMobilityRegistrationUpdating, mobileIdentity5GS, nil)
+	nasPdu := nasTestpacket.GetRegistrationRequest(nasMessage.RegistrationType5GSMobilityRegistrationUpdating, mobileIdentity5GS, nil, nil)
 
 	message := ngapTestpacket.BuildInitialUEMessage(1, nasPdu, "fe0000000001")
 	msg, err := ngap.Encoder(message)
@@ -376,7 +376,7 @@ func TestDispatchPDUSessionResourceSetupResponse(t *testing.T) {
 	ran := TestAmf.TestAmf.AmfRanPool[TestAmf.Laddr.String()]
 	ran.RanUeList[0].RanUeNgapId = 123
 
-	message := ngapTestpacket.BuildPDUSessionResourceSetupResponse(1, 123)
+	message := ngapTestpacket.BuildPDUSessionResourceSetupResponse(1, 123, "10.200.200.1")
 	msg, err := ngap.Encoder(message)
 	if err != nil {
 		amf_ngap.Ngaplog.Errorln(err)
@@ -445,7 +445,7 @@ func TestDispatchInitialContextSetupResponse(t *testing.T) {
 	ran := TestAmf.TestAmf.AmfRanPool[TestAmf.Laddr.String()]
 	ran.RanUeList[0].AmfUeNgapId = 1
 	ran.RanUeList[0].RanUeNgapId = 2
-	message := ngapTestpacket.BuildInitialContextSetupResponse(1, 2, nil)
+	message := ngapTestpacket.BuildInitialContextSetupResponse(1, 2, "10.200.200.1", nil)
 	msg, err := ngap.Encoder(message)
 	if err != nil {
 		amf_ngap.Ngaplog.Errorln(err)
@@ -804,9 +804,6 @@ func TestDispatchHandoverRequired(t *testing.T) {
 	ue := TestAmf.TestAmf.UePool["imsi-2089300007487"]
 	ue.SecurityContextAvailable = true
 	ue.RanUe[models.AccessType__3_GPP_ACCESS].RanUeNgapId = 1
-	ue.UEAMBR = new(models.Ambr)
-	ue.UEAMBR.Uplink = "800"
-	ue.UEAMBR.Downlink = "1000"
 
 	ue.NCC = 5
 	ue.NH, _ = hex.DecodeString("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")

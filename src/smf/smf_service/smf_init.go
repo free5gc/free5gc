@@ -20,6 +20,7 @@ import (
 	"free5gc/src/smf/smf_handler"
 	"free5gc/src/smf/smf_pfcp/pfcp_message"
 	"free5gc/src/smf/smf_pfcp/pfcp_udp"
+	"free5gc/src/smf/smf_util"
 	"net"
 	"os/exec"
 	"sync"
@@ -137,9 +138,9 @@ func (smf *SMF) Start() {
 
 	go smf_handler.Handle()
 	HTTPAddr := fmt.Sprintf("%s:%d", smf_context.SMF_Self().HTTPAddress, smf_context.SMF_Self().HTTPPort)
-	server, _ := http2_util.NewServer(HTTPAddr, smf_context.SMF_Self().TLSKeyLogPath, router)
+	server, _ := http2_util.NewServer(HTTPAddr, smf_util.SmfLogPath, router)
 
-	initLog.Infoln(server.ListenAndServeTLS(smf_context.SMF_Self().TLSPEMPath, smf_context.SMF_Self().TLSKeyPath))
+	initLog.Infoln(server.ListenAndServeTLS(smf_util.SmfPemPath, smf_util.SmfKeyPath))
 }
 
 func (smf *SMF) Exec(c *cli.Context) error {

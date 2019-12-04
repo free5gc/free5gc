@@ -11,7 +11,7 @@ import (
 	"free5gc/src/nrf/Management"
 	"free5gc/src/nrf/logger"
 	"free5gc/src/nrf/nrf_handler"
-	"free5gc/src/nrf/util"
+	"free5gc/src/nrf/nrf_util"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
@@ -33,7 +33,7 @@ var dbUrl = "mongodb://140.113.214.205:30030"
 func TestGetNFInstance(t *testing.T) {
 	// run AccessToken Server Routine
 	go func() {
-		kl, _ := os.OpenFile(util.NRF_LOG_PATH, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+		kl, _ := os.OpenFile(nrf_util.NrfLogPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 		router := gin.Default()
 
 		Management.AddService(router)
@@ -46,7 +46,7 @@ func TestGetNFInstance(t *testing.T) {
 
 			Handler: router,
 		}
-		_ = server.ListenAndServeTLS(util.NRF_PEM_PATH, util.NRF_KEY_PATH)
+		_ = server.ListenAndServeTLS(nrf_util.NrfPemPath, nrf_util.NrfKeyPath)
 
 	}()
 	time.Sleep(time.Duration(2) * time.Second)
@@ -103,7 +103,7 @@ func TestGetNFInstance(t *testing.T) {
 func TestDeregisterNFInstance(t *testing.T) {
 	// run AccessToken Server Routine
 	go func() {
-		kl, _ := os.OpenFile(util.NRF_LOG_PATH, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+		kl, _ := os.OpenFile(nrf_util.NrfLogPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 		router := gin.Default()
 
 		Management.AddService(router)
@@ -116,7 +116,7 @@ func TestDeregisterNFInstance(t *testing.T) {
 
 			Handler: router,
 		}
-		_ = server.ListenAndServeTLS(util.NRF_PEM_PATH, util.NRF_KEY_PATH)
+		_ = server.ListenAndServeTLS(nrf_util.NrfPemPath, nrf_util.NrfKeyPath)
 
 	}()
 
@@ -131,12 +131,12 @@ func TestDeregisterNFInstance(t *testing.T) {
 			c.JSON(http.StatusNoContent, gin.H{})
 		})
 
-		srv, err := http2_util.NewServer(":30678", util.NRF_LOG_PATH, router)
+		srv, err := http2_util.NewServer(":30678", nrf_util.NrfLogPath, router)
 		if err != nil {
 			log.Panic(err.Error())
 		}
 
-		err2 := srv.ListenAndServeTLS(util.NRF_PEM_PATH, util.NRF_KEY_PATH)
+		err2 := srv.ListenAndServeTLS(nrf_util.NrfPemPath, nrf_util.NrfKeyPath)
 		if err2 != nil && err2 != http.ErrServerClosed {
 			log.Panic(err2.Error())
 		}
@@ -191,7 +191,7 @@ func TestDeregisterNFInstance(t *testing.T) {
 func TestRegisterNFInstance(t *testing.T) {
 	// run AccessToken Server Routine
 	go func() {
-		kl, _ := os.OpenFile(util.NRF_LOG_PATH, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+		kl, _ := os.OpenFile(nrf_util.NrfLogPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 		router := gin.Default()
 
 		Management.AddService(router)
@@ -204,7 +204,7 @@ func TestRegisterNFInstance(t *testing.T) {
 
 			Handler: router,
 		}
-		_ = server.ListenAndServeTLS(util.NRF_PEM_PATH, util.NRF_KEY_PATH)
+		_ = server.ListenAndServeTLS(nrf_util.NrfPemPath, nrf_util.NrfKeyPath)
 
 	}()
 	go func() {
@@ -218,12 +218,12 @@ func TestRegisterNFInstance(t *testing.T) {
 			c.JSON(http.StatusNoContent, gin.H{})
 		})
 
-		srv, err := http2_util.NewServer(":30678", util.NRF_LOG_PATH, router)
+		srv, err := http2_util.NewServer(":30678", nrf_util.NrfLogPath, router)
 		if err != nil {
 			log.Panic(err.Error())
 		}
 
-		err2 := srv.ListenAndServeTLS(util.NRF_PEM_PATH, util.NRF_KEY_PATH)
+		err2 := srv.ListenAndServeTLS(nrf_util.NrfPemPath, nrf_util.NrfKeyPath)
 		if err2 != nil && err2 != http.ErrServerClosed {
 			log.Panic(err2.Error())
 		}
@@ -284,7 +284,7 @@ func TestRegisterNFInstance(t *testing.T) {
 func TestUpdateNFInstance(t *testing.T) {
 	// run AccessToken Server Routine
 	go func() {
-		kl, _ := os.OpenFile(util.NRF_LOG_PATH, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+		kl, _ := os.OpenFile(nrf_util.NrfLogPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 		router := gin.Default()
 
 		Management.AddService(router)
@@ -297,7 +297,7 @@ func TestUpdateNFInstance(t *testing.T) {
 
 			Handler: router,
 		}
-		_ = server.ListenAndServeTLS(util.NRF_PEM_PATH, util.NRF_KEY_PATH)
+		_ = server.ListenAndServeTLS(nrf_util.NrfPemPath, nrf_util.NrfKeyPath)
 
 	}()
 	go func() {
@@ -311,12 +311,12 @@ func TestUpdateNFInstance(t *testing.T) {
 			c.JSON(http.StatusNoContent, gin.H{})
 		})
 
-		srv, err := http2_util.NewServer(":30676", util.NRF_LOG_PATH, router)
+		srv, err := http2_util.NewServer(":30676", nrf_util.NrfLogPath, router)
 		if err != nil {
 			log.Panic(err.Error())
 		}
 
-		err2 := srv.ListenAndServeTLS(util.NRF_PEM_PATH, util.NRF_KEY_PATH)
+		err2 := srv.ListenAndServeTLS(nrf_util.NrfPemPath, nrf_util.NrfKeyPath)
 		if err2 != nil && err2 != http.ErrServerClosed {
 			log.Panic(err2.Error())
 		}
@@ -395,7 +395,7 @@ func TestUpdateNFInstance(t *testing.T) {
 func TestRegisterNotification(t *testing.T) {
 	// run AccessToken Server Routine
 	go func() {
-		kl, _ := os.OpenFile(util.NRF_LOG_PATH, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+		kl, _ := os.OpenFile(nrf_util.NrfLogPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 		router := gin.Default()
 
 		Management.AddService(router)
@@ -408,7 +408,7 @@ func TestRegisterNotification(t *testing.T) {
 
 			Handler: router,
 		}
-		_ = server.ListenAndServeTLS(util.NRF_PEM_PATH, util.NRF_KEY_PATH)
+		_ = server.ListenAndServeTLS(nrf_util.NrfPemPath, nrf_util.NrfKeyPath)
 
 	}()
 	time.Sleep(time.Duration(2) * time.Second)

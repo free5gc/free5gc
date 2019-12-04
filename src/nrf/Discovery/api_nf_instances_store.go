@@ -606,10 +606,6 @@ func buildQueryFilter(queryParameters url.Values) bson.M {
 						},
 					},
 					{
-						"udmInfo.groupId": bson.M{
-							"$exists": false,
-						},
-
 						"udmInfo.supiRanges": bson.M{
 							"$exists": false,
 						},
@@ -619,9 +615,6 @@ func buildQueryFilter(queryParameters url.Values) bson.M {
 						},
 
 						"udmInfo.externalGroupIdentifiersRanges": bson.M{
-							"$exists": false,
-						},
-						"udmInfo.routingIndicators": bson.M{
 							"$exists": false,
 						},
 					},
@@ -643,10 +636,6 @@ func buildQueryFilter(queryParameters url.Values) bson.M {
 						},
 					},
 					{
-						"udrInfo.groupId": bson.M{
-							"$exists": false,
-						},
-
 						"udrInfo.supiRanges": bson.M{
 							"$exists": false,
 						},
@@ -656,9 +645,6 @@ func buildQueryFilter(queryParameters url.Values) bson.M {
 						},
 
 						"udrInfo.externalGroupIdentifiersRanges": bson.M{
-							"$exists": false,
-						},
-						"udrInfo.supportedDataSets": bson.M{
 							"$exists": false,
 						},
 					},
@@ -816,10 +802,6 @@ func buildQueryFilter(queryParameters url.Values) bson.M {
 						},
 					},
 					{
-						"udmInfo.groupId": bson.M{
-							"$exists": false,
-						},
-
 						"udmInfo.supiRanges": bson.M{
 							"$exists": false,
 						},
@@ -829,9 +811,6 @@ func buildQueryFilter(queryParameters url.Values) bson.M {
 						},
 
 						"udmInfo.externalGroupIdentifiersRanges": bson.M{
-							"$exists": false,
-						},
-						"udmInfo.routingIndicators": bson.M{
 							"$exists": false,
 						},
 					},
@@ -853,10 +832,6 @@ func buildQueryFilter(queryParameters url.Values) bson.M {
 						},
 					},
 					{
-						"udrInfo.groupId": bson.M{
-							"$exists": false,
-						},
-
 						"udrInfo.supiRanges": bson.M{
 							"$exists": false,
 						},
@@ -866,9 +841,6 @@ func buildQueryFilter(queryParameters url.Values) bson.M {
 						},
 
 						"udrInfo.externalGroupIdentifiersRanges": bson.M{
-							"$exists": false,
-						},
-						"udrInfo.supportedDataSets": bson.M{
 							"$exists": false,
 						},
 					},
@@ -901,10 +873,6 @@ func buildQueryFilter(queryParameters url.Values) bson.M {
 						},
 					},
 					{
-						"udmInfo.groupId": bson.M{
-							"$exists": false,
-						},
-
 						"udmInfo.supiRanges": bson.M{
 							"$exists": false,
 						},
@@ -914,9 +882,6 @@ func buildQueryFilter(queryParameters url.Values) bson.M {
 						},
 
 						"udmInfo.externalGroupIdentifiersRanges": bson.M{
-							"$exists": false,
-						},
-						"udmInfo.routingIndicators": bson.M{
 							"$exists": false,
 						},
 					},
@@ -938,10 +903,6 @@ func buildQueryFilter(queryParameters url.Values) bson.M {
 						},
 					},
 					{
-						"udrInfo.groupId": bson.M{
-							"$exists": false,
-						},
-
 						"udrInfo.supiRanges": bson.M{
 							"$exists": false,
 						},
@@ -951,9 +912,6 @@ func buildQueryFilter(queryParameters url.Values) bson.M {
 						},
 
 						"udrInfo.externalGroupIdentifiersRanges": bson.M{
-							"$exists": false,
-						},
-						"udrInfo.supportedDataSets": bson.M{
 							"$exists": false,
 						},
 					},

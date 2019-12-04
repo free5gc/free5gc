@@ -10,9 +10,10 @@
 package AMPolicy
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"strings"
+
+	"github.com/gin-gonic/gin"
 )
 
 // Route is the information for every URI.
@@ -46,8 +47,12 @@ func AddService(engine *gin.Engine) *gin.RouterGroup {
 			group.GET(route.Pattern, route.HandlerFunc)
 		case "POST":
 			group.POST(route.Pattern, route.HandlerFunc)
+		case "PUT":
+			group.PUT(route.Pattern, route.HandlerFunc)
 		case "DELETE":
 			group.DELETE(route.Pattern, route.HandlerFunc)
+		case "PATCH":
+			group.PATCH(route.Pattern, route.HandlerFunc)
 		}
 	}
 	return group

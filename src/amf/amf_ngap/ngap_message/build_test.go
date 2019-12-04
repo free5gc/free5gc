@@ -2,32 +2,22 @@ package ngap_message_test
 
 import (
 	"encoding/hex"
-	"github.com/mohae/deepcopy"
-	"github.com/sirupsen/logrus"
 	"free5gc/lib/CommonConsumerTestData/AMF/TestAmf"
 	"free5gc/lib/CommonConsumerTestData/AMF/TestComm"
-	"free5gc/lib/CommonConsumerTestData/SMF/TestPDUSession"
 	"free5gc/lib/aper"
 	"free5gc/lib/nas/nasMessage"
 	"free5gc/lib/nas/nasTestpacket"
 	"free5gc/lib/nas/nasType"
 	"free5gc/lib/ngap"
 	"free5gc/lib/ngap/ngapConvert"
-	"free5gc/lib/ngap/ngapTestpacket"
 	"free5gc/lib/ngap/ngapType"
 	"free5gc/lib/openapi/models"
-	"free5gc/src/amf/amf_consumer"
 	"free5gc/src/amf/amf_context"
 	"free5gc/src/amf/amf_ngap/ngap_message"
-	"free5gc/src/amf/logger"
+	"free5gc/src/test/ngapTestpacket"
 	"reflect"
 	"testing"
 )
-
-func init() {
-	logger.SetLogLevel(logrus.TraceLevel)
-	logger.SetReportCaller(false)
-}
 
 func TestBuildPDUSessionResourceReleaseCommand(t *testing.T) {
 
@@ -50,18 +40,15 @@ func TestBuildPDUSessionResourceReleaseCommand(t *testing.T) {
 	pkg, err := ngap_message.BuildPDUSessionResourceReleaseCommand(ue.RanUe[models.AccessType__3_GPP_ACCESS], []byte{12}, pduSessionResourceToReleaseListRelCmd)
 
 	if err != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Encode is FAILED")
+		t.Errorf("Encode is FAILED: %+v", err)
 	} else {
-		logger.NgapLog.Tracef("Encode : %0x", pkg)
+		t.Logf("Encode : %0x", pkg)
 	}
 	pdu, err1 := ngap.Decoder(pkg)
 	if err1 != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Decode is FAILED")
+		t.Errorf("Decode is FAILED: %+v", err1)
 	} else {
-		logger.NgapLog.Tracef("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pdu).Elem(), 0))
-
+		t.Logf("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pdu).Elem(), 0))
 	}
 }
 
@@ -69,17 +56,15 @@ func TestBuildNGSetupResponse(t *testing.T) {
 
 	pdu, err := ngap_message.BuildNGSetupResponse()
 	if err != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Encode is FAILED")
+		t.Errorf("Encode is FAILED: %+v", err)
 	} else {
-		logger.NgapLog.Tracef("Encode : %0x", pdu)
+		t.Logf("Encode : %0x", pdu)
 	}
 	pkg, err1 := ngap.Decoder(pdu)
 	if err1 != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Decode is FAILED")
+		t.Errorf("Decode is FAILED: %+v", err1)
 	} else {
-		logger.NgapLog.Tracef("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pkg).Elem(), 0))
+		t.Logf("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pkg).Elem(), 0))
 	}
 }
 
@@ -99,17 +84,15 @@ func TestBuildNGSetupFailure(t *testing.T) {
 	pdu, err := ngap_message.BuildNGSetupFailure(cause)
 
 	if err != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Encode is FAILED")
+		t.Errorf("Encode is FAILED: %+v", err)
 	} else {
-		logger.NgapLog.Tracef("  Encode : %0x", pdu)
+		t.Logf("  Encode : %0x", pdu)
 	}
 	pkg, err1 := ngap.Decoder(pdu)
 	if err1 != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Decode is FAILED")
+		t.Errorf("Decode is FAILED: %+v", err1)
 	} else {
-		logger.NgapLog.Tracef("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pkg).Elem(), 0))
+		t.Logf("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pkg).Elem(), 0))
 	}
 }
 
@@ -125,17 +108,15 @@ func TestBuildNGReset(t *testing.T) {
 	pdu, err := ngap_message.BuildNGReset(cause, nil)
 
 	if err != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Encode is FAILED")
+		t.Errorf("Encode is FAILED: %+v", err)
 	} else {
-		logger.NgapLog.Tracef("Encode : %0x", pdu)
+		t.Logf("Encode : %0x", pdu)
 	}
 	pkg, err1 := ngap.Decoder(pdu)
 	if err1 != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Decode is FAILED")
+		t.Errorf("Decode is FAILED: %+v", err1)
 	} else {
-		logger.NgapLog.Tracef("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pkg).Elem(), 0))
+		t.Logf("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pkg).Elem(), 0))
 	}
 }
 
@@ -158,17 +139,15 @@ func TestBuildNGResetAcknowledge(t *testing.T) {
 	pdu, err := ngap_message.BuildNGResetAcknowledge(&partOfNGInterface, nil)
 
 	if err != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Encode is FAILED")
+		t.Errorf("Encode is FAILED: %+v", err)
 	} else {
-		logger.NgapLog.Tracef("Encode : %0x", pdu)
+		t.Logf("Encode : %0x", pdu)
 	}
 	pkg, err1 := ngap.Decoder(pdu)
 	if err1 != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Decode is FAILED")
+		t.Errorf("Decode is FAILED: %+v", err1)
 	} else {
-		logger.NgapLog.Tracef("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pkg).Elem(), 0))
+		t.Logf("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pkg).Elem(), 0))
 	}
 }
 
@@ -186,17 +165,15 @@ func TestBuildDownlinkNasTransport(t *testing.T) {
 	pdu, err := ngap_message.BuildDownlinkNasTransport(ue.RanUe[models.AccessType__3_GPP_ACCESS], nasPdu.Value)
 
 	if err != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Encode is FAILED")
+		t.Errorf("Encode is FAILED: %+v", err)
 	} else {
-		logger.NgapLog.Tracef("Encode : %0x", pdu)
+		t.Logf("Encode : %0x", pdu)
 	}
 	pkg, err1 := ngap.Decoder(pdu)
 	if err1 != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Decode is FAILED")
+		t.Errorf("Decode is FAILED: %+v", err1)
 	} else {
-		logger.NgapLog.Tracef("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pkg).Elem(), 0))
+		t.Logf("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pkg).Elem(), 0))
 	}
 }
 
@@ -210,17 +187,15 @@ func TestBuildUEContextReleaseCommand(t *testing.T) {
 	pdu, err := ngap_message.BuildUEContextReleaseCommand(ue.RanUe[models.AccessType__3_GPP_ACCESS], ngapType.CausePresentMisc, ngapType.CauseMiscPresentUnspecified)
 
 	if err != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Encode is FAILED")
+		t.Errorf("Encode is FAILED: %+v", err)
 	} else {
-		logger.NgapLog.Tracef("Encode : %0x", pdu)
+		t.Logf("Encode : %0x", pdu)
 	}
 	pkg, err1 := ngap.Decoder(pdu)
 	if err1 != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Decode is FAILED")
+		t.Errorf("Decode is FAILED: %+v", err1)
 	} else {
-		logger.NgapLog.Tracef("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pkg).Elem(), 0))
+		t.Logf("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pkg).Elem(), 0))
 	}
 }
 
@@ -239,17 +214,15 @@ func TestBuildErrorIndication(t *testing.T) {
 	pdu, err := ngap_message.BuildErrorIndication(&amfUeNgapID, &ranUeNgapID, &cause, nil)
 
 	if err != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Encode is FAILED")
+		t.Errorf("Encode is FAILED: %+v", err)
 	} else {
-		logger.NgapLog.Tracef("Encode : %0x", pdu)
+		t.Logf("Encode : %0x", pdu)
 	}
 	pkg, err1 := ngap.Decoder(pdu)
 	if err1 != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Decode is FAILED")
+		t.Errorf("Decode is FAILED: %+v", err1)
 	} else {
-		logger.NgapLog.Tracef("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pkg).Elem(), 0))
+		t.Logf("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pkg).Elem(), 0))
 	}
 }
 func TestBuildUERadioCapabilityCheckRequest(t *testing.T) {
@@ -262,17 +235,15 @@ func TestBuildUERadioCapabilityCheckRequest(t *testing.T) {
 	pdu, err := ngap_message.BuildUERadioCapabilityCheckRequest(ue.RanUe[models.AccessType__3_GPP_ACCESS])
 
 	if err != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Encode is FAILED")
+		t.Errorf("Encode is FAILED: %+v", err)
 	} else {
-		logger.NgapLog.Tracef("Encode : %0x", pdu)
+		t.Logf("Encode : %0x", pdu)
 	}
 	pkg, err1 := ngap.Decoder(pdu)
 	if err1 != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Decode is FAILED")
+		t.Errorf("Decode is FAILED: %+v", err1)
 	} else {
-		logger.NgapLog.Tracef("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pkg).Elem(), 0))
+		t.Logf("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pkg).Elem(), 0))
 	}
 }
 
@@ -286,17 +257,15 @@ func TestBuildHandoverCancelAcknowledge(t *testing.T) {
 	pdu, err := ngap_message.BuildHandoverCancelAcknowledge(ue.RanUe[models.AccessType__3_GPP_ACCESS], nil)
 
 	if err != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Encode is FAILED")
+		t.Errorf("Encode is FAILED: %+v", err)
 	} else {
-		logger.NgapLog.Tracef("Encode : %0x", pdu)
+		t.Logf("Encode : %0x", pdu)
 	}
 	pkg, err1 := ngap.Decoder(pdu)
 	if err1 != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Decode is FAILED")
+		t.Errorf("Decode is FAILED: %+v", err1)
 	} else {
-		logger.NgapLog.Tracef("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pkg).Elem(), 0))
+		t.Logf("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pkg).Elem(), 0))
 	}
 }
 
@@ -326,17 +295,15 @@ func TestBuildPDUSessionResourceSetupRequest(t *testing.T) {
 	pkg, err := ngap_message.BuildPDUSessionResourceSetupRequest(ue.RanUe[models.AccessType__3_GPP_ACCESS], nasPdu, pduSessionResourceSetupListSUReq)
 
 	if err != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Encode is FAILED")
+		t.Errorf("Encode is FAILED: %+v", err)
 	} else {
-		logger.NgapLog.Tracef("Encode : %0x", pkg)
+		t.Logf("Encode : %0x", pkg)
 	}
 	pdu, err1 := ngap.Decoder(pkg)
 	if err1 != nil {
-		logger.NgapLog.Error(err1.Error())
-		t.Error("Decode is FAILED")
+		t.Errorf("Decode is FAILED: %+v", err1)
 	} else {
-		logger.NgapLog.Tracef("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pdu).Elem(), 0))
+		t.Logf("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pdu).Elem(), 0))
 	}
 }
 
@@ -369,17 +336,15 @@ func TestBuildPDUSessionResourceModifyConfirm(t *testing.T) {
 	pkg, err := ngap_message.BuildPDUSessionResourceModifyConfirm(ue.RanUe[models.AccessType__3_GPP_ACCESS], pduSessionResourceModifyConfirmList, pduSessionResourceFailedToModifyListModCfm, nil)
 
 	if err != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Encode is FAILED")
+		t.Errorf("Encode is FAILED: %+v", err)
 	} else {
-		logger.NgapLog.Tracef("Encode : %0x", pkg)
+		t.Logf("Encode : %0x", pkg)
 	}
 	pdu, err1 := ngap.Decoder(pkg)
 	if err1 != nil {
-		logger.NgapLog.Error(err1.Error())
-		t.Error("Decode is FAILED")
+		t.Errorf("Decode is FAILED: %+v", err1)
 	} else {
-		logger.NgapLog.Tracef("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pdu).Elem(), 0))
+		t.Logf("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pdu).Elem(), 0))
 	}
 }
 
@@ -405,17 +370,15 @@ func TestBuildPDUSessionResourceModifyRequest(t *testing.T) {
 	pkg, err := ngap_message.BuildPDUSessionResourceModifyRequest(ue.RanUe[models.AccessType__3_GPP_ACCESS], pduModifyRequestList)
 
 	if err != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Encode is FAILED")
+		t.Errorf("Encode is FAILED: %+v", err)
 	} else {
-		logger.NgapLog.Tracef("Encode : %0x", pkg)
+		t.Logf("Encode : %0x", pkg)
 	}
 	pdu, err1 := ngap.Decoder(pkg)
 	if err1 != nil {
-		logger.NgapLog.Error(err1.Error())
-		t.Error("Decode is FAILED")
+		t.Errorf("Decode is FAILED: %+v", err1)
 	} else {
-		logger.NgapLog.Tracef("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pdu).Elem(), 0))
+		t.Logf("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pdu).Elem(), 0))
 	}
 }
 
@@ -425,21 +388,33 @@ func TestBuildInitialContextSetupRequest(t *testing.T) {
 	TestAmf.UeAttach(models.AccessType__3_GPP_ACCESS)
 
 	ue := TestAmf.TestAmf.UePool["imsi-2089300007487"]
-	pkg, err := ngap_message.BuildInitialContextSetupRequest(ue, models.AccessType__3_GPP_ACCESS, []byte{0x01, 0x02}, nil, nil, nil, nil, nil, nil)
+	ue.PlmnId = models.PlmnId{
+		Mcc: "208",
+		Mnc: "93",
+	}
+	ue.AccessAndMobilitySubscriptionData = &models.AccessAndMobilitySubscriptionData{}
+	ue.AccessAndMobilitySubscriptionData.RatRestrictions = append(ue.AccessAndMobilitySubscriptionData.RatRestrictions, models.RatType_EUTRA)
+
+	ue.AmPolicyAssociation = &models.PolicyAssociation{}
+	ue.AmPolicyAssociation.ServAreaRes = &models.ServiceAreaRestriction{}
+	ue.AmPolicyAssociation.ServAreaRes.Areas = append(ue.AmPolicyAssociation.ServAreaRes.Areas, models.Area{
+		Tacs: []string{
+			"000102",
+		},
+	})
+
+	pkg, err := ngap_message.BuildInitialContextSetupRequest(ue, models.AccessType__3_GPP_ACCESS, []byte{0x01, 0x02}, nil, nil, nil, nil, nil)
 
 	if err != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Encode is FAILED")
+		t.Errorf("Encode is FAILED: %+v", err)
 	} else {
-		logger.NgapLog.Tracef("Encode : %0x", pkg)
+		t.Logf("Encode : %0x", pkg)
 	}
 	pdu, err1 := ngap.Decoder(pkg)
 	if err1 != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Decode is FAILED")
+		t.Errorf("Decode is FAILED: %+v", err1)
 	} else {
-		logger.NgapLog.Tracef("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pdu).Elem(), 0))
-
+		t.Logf("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pdu).Elem(), 0))
 	}
 }
 
@@ -448,9 +423,6 @@ func TestBuildUEContextModificationRequest(t *testing.T) {
 	TestAmf.AmfInit()
 	TestAmf.UeAttach(models.AccessType__3_GPP_ACCESS)
 	ue := TestAmf.TestAmf.UePool["imsi-2089300007487"]
-	ue.UEAMBR = new(models.Ambr)
-	ue.UEAMBR.Uplink = "800"
-	ue.UEAMBR.Downlink = "1000"
 	oldAmfUeNgapID := int64(1234)
 
 	emergencyFallbackIndicator := ngapType.EmergencyFallbackIndicator{}
@@ -461,23 +433,19 @@ func TestBuildUEContextModificationRequest(t *testing.T) {
 	pkg, err := ngap_message.BuildUEContextModificationRequest(ue, models.AccessType__3_GPP_ACCESS, &oldAmfUeNgapID, nil, nil, nil, &emergencyFallbackIndicator)
 
 	if err != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Encode is FAILED")
+		t.Errorf("Encode is FAILED: %+v", err)
 	} else {
-		logger.NgapLog.Tracef("Encode : %0x", pkg)
+		t.Logf("Encode : %0x", pkg)
 	}
 	pdu, err1 := ngap.Decoder(pkg)
 	if err1 != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Decode is FAILED")
+		t.Errorf("Decode is FAILED: %+v", err1)
 	} else {
-		logger.NgapLog.Tracef("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pdu).Elem(), 0))
+		t.Logf("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pdu).Elem(), 0))
 	}
 }
 
 func TestBuildHandoverCommand(t *testing.T) {
-
-	smContextCreate()
 
 	ue := TestAmf.TestAmf.UePool["imsi-2089300007487"]
 
@@ -505,17 +473,15 @@ func TestBuildHandoverCommand(t *testing.T) {
 	pdu, err := ngap_message.BuildHandoverCommand(ue.RanUe[models.AccessType__3_GPP_ACCESS], pduSessionResourceHandoverList, pduSessionResourceToReleaseList, container, nil)
 
 	if err != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Encode is FAILED")
+		t.Errorf("Encode is FAILED: %+v", err)
 	} else {
-		logger.NgapLog.Tracef("Encode : %0x", pdu)
+		t.Logf("Encode : %0x", pdu)
 	}
 	pkg, err1 := ngap.Decoder(pdu)
 	if err1 != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Decode is FAILED")
+		t.Errorf("Decode is FAILED: %+v", err1)
 	} else {
-		logger.NgapLog.Tracef("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pkg).Elem(), 0))
+		t.Logf("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pkg).Elem(), 0))
 	}
 }
 
@@ -536,17 +502,15 @@ func TestBuildHandoverPreparationFailure(t *testing.T) {
 	pdu, err := ngap_message.BuildHandoverPreparationFailure(ue.RanUe[models.AccessType__3_GPP_ACCESS], cause, nil)
 
 	if err != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Encode is FAILED")
+		t.Errorf("Encode is FAILED: %+v", err)
 	} else {
-		logger.NgapLog.Tracef("Encode : %0x", pdu)
+		t.Logf("Encode : %0x", pdu)
 	}
 	pkg, err1 := ngap.Decoder(pdu)
 	if err1 != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Decode is FAILED")
+		t.Errorf("Decode is FAILED: %+v", err1)
 	} else {
-		logger.NgapLog.Tracef("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pkg).Elem(), 0))
+		t.Logf("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pkg).Elem(), 0))
 	}
 }
 
@@ -556,10 +520,6 @@ func TestBuildHandoverRequest(t *testing.T) {
 	TestAmf.UeAttach(models.AccessType__3_GPP_ACCESS)
 
 	ue := TestAmf.TestAmf.UePool["imsi-2089300007487"]
-	ue.UEAMBR = new(models.Ambr)
-	ue.UEAMBR.Uplink = "800"
-	ue.UEAMBR.Downlink = "1000"
-
 	ue.NCC = 5
 	ue.NH, _ = hex.DecodeString("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")
 
@@ -599,17 +559,15 @@ func TestBuildHandoverRequest(t *testing.T) {
 	pdu, err := ngap_message.BuildHandoverRequest(ue.RanUe[models.AccessType__3_GPP_ACCESS], cause, pduSessionResourceSetupListHOReq, sourceToTargetTransparentContainer, false)
 
 	if err != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Encode is FAILED")
+		t.Errorf("Encode is FAILED: %+v", err)
 	} else {
-		logger.NgapLog.Tracef("Encode : %0x", pdu)
+		t.Logf("Encode : %0x", pdu)
 	}
 	pkg, err1 := ngap.Decoder(pdu)
 	if err1 != nil {
-		logger.NgapLog.Error(err1.Error())
-		t.Error("Decode is FAILED")
+		t.Errorf("Decode is FAILED: %+v", err1)
 	} else {
-		logger.NgapLog.Tracef("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pkg).Elem(), 0))
+		t.Logf("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pkg).Elem(), 0))
 	}
 }
 
@@ -650,17 +608,15 @@ func TestBuildPathSwitchRequestAcknowledge(t *testing.T) {
 	pdu, err := ngap_message.BuildPathSwitchRequestAcknowledge(ue.RanUe[models.AccessType__3_GPP_ACCESS], pduSessionResourceSwitchedList, pduSessionResourceReleasedList, false, nil, nil, nil)
 
 	if err != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Encode is FAILED")
+		t.Errorf("Encode is FAILED: %+v", err)
 	} else {
-		logger.NgapLog.Tracef("Encode : %0x", pdu)
+		t.Logf("Encode : %0x", pdu)
 	}
 	pkg, err1 := ngap.Decoder(pdu)
 	if err1 != nil {
-		logger.NgapLog.Error(err1.Error())
-		t.Error("Decode is FAILED")
+		t.Errorf("Decode is FAILED: %+v", err1)
 	} else {
-		logger.NgapLog.Tracef("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pkg).Elem(), 0))
+		t.Logf("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pkg).Elem(), 0))
 	}
 }
 
@@ -684,17 +640,15 @@ func TestBuildPathSwitchRequestFailure(t *testing.T) {
 	pdu, err := ngap_message.BuildPathSwitchRequestFailure(ranUe.AmfUeNgapId, ranUe.RanUeNgapId, &pduSessionResourceReleasedList, nil)
 
 	if err != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Encode is FAILED")
+		t.Errorf("Encode is FAILED: %+v", err)
 	} else {
-		logger.NgapLog.Tracef("Encode : %0x", pdu)
+		t.Logf("Encode : %0x", pdu)
 	}
 	pkg, err1 := ngap.Decoder(pdu)
 	if err1 != nil {
-		logger.NgapLog.Error(err1.Error())
-		t.Error("Decode is FAILED")
+		t.Errorf("Decode is FAILED: %+v", err1)
 	} else {
-		logger.NgapLog.Tracef("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pkg).Elem(), 0))
+		t.Logf("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pkg).Elem(), 0))
 	}
 }
 
@@ -748,17 +702,15 @@ func TestBuildDownlinkRanStatusTransfer(t *testing.T) {
 	pdu, err := ngap_message.BuildDownlinkRanStatusTransfer(ue.RanUe[models.AccessType__3_GPP_ACCESS], ranStatusTransferTransparentContainer)
 
 	if err != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Encode is FAILED")
+		t.Errorf("Encode is FAILED: %+v", err)
 	} else {
-		logger.NgapLog.Tracef("Encode : %0x", pdu)
+		t.Logf("Encode : %0x", pdu)
 	}
 	pkg, err1 := ngap.Decoder(pdu)
 	if err1 != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Decode is FAILED")
+		t.Errorf("Decode is FAILED: %+v", err1)
 	} else {
-		logger.NgapLog.Tracef("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pkg).Elem(), 0))
+		t.Logf("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pkg).Elem(), 0))
 	}
 }
 
@@ -808,17 +760,15 @@ func TestBuildPaging(t *testing.T) {
 	pkg, err := ngap_message.BuildPaging(ue, &pagingPriority, false)
 
 	if err != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Encode is FAILED")
+		t.Errorf("Encode is FAILED: %+v", err)
 	} else {
-		logger.NgapLog.Tracef("Encode : %0x", pkg)
+		t.Logf("Encode : %0x", pkg)
 	}
 	pdu, err1 := ngap.Decoder(pkg)
 	if err1 != nil {
-		logger.NgapLog.Error(err1.Error())
-		t.Error("Decode is FAILED")
+		t.Errorf("Decode is FAILED: %+v", err1)
 	} else {
-		logger.NgapLog.Tracef("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pdu).Elem(), 0))
+		t.Logf("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pdu).Elem(), 0))
 	}
 }
 
@@ -832,7 +782,7 @@ func TestBuildRerouteNasRequest(t *testing.T) {
 		Len:    12, // suci
 		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
 	}
-	nasPdu := nasTestpacket.GetRegistrationRequest(nasMessage.RegistrationType5GSInitialRegistration, mobileIdentity5GS, nil)
+	nasPdu := nasTestpacket.GetRegistrationRequest(nasMessage.RegistrationType5GSInitialRegistration, mobileIdentity5GS, nil, nil)
 	initialUeMessage := ngapTestpacket.BuildInitialUEMessage(1, nasPdu, "")
 	initialUeMessagePkg, _ := ngap.Encoder(initialUeMessage)
 
@@ -840,17 +790,15 @@ func TestBuildRerouteNasRequest(t *testing.T) {
 	pdu, err := ngap_message.BuildRerouteNasRequest(ue, models.AccessType__3_GPP_ACCESS, nil, initialUeMessagePkg, nil)
 
 	if err != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Encode is FAILED")
+		t.Errorf("Encode is FAILED: %+v", err)
 	} else {
-		logger.NgapLog.Tracef("Encode : %0x", pdu)
+		t.Logf("Encode : %0x", pdu)
 	}
 	pkg, err1 := ngap.Decoder(pdu)
 	if err1 != nil {
-		logger.NgapLog.Error(err1.Error())
-		t.Error("Decode is FAILED")
+		t.Errorf("Decode is FAILED: %+v", err1)
 	} else {
-		logger.NgapLog.Tracef("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pkg).Elem(), 0))
+		t.Logf("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pkg).Elem(), 0))
 	}
 }
 
@@ -864,17 +812,15 @@ func TestBuildRanConfigurationUpdateAcknowledge(t *testing.T) {
 	pdu, err := ngap_message.BuildRanConfigurationUpdateAcknowledge(nil)
 
 	if err != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Encode is FAILED")
+		t.Errorf("Encode is FAILED: %+v", err)
 	} else {
-		logger.NgapLog.Tracef("Encode : %0x", pdu)
+		t.Logf("Encode : %0x", pdu)
 	}
 	pkg, err1 := ngap.Decoder(pdu)
 	if err1 != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Decode is FAILED")
+		t.Errorf("Decode is FAILED: %+v", err1)
 	} else {
-		logger.NgapLog.Tracef("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pkg).Elem(), 0))
+		t.Logf("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pkg).Elem(), 0))
 	}
 }
 
@@ -893,17 +839,15 @@ func TestBuildRanConfigurationUpdateFailure(t *testing.T) {
 	pdu, err := ngap_message.BuildRanConfigurationUpdateFailure(cause, nil)
 
 	if err != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Encode is FAILED")
+		t.Errorf("Encode is FAILED: %+v", err)
 	} else {
-		logger.NgapLog.Tracef("Encode : %0x", pdu)
+		t.Logf("Encode : %0x", pdu)
 	}
 	pkg, err1 := ngap.Decoder(pdu)
 	if err1 != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Decode is FAILED")
+		t.Errorf("Decode is FAILED: %+v", err1)
 	} else {
-		logger.NgapLog.Tracef("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pkg).Elem(), 0))
+		t.Logf("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pkg).Elem(), 0))
 	}
 }
 func TestBuildAMFStatusIndication(t *testing.T) {
@@ -945,17 +889,15 @@ func TestBuildAMFStatusIndication(t *testing.T) {
 	pdu, err := ngap_message.BuildAMFStatusIndication(unavailableGUAMIList)
 
 	if err != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Encode is FAILED")
+		t.Errorf("Encode is FAILED: %+v", err)
 	} else {
-		logger.NgapLog.Tracef("Encode : %0x", pdu)
+		t.Logf("Encode : %0x", pdu)
 	}
 	pkg, err1 := ngap.Decoder(pdu)
 	if err1 != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Decode is FAILED")
+		t.Errorf("Decode is FAILED: %+v", err1)
 	} else {
-		logger.NgapLog.Tracef("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pkg).Elem(), 0))
+		t.Logf("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pkg).Elem(), 0))
 	}
 }
 
@@ -984,17 +926,15 @@ func TestBuildOverloadStart(t *testing.T) {
 	pdu, err := ngap_message.BuildOverloadStart(&overloadResponse, 80, &overloadStartNSSAIList)
 
 	if err != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Encode is FAILED")
+		t.Errorf("Encode is FAILED: %+v", err)
 	} else {
-		logger.NgapLog.Tracef("Encode : %0x", pdu)
+		t.Logf("Encode : %0x", pdu)
 	}
 	pkg, err1 := ngap.Decoder(pdu)
 	if err1 != nil {
-		logger.NgapLog.Error(err1.Error())
-		t.Error("Decode is FAILED")
+		t.Errorf("Decode is FAILED: %+v", err1)
 	} else {
-		logger.NgapLog.Tracef("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pkg).Elem(), 0))
+		t.Logf("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pkg).Elem(), 0))
 	}
 }
 
@@ -1003,17 +943,15 @@ func TestBuildOverloadStop(t *testing.T) {
 	pdu, err := ngap_message.BuildOverloadStop()
 
 	if err != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Encode is FAILED")
+		t.Errorf("Encode is FAILED: %+v", err)
 	} else {
-		logger.NgapLog.Tracef("Encode : %0x", pdu)
+		t.Logf("Encode : %0x", pdu)
 	}
 	pkg, err1 := ngap.Decoder(pdu)
 	if err1 != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Decode is FAILED")
+		t.Errorf("Decode is FAILED: %+v", err1)
 	} else {
-		logger.NgapLog.Tracef("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pkg).Elem(), 0))
+		t.Logf("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pkg).Elem(), 0))
 	}
 }
 
@@ -1100,17 +1038,15 @@ func TestBuildDownlinkRanConfigurationTransfer(t *testing.T) {
 	pkg, err := ngap_message.BuildDownlinkRanConfigurationTransfer(&sONConfigurationTransfer)
 
 	if err != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Encode is FAILED")
+		t.Errorf("Encode is FAILED: %+v", err)
 	} else {
-		logger.NgapLog.Tracef("Encode : %0x", pkg)
+		t.Logf("Encode : %0x", pkg)
 	}
 	pdu, err1 := ngap.Decoder(pkg)
 	if err1 != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Decode is FAILED")
+		t.Errorf("Decode is FAILED: %+v", err1)
 	} else {
-		logger.NgapLog.Tracef("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pdu).Elem(), 0))
+		t.Logf("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pdu).Elem(), 0))
 
 	}
 }
@@ -1128,17 +1064,15 @@ func TestBuildDownlinkNonUEAssociatedNRPPATransport(t *testing.T) {
 	pdu, err := ngap_message.BuildDownlinkNonUEAssociatedNRPPATransport(ue.RanUe[models.AccessType__3_GPP_ACCESS], nRPPaPDU)
 
 	if err != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Encode is FAILED")
+		t.Errorf("Encode is FAILED: %+v", err)
 	} else {
-		logger.NgapLog.Tracef("Encode : %0x", pdu)
+		t.Logf("Encode : %0x", pdu)
 	}
 	pkg, err1 := ngap.Decoder(pdu)
 	if err1 != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Decode is FAILED")
+		t.Errorf("Decode is FAILED: %+v", err1)
 	} else {
-		logger.NgapLog.Tracef("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pkg).Elem(), 0))
+		t.Logf("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pkg).Elem(), 0))
 	}
 }
 
@@ -1153,17 +1087,15 @@ func TestBuildDeactivateTrace(t *testing.T) {
 	pdu, err := ngap_message.BuildDeactivateTrace(ue, models.AccessType__3_GPP_ACCESS)
 
 	if err != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Encode is FAILED")
+		t.Errorf("Encode is FAILED: %+v", err)
 	} else {
-		logger.NgapLog.Tracef("Encode : %0x", pdu)
+		t.Logf("Encode : %0x", pdu)
 	}
 	pkg, err1 := ngap.Decoder(pdu)
 	if err1 != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Decode is FAILED")
+		t.Errorf("Decode is FAILED: %+v", err1)
 	} else {
-		logger.NgapLog.Tracef("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pkg).Elem(), 0))
+		t.Logf("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pkg).Elem(), 0))
 	}
 }
 
@@ -1255,17 +1187,15 @@ func TestBuildLocationReportingControl(t *testing.T) {
 	pkg, err := ngap_message.BuildLocationReportingControl(ue.RanUe[models.AccessType__3_GPP_ACCESS], &AOIList, 0, eventType)
 
 	if err != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Encode is FAILED")
+		t.Errorf("Encode is FAILED: %+v", err)
 	} else {
-		logger.NgapLog.Tracef("Encode : %0x", pkg)
+		t.Logf("Encode : %0x", pkg)
 	}
 	pdu, err1 := ngap.Decoder(pkg)
 	if err1 != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Decode is FAILED")
+		t.Errorf("Decode is FAILED: %+v", err1)
 	} else {
-		logger.NgapLog.Tracef("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pdu).Elem(), 0))
+		t.Logf("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pdu).Elem(), 0))
 
 	}
 }
@@ -1282,17 +1212,15 @@ func TestBuildUETNLABindingReleaseRequest(t *testing.T) {
 	pdu, err := ngap_message.BuildUETNLABindingReleaseRequest(ue.RanUe[models.AccessType__3_GPP_ACCESS])
 
 	if err != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Encode is FAILED")
+		t.Errorf("Encode is FAILED: %+v", err)
 	} else {
-		logger.NgapLog.Tracef("Encode : %0x", pdu)
+		t.Logf("Encode : %0x", pdu)
 	}
 	pkg, err1 := ngap.Decoder(pdu)
 	if err1 != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Decode is FAILED")
+		t.Errorf("Decode is FAILED: %+v", err1)
 	} else {
-		logger.NgapLog.Tracef("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pkg).Elem(), 0))
+		t.Logf("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pkg).Elem(), 0))
 	}
 }
 
@@ -1315,17 +1243,15 @@ func TestBuildAMFConfigurationUpdate(t *testing.T) {
 	pdu, err := ngap_message.BuildAMFConfigurationUpdate(tNLassociationUsage, tNLAddressWeightFactor)
 
 	if err != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Encode is FAILED")
+		t.Errorf("Encode is FAILED: %+v", err)
 	} else {
-		logger.NgapLog.Tracef("Encode : %0x", pdu)
+		t.Logf("Encode : %0x", pdu)
 	}
 	pkg, err1 := ngap.Decoder(pdu)
 	if err1 != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Decode is FAILED")
+		t.Errorf("Decode is FAILED: %+v", err1)
 	} else {
-		logger.NgapLog.Tracef("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pkg).Elem(), 0))
+		t.Logf("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pkg).Elem(), 0))
 	}
 }
 func TestBuildDownlinkUEAssociatedNRPPaTransport(t *testing.T) {
@@ -1342,82 +1268,14 @@ func TestBuildDownlinkUEAssociatedNRPPaTransport(t *testing.T) {
 	pdu, err := ngap_message.BuildDownlinkUEAssociatedNRPPaTransport(ue.RanUe[models.AccessType__3_GPP_ACCESS], nRPPaPDU)
 
 	if err != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Encode is FAILED")
+		t.Errorf("Encode is FAILED: %+v", err)
 	} else {
-		logger.NgapLog.Tracef("Encode : %0x", pdu)
+		t.Logf("Encode : %0x", pdu)
 	}
 	pkg, err1 := ngap.Decoder(pdu)
 	if err1 != nil {
-		logger.NgapLog.Error(err.Error())
-		t.Error("Decode is FAILED")
+		t.Errorf("Decode is FAILED: %+v", err1)
 	} else {
-		logger.NgapLog.Tracef("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pkg).Elem(), 0))
-	}
-}
-
-// Copy from TestSMContextCreate() in amf_consumer/sm_context_test.go
-func smContextCreate() {
-
-	TestAmf.AmfInit()
-	TestAmf.UeAttach(models.AccessType__3_GPP_ACCESS)
-	ue := TestAmf.TestAmf.UePool["imsi-2089300007487"]
-
-	payload := TestPDUSession.GetEstablishmentRequestData(TestPDUSession.SERVICE_REQUEST)
-	pduSession := models.PduSessionContext{
-		PduSessionId: 10,
-		Dnn:          "nctu.edu.tw",
-		SNssai: &models.Snssai{
-			Sst: 1,
-			Sd:  "020304",
-		},
-	}
-	requestType := models.RequestType_INITIAL_REQUEST
-	if anType := ue.GetAnType(); anType == "" {
-		pduSession.AccessType = models.AccessType__3_GPP_ACCESS
-	} else {
-		pduSession.AccessType = anType
-	}
-	smContextCreateData := amf_consumer.BuildCreateSmContextRequest(ue, pduSession, requestType)
-	// TODO: http://localhost:29502/ -> smfD smfUri which required from NRF
-	smfUri := "https://localhost:29502"
-
-	createPduSession(ue, &pduSession, smfUri, payload, smContextCreateData)
-
-	pduSession2 := models.PduSessionContext{
-		PduSessionId: 11,
-		Dnn:          "nctu.edu.tw",
-		SNssai: &models.Snssai{
-			Sst: 1,
-			Sd:  "020304",
-		},
-	}
-	requestType = models.RequestType_INITIAL_REQUEST
-	if anType := ue.GetAnType(); anType == "" {
-		pduSession2.AccessType = models.AccessType__3_GPP_ACCESS
-	} else {
-		pduSession2.AccessType = anType
-	}
-	smContextCreateData = amf_consumer.BuildCreateSmContextRequest(ue, pduSession2, requestType)
-
-	createPduSession(ue, &pduSession2, smfUri, payload, smContextCreateData)
-
-}
-
-func createPduSession(ue *amf_context.AmfUe, pduSession *models.PduSessionContext, smfUri string, payload []byte, smContextCreateData models.SmContextCreateData) {
-
-	response, smContextRef, _, _, err := amf_consumer.SendCreateSmContextRequest(ue, smfUri, payload, smContextCreateData)
-	if response != nil {
-		var smContext amf_context.SmContext
-		pduSession.SmContextRef = smContextRef
-		smContext.PduSessionContext = pduSession
-		smContext.UserLocation = deepcopy.Copy(ue.Location).(models.UserLocation)
-		smContext.SmfUri = smfUri
-		ue.SmContextList[pduSession.PduSessionId] = &smContext
-		// TODO: handle response(response N2SmInfo to RAN if exists)
-	} else if err != nil {
-		logger.NgapLog.Errorf("[ERROR] " + err.Error())
-	} else {
-		// TODO: error handling
+		t.Logf("Decode : \n%s", ngap.PrintResult(reflect.ValueOf(pkg).Elem(), 0))
 	}
 }

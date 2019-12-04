@@ -6,7 +6,7 @@ import (
 
 	// Nausf_UEAU_Client "free5gc/lib/Nausf_UEAuthentication"
 	"free5gc/lib/ngap"
-	"free5gc/lib/ngap/ngapTestpacket"
+	"free5gc/src/test/ngapTestpacket"
 	// "free5gc/lib/openapi/models"
 )
 
@@ -40,13 +40,13 @@ func GetInitialContextSetupResponse(amfUeNgapID int64, ranUeNgapID int64) ([]byt
 	return ngap.Encoder(message)
 }
 
-func GetInitialContextSetupResponseForServiceRequest(amfUeNgapID int64, ranUeNgapID int64) ([]byte, error) {
-	message := ngapTestpacket.BuildInitialContextSetupResponse(amfUeNgapID, ranUeNgapID, nil)
+func GetInitialContextSetupResponseForServiceRequest(amfUeNgapID int64, ranUeNgapID int64, ipv4 string) ([]byte, error) {
+	message := ngapTestpacket.BuildInitialContextSetupResponse(amfUeNgapID, ranUeNgapID, ipv4, nil)
 	return ngap.Encoder(message)
 }
 
-func GetPDUSessionResourceSetupResponse(amfUeNgapID int64, ranUeNgapID int64) ([]byte, error) {
-	message := ngapTestpacket.BuildPDUSessionResourceSetupResponseForRegistrationTest(amfUeNgapID, ranUeNgapID)
+func GetPDUSessionResourceSetupResponse(amfUeNgapID int64, ranUeNgapID int64, ipv4 string) ([]byte, error) {
+	message := ngapTestpacket.BuildPDUSessionResourceSetupResponseForRegistrationTest(amfUeNgapID, ranUeNgapID, ipv4)
 	return ngap.Encoder(message)
 }
 func EncodeNasPduWithSecurity(ue *RanUeContext, pdu []byte) ([]byte, error) {
@@ -97,7 +97,7 @@ func GetHandoverNotify(amfUeNgapID int64, ranUeNgapID int64) ([]byte, error) {
 	return ngap.Encoder(message)
 }
 
-func GetPDUSessionResourceSetupResponseForPaging(amfUeNgapID int64, ranUeNgapID int64) ([]byte, error) {
-	message := ngapTestpacket.BuildPDUSessionResourceSetupResponseForPaging(amfUeNgapID, ranUeNgapID)
+func GetPDUSessionResourceSetupResponseForPaging(amfUeNgapID int64, ranUeNgapID int64, ipv4 string) ([]byte, error) {
+	message := ngapTestpacket.BuildPDUSessionResourceSetupResponseForPaging(amfUeNgapID, ranUeNgapID, ipv4)
 	return ngap.Encoder(message)
 }

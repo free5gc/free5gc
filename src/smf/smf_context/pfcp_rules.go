@@ -2,6 +2,7 @@ package smf_context
 
 import (
 	"free5gc/lib/pfcp/pfcpType"
+	"free5gc/lib/util_3gpp"
 )
 
 const (
@@ -32,7 +33,7 @@ type PDR struct {
 type PDI struct {
 	SourceInterface pfcpType.SourceInterface
 	LocalFTeid      pfcpType.FTEID
-	NetworkInstance pfcpType.NetworkInstance
+	NetworkInstance util_3gpp.Dnn
 	UEIPAddress     *pfcpType.UEIPAddress
 }
 
@@ -50,7 +51,7 @@ type FAR struct {
 // Forwarding Parameters. 7.5.2.3-2
 type ForwardingParameters struct {
 	DestinationInterface pfcpType.DestinationInterface
-	NetworkInstance      pfcpType.NetworkInstance
+	NetworkInstance      util_3gpp.Dnn
 	OuterHeaderCreation  *pfcpType.OuterHeaderCreation
 }
 

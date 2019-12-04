@@ -11,6 +11,9 @@ package DataRepository_test
 
 import (
 	"context"
+	"github.com/antihax/optional"
+	"github.com/davecgh/go-spew/spew"
+	"free5gc/lib/openapi"
 	"free5gc/src/udr/logger"
 	"net/http"
 	"testing"
@@ -40,6 +43,20 @@ func TestQuerySmData(t *testing.T) {
 	{
 		testData := models.SessionManagementSubscriptionData{
 			SharedDnnConfigurationsIds: "1",
+			SingleNssai: &models.Snssai{
+				Sst: 1,
+				Sd:  "010203",
+			},
+			DnnConfigurations: map[string]models.DnnConfiguration{
+				"internet": models.DnnConfiguration{
+					PduSessionTypes: &models.PduSessionTypes{
+						DefaultSessionType: models.PduSessionType_IPV4,
+					},
+					SscModes: &models.SscModes{
+						DefaultSscMode: models.SscMode__1,
+					},
+				},
+			},
 		}
 		insertTestData := toBsonM(testData)
 		insertTestData["ueId"] = ueId
@@ -49,6 +66,20 @@ func TestQuerySmData(t *testing.T) {
 	{
 		testData := models.SessionManagementSubscriptionData{
 			SharedDnnConfigurationsIds: "2",
+			SingleNssai: &models.Snssai{
+				Sst: 1,
+				Sd:  "112233",
+			},
+			DnnConfigurations: map[string]models.DnnConfiguration{
+				"internet": models.DnnConfiguration{
+					PduSessionTypes: &models.PduSessionTypes{
+						DefaultSessionType: models.PduSessionType_IPV4,
+					},
+					SscModes: &models.SscModes{
+						DefaultSscMode: models.SscMode__1,
+					},
+				},
+			},
 		}
 		insertTestData := toBsonM(testData)
 		insertTestData["ueId"] = ueId
@@ -59,19 +90,57 @@ func TestQuerySmData(t *testing.T) {
 	testData := []models.SessionManagementSubscriptionData{
 		{
 			SharedDnnConfigurationsIds: "1",
+			SingleNssai: &models.Snssai{
+				Sst: 1,
+				Sd:  "010203",
+			},
+			DnnConfigurations: map[string]models.DnnConfiguration{
+				"internet": models.DnnConfiguration{
+					PduSessionTypes: &models.PduSessionTypes{
+						DefaultSessionType: models.PduSessionType_IPV4,
+					},
+					SscModes: &models.SscModes{
+						DefaultSscMode: models.SscMode__1,
+					},
+				},
+			},
 		},
 		{
 			SharedDnnConfigurationsIds: "2",
+			SingleNssai: &models.Snssai{
+				Sst: 1,
+				Sd:  "112233",
+			},
+			DnnConfigurations: map[string]models.DnnConfiguration{
+				"internet": models.DnnConfiguration{
+					PduSessionTypes: &models.PduSessionTypes{
+						DefaultSessionType: models.PduSessionType_IPV4,
+					},
+					SscModes: &models.SscModes{
+						DefaultSscMode: models.SscMode__1,
+					},
+				},
+			},
 		},
 	}
 
 	{
 		// Check test data (Use RESTful GET)
-		var querySmDataParamOpts Nudr_DataRepository.QuerySmDataParamOpts
+		tmp := models.Snssai{
+			Sst: 1,
+			Sd:  "010203",
+		}
+		var querySmDataParamOpts = Nudr_DataRepository.QuerySmDataParamOpts{
+			Dnn:         optional.NewString("internet"),
+			SingleNssai: optional.NewInterface(openapi.MarshToJsonString(tmp)),
+		}
 		sessionManagementSubscriptionDatas, res, err := client.SessionManagementSubscriptionDataApi.QuerySmData(context.TODO(), ueId, servingPlmnId, &querySmDataParamOpts)
 		if err != nil {
 			logger.AppLog.Panic(err)
 		}
+
+		// logger.AppLog.Printf("[Recevied sessionManagementSubscriptionDatas] %+v", sessionManagementSubscriptionDatas)
+		spew.Printf("[Recevied sessionManagementSubscriptionDatas] %+v\n", sessionManagementSubscriptionDatas)
 
 		if status := res.StatusCode; status != http.StatusOK {
 			t.Errorf("handler returned wrong status code: got %v want %v",
@@ -85,7 +154,7 @@ func TestQuerySmData(t *testing.T) {
 	}
 
 	// Clean test data
-	collection.DeleteOne(context.TODO(), bson.M{"ueId": "imsi-0123456789", "servingPlmnId": "20893"})
+	collection.DeleteMany(context.TODO(), bson.M{"ueId": "imsi-0123456789", "servingPlmnId": "20893"})
 
 	// TEST END
 }
