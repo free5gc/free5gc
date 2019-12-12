@@ -24,6 +24,7 @@ var CommLog *logrus.Entry
 var CallbackLog *logrus.Entry
 var UtilLog *logrus.Entry
 var NasLog *logrus.Entry
+var ConsumerLog *logrus.Entry
 
 func init() {
 	log = logrus.New()
@@ -65,6 +66,7 @@ func init() {
 	CallbackLog = log.WithFields(logrus.Fields{"AMF": "Callback"})
 	UtilLog = log.WithFields(logrus.Fields{"AMF": "Util"})
 	NasLog = log.WithFields(logrus.Fields{"AMF": "NAS"})
+	ConsumerLog = log.WithFields(logrus.Fields{"AMF": "Consumer"})
 }
 
 func SetLogLevel(level logrus.Level) {

@@ -8,129 +8,83 @@ import (
 
 func CreateTestData() models.SmPolicyContextData {
 	t := time.Date(2000, 2, 1, 12, 30, 0, 0, time.UTC)
+	// timeNow := time.Now()
 	smReqData := models.SmPolicyContextData{
-		AccNetChId: &models.AccNetChId{
-			AccNetChaIdValue: 0,
-			RefPccRuleIds:    []string{"A", "B", "C"},
-			SessionChScope:   true,
-		},
-		ChargEntityAddr: &models.AccNetChargingAddress{
-			AnChargIpv4Addr: "198.51.100.1",
-			AnChargIpv6Addr: "2001:db8:85a3::8a2e:370:7334",
-		},
-		Gpsi:                    "string1",
-		Supi:                    "string1",
-		InterGrpIds:             []string{"A", "B", "C"},
-		PduSessionId:            123,
-		Chargingcharacteristics: "string",
-		Dnn:                     "string",
-		NotificationUri:         "https://localhost:8081/nsmf/NotificationUri",
-		AccessType:              "3GPP_ACCESS",
-		PduSessionType:          "string",
+		NotificationUri: "https://127.0.0.1:29502/nsmf-callback/v1/sm-policies/imsi-2089300007487-1",
+		// AccNetChId: &models.AccNetChId{
+		// 	AccNetChaIdValue: 0,
+		// 	RefPccRuleIds:    []string{"A", "B", "C"},
+		// 	SessionChScope:   true,
+		// },
+		// ChargEntityAddr: &models.AccNetChargingAddress{
+		// 	AnChargIpv4Addr: "198.51.100.1",
+		// 	AnChargIpv6Addr: "2001:db8:85a3::8a2e:370:7334",
+		// },
+		Supi:       "imsi-2089300007487",
+		SuppFeat:   "1",
+		Pei:        "123456789123456",
+		RatType:    models.RatType_NR,
+		AccessType: models.AccessType__3_GPP_ACCESS,
+		// Gpsi:                    "string1",
+		// InterGrpIds:             []string{"A", "B", "C"},
+		PduSessionId: 1,
+		// Chargingcharacteristics: "string",
+		Dnn:            "internet",
+		PduSessionType: models.PduSessionType_IPV4,
 		ServingNetwork: &models.NetworkId{
-			Mnc: "string",
-			Mcc: "string",
+			Mcc: "208",
+			Mnc: "93",
 		},
 		UserLocationInfo: &models.UserLocation{
-			EutraLocation: &models.EutraLocation{
-				Tai: &models.Tai{
-					PlmnId: &models.PlmnId{
-						Mcc: "string",
-						Mnc: "string",
-					},
-					Tac: "string",
-				},
-				Ecgi: &models.Ecgi{
-					PlmnId: &models.PlmnId{
-						Mcc: "string",
-						Mnc: "string",
-					},
-					EutraCellId: "string",
-				},
-				AgeOfLocationInformation: 0,
-				UeLocationTimestamp:      &t,
-				GeographicalInformation:  "string",
-				GeodeticInformation:      "string",
-				GlobalNgenbId: &models.GlobalRanNodeId{
-					PlmnId: &models.PlmnId{
-						Mcc: "string",
-						Mnc: "string",
-					},
-					N3IwfId: "string",
-					GNbId: &models.GNbId{
-						BitLength: 0,
-						GNBValue:  "string",
-					},
-					NgeNbId: "string",
-				},
-			},
 			NrLocation: &models.NrLocation{
 				Tai: &models.Tai{
 					PlmnId: &models.PlmnId{
-						Mcc: "string",
-						Mnc: "string",
+						Mcc: "208",
+						Mnc: "93",
 					},
-					Tac: "string",
+					Tac: "000001",
 				},
 				Ncgi: &models.Ncgi{
 					PlmnId: &models.PlmnId{
-						Mcc: "string",
-						Mnc: "string",
+						Mcc: "208",
+						Mnc: "93",
 					},
-					NrCellId: "string",
+					NrCellId: "000000001",
 				},
-				AgeOfLocationInformation: 0,
-				UeLocationTimestamp:      &t,
-				GeographicalInformation:  "string",
-				GeodeticInformation:      "string",
+				AgeOfLocationInformation: 123,
+				// UeLocationTimestamp:      "2019-04-15T09:47:35.505Z",
+				UeLocationTimestamp: &t,
 				GlobalGnbId: &models.GlobalRanNodeId{
 					PlmnId: &models.PlmnId{
-						Mcc: "string",
-						Mnc: "string",
+						Mcc: "208",
+						Mnc: "93",
 					},
-					N3IwfId: "string",
 					GNbId: &models.GNbId{
-						BitLength: 0,
-						GNBValue:  "string",
+						BitLength: 24,
+						GNBValue:  "000001",
 					},
-					NgeNbId: "string",
 				},
-			},
-			N3gaLocation: &models.N3gaLocation{
-				N3gppTai: &models.Tai{
-					PlmnId: &models.PlmnId{
-						Mcc: "string",
-						Mnc: "string",
-					},
-					Tac: "string",
-				},
-				N3IwfId:    "string",
-				UeIpv4Addr: "198.51.100.1",
-				UeIpv6Addr: "2001:db8:85a3::8a2e:370:7334",
-				PortNumber: 0,
 			},
 		},
-		UeTimeZone:        "string",
-		Pei:               "string",
-		Ipv4Address:       "198.51.100.1",
+		UeTimeZone:        "+08:00+1h",
+		Ipv4Address:       "45.45.0.2",
 		Ipv6AddressPrefix: "2001:db8:abcd:12::0/64",
-		IpDomain:          "string",
+		IpDomain:          "free5gc.org",
 		SubsSessAmbr: &models.Ambr{
-			Uplink:   "string",
-			Downlink: "string",
+			Uplink:   "800Kbps",
+			Downlink: "1000Kbps",
 		},
 		SubsDefQos: &models.SubscribedDefaultQos{
-			Var5qi: 0,
+			Var5qi: 9,
 			Arp: &models.Arp{
-				PriorityLevel: 0,
+				PriorityLevel: 8,
 			},
-			PriorityLevel: 0,
+			PriorityLevel: 8,
 		},
-		NumOfPackFilter:        0,
-		Online:                 true,
-		Offline:                true,
-		Var3gppPsDataOffStatus: true,
-		RefQosIndication:       true,
+		Online:                 false,
+		Offline:                false,
+		Var3gppPsDataOffStatus: false,
+		// RefQosIndication:       true,
 		TraceReq: &models.TraceData{
 			TraceRef:                 "string",
 			NeTypeList:               "string",
@@ -141,65 +95,123 @@ func CreateTestData() models.SmPolicyContextData {
 		},
 		SliceInfo: &models.Snssai{
 			Sst: 1,
-			Sd:  "string",
+			Sd:  "010203",
 		},
-		SuppFeat: "string",
+		QosFlowUsage: models.QosFlowUsage_GENERAL,
 	}
 	return smReqData
 }
 
-func UpdateTestData() models.SmPolicyUpdateContextData {
+func UpdateTestData(trigger []models.PolicyControlRequestTrigger, op *models.RuleOperation) models.SmPolicyUpdateContextData {
 	t := time.Date(2000, 2, 1, 12, 30, 0, 0, time.UTC)
-	smUpData := models.SmPolicyUpdateContextData{
-		RepPolicyCtrlReqTriggers: []models.PolicyControlRequestTrigger{"PLMN_CH", "string", "C"},
-		AccNetChIds: []models.AccNetChId{
-			{
-				AccNetChaIdValue: 0,
-				RefPccRuleIds:    []string{"string"},
-				SessionChScope:   true,
-			},
-		},
-		AccessType: "3GPP_ACCESS",
+	data := models.SmPolicyUpdateContextData{
+		RepPolicyCtrlReqTriggers: trigger,
+		AccessType:               models.AccessType__3_GPP_ACCESS,
 		ServingNetwork: &models.NetworkId{
-			Mnc: "string",
-			Mcc: "string",
+			Mnc: "208",
+			Mcc: "93",
+		},
+		RatType:                models.RatType_NR,
+		RelIpv4Address:         "45.45.0.2",
+		Ipv4Address:            "45.45.0.3",
+		Var3gppPsDataOffStatus: false,
+		SubsDefQos: &models.SubscribedDefaultQos{
+			Var5qi: 8,
+			Arp: &models.Arp{
+				PriorityLevel: 8,
+			},
+			PriorityLevel: 8,
+		},
+		SubsSessAmbr: &models.Ambr{
+			Uplink:   "1.2Mbps",
+			Downlink: "1.3Mbps",
 		},
 		UserLocationInfo: &models.UserLocation{
-			EutraLocation: &models.EutraLocation{
+			NrLocation: &models.NrLocation{
 				Tai: &models.Tai{
 					PlmnId: &models.PlmnId{
-						Mcc: "string",
-						Mnc: "string",
+						Mcc: "208",
+						Mnc: "93",
 					},
-					Tac: "string",
+					Tac: "000002",
 				},
-				Ecgi: &models.Ecgi{
+				Ncgi: &models.Ncgi{
 					PlmnId: &models.PlmnId{
-						Mcc: "string",
-						Mnc: "string",
+						Mcc: "208",
+						Mnc: "93",
 					},
-					EutraCellId: "string",
+					NrCellId: "000000001",
 				},
-				AgeOfLocationInformation: 0,
-				UeLocationTimestamp:      &t,
-				GeographicalInformation:  "string",
-				GeodeticInformation:      "string",
-				GlobalNgenbId: &models.GlobalRanNodeId{
+				AgeOfLocationInformation: 123,
+				// UeLocationTimestamp:      "2019-04-15T09:47:35.505Z",
+				UeLocationTimestamp: &t,
+				GlobalGnbId: &models.GlobalRanNodeId{
 					PlmnId: &models.PlmnId{
-						Mcc: "string",
-						Mnc: "string",
+						Mcc: "208",
+						Mnc: "93",
 					},
-					N3IwfId: "string",
 					GNbId: &models.GNbId{
-						BitLength: 0,
-						GNBValue:  "string",
+						BitLength: 24,
+						GNBValue:  "000002",
 					},
-					NgeNbId: "string",
 				},
 			},
 		},
+		ServNfId: &models.ServingNfIdentity{
+			Guami: &models.Guami{
+				PlmnId: &models.PlmnId{
+					Mcc: "208",
+					Mnc: "93",
+				},
+				AmfId: "cafe00",
+			},
+		},
+		UeTimeZone: "+08:00+2h",
 	}
-	return smUpData
+	if op != nil {
+		ueInitResReq := models.UeInitiatedResourceRequest{
+			PccRuleId:  "PccRuleId-1",
+			RuleOp:     *op,
+			Precedence: 1,
+			ReqQos: &models.RequestedQos{
+				Var5qi: 2,
+				GbrDl:  "30Mbps",
+				GbrUl:  "30.5Mbps",
+			},
+			PackFiltInfo: []models.PacketFilterInfo{
+				{
+					PackFiltCont:  "permit out ip from any to assigned",
+					FlowDirection: models.FlowDirection_DOWNLINK,
+				},
+			},
+		}
+		switch *op {
+		case models.RuleOperation_CREATE_PCC_RULE:
+		case models.RuleOperation_DELETE_PCC_RULE:
+			data.UeInitResReq = &models.UeInitiatedResourceRequest{
+				RuleOp:    *op,
+				PccRuleId: "PccRuleId-1",
+			}
+			return data
+		case models.RuleOperation_MODIFY_PCC_RULE_AND_ADD_PACKET_FILTERS:
+			ueInitResReq.ReqQos.GbrDl = "30.5Mbps"
+			ueInitResReq.PackFiltInfo[0] = models.PacketFilterInfo{
+				PackFiltCont:  "permit out ip from any to assigned",
+				FlowDirection: models.FlowDirection_UPLINK,
+			}
+		case models.RuleOperation_MODIFY_PCC_RULE_AND_REPLACE_PACKET_FILTERS:
+			ueInitResReq.PackFiltInfo[0].PackFiltCont = "permit out tcp from any 8080 to assigned"
+			ueInitResReq.ReqQos = nil
+		case models.RuleOperation_MODIFY_PCC_RULE_AND_DELETE_PACKET_FILTERS:
+			ueInitResReq.ReqQos = nil
+			ueInitResReq.PackFiltInfo[0].PackFiltId = "PackFiltId-1"
+		case models.RuleOperation_MODIFY_PCC_RULE_WITHOUT_MODIFY_PACKET_FILTERS:
+			ueInitResReq.ReqQos.GbrUl = "50Mbps"
+			ueInitResReq.ReqQos.GbrDl = "50.5Mbps"
+		}
+		data.UeInitResReq = &ueInitResReq
+	}
+	return data
 }
 func DeldateTestData() models.SmPolicyDeleteData {
 	smDelData := models.SmPolicyDeleteData{

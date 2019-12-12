@@ -28,7 +28,6 @@ After building from sources, edit `./build/config/upfcfg.yaml`
 
 ### Setup environment
 ```bash
-ip r add {Subnet_for_UE} dev free5GCtun0
 sh -c 'echo 1 > /proc/sys/net/ipv4/ip_forward'
 iptables -t nat -A POSTROUTING -o {DN_Interface_Name} -j MASQUERADE
 ```

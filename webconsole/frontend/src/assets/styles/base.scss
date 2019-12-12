@@ -1,0 +1,80 @@
+$pe-7s-font-path: "~pe7-icon/dist/fonts" !default;
+@import 'base/new_variables';
+@import 'base/variables';
+@import 'base/mixins';
+
+@import "~pe7-icon/dist/scss/pe-icon-7-stroke.scss";
+@import 'base/sidebar';
+@import 'base/navbar';
+@import 'base/card';
+@import 'base/checkbox-radio-switch';
+@import 'base/footer';
+@import 'base/buttons';
+@import 'base/typography';
+@import 'base/form';
+@import 'base/auth';
+@import 'free5gc/global';
+@import 'free5gc/icons';
+@import 'free5gc/patches';
+@import 'free5gc/spinner';
+@import 'free5gc/subscribers';
+
+html, body {
+  font-size: 14px;
+}
+
+.places-buttons .btn {
+  margin-bottom: 30px;
+}
+
+.rbc-calendar {
+  .rbc-toolbar .rbc-toolbar-label {
+    font-size: 22px;
+  }
+  .rbc-toolbar {
+    margin-bottom: 25px;
+  }
+  .rbc-toolbar button {
+    @include btn-styles($primary-bg, $primary-states-color);
+    &.rbc-active,
+    &.rbc-active:hover,
+    &:active,
+    &:focus,
+    &:hover,
+    &:active:hover {
+      background-color: lighten($primary-bg, 25%);
+      border-color: $primary-bg;
+    }
+  }
+  .rbc-month-row {
+    min-height: 100px;
+  }
+  .rbc-row-segment {
+    padding: 2px;
+    .rbc-event {
+      background: $primary-bg;
+    }
+    .rbc-event.rbc-selected {
+      background: darken($primary-bg, 5);
+    }
+    .rbc-event-content {
+      font-size: 12px;
+    }
+
+  }
+  .rbc-time-view,
+  .rbc-month-view,
+  .rbc-agenda-view {
+    border-radius: 3px;
+  }
+}
+
+.ct-chart-line .ct-label, .ct-chart-bar .ct-label {
+  font-size: 1rem;
+}
+
+.react-bs-table {
+  .table {
+    margin-bottom: 0;
+  }
+}

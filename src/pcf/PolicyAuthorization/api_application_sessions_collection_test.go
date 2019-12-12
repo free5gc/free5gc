@@ -6,7 +6,7 @@ import (
 	"free5gc/lib/CommonConsumerTestData/PCF/TestPolicyAuthorization"
 	"free5gc/lib/CommonConsumerTestData/PCF/TestSMPolicy"
 	"free5gc/lib/Npcf_PolicyAuthorization"
-	"free5gc/lib/Npcf_SMPolicy"
+	"free5gc/lib/Npcf_SMPolicyControl"
 	"free5gc/src/pcf/pcf_context"
 	"free5gc/src/pcf/pcf_service"
 	"free5gc/src/pcf/pcf_util"
@@ -40,9 +40,9 @@ func TestApplicationSessionsCollection(t *testing.T) {
 	// pcf_context.NewPCFUe("123")
 	pcf_context.PCF_Self().NewPCFUe("string1")
 	smReqData := TestSMPolicy.CreateTestData()
-	configuration2 := Npcf_SMPolicy.NewConfiguration()
+	configuration2 := Npcf_SMPolicyControl.NewConfiguration()
 	configuration2.SetBasePath(pcf_util.PCF_BASIC_PATH + pcf_context.SmUri)
-	client2 := Npcf_SMPolicy.NewAPIClient(configuration2)
+	client2 := Npcf_SMPolicyControl.NewAPIClient(configuration2)
 	_, httpRsp, err := client2.DefaultApi.SmPoliciesPost(context.Background(), smReqData)
 
 	//Test PostAppSessions 201

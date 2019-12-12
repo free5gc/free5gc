@@ -130,10 +130,8 @@ func (amf *AMF) Start() {
 	if err != nil {
 		initLog.Error("Build AMF Profile Error")
 	}
-	_, err = amf_consumer.SendRegisterNFInstance(self.NrfUri, self.NfId, profile)
-	if err != nil {
-		initLog.Errorf("AMF register to NRF Error[%s]", err.Error())
-	}
+
+	_, self.NfId, _ = amf_consumer.SendRegisterNFInstance(self.NrfUri, self.NfId, profile)
 
 	server, err := http2_util.NewServer(addr, amf_util.AmfLogPath, router)
 	if err == nil && server != nil {

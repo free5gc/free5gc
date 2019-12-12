@@ -18,14 +18,14 @@ var nasTypePDUSessionEstablishmentAcceptAuthorizedQosFlowDescriptionsTable = []N
 
 func TestNasTypeAuthorizedQosFlowDescriptionsGetSetIei(t *testing.T) {}
 
-var nasTypePDUSessionEstablishmentAcceptAuthorizedQosFlowDescriptionsLenTable = []NasTypeLenuint8Data{
+var nasTypePDUSessionEstablishmentAcceptAuthorizedQosFlowDescriptionsLenTable = []NasTypeLenUint16Data{
 	{12, 12},
 }
 
 func TestNasTypeAuthorizedQosFlowDescriptionsGetSetLen(t *testing.T) {}
 
 type nasTypeQoSFlowDescription struct {
-	inLen uint8
+	inLen uint16
 	in    []uint8
 	out   []uint8
 }

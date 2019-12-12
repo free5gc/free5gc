@@ -12,7 +12,9 @@ package AMPolicy
 import (
 	"free5gc/lib/http_wrapper"
 	"free5gc/lib/openapi/models"
+	"free5gc/src/pcf/logger"
 	"free5gc/src/pcf/pcf_handler/pcf_message"
+	"free5gc/src/pcf/pcf_util"
 
 	"github.com/gin-gonic/gin"
 )
@@ -44,9 +46,14 @@ func PoliciesPolAssoIdGet(c *gin.Context) {
 // PoliciesPolAssoIdUpdatePost -
 func PoliciesPolAssoIdUpdatePost(c *gin.Context) {
 	var policyAssociationUpdateRequest models.PolicyAssociationUpdateRequest
-	c.BindJSON(&policyAssociationUpdateRequest)
+	err := c.BindJSON(&policyAssociationUpdateRequest)
+	if err != nil {
+		rsp := pcf_util.GetProblemDetail("Malformed request syntax", pcf_util.ERROR_REQUEST_PARAMETERS)
+		logger.HandlerLog.Errorln(rsp.Detail)
+		c.JSON(int(rsp.Status), rsp)
+		return
+	}
 	req := http_wrapper.NewRequest(c.Request, policyAssociationUpdateRequest)
-	req.Params["ReqURI"] = c.Request.RequestURI
 	req.Params["polAssoId"], _ = c.Params.Get("polAssoId")
 	channelMsg := pcf_message.NewHttpChannelMessage(pcf_message.EventAMPolicyUpdate, req)
 
@@ -59,14 +66,28 @@ func PoliciesPolAssoIdUpdatePost(c *gin.Context) {
 // PoliciesPost -
 func PoliciesPost(c *gin.Context) {
 	var policyAssociationRequest models.PolicyAssociationRequest
-	c.BindJSON(&policyAssociationRequest)
+	err := c.BindJSON(&policyAssociationRequest)
+	if err != nil {
+		rsp := pcf_util.GetProblemDetail("Malformed request syntax", pcf_util.ERROR_REQUEST_PARAMETERS)
+		logger.HandlerLog.Errorln(rsp.Detail)
+		c.JSON(int(rsp.Status), rsp)
+		return
+	}
+	if policyAssociationRequest.Supi == "" || policyAssociationRequest.NotificationUri == "" {
+		rsp := pcf_util.GetProblemDetail("Miss Mandotory IE", pcf_util.ERROR_REQUEST_PARAMETERS)
+		logger.HandlerLog.Errorln(rsp.Detail)
+		c.JSON(int(rsp.Status), rsp)
+		return
+	}
 	req := http_wrapper.NewRequest(c.Request, policyAssociationRequest)
-	req.Params["ReqURI"] = c.Request.RequestURI
 	channelMsg := pcf_message.NewHttpChannelMessage(pcf_message.EventAMPolicyCreate, req)
 
 	pcf_message.SendMessage(channelMsg)
 	recvMsg := <-channelMsg.HttpChannel
 	HTTPResponse := recvMsg.HTTPResponse
+	for key, val := range HTTPResponse.Header {
+		c.Header(key, val[0])
+	}
 	c.JSON(HTTPResponse.Status, HTTPResponse.Body)
 
 }

@@ -203,3 +203,9 @@ const (
 	NGRanRadioCapabilityUpdateNotNeeded uint8 = 0x00
 	NGRanRadioCapabilityUpdateNeeded    uint8 = 0x01
 )
+
+// TS 24.501 9.11.3.49
+const (
+	AllowedTypeAllowedArea    uint8 = 0x00
+	AllowedTypeNonAllowedArea uint8 = 0x01
+)

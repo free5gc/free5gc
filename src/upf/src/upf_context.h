@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <netinet/in.h>
+#include <net/if.h>
 #include <pthread.h>
 
 #include "utlt_list.h"
@@ -41,7 +42,7 @@ typedef enum _UpfEvent {
 } UpfEvent;
 
 typedef struct {
-    const char      *gtpDevNamePrefix;   // Default : "free5GCgtp"
+    const char      *gtpDevNamePrefix;   // Default : "upfgtp"
 
     // Add context related to GTP-U here
     uint16_t        gtpv1Port;           // Default : GTP_V1_PORT
@@ -217,19 +218,20 @@ typedef struct _UpfBar {
     PfcpNode        *pfcpNode;
 } UpfBar;
 
-typedef struct _UpfApn {
+typedef struct _ApnNode {
     ListNode      node;
     char          apn[MAX_APN_LEN + 1];
     char          subnetIP[INET6_ADDRSTRLEN];
+    char          natifname[IF_NAMESIZE];
     uint8_t       subnetPrefix;
-} UpfApn;
+} ApnNode;
 
 UpfContext *Self();
 Status UpfContextInit();
 Status UpfContextTerminate();
 
 // APN / PDR / FAR
-UpfApn *UpfApnAdd(const char *apnName, const char *ip, const char *prefix);
+ApnNode *UpfApnAdd(const char *apnName, const char *ip, const char *prefix, const char *natifname);
 Status UpfApnRemoveAll();
 UpfPdr *UpfPdrAdd(UpfSession *session);
 Status UpfPdrRemove(UpfPdr *pdr);
@@ -252,10 +254,6 @@ UpfSession *UpfSessionFind(uint32_t idx);
 UpfSession *UpfSessionFindBySeid(uint64_t seid);
 UpfSession *UpfSessionAddByMessage(PfcpMessage *message);
 UpfSession *UpfSessionFindByPdrTeid(uint32_t teid);
-
-Status UpfSessionPacketSend(UpfSession *session, Sock *sock);
-Status UpfSessionPacketRecv(UpfSession *session, Bufblk *pktBuf);
-Status UpfSessionPacketClear(UpfSession *session);
 
 #ifdef __cplusplus
 }

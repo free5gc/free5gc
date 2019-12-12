@@ -12,7 +12,6 @@ import (
 	"free5gc/lib/nas/nasType"
 	"free5gc/lib/ngap"
 	"free5gc/lib/ngap/ngapConvert"
-	"free5gc/lib/ngap/ngapTestpacket"
 	"free5gc/lib/ngap/ngapType"
 	"free5gc/lib/openapi/models"
 	"free5gc/src/amf/amf_context"
@@ -23,6 +22,7 @@ import (
 	"free5gc/src/amf/logger"
 	"free5gc/src/smf/PDUSession"
 	"free5gc/src/smf/smf_handler"
+	"free5gc/src/test/ngapTestpacket"
 	"testing"
 	"time"
 )
@@ -256,17 +256,26 @@ func TestSendInitialContextSetupRequest(t *testing.T) {
 	time.Sleep(200 * time.Millisecond)
 	ue := TestAmf.TestAmf.UePool["imsi-2089300007487"]
 	ue.DerivateAnKey(models.AccessType__3_GPP_ACCESS)
-	// TODO: use real nas pdu
-	ngap_message.SendInitialContextSetupRequest(ue, ue.GetAnType(), nil, nil, nil, nil, nil, nil, nil)
+	ue.PlmnId = models.PlmnId{
+		Mcc: "208",
+		Mnc: "93",
+	}
+
+	ue.AmPolicyAssociation = &models.PolicyAssociation{}
+	ue.AmPolicyAssociation.ServAreaRes = &models.ServiceAreaRestriction{}
+	ue.AmPolicyAssociation.ServAreaRes.Areas = append(ue.AmPolicyAssociation.ServAreaRes.Areas, models.Area{
+		Tacs: []string{
+			"000102",
+		},
+	})
+
+	ngap_message.SendInitialContextSetupRequest(ue, ue.GetAnType(), nil, nil, nil, nil, nil, nil)
 }
 
 func TestSendUEContextModificationRequest(t *testing.T) {
 
 	time.Sleep(200 * time.Millisecond)
 	ue := TestAmf.TestAmf.UePool["imsi-2089300007487"]
-	ue.UEAMBR = new(models.Ambr)
-	ue.UEAMBR.Uplink = "800"
-	ue.UEAMBR.Downlink = "1000"
 	oldAmfUeNgapID := int64(1234)
 
 	emergencyFallbackIndicator := ngapType.EmergencyFallbackIndicator{}
@@ -336,10 +345,6 @@ func TestSendHandoverRequest(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	ran := TestAmf.TestAmf.AmfRanPool[TestAmf.Laddr2.String()]
 	ue := TestAmf.TestAmf.UePool["imsi-2089300007487"]
-	ue.UEAMBR = new(models.Ambr)
-	ue.UEAMBR.Uplink = "800"
-	ue.UEAMBR.Downlink = "1000"
-
 	ue.NCC = 5
 	ue.NH, _ = hex.DecodeString("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")
 
@@ -543,7 +548,7 @@ func TestSendRerouteNasRequest(t *testing.T) {
 		Len:    12, // suci
 		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
 	}
-	nasPdu := nasTestpacket.GetRegistrationRequest(nasMessage.RegistrationType5GSInitialRegistration, mobileIdentity5GS, nil)
+	nasPdu := nasTestpacket.GetRegistrationRequest(nasMessage.RegistrationType5GSInitialRegistration, mobileIdentity5GS, nil, nil)
 	initialUeMessage := ngapTestpacket.BuildInitialUEMessage(1, nasPdu, "")
 	initialUeMessagePkg, _ := ngap.Encoder(initialUeMessage)
 

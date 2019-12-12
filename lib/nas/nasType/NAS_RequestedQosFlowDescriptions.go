@@ -6,7 +6,7 @@ package nasType
 // QoSFlowDescriptions Row, sBit, len = [0, 0], 8 , INF
 type RequestedQosFlowDescriptions struct {
 	Iei    uint8
-	Len    uint8
+	Len    uint16
 	Buffer []uint8
 }
 
@@ -21,12 +21,12 @@ func (a *RequestedQosFlowDescriptions) GetIei() (iei uint8) {}
 func (a *RequestedQosFlowDescriptions) SetIei(iei uint8) {}
 
 // RequestedQosFlowDescriptions 9.11.4.12
-// Len Row, sBit, len = [], 8, 8
-func (a *RequestedQosFlowDescriptions) GetLen() (len uint8) {}
+// Len Row, sBit, len = [], 8, 16
+func (a *RequestedQosFlowDescriptions) GetLen() (len uint16) {}
 
 // RequestedQosFlowDescriptions 9.11.4.12
-// Len Row, sBit, len = [], 8, 8
-func (a *RequestedQosFlowDescriptions) SetLen(len uint8) {}
+// Len Row, sBit, len = [], 8, 16
+func (a *RequestedQosFlowDescriptions) SetLen(len uint16) {}
 
 // RequestedQosFlowDescriptions 9.11.4.12
 // QoSFlowDescriptions Row, sBit, len = [0, 0], 8 , INF

@@ -3,11 +3,24 @@ package AMPolicy_test
 import (
 	"context"
 	"flag"
+	"fmt"
+	"github.com/gin-gonic/gin"
 	"free5gc/lib/CommonConsumerTestData/PCF/TestAMPolicy"
 	"free5gc/lib/Npcf_AMPolicy"
+	"free5gc/lib/http2_util"
+	"free5gc/lib/openapi/common"
+	"free5gc/lib/openapi/models"
+	"free5gc/lib/path_util"
+	"free5gc/src/amf/amf_service"
+	"free5gc/src/app"
+	"free5gc/src/nrf/nrf_service"
+	"free5gc/src/pcf/logger"
 	"free5gc/src/pcf/pcf_context"
+	"free5gc/src/pcf/pcf_producer"
 	"free5gc/src/pcf/pcf_service"
-	"free5gc/src/pcf/pcf_util"
+	"free5gc/src/udr/udr_service"
+	"net/http"
+	"strings"
 	"testing"
 	"time"
 
@@ -15,107 +28,278 @@ import (
 	"github.com/urfave/cli"
 )
 
-func pcfInit() {
-	flags := flag.FlagSet{}
-	c := cli.NewContext(nil, &flags, nil)
-	pcf := &pcf_service.PCF{}
-	pcf.Initialize(c)
-	go pcf.Start()
-	time.Sleep(100 * time.Millisecond)
+var NFs = []app.NetworkFunction{
+	&nrf_service.NRF{},
+	&amf_service.AMF{},
+	&udr_service.UDR{},
+	&pcf_service.PCF{},
+}
+
+func init() {
+	app.AppInitializeWillInitialize("")
+	flag := flag.FlagSet{}
+	cli := cli.NewContext(nil, &flag, nil)
+	for _, service := range NFs {
+		service.Initialize(cli)
+		go service.Start()
+		time.Sleep(300 * time.Millisecond)
+	}
 }
 func TestCreateAMPolicy(t *testing.T) {
-	pcfInit()
 
 	configuration := Npcf_AMPolicy.NewConfiguration()
-	configuration.SetBasePath(pcf_util.PCF_BASIC_PATH + pcf_context.AmpolicyUri)
+	configuration.SetBasePath("https://127.0.0.1:29507")
 	client := Npcf_AMPolicy.NewAPIClient(configuration)
 
 	//Test PostPolicies
+	{
+		amCreateReqData := TestAMPolicy.GetAMreqdata()
+		_, httpRsp, err := client.DefaultApi.PoliciesPost(context.Background(), amCreateReqData)
+		assert.True(t, err == nil)
+		assert.True(t, httpRsp != nil)
+		if httpRsp != nil {
+			assert.Equal(t, http.StatusCreated, httpRsp.StatusCode)
+			locationHeader := httpRsp.Header.Get("Location")
+			index := strings.LastIndex(locationHeader, "/")
+			assert.True(t, index != -1)
+			polAssoId := locationHeader[index+1:]
+			assert.True(t, strings.HasPrefix(polAssoId, "imsi-2089300007487"))
+		}
+	}
+	{
+		amCreateReqData := TestAMPolicy.GetamCreatefailnotifyURIData()
+		_, httpRsp, err := client.DefaultApi.PoliciesPost(context.Background(), amCreateReqData)
+		assert.True(t, err != nil)
+		assert.True(t, httpRsp != nil)
+		if httpRsp != nil {
+			assert.Equal(t, http.StatusBadRequest, httpRsp.StatusCode)
+			problem := err.(common.GenericOpenAPIError).Model().(models.ProblemDetails)
+			assert.Equal(t, "ERROR_REQUEST_PARAMETERS", problem.Cause)
+			assert.Equal(t, "Miss Mandotory IE", problem.Detail)
+		}
+	}
+	{
+		amCreateReqData := TestAMPolicy.GetamCreatefailsupiData()
+		_, httpRsp, err := client.DefaultApi.PoliciesPost(context.Background(), amCreateReqData)
+		assert.True(t, err != nil)
+		assert.True(t, httpRsp != nil)
+		if httpRsp != nil {
+			assert.Equal(t, http.StatusBadRequest, httpRsp.StatusCode)
+			problem := err.(common.GenericOpenAPIError).Model().(models.ProblemDetails)
+			assert.Equal(t, "ERROR_REQUEST_PARAMETERS", problem.Cause)
+			assert.Equal(t, "Supi Format Error", problem.Detail)
+		}
+	}
+
+}
+
+func TestGetAMPolicy(t *testing.T) {
+
+	configuration := Npcf_AMPolicy.NewConfiguration()
+	configuration.SetBasePath("https://127.0.0.1:29507")
+	client := Npcf_AMPolicy.NewAPIClient(configuration)
+
 	amCreateReqData := TestAMPolicy.GetAMreqdata()
-	_, httpRsp, err := client.AMPolicyAssociationsCollectionApi.CreateIndividualAMPolicyAssociation(context.Background(), amCreateReqData)
-	assert.True(t, err == nil)
-	assert.True(t, httpRsp != nil)
-	assert.Equal(t, "201 Created", httpRsp.Status)
-
-	//Test GetPoliciesPolAssoId
-	_, httpRsp, err = client.IndividualAMPolicyAssociationDocumentApi.ReadIndividualAMPolicyAssociation(context.Background(), "46611123456789")
-	assert.True(t, err == nil)
-	assert.True(t, httpRsp != nil)
-	assert.Equal(t, "200 OK", httpRsp.Status)
-
-	//Test Update
-	amUpdateReqData := TestAMPolicy.GetAMUpdateReqData()
-	_, httpRsp, err = client.IndividualAMPolicyAssociationDocumentApi.ReportObservedEventTriggersForIndividualAMPolicyAssociation(context.Background(), "46611123456789", amUpdateReqData)
-	assert.True(t, err == nil)
-	assert.True(t, httpRsp != nil)
-	assert.Equal(t, "200 OK", httpRsp.Status)
-
-	//Test PoliciesPolAssoIdDelete
-	httpRsp, err = client.IndividualAMPolicyAssociationDocumentApi.DeleteIndividualAMPolicyAssociation(context.Background(), "46611123456789")
-	assert.True(t, err == nil)
-	assert.True(t, httpRsp != nil)
-	assert.Equal(t, "204 No Content", httpRsp.Status)
-
-	//---------------------------------------------------------------------------------------------------------
-	//Fail Test (Create no notifyURI)
-	amCreatefailnotifyURIData := TestAMPolicy.GetamCreatefailnotifyURIData()
-	_, httpRsp, err = client.AMPolicyAssociationsCollectionApi.CreateIndividualAMPolicyAssociation(context.Background(), amCreatefailnotifyURIData)
-	assert.True(t, err != nil)
-	assert.True(t, httpRsp != nil)
-	assert.Equal(t, "400 Bad Request", httpRsp.Status)
-
-	//Fail Test (Create no supi)
-	amCreatefailsupiData := TestAMPolicy.GetamCreatefailsupiData()
-	_, httpRsp, err = client.AMPolicyAssociationsCollectionApi.CreateIndividualAMPolicyAssociation(context.Background(), amCreatefailsupiData)
-	assert.True(t, err != nil)
-	assert.True(t, httpRsp != nil)
-	assert.Equal(t, "400 Bad Request", httpRsp.Status)
-
-	//Fail Test (Create no suppfeat)
-	amCreatefailsuppfeatData := TestAMPolicy.GetamCreatefailsuppfeatData()
-	_, httpRsp, err = client.AMPolicyAssociationsCollectionApi.CreateIndividualAMPolicyAssociation(context.Background(), amCreatefailsuppfeatData)
-	assert.True(t, err != nil)
-	assert.True(t, httpRsp != nil)
-	assert.Equal(t, "400 Bad Request", httpRsp.Status)
-	//---------------------------------------------------------------------------------------------------
-
+	polAssoId := "imsi-2089300007487-1"
 	//Test PostPolicies
-	amCreateReqData = TestAMPolicy.GetAMreqdata()
-	_, httpRsp, err = client.AMPolicyAssociationsCollectionApi.CreateIndividualAMPolicyAssociation(context.Background(), amCreateReqData)
-	assert.True(t, err == nil)
-	assert.True(t, httpRsp != nil)
-	assert.Equal(t, "201 Created", httpRsp.Status)
+	{
+		_, httpRsp, err := client.DefaultApi.PoliciesPost(context.Background(), amCreateReqData)
+		assert.True(t, err == nil)
+		assert.True(t, httpRsp != nil)
+		if httpRsp != nil {
+			assert.Equal(t, http.StatusCreated, httpRsp.StatusCode)
+			locationHeader := httpRsp.Header.Get("Location")
+			index := strings.LastIndex(locationHeader, "/")
+			assert.True(t, index != -1)
+			polAssoId = locationHeader[index+1:]
+			assert.True(t, strings.HasPrefix(polAssoId, "imsi-2089300007487"))
+		}
+	}
+	{
+		//Test GetPoliciesPolAssoId
+		rsp, httpRsp, err := client.DefaultApi.PoliciesPolAssoIdGet(context.Background(), polAssoId)
+		assert.True(t, err == nil)
+		assert.True(t, httpRsp != nil)
+		if httpRsp != nil {
+			assert.Equal(t, http.StatusOK, httpRsp.StatusCode)
+			assert.Equal(t, amCreateReqData.SuppFeat, rsp.SuppFeat)
+			assert.Equal(t, amCreateReqData.ServAreaRes, rsp.ServAreaRes)
+			assert.Equal(t, amCreateReqData.Rfsp, rsp.Rfsp)
+			assert.True(t, rsp.Triggers == nil)
+			assert.True(t, rsp.Pras == nil)
+		}
+	}
 
-	//Fail Test (GetID wrong ID)
-	_, httpRsp, err = client.IndividualAMPolicyAssociationDocumentApi.ReadIndividualAMPolicyAssociation(context.Background(), "11111111")
-	assert.True(t, err != nil)
-	assert.True(t, httpRsp != nil)
-	assert.Equal(t, "404 Not Found", httpRsp.Status)
+}
 
-	//Test PoliciesPolAssoIdDelete
-	httpRsp, err = client.IndividualAMPolicyAssociationDocumentApi.DeleteIndividualAMPolicyAssociation(context.Background(), "46611123456789")
-	assert.True(t, err == nil)
-	assert.True(t, httpRsp != nil)
-	assert.Equal(t, "204 No Content", httpRsp.Status)
+func TestDelAMPolicy(t *testing.T) {
 
-	//Test Fail Update
-	amCreateReqData = TestAMPolicy.GetAMreqdata()
-	_, httpRsp, err = client.AMPolicyAssociationsCollectionApi.CreateIndividualAMPolicyAssociation(context.Background(), amCreateReqData)
-	assert.True(t, err == nil)
-	assert.True(t, httpRsp != nil)
-	assert.Equal(t, "201 Created", httpRsp.Status)
+	configuration := Npcf_AMPolicy.NewConfiguration()
+	configuration.SetBasePath("https://127.0.0.1:29507")
+	client := Npcf_AMPolicy.NewAPIClient(configuration)
 
-	//Test Fail Update
-	amUpdateReqData = TestAMPolicy.GetAMUpdateReqData()
-	_, httpRsp, err = client.IndividualAMPolicyAssociationDocumentApi.ReportObservedEventTriggersForIndividualAMPolicyAssociation(context.Background(), "1111111", amUpdateReqData)
-	assert.True(t, err != nil)
-	assert.True(t, httpRsp != nil)
-	assert.Equal(t, "404 Not Found", httpRsp.Status)
+	amCreateReqData := TestAMPolicy.GetAMreqdata()
+	polAssoId := "imsi-2089300007487-1"
+	//Test PostPolicies
+	{
+		_, httpRsp, err := client.DefaultApi.PoliciesPost(context.Background(), amCreateReqData)
+		assert.True(t, err == nil)
+		assert.True(t, httpRsp != nil)
+		if httpRsp != nil {
+			assert.Equal(t, http.StatusCreated, httpRsp.StatusCode)
+			locationHeader := httpRsp.Header.Get("Location")
+			index := strings.LastIndex(locationHeader, "/")
+			assert.True(t, index != -1)
+			polAssoId = locationHeader[index+1:]
+			assert.True(t, strings.HasPrefix(polAssoId, "imsi-2089300007487"))
+		}
+	}
+	{
+		//Test DelPoliciesPolAssoId
+		httpRsp, err := client.DefaultApi.PoliciesPolAssoIdDelete(context.Background(), polAssoId)
+		assert.True(t, err == nil)
+		assert.True(t, httpRsp != nil)
+		if httpRsp != nil {
+			assert.Equal(t, http.StatusNoContent, httpRsp.StatusCode)
+		}
+	}
+	{
+		//Test GetPoliciesPolAssoId
+		_, httpRsp, err := client.DefaultApi.PoliciesPolAssoIdGet(context.Background(), polAssoId)
+		assert.True(t, err != nil)
+		assert.True(t, httpRsp != nil)
+		if httpRsp != nil {
+			assert.Equal(t, http.StatusNotFound, httpRsp.StatusCode)
+			problem := err.(common.GenericOpenAPIError).Model().(models.ProblemDetails)
+			assert.Equal(t, "CONTEXT_NOT_FOUND", problem.Cause)
+		}
+	}
 
-	//Test PoliciesPolAssoIdDelete
-	httpRsp, err = client.IndividualAMPolicyAssociationDocumentApi.DeleteIndividualAMPolicyAssociation(context.Background(), "46611123456789")
-	assert.True(t, err == nil)
-	assert.True(t, httpRsp != nil)
-	assert.Equal(t, "204 No Content", httpRsp.Status)
+}
 
+func TestUpdateAMPolicy(t *testing.T) {
+
+	configuration := Npcf_AMPolicy.NewConfiguration()
+	configuration.SetBasePath("https://127.0.0.1:29507")
+	client := Npcf_AMPolicy.NewAPIClient(configuration)
+
+	amCreateReqData := TestAMPolicy.GetAMreqdata()
+	polAssoId := "imsi-2089300007487-1"
+	//Test PostPolicies
+	{
+		_, httpRsp, err := client.DefaultApi.PoliciesPost(context.Background(), amCreateReqData)
+		assert.True(t, err == nil)
+		assert.True(t, httpRsp != nil)
+		if httpRsp != nil {
+			assert.Equal(t, http.StatusCreated, httpRsp.StatusCode)
+			locationHeader := httpRsp.Header.Get("Location")
+			index := strings.LastIndex(locationHeader, "/")
+			assert.True(t, index != -1)
+			polAssoId = locationHeader[index+1:]
+			assert.True(t, strings.HasPrefix(polAssoId, "imsi-2089300007487"))
+		}
+	}
+	updateReq := TestAMPolicy.GetAMUpdateReqData()
+	{
+		//Test UpdatePoliciesPolAssoId
+		rsp, httpRsp, err := client.DefaultApi.PoliciesPolAssoIdUpdatePost(context.Background(), polAssoId, updateReq)
+		assert.True(t, err == nil)
+		assert.True(t, httpRsp != nil)
+		if httpRsp != nil {
+			assert.Equal(t, http.StatusOK, httpRsp.StatusCode)
+			assert.Equal(t, updateReq.ServAreaRes, rsp.ServAreaRes)
+			assert.Equal(t, updateReq.Rfsp, rsp.Rfsp)
+			assert.True(t, rsp.Triggers == nil)
+			assert.True(t, rsp.Pras == nil)
+		}
+	}
+}
+
+func TestAMPolicyNotification(t *testing.T) {
+
+	configuration := Npcf_AMPolicy.NewConfiguration()
+	configuration.SetBasePath("https://127.0.0.1:29507")
+	client := Npcf_AMPolicy.NewAPIClient(configuration)
+	go func() { // fake udr server
+		router := gin.Default()
+
+		router.POST("/namf-callback/v1/am-policy/:polAssoId/update", func(c *gin.Context) {
+			polAssoId := c.Param("polAssoId")
+			fmt.Println("==========AMF Policy Association Update Callback=============")
+			fmt.Println("polAssoId: ", polAssoId)
+
+			var policyUpdate models.PolicyUpdate
+			if err := c.ShouldBindJSON(&policyUpdate); err != nil {
+				fmt.Println("fake amf server error")
+				c.JSON(http.StatusInternalServerError, gin.H{})
+				return
+			}
+			c.JSON(http.StatusNoContent, gin.H{})
+		})
+
+		router.POST("/namf-callback/v1/am-policy/:polAssoId/terminate", func(c *gin.Context) {
+			polAssoId := c.Param("polAssoId")
+			fmt.Println("==========AMF Policy Association Terminate Callback=============")
+			fmt.Println("polAssoId: ", polAssoId)
+
+			var terminationNotification models.TerminationNotification
+			if err := c.ShouldBindJSON(&terminationNotification); err != nil {
+				fmt.Println("fake amf server error")
+				c.JSON(http.StatusInternalServerError, gin.H{})
+				return
+			}
+			c.JSON(http.StatusNoContent, gin.H{})
+			httpRsp, err := client.DefaultApi.PoliciesPolAssoIdDelete(context.Background(), polAssoId)
+			assert.True(t, err == nil)
+			assert.True(t, httpRsp != nil)
+			if httpRsp != nil {
+				assert.Equal(t, http.StatusNoContent, httpRsp.StatusCode)
+			}
+		})
+
+		amfLogPath := path_util.Gofree5gcPath("free5gc/amfsslkey.log")
+		amfPemPath := path_util.Gofree5gcPath("free5gc/support/TLS/amf.pem")
+		amfKeyPath := path_util.Gofree5gcPath("free5gc/support/TLS/amf.key")
+
+		server, err := http2_util.NewServer(":8888", amfLogPath, router)
+		if err == nil && server != nil {
+			logger.InitLog.Infoln(server.ListenAndServeTLS(amfPemPath, amfKeyPath))
+		}
+		assert.True(t, err == nil)
+	}()
+
+	time.Sleep(100 * time.Millisecond)
+
+	var polAssoId string
+	amCreateReqData := TestAMPolicy.GetAMreqdata()
+	amCreateReqData.NotificationUri = "https://127.0.0.1:8888/namf-callback/v1/am-policy/imsi-2089300007487-1"
+	//Test PostPolicies
+	{
+		_, httpRsp, err := client.DefaultApi.PoliciesPost(context.Background(), amCreateReqData)
+		assert.True(t, err == nil)
+		assert.True(t, httpRsp != nil)
+		if httpRsp != nil {
+			assert.Equal(t, http.StatusCreated, httpRsp.StatusCode)
+			locationHeader := httpRsp.Header.Get("Location")
+			index := strings.LastIndex(locationHeader, "/")
+			assert.True(t, index != -1)
+			polAssoId = locationHeader[index+1:]
+			assert.True(t, strings.HasPrefix(polAssoId, "imsi-2089300007487"))
+		}
+	}
+	ue := pcf_context.PCF_Self().UePool["imsi-2089300007487"]
+	//Test Policies Update Notify
+	policyUpdate := models.PolicyUpdate{
+		ResourceUri: amCreateReqData.NotificationUri,
+	}
+	pcf_producer.SendAMPolicyUpdateNotification(ue, polAssoId, policyUpdate)
+
+	//Test Policies Termination Notify
+	notification := models.TerminationNotification{
+		ResourceUri: amCreateReqData.NotificationUri,
+		Cause:       models.PolicyAssociationReleaseCause_UNSPECIFIED,
+	}
+	pcf_producer.SendAMPolicyTerminationRequestNotification(ue, polAssoId, notification)
+
+	time.Sleep(200 * time.Millisecond)
 }

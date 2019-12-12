@@ -3,6 +3,7 @@ package smf_context
 import (
 	"free5gc/lib/nas"
 	"free5gc/lib/nas/nasMessage"
+	// "free5gc/lib/nas/nasType"
 )
 
 func BuildGSMPDUSessionEstablishmentAccept(smContext *SMContext) ([]byte, error) {
@@ -27,6 +28,9 @@ func BuildGSMPDUSessionEstablishmentAccept(smContext *SMContext) ([]byte, error)
 	pDUSessionEstablishmentAccept.SessionAMBR.SetUnitForSessionAMBRForUplink(10)
 	pDUSessionEstablishmentAccept.SessionAMBR.SetLen(uint8(len(pDUSessionEstablishmentAccept.SessionAMBR.Octet)))
 
+	// pDUSessionEstablishmentAccept.AuthorizedQosFlowDescriptions = nasType.NewAuthorizedQosFlowDescriptions(nasMessage.PDUSessionEstablishmentAcceptAuthorizedQosFlowDescriptionsType)
+	// pDUSessionEstablishmentAccept.AuthorizedQosFlowDescriptions.SetLen(6)
+	// pDUSessionEstablishmentAccept.SetQoSFlowDescriptions([]uint8{0x09, 0x20, 0x41, 0x01, 0x01, 0x09})
 	return m.PlainNasEncode()
 }
 

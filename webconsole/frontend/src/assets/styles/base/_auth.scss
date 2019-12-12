@@ -1,0 +1,50 @@
+$mobile-width: 480px;
+
+.Login {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+
+  .LoginForm {
+    margin-top: -200px;
+    padding: 60px;
+    width: 100%;
+    max-width: 480px;
+    text-align: center;
+
+    .error-msg {
+      color: red;
+    }
+
+    h3 {
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    form {
+      margin-top: 2px;
+      margin-bottom: 20px;
+    }
+
+    .register {
+      font-size: 16px;
+    }
+  }
+}
+@media all and (max-width: $mobile-width) {
+  .Login {
+    justify-content: flex-start;
+
+    .LoginForm {
+      margin-top: 0;
+      padding: 5px 10px;
+    }
+  }
+}
+
+
+.Register {
+
+}

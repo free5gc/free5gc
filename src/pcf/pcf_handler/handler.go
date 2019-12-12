@@ -56,24 +56,21 @@ func Handle() {
 					PolAssoId := msg.HTTPRequest.Params["polAssoId"]
 					pcf_producer.DeletePoliciesPolAssoId(msg.HttpChannel, PolAssoId)
 				case pcf_message.EventAMPolicyCreate:
-					ReqURI := msg.HTTPRequest.Params["ReqURI"]
-					pcf_producer.PostPolicies(msg.HttpChannel, ReqURI, msg.HTTPRequest.Body.(models.PolicyAssociationRequest))
+					pcf_producer.PostPolicies(msg.HttpChannel, msg.HTTPRequest.Body.(models.PolicyAssociationRequest))
 				case pcf_message.EventAMPolicyUpdate:
-					ReqURI := msg.HTTPRequest.Params["ReqURI"]
 					PolAssoId := msg.HTTPRequest.Params["polAssoId"]
-					pcf_producer.UpdatePostPoliciesPolAssoId(msg.HttpChannel, ReqURI, PolAssoId, msg.HTTPRequest.Body.(models.PolicyAssociationUpdateRequest))
+					pcf_producer.UpdatePostPoliciesPolAssoId(msg.HttpChannel, PolAssoId, msg.HTTPRequest.Body.(models.PolicyAssociationUpdateRequest))
 				case pcf_message.EventSMPolicyCreate:
-					ReqURI := msg.HTTPRequest.Params["ReqURI"]
-					pcf_producer.CreateSmPolicyContext(msg.HttpChannel, ReqURI, msg.HTTPRequest.Body.(models.SmPolicyContextData))
+					pcf_producer.CreateSmPolicy(msg.HttpChannel, msg.HTTPRequest.Body.(models.SmPolicyContextData))
 				case pcf_message.EventSMPolicyGet:
-					ReqURI := msg.HTTPRequest.Params["ReqURI"]
-					pcf_producer.GetSmPolicyContext(msg.HttpChannel, ReqURI)
+					smPolicyId := msg.HTTPRequest.Params["smPolicyId"]
+					pcf_producer.GetSmPolicyContext(msg.HttpChannel, smPolicyId)
 				case pcf_message.EventSMPolicyUpdate:
-					ReqURI := msg.HTTPRequest.Params["ReqURI"]
-					pcf_producer.UpdateSmPolicyContext(msg.HttpChannel, ReqURI, msg.HTTPRequest.Body.(models.SmPolicyUpdateContextData))
+					smPolicyId := msg.HTTPRequest.Params["smPolicyId"]
+					pcf_producer.UpdateSmPolicyContext(msg.HttpChannel, smPolicyId, msg.HTTPRequest.Body.(models.SmPolicyUpdateContextData))
 				case pcf_message.EventSMPolicyDelete:
-					ReqURI := msg.HTTPRequest.Params["ReqURI"]
-					pcf_producer.DeleteSmPolicyContext(msg.HttpChannel, ReqURI)
+					smPolicyId := msg.HTTPRequest.Params["smPolicyId"]
+					pcf_producer.DeleteSmPolicyContext(msg.HttpChannel, smPolicyId)
 				case pcf_message.EventSMPolicyNotify:
 					ReqURI := msg.HTTPRequest.Params["ReqURI"]
 					pcf_producer.HandleSmPolicyNotify(msg.HttpChannel, ReqURI, msg.HTTPRequest.Body.(models.PolicyDataChangeNotification))

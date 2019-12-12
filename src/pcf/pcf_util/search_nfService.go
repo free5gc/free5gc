@@ -6,14 +6,23 @@ import (
 )
 
 func SearchNFServiceUri(nfProfile models.NfProfile, serviceName models.ServiceName, nfServiceStatus models.NfServiceStatus) (nfUri string) {
+
 	if nfProfile.NfServices != nil {
 		for _, service := range *nfProfile.NfServices {
 			if service.ServiceName == serviceName && service.NfServiceStatus == nfServiceStatus {
-				point := (*service.IpEndPoints)[0]
-				if point.Ipv4Address != "" {
-					nfUri = getSbiUri(service.Scheme, point.Ipv4Address, point.Port)
-				} else if len(nfProfile.Ipv4Addresses) != 0 {
-					nfUri = getSbiUri(service.Scheme, nfProfile.Ipv4Addresses[0], point.Port)
+				if nfProfile.Fqdn != "" {
+					nfUri = nfProfile.Fqdn
+				} else if service.Fqdn != "" {
+					nfUri = service.Fqdn
+				} else if service.ApiPrefix != "" {
+					nfUri = service.ApiPrefix
+				} else if service.IpEndPoints != nil {
+					point := (*service.IpEndPoints)[0]
+					if point.Ipv4Address != "" {
+						nfUri = getSbiUri(service.Scheme, point.Ipv4Address, point.Port)
+					} else if len(nfProfile.Ipv4Addresses) != 0 {
+						nfUri = getSbiUri(service.Scheme, nfProfile.Ipv4Addresses[0], point.Port)
+					}
 				}
 			}
 			if nfUri != "" {
@@ -21,6 +30,7 @@ func SearchNFServiceUri(nfProfile models.NfProfile, serviceName models.ServiceNa
 			}
 		}
 	}
+
 	return
 }
 

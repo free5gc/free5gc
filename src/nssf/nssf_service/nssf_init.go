@@ -118,7 +118,7 @@ func (nssf *NSSF) Start() {
 	if err != nil {
 		initLog.Error("Failed to build NSSF profile")
 	}
-	_, err = nssf_consumer.SendRegisterNFInstance(self.NrfUri, self.NfId, profile)
+	_, self.NfId, err = nssf_consumer.SendRegisterNFInstance(self.NrfUri, self.NfId, profile)
 	if err != nil {
 		initLog.Errorf("Failed to register NSSF to NRF: %s", err.Error())
 	}

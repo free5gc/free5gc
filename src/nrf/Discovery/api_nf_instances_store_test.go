@@ -16,7 +16,7 @@ import (
 	"free5gc/src/nrf/dataconv"
 	"free5gc/src/nrf/logger"
 	"free5gc/src/nrf/nrf_handler"
-	"free5gc/src/nrf/util"
+	"free5gc/src/nrf/nrf_util"
 	"log"
 	"net/http"
 	"os"
@@ -33,7 +33,7 @@ var dbAddr = "mongodb://140.113.214.205:30030"
 func TestQueryParamRequestNfType(t *testing.T) {
 	// run AccessToken Server Routine
 	go func() {
-		kl, _ := os.OpenFile(util.NRF_LOG_PATH, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+		kl, _ := os.OpenFile(nrf_util.NrfLogPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 		router := gin.Default()
 
 		AccessToken.AddService(router)
@@ -48,7 +48,7 @@ func TestQueryParamRequestNfType(t *testing.T) {
 
 			Handler: router,
 		}
-		_ = server.ListenAndServeTLS(util.NRF_PEM_PATH, util.NRF_KEY_PATH)
+		_ = server.ListenAndServeTLS(nrf_util.NrfPemPath, nrf_util.NrfKeyPath)
 
 	}()
 	time.Sleep(time.Duration(1) * time.Second)
@@ -396,7 +396,7 @@ func TestQueryParamRequestNfType(t *testing.T) {
 func TestQueryParamRequesterNfInstanceFqdn(t *testing.T) {
 	// run AccessToken Server Routine
 	go func() {
-		kl, _ := os.OpenFile(util.NRF_LOG_PATH, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+		kl, _ := os.OpenFile(nrf_util.NrfLogPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 		router := gin.Default()
 
 		AccessToken.AddService(router)
@@ -411,7 +411,7 @@ func TestQueryParamRequesterNfInstanceFqdn(t *testing.T) {
 
 			Handler: router,
 		}
-		_ = server.ListenAndServeTLS(util.NRF_PEM_PATH, util.NRF_KEY_PATH)
+		_ = server.ListenAndServeTLS(nrf_util.NrfPemPath, nrf_util.NrfKeyPath)
 
 	}()
 	time.Sleep(time.Duration(1) * time.Second)
@@ -757,7 +757,7 @@ func TestQueryParamRequesterNfInstanceFqdn(t *testing.T) {
 func TestSearchNFInstances(t *testing.T) {
 	// run AccessToken Server Routine
 	go func() {
-		kl, _ := os.OpenFile(util.NRF_LOG_PATH, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+		kl, _ := os.OpenFile(nrf_util.NrfLogPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 		router := gin.Default()
 
 		AccessToken.AddService(router)
@@ -772,7 +772,7 @@ func TestSearchNFInstances(t *testing.T) {
 
 			Handler: router,
 		}
-		_ = server.ListenAndServeTLS(util.NRF_PEM_PATH, util.NRF_KEY_PATH)
+		_ = server.ListenAndServeTLS(nrf_util.NrfPemPath, nrf_util.NrfKeyPath)
 
 	}()
 	time.Sleep(time.Duration(1) * time.Second)
@@ -1054,7 +1054,7 @@ func TestSearchNFInstances(t *testing.T) {
 func TestQueryParamServiceNames(t *testing.T) {
 	// run AccessToken Server Routine
 	go func() {
-		kl, _ := os.OpenFile(util.NRF_LOG_PATH, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+		kl, _ := os.OpenFile(nrf_util.NrfLogPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 		router := gin.Default()
 
 		AccessToken.AddService(router)
@@ -1069,7 +1069,7 @@ func TestQueryParamServiceNames(t *testing.T) {
 
 			Handler: router,
 		}
-		_ = server.ListenAndServeTLS(util.NRF_PEM_PATH, util.NRF_KEY_PATH)
+		_ = server.ListenAndServeTLS(nrf_util.NrfPemPath, nrf_util.NrfKeyPath)
 
 	}()
 	time.Sleep(time.Duration(1) * time.Second)
@@ -1393,7 +1393,7 @@ func TestQueryParamServiceNames(t *testing.T) {
 func TestQueryParamSNSSAI(t *testing.T) {
 	// run AccessToken Server Routine
 	go func() {
-		kl, _ := os.OpenFile(util.NRF_LOG_PATH, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+		kl, _ := os.OpenFile(nrf_util.NrfLogPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 		router := gin.Default()
 
 		AccessToken.AddService(router)
@@ -1408,7 +1408,7 @@ func TestQueryParamSNSSAI(t *testing.T) {
 
 			Handler: router,
 		}
-		_ = server.ListenAndServeTLS(util.NRF_PEM_PATH, util.NRF_KEY_PATH)
+		_ = server.ListenAndServeTLS(nrf_util.NrfPemPath, nrf_util.NrfKeyPath)
 
 	}()
 	time.Sleep(time.Duration(1) * time.Second)
@@ -1720,7 +1720,7 @@ func TestQueryParamSNSSAI(t *testing.T) {
 func TestQueryParamDnn(t *testing.T) {
 	// run AccessToken Server Routine
 	go func() {
-		kl, _ := os.OpenFile(util.NRF_LOG_PATH, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+		kl, _ := os.OpenFile(nrf_util.NrfLogPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 		router := gin.Default()
 
 		AccessToken.AddService(router)
@@ -1735,7 +1735,7 @@ func TestQueryParamDnn(t *testing.T) {
 
 			Handler: router,
 		}
-		_ = server.ListenAndServeTLS(util.NRF_PEM_PATH, util.NRF_KEY_PATH)
+		_ = server.ListenAndServeTLS(nrf_util.NrfPemPath, nrf_util.NrfKeyPath)
 
 	}()
 	time.Sleep(time.Duration(1) * time.Second)
@@ -2173,7 +2173,7 @@ func TestQueryParamDnn(t *testing.T) {
 func TestQueryParamSmfServingArea(t *testing.T) {
 	// run AccessToken Server Routine
 	go func() {
-		kl, _ := os.OpenFile(util.NRF_LOG_PATH, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+		kl, _ := os.OpenFile(nrf_util.NrfLogPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 		router := gin.Default()
 
 		AccessToken.AddService(router)
@@ -2188,7 +2188,7 @@ func TestQueryParamSmfServingArea(t *testing.T) {
 
 			Handler: router,
 		}
-		_ = server.ListenAndServeTLS(util.NRF_PEM_PATH, util.NRF_KEY_PATH)
+		_ = server.ListenAndServeTLS(nrf_util.NrfPemPath, nrf_util.NrfKeyPath)
 
 	}()
 	time.Sleep(time.Duration(1) * time.Second)
@@ -2533,7 +2533,7 @@ func TestQueryParamSmfServingArea(t *testing.T) {
 func TestQueryParamTai(t *testing.T) {
 	// run AccessToken Server Routine
 	go func() {
-		kl, _ := os.OpenFile(util.NRF_LOG_PATH, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+		kl, _ := os.OpenFile(nrf_util.NrfLogPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 		router := gin.Default()
 
 		AccessToken.AddService(router)
@@ -2548,7 +2548,7 @@ func TestQueryParamTai(t *testing.T) {
 
 			Handler: router,
 		}
-		_ = server.ListenAndServeTLS(util.NRF_PEM_PATH, util.NRF_KEY_PATH)
+		_ = server.ListenAndServeTLS(nrf_util.NrfPemPath, nrf_util.NrfKeyPath)
 
 	}()
 	time.Sleep(time.Duration(1) * time.Second)
@@ -2912,7 +2912,7 @@ func TestQueryParamTai(t *testing.T) {
 func TestQueryParamAmfRegionId(t *testing.T) {
 	// run AccessToken Server Routine
 	go func() {
-		kl, _ := os.OpenFile(util.NRF_LOG_PATH, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+		kl, _ := os.OpenFile(nrf_util.NrfLogPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 		router := gin.Default()
 
 		AccessToken.AddService(router)
@@ -2927,7 +2927,7 @@ func TestQueryParamAmfRegionId(t *testing.T) {
 
 			Handler: router,
 		}
-		_ = server.ListenAndServeTLS(util.NRF_PEM_PATH, util.NRF_KEY_PATH)
+		_ = server.ListenAndServeTLS(nrf_util.NrfPemPath, nrf_util.NrfKeyPath)
 
 	}()
 	time.Sleep(time.Duration(1) * time.Second)
@@ -3286,7 +3286,7 @@ func TestQueryParamAmfRegionId(t *testing.T) {
 func TestQueryParamAmfSetId(t *testing.T) {
 	// run AccessToken Server Routine
 	go func() {
-		kl, _ := os.OpenFile(util.NRF_LOG_PATH, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+		kl, _ := os.OpenFile(nrf_util.NrfLogPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 		router := gin.Default()
 
 		AccessToken.AddService(router)
@@ -3301,7 +3301,7 @@ func TestQueryParamAmfSetId(t *testing.T) {
 
 			Handler: router,
 		}
-		_ = server.ListenAndServeTLS(util.NRF_PEM_PATH, util.NRF_KEY_PATH)
+		_ = server.ListenAndServeTLS(nrf_util.NrfPemPath, nrf_util.NrfKeyPath)
 
 	}()
 	time.Sleep(time.Duration(1) * time.Second)
@@ -3661,7 +3661,7 @@ func TestQueryParamAmfSetId(t *testing.T) {
 func TestQueryParamGuami(t *testing.T) {
 	// run AccessToken Server Routine
 	go func() {
-		kl, _ := os.OpenFile(util.NRF_LOG_PATH, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+		kl, _ := os.OpenFile(nrf_util.NrfLogPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 		router := gin.Default()
 
 		AccessToken.AddService(router)
@@ -3676,7 +3676,7 @@ func TestQueryParamGuami(t *testing.T) {
 
 			Handler: router,
 		}
-		_ = server.ListenAndServeTLS(util.NRF_PEM_PATH, util.NRF_KEY_PATH)
+		_ = server.ListenAndServeTLS(nrf_util.NrfPemPath, nrf_util.NrfKeyPath)
 
 	}()
 	time.Sleep(time.Duration(1) * time.Second)
@@ -4045,7 +4045,7 @@ func TestQueryParamGuami(t *testing.T) {
 func TestQueryParamSupi(t *testing.T) {
 	// run AccessToken Server Routine
 	go func() {
-		kl, _ := os.OpenFile(util.NRF_LOG_PATH, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+		kl, _ := os.OpenFile(nrf_util.NrfLogPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 		router := gin.Default()
 
 		AccessToken.AddService(router)
@@ -4060,7 +4060,7 @@ func TestQueryParamSupi(t *testing.T) {
 
 			Handler: router,
 		}
-		_ = server.ListenAndServeTLS(util.NRF_PEM_PATH, util.NRF_KEY_PATH)
+		_ = server.ListenAndServeTLS(nrf_util.NrfPemPath, nrf_util.NrfKeyPath)
 
 	}()
 	time.Sleep(time.Duration(1) * time.Second)
@@ -4577,7 +4577,7 @@ func TestQueryParamSupi(t *testing.T) {
 func TestQueryParamUeIpv4Address(t *testing.T) {
 	// run AccessToken Server Routine
 	go func() {
-		kl, _ := os.OpenFile(util.NRF_LOG_PATH, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+		kl, _ := os.OpenFile(nrf_util.NrfLogPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 		router := gin.Default()
 
 		AccessToken.AddService(router)
@@ -4592,7 +4592,7 @@ func TestQueryParamUeIpv4Address(t *testing.T) {
 
 			Handler: router,
 		}
-		_ = server.ListenAndServeTLS(util.NRF_PEM_PATH, util.NRF_KEY_PATH)
+		_ = server.ListenAndServeTLS(nrf_util.NrfPemPath, nrf_util.NrfKeyPath)
 
 	}()
 	time.Sleep(time.Duration(1) * time.Second)
@@ -5008,7 +5008,7 @@ func TestQueryParamUeIpv4Address(t *testing.T) {
 func TestQueryParamIpDomain(t *testing.T) {
 	// run AccessToken Server Routine
 	go func() {
-		kl, _ := os.OpenFile(util.NRF_LOG_PATH, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+		kl, _ := os.OpenFile(nrf_util.NrfLogPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 		router := gin.Default()
 
 		AccessToken.AddService(router)
@@ -5023,7 +5023,7 @@ func TestQueryParamIpDomain(t *testing.T) {
 
 			Handler: router,
 		}
-		_ = server.ListenAndServeTLS(util.NRF_PEM_PATH, util.NRF_KEY_PATH)
+		_ = server.ListenAndServeTLS(nrf_util.NrfPemPath, nrf_util.NrfKeyPath)
 
 	}()
 	time.Sleep(time.Duration(1) * time.Second)
@@ -5276,7 +5276,7 @@ func TestQueryParamIpDomain(t *testing.T) {
 func TestQueryParamUeIpv6Prefix(t *testing.T) {
 	// run AccessToken Server Routine
 	go func() {
-		kl, _ := os.OpenFile(util.NRF_LOG_PATH, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+		kl, _ := os.OpenFile(nrf_util.NrfLogPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 		router := gin.Default()
 
 		AccessToken.AddService(router)
@@ -5291,7 +5291,7 @@ func TestQueryParamUeIpv6Prefix(t *testing.T) {
 
 			Handler: router,
 		}
-		_ = server.ListenAndServeTLS(util.NRF_PEM_PATH, util.NRF_KEY_PATH)
+		_ = server.ListenAndServeTLS(nrf_util.NrfPemPath, nrf_util.NrfKeyPath)
 
 	}()
 	time.Sleep(time.Duration(1) * time.Second)
@@ -5628,7 +5628,7 @@ func TestQueryParamUeIpv6Prefix(t *testing.T) {
 func TestQueryParamPgwInd(t *testing.T) {
 	// run AccessToken Server Routine
 	go func() {
-		kl, _ := os.OpenFile(util.NRF_LOG_PATH, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+		kl, _ := os.OpenFile(nrf_util.NrfLogPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 		router := gin.Default()
 
 		AccessToken.AddService(router)
@@ -5643,7 +5643,7 @@ func TestQueryParamPgwInd(t *testing.T) {
 
 			Handler: router,
 		}
-		_ = server.ListenAndServeTLS(util.NRF_PEM_PATH, util.NRF_KEY_PATH)
+		_ = server.ListenAndServeTLS(nrf_util.NrfPemPath, nrf_util.NrfKeyPath)
 
 	}()
 	time.Sleep(time.Duration(1) * time.Second)
@@ -5903,7 +5903,7 @@ func TestQueryParamPgwInd(t *testing.T) {
 func TestQueryParamPgw(t *testing.T) {
 	// run AccessToken Server Routine
 	go func() {
-		kl, _ := os.OpenFile(util.NRF_LOG_PATH, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+		kl, _ := os.OpenFile(nrf_util.NrfLogPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 		router := gin.Default()
 
 		AccessToken.AddService(router)
@@ -5918,7 +5918,7 @@ func TestQueryParamPgw(t *testing.T) {
 
 			Handler: router,
 		}
-		_ = server.ListenAndServeTLS(util.NRF_PEM_PATH, util.NRF_KEY_PATH)
+		_ = server.ListenAndServeTLS(nrf_util.NrfPemPath, nrf_util.NrfKeyPath)
 
 	}()
 	time.Sleep(time.Duration(1) * time.Second)
@@ -6175,7 +6175,7 @@ func TestQueryParamPgw(t *testing.T) {
 func TestQueryParamGpsi(t *testing.T) {
 	// run AccessToken Server Routine
 	go func() {
-		kl, _ := os.OpenFile(util.NRF_LOG_PATH, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+		kl, _ := os.OpenFile(nrf_util.NrfLogPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 		router := gin.Default()
 
 		AccessToken.AddService(router)
@@ -6190,7 +6190,7 @@ func TestQueryParamGpsi(t *testing.T) {
 
 			Handler: router,
 		}
-		_ = server.ListenAndServeTLS(util.NRF_PEM_PATH, util.NRF_KEY_PATH)
+		_ = server.ListenAndServeTLS(nrf_util.NrfPemPath, nrf_util.NrfKeyPath)
 
 	}()
 	time.Sleep(time.Duration(1) * time.Second)
@@ -6537,7 +6537,7 @@ func TestQueryParamGpsi(t *testing.T) {
 func TestQueryParamDataSet(t *testing.T) {
 	// run AccessToken Server Routine
 	go func() {
-		kl, _ := os.OpenFile(util.NRF_LOG_PATH, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+		kl, _ := os.OpenFile(nrf_util.NrfLogPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 		router := gin.Default()
 
 		AccessToken.AddService(router)
@@ -6552,7 +6552,7 @@ func TestQueryParamDataSet(t *testing.T) {
 
 			Handler: router,
 		}
-		_ = server.ListenAndServeTLS(util.NRF_PEM_PATH, util.NRF_KEY_PATH)
+		_ = server.ListenAndServeTLS(nrf_util.NrfPemPath, nrf_util.NrfKeyPath)
 
 	}()
 	time.Sleep(time.Duration(1) * time.Second)
@@ -6805,7 +6805,7 @@ func TestQueryParamDataSet(t *testing.T) {
 func TestQueryParamRoutingIndicator(t *testing.T) {
 	// run AccessToken Server Routine
 	go func() {
-		kl, _ := os.OpenFile(util.NRF_LOG_PATH, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+		kl, _ := os.OpenFile(nrf_util.NrfLogPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 		router := gin.Default()
 
 		AccessToken.AddService(router)
@@ -6820,7 +6820,7 @@ func TestQueryParamRoutingIndicator(t *testing.T) {
 
 			Handler: router,
 		}
-		_ = server.ListenAndServeTLS(util.NRF_PEM_PATH, util.NRF_KEY_PATH)
+		_ = server.ListenAndServeTLS(nrf_util.NrfPemPath, nrf_util.NrfKeyPath)
 
 	}()
 	time.Sleep(time.Duration(1) * time.Second)
@@ -7076,7 +7076,7 @@ func TestQueryParamRoutingIndicator(t *testing.T) {
 func TestQueryParamGroupIdList(t *testing.T) {
 	// run AccessToken Server Routine
 	go func() {
-		kl, _ := os.OpenFile(util.NRF_LOG_PATH, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+		kl, _ := os.OpenFile(nrf_util.NrfLogPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 		router := gin.Default()
 
 		AccessToken.AddService(router)
@@ -7091,7 +7091,7 @@ func TestQueryParamGroupIdList(t *testing.T) {
 
 			Handler: router,
 		}
-		_ = server.ListenAndServeTLS(util.NRF_PEM_PATH, util.NRF_KEY_PATH)
+		_ = server.ListenAndServeTLS(nrf_util.NrfPemPath, nrf_util.NrfKeyPath)
 
 	}()
 	time.Sleep(time.Duration(1) * time.Second)
@@ -7423,7 +7423,7 @@ func TestQueryParamGroupIdList(t *testing.T) {
 func TestQueryParamDnaiList(t *testing.T) {
 	// run AccessToken Server Routine
 	go func() {
-		kl, _ := os.OpenFile(util.NRF_LOG_PATH, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+		kl, _ := os.OpenFile(nrf_util.NrfLogPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 		router := gin.Default()
 
 		AccessToken.AddService(router)
@@ -7438,7 +7438,7 @@ func TestQueryParamDnaiList(t *testing.T) {
 
 			Handler: router,
 		}
-		_ = server.ListenAndServeTLS(util.NRF_PEM_PATH, util.NRF_KEY_PATH)
+		_ = server.ListenAndServeTLS(nrf_util.NrfPemPath, nrf_util.NrfKeyPath)
 
 	}()
 	time.Sleep(time.Duration(1) * time.Second)
@@ -7706,7 +7706,7 @@ func TestQueryParamDnaiList(t *testing.T) {
 func TestQueryParamUpfIwkEpsInd(t *testing.T) {
 	// run AccessToken Server Routine
 	go func() {
-		kl, _ := os.OpenFile(util.NRF_LOG_PATH, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+		kl, _ := os.OpenFile(nrf_util.NrfLogPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 		router := gin.Default()
 
 		AccessToken.AddService(router)
@@ -7721,7 +7721,7 @@ func TestQueryParamUpfIwkEpsInd(t *testing.T) {
 
 			Handler: router,
 		}
-		_ = server.ListenAndServeTLS(util.NRF_PEM_PATH, util.NRF_KEY_PATH)
+		_ = server.ListenAndServeTLS(nrf_util.NrfPemPath, nrf_util.NrfKeyPath)
 
 	}()
 	time.Sleep(time.Duration(1) * time.Second)
@@ -7978,7 +7978,7 @@ func TestQueryParamUpfIwkEpsInd(t *testing.T) {
 func TestQueryParamChfSupportedPlmn(t *testing.T) {
 	// run AccessToken Server Routine
 	go func() {
-		kl, _ := os.OpenFile(util.NRF_LOG_PATH, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+		kl, _ := os.OpenFile(nrf_util.NrfLogPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 		router := gin.Default()
 
 		AccessToken.AddService(router)
@@ -7993,7 +7993,7 @@ func TestQueryParamChfSupportedPlmn(t *testing.T) {
 
 			Handler: router,
 		}
-		_ = server.ListenAndServeTLS(util.NRF_PEM_PATH, util.NRF_KEY_PATH)
+		_ = server.ListenAndServeTLS(nrf_util.NrfPemPath, nrf_util.NrfKeyPath)
 
 	}()
 	time.Sleep(time.Duration(1) * time.Second)
@@ -8249,7 +8249,7 @@ func TestQueryParamChfSupportedPlmn(t *testing.T) {
 func TestQueryParamPreferredLocality(t *testing.T) {
 	// run AccessToken Server Routine
 	go func() {
-		kl, _ := os.OpenFile(util.NRF_LOG_PATH, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+		kl, _ := os.OpenFile(nrf_util.NrfLogPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 		router := gin.Default()
 
 		AccessToken.AddService(router)
@@ -8264,7 +8264,7 @@ func TestQueryParamPreferredLocality(t *testing.T) {
 
 			Handler: router,
 		}
-		_ = server.ListenAndServeTLS(util.NRF_PEM_PATH, util.NRF_KEY_PATH)
+		_ = server.ListenAndServeTLS(nrf_util.NrfPemPath, nrf_util.NrfKeyPath)
 
 	}()
 	time.Sleep(time.Duration(1) * time.Second)
@@ -8526,7 +8526,7 @@ func TestQueryParamPreferredLocality(t *testing.T) {
 func TestQueryParamAccessType(t *testing.T) {
 	// run AccessToken Server Routine
 	go func() {
-		kl, _ := os.OpenFile(util.NRF_LOG_PATH, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+		kl, _ := os.OpenFile(nrf_util.NrfLogPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 		router := gin.Default()
 
 		AccessToken.AddService(router)
@@ -8541,7 +8541,7 @@ func TestQueryParamAccessType(t *testing.T) {
 
 			Handler: router,
 		}
-		_ = server.ListenAndServeTLS(util.NRF_PEM_PATH, util.NRF_KEY_PATH)
+		_ = server.ListenAndServeTLS(nrf_util.NrfPemPath, nrf_util.NrfKeyPath)
 
 	}()
 	time.Sleep(time.Duration(1) * time.Second)
@@ -8794,7 +8794,7 @@ func TestQueryParamAccessType(t *testing.T) {
 func TestQueryParamSupportedFeatures(t *testing.T) {
 	// run AccessToken Server Routine
 	go func() {
-		kl, _ := os.OpenFile(util.NRF_LOG_PATH, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+		kl, _ := os.OpenFile(nrf_util.NrfLogPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 		router := gin.Default()
 
 		AccessToken.AddService(router)
@@ -8809,7 +8809,7 @@ func TestQueryParamSupportedFeatures(t *testing.T) {
 
 			Handler: router,
 		}
-		_ = server.ListenAndServeTLS(util.NRF_PEM_PATH, util.NRF_KEY_PATH)
+		_ = server.ListenAndServeTLS(nrf_util.NrfPemPath, nrf_util.NrfKeyPath)
 
 	}()
 	time.Sleep(time.Duration(1) * time.Second)
@@ -9069,7 +9069,7 @@ func TestQueryParamSupportedFeatures(t *testing.T) {
 func TestQueryParamExternalGroupIdentity(t *testing.T) {
 	// run AccessToken Server Routine
 	go func() {
-		kl, _ := os.OpenFile(util.NRF_LOG_PATH, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+		kl, _ := os.OpenFile(nrf_util.NrfLogPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 		router := gin.Default()
 
 		AccessToken.AddService(router)
@@ -9084,7 +9084,7 @@ func TestQueryParamExternalGroupIdentity(t *testing.T) {
 
 			Handler: router,
 		}
-		_ = server.ListenAndServeTLS(util.NRF_PEM_PATH, util.NRF_KEY_PATH)
+		_ = server.ListenAndServeTLS(nrf_util.NrfPemPath, nrf_util.NrfKeyPath)
 
 	}()
 	time.Sleep(time.Duration(1) * time.Second)

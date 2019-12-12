@@ -1023,9 +1023,22 @@ func HandleQuerysdmsubscriptions(respChan chan udr_message.HandlerResponseMessag
 	udr_message.SendHttpResponseMessage(respChan, nil, http.StatusOK, sdmSubscriptions)
 }
 
-func HandleQuerySmData(respChan chan udr_message.HandlerResponseMessage, ueId string, servingPlmnId string) {
+func HandleQuerySmData(respChan chan udr_message.HandlerResponseMessage, ueId string, servingPlmnId string, singleNssai models.Snssai, dnn string) {
 	collName := "subscriptionData.provisionedData.smData"
 	filter := bson.M{"ueId": ueId, "servingPlmnId": servingPlmnId}
+
+	if !reflect.DeepEqual(singleNssai, models.Snssai{}) {
+		if singleNssai.Sd == "" {
+			filter["singleNssai.sst"] = singleNssai.Sst
+		} else {
+			filter["singleNssai.sst"] = singleNssai.Sst
+			filter["singleNssai.sd"] = singleNssai.Sd
+		}
+	}
+
+	if dnn != "" {
+		filter["dnnConfigurations."+dnn] = bson.M{"$exists": true}
+	}
 
 	sessionManagementSubscriptionDatas := RestfulAPIGetMany(collName, filter)
 

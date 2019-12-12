@@ -133,7 +133,9 @@ func (udm *UDM) Start() {
 	if err != nil {
 		logger.InitLog.Errorln(err.Error())
 	} else {
-		newNrfUri, err1 := udm_consumer.SendRegisterNFInstance(self.NrfUri, self.NfId, proflie)
+		var newNrfUri string
+		var err1 error
+		newNrfUri, self.NfId, err1 = udm_consumer.SendRegisterNFInstance(self.NrfUri, self.NfId, proflie)
 		if err1 != nil {
 			logger.InitLog.Errorln(err1.Error())
 		} else {

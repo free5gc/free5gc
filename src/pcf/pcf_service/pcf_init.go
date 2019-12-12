@@ -116,7 +116,7 @@ func (pcf *PCF) Start() {
 	if err != nil {
 		initLog.Error("Build PCF Profile Error")
 	}
-	_, err = pcf_consumer.SendRegisterNFInstance(self.NrfUri, self.NfId, profile)
+	_, self.NfId, err = pcf_consumer.SendRegisterNFInstance(self.NrfUri, self.NfId, profile)
 	if err != nil {
 		initLog.Errorf("PCF register to NRF Error[%s]", err.Error())
 	}
@@ -139,6 +139,9 @@ func (pcf *PCF) Start() {
 	server, err := http2_util.NewServer(addr, pcf_util.PCF_LOG_PATH, router)
 	if err == nil && server != nil {
 		initLog.Infoln(server.ListenAndServeTLS(pcf_util.PCF_PEM_PATH, pcf_util.PCF_KEY_PATH))
+	}
+	if err != nil {
+		initLog.Errorln(err)
 	}
 }
 

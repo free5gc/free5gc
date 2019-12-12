@@ -2,9 +2,11 @@ package ngap_message
 
 import (
 	"github.com/sirupsen/logrus"
+
 	"free5gc/lib/ngap/ngapType"
 	"free5gc/src/n3iwf/logger"
 	"free5gc/src/n3iwf/n3iwf_context"
+	"free5gc/src/n3iwf/n3iwf_ngap/n3iwf_sctp"
 )
 
 var ngaplog *logrus.Entry
@@ -13,11 +15,21 @@ func init() {
 	ngaplog = logger.NgapLog
 }
 
-func SendToAmf(packet []byte) {
+func SendToAmf(sessionID string, packet []byte) {
+	if ok := n3iwf_sctp.Send(sessionID, packet); !ok {
+		// TODO: Feature: retry sending
+	}
 }
 
-func SendNGSetupRequest() {
+func SendNGSetupRequest(sessionID string) {
 	ngaplog.Infoln("[N3IWF] Send NG Setup Request")
+	pkt, err := BuildNGSetupRequest()
+	if err != nil {
+		ngaplog.Errorf("Build NGSetup Request failed: %+v\n", err)
+		return
+	}
+
+	SendToAmf(sessionID, pkt)
 }
 
 func SendNGReset() {
@@ -29,6 +41,7 @@ func SendNGResetAcknowledge() {
 }
 
 func SendInitialContextSetupResponse(
+	sessionID string,
 	ue *n3iwf_context.N3IWFUe,
 	responseList *ngapType.PDUSessionResourceSetupListCxtRes,
 	failedList *ngapType.PDUSessionResourceFailedToSetupListCxtRes,
@@ -52,14 +65,16 @@ func SendInitialContextSetupResponse(
 		return
 	}
 
-	SendToAmf(pkt)
+	SendToAmf(sessionID, pkt)
 }
 
 func SendInitialContextSetupFailure(
+	sessionID string,
 	ue *n3iwf_context.N3IWFUe,
 	cause ngapType.Cause,
 	failedList *ngapType.PDUSessionResourceFailedToSetupListCxtFail,
 	criticalityDiagnostics *ngapType.CriticalityDiagnostics) {
+
 	ngaplog.Infoln("[N3IWF] Send Initial Context Setup Failure")
 
 	if failedList != nil && len(failedList.List) > n3iwf_context.MaxNumOfPDUSessions {
@@ -73,10 +88,14 @@ func SendInitialContextSetupFailure(
 		return
 	}
 
-	SendToAmf(pkt)
+	SendToAmf(sessionID, pkt)
 }
 
-func SendUEContextModificationResponse(ue *n3iwf_context.N3IWFUe, criticalityDiagnostics *ngapType.CriticalityDiagnostics) {
+func SendUEContextModificationResponse(
+	sessionID string,
+	ue *n3iwf_context.N3IWFUe,
+	criticalityDiagnostics *ngapType.CriticalityDiagnostics) {
+
 	ngaplog.Infoln("[N3IWF] Send UE Context Modification Response")
 
 	pkt, err := BuildUEContextModificationResponse(ue, criticalityDiagnostics)
@@ -85,10 +104,15 @@ func SendUEContextModificationResponse(ue *n3iwf_context.N3IWFUe, criticalityDia
 		return
 	}
 
-	SendToAmf(pkt)
+	SendToAmf(sessionID, pkt)
 }
 
-func SendUEContextModificationFailure(ue *n3iwf_context.N3IWFUe, cause ngapType.Cause, criticalityDiagnostics *ngapType.CriticalityDiagnostics) {
+func SendUEContextModificationFailure(
+	sessionID string,
+	ue *n3iwf_context.N3IWFUe,
+	cause ngapType.Cause,
+	criticalityDiagnostics *ngapType.CriticalityDiagnostics) {
+
 	ngaplog.Infoln("[N3IWF] Send UE Context Modification Failure")
 
 	pkt, err := BuildUEContextModificationFailure(ue, cause, criticalityDiagnostics)
@@ -97,10 +121,14 @@ func SendUEContextModificationFailure(ue *n3iwf_context.N3IWFUe, cause ngapType.
 		return
 	}
 
-	SendToAmf(pkt)
+	SendToAmf(sessionID, pkt)
 }
 
-func SendUEContextReleaseComplete(ue *n3iwf_context.N3IWFUe, criticalityDiagnostics *ngapType.CriticalityDiagnostics) {
+func SendUEContextReleaseComplete(
+	sessionID string,
+	ue *n3iwf_context.N3IWFUe,
+	criticalityDiagnostics *ngapType.CriticalityDiagnostics) {
+
 	ngaplog.Infoln("[N3IWF] Send UE Context Release Complete")
 
 	pkt, err := BuildUEContextReleaseComplete(ue, criticalityDiagnostics)
@@ -109,10 +137,13 @@ func SendUEContextReleaseComplete(ue *n3iwf_context.N3IWFUe, criticalityDiagnost
 		return
 	}
 
-	SendToAmf(pkt)
+	SendToAmf(sessionID, pkt)
 }
 
-func SendUEContextReleaseRequest(ue *n3iwf_context.N3IWFUe, cause ngapType.Cause) {
+func SendUEContextReleaseRequest(
+	sessionID string,
+	ue *n3iwf_context.N3IWFUe, cause ngapType.Cause) {
+
 	ngaplog.Infoln("[N3IWF] Send UE Context Release Request")
 
 	pkt, err := BuildUEContextReleaseRequest(ue, cause)
@@ -121,15 +152,32 @@ func SendUEContextReleaseRequest(ue *n3iwf_context.N3IWFUe, cause ngapType.Cause
 		return
 	}
 
-	SendToAmf(pkt)
+	SendToAmf(sessionID, pkt)
 }
 
 func SendInitialUEMessage() {
 	ngaplog.Infoln("[N3IWF] Send Initial UE Message")
 }
 
-func SendUplinkNASTransport() {
+func SendUplinkNASTransport(
+	sessionID string,
+	ue *n3iwf_context.N3IWFUe,
+	nasPdu []byte) {
+
 	ngaplog.Infoln("[N3IWF] Send Uplink NAS Transport")
+
+	if len(nasPdu) == 0 {
+		ngaplog.Errorln("NAS Pdu is nil")
+		return
+	}
+
+	pkt, err := BuildUplinkNASTransport(ue, nasPdu)
+	if err != nil {
+		ngaplog.Errorf("Build Uplink NAS Transport failed : %+v\n", err)
+		return
+	}
+
+	SendToAmf(sessionID, pkt)
 }
 
 func SendNASNonDeliveryIndication() {

@@ -23,11 +23,13 @@ const (
 	PDUSesAuthCmp    string = "PDU Session Authentication Complete"
 )
 
-func GetRegistrationRequest(registrationType uint8, mobileIdentity nasType.MobileIdentity5GS, requestedNSSAI *nasType.RequestedNSSAI) (nasPdu []byte) {}
+func GetRegistrationRequest(registrationType uint8, mobileIdentity nasType.MobileIdentity5GS, requestedNSSAI *nasType.RequestedNSSAI, uplinkDataStatus *nasType.UplinkDataStatus) (nasPdu []byte) {}
 
 func GetPduSessionEstablishmentRequest(pduSessionId uint8) (nasPdu []byte) {}
 
 func GetUlNasTransport_PduSessionEstablishmentRequest(pduSessionId uint8, requestType uint8, dnnString string, sNssai *models.Snssai) (nasPdu []byte) {}
+
+func GetUlNasTransport_PduSessionModificationRequest(pduSessionId uint8, requestType uint8, dnnString string, sNssai *models.Snssai) (nasPdu []byte) {}
 
 func GetPduSessionModificationRequest(pduSessionId uint8) (nasPdu []byte) {}
 func GetPduSessionModificationComplete(pduSessionId uint8) (nasPdu []byte) {}

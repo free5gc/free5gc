@@ -62,18 +62,22 @@ func InitAmfContext(context *amf_context.AMFContext) {
 func getIntAlgOrder(integrityOrder []string) (intOrder []uint8) {
 	for _, intAlg := range integrityOrder {
 		switch intAlg {
+		case "NIA0":
+			intOrder = append(intOrder, 0x00)
 		case "NIA1":
 			intOrder = append(intOrder, 0x80)
 		case "NIA2":
 			intOrder = append(intOrder, 0x40)
 		case "NIA3":
 			intOrder = append(intOrder, 0x20)
-		case "EIA1":
+		case "EIA0":
 			intOrder = append(intOrder, 0x10)
-		case "EIA2":
+		case "EIA1":
 			intOrder = append(intOrder, 0x08)
-		case "EIA3":
+		case "EIA2":
 			intOrder = append(intOrder, 0x04)
+		case "EIA3":
+			intOrder = append(intOrder, 0x02)
 		}
 	}
 	return
@@ -81,18 +85,22 @@ func getIntAlgOrder(integrityOrder []string) (intOrder []uint8) {
 func getEncAlgOrder(cipheringOrder []string) (encOrder []uint8) {
 	for _, encAlg := range cipheringOrder {
 		switch encAlg {
+		case "NEA0":
+			encOrder = append(encOrder, 0x00)
 		case "NEA1":
 			encOrder = append(encOrder, 0x80)
 		case "NEA2":
 			encOrder = append(encOrder, 0x40)
 		case "NEA3":
 			encOrder = append(encOrder, 0x20)
-		case "EEA1":
+		case "EEA0":
 			encOrder = append(encOrder, 0x10)
-		case "EEA2":
+		case "EEA1":
 			encOrder = append(encOrder, 0x08)
-		case "EEA3":
+		case "EEA2":
 			encOrder = append(encOrder, 0x04)
+		case "EEA3":
+			encOrder = append(encOrder, 0x02)
 		}
 	}
 	return

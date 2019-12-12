@@ -10,7 +10,7 @@ import (
 	"free5gc/src/nrf/AccessToken"
 	"free5gc/src/nrf/logger"
 	"free5gc/src/nrf/nrf_handler"
-	"free5gc/src/nrf/util"
+	"free5gc/src/nrf/nrf_util"
 	"net/http"
 	"os"
 	"testing"
@@ -21,7 +21,7 @@ import (
 func TestAccessTokenRequest(t *testing.T) {
 	// run AccessToken Server Routine
 	go func() {
-		kl, _ := os.OpenFile(util.NRF_LOG_PATH, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+		kl, _ := os.OpenFile(nrf_util.NrfLogPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 		router := AccessToken.NewRouter()
 
 		server := http.Server{
@@ -32,7 +32,7 @@ func TestAccessTokenRequest(t *testing.T) {
 
 			Handler: router,
 		}
-		_ = server.ListenAndServeTLS(util.NRF_PEM_PATH, util.NRF_KEY_PATH)
+		_ = server.ListenAndServeTLS(nrf_util.NrfPemPath, nrf_util.NrfKeyPath)
 
 	}()
 	time.Sleep(time.Duration(2) * time.Second)

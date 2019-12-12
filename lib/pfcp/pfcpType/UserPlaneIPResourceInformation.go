@@ -4,6 +4,7 @@ package pfcpType
 
 import (
 	"fmt"
+	"free5gc/lib/util_3gpp"
 	"math/bits"
 	"net"
 )
@@ -17,7 +18,7 @@ type UserPlaneIPResourceInformation struct {
 	TeidRange       uint8
 	Ipv4Address     net.IP
 	Ipv6Address     net.IP
-	NetworkInstance []byte
+	NetworkInstance util_3gpp.Dnn
 	SourceInterface uint8 // 0x00001111
 }
 

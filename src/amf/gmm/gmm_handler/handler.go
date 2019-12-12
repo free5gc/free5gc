@@ -22,6 +22,7 @@ import (
 	"free5gc/src/amf/logger"
 	"reflect"
 	"strconv"
+	"time"
 
 	"github.com/antihax/optional"
 	"github.com/mitchellh/mapstructure"
@@ -569,7 +570,7 @@ func HandleRegistrationRequest(ue *amf_context.AmfUe, anType models.AccessType, 
 			ue.NasUESecurityCapability = *registrationRequest.UESecurityCapability
 			ue.SecurityCapabilities.NREncryptionAlgorithms, ue.SecurityCapabilities.NRIntegrityProtectionAlgorithms,
 				ue.SecurityCapabilities.EUTRAEncryptionAlgorithms, ue.SecurityCapabilities.EUTRAIntegrityProtectionAlgorithms =
-				nasConvert.UESecurityCapabilityToByteArray(registrationRequest.UESecurityCapability.Octet[:4])
+				nasConvert.UESecurityCapabilityToByteArray(registrationRequest.UESecurityCapability.Buffer)
 		} else {
 			gmm_message.SendRegistrationReject(ue.RanUe[anType], nasMessage.Cause5GMMProtocolErrorUnspecified, "")
 			return fmt.Errorf("UESecurityCapability is nil")
@@ -771,10 +772,54 @@ func HandleInitialRegistration(ue *amf_context.AmfUe, anType models.AccessType) 
 		ue.ContextValid = true
 	}
 
-	// TODO (step 15 optional): PCF selection (TS 23.501 6.3.7)
-	// TODO (step 16 optional): new AMF performs an AM Policy Association Establishment as defined in clause 4.16.1.2. For an Emergency Registration,
-	// this step is skipped
-	// TODO: invoke Npcf_AMPolicyControl_Create
+	param := Nnrf_NFDiscovery.SearchNFInstancesParamOpts{
+		Supi: optional.NewString(ue.Supi),
+	}
+	for {
+		resp, err := amf_consumer.SendSearchNFInstances(amfSelf.NrfUri, models.NfType_PCF, models.NfType_AMF, param)
+		if err != nil {
+			logger.GmmLog.Error("AMF can not select an PCF by NRF")
+		} else {
+			// select the first PCF, TODO: select base on other info
+			var pcfUri string
+			for _, nfProfile := range resp.NfInstances {
+				pcfUri = amf_util.SearchNFServiceUri(nfProfile, models.ServiceName_NPCF_AM_POLICY_CONTROL, models.NfServiceStatus_REGISTERED)
+				if pcfUri != "" {
+					break
+				}
+			}
+			if ue.PcfUri = pcfUri; ue.PcfUri == "" {
+				logger.GmmLog.Error("AMF can not select an PCF by NRF")
+			} else {
+				break
+			}
+		}
+		time.Sleep(500 * time.Millisecond) // sleep a while when search NF Instance fail
+	}
+
+	problemDetails, err := amf_consumer.AMPolicyControlCreate(ue)
+	if problemDetails != nil {
+		logger.GmmLog.Errorf("AM Policy Control Create Failed Problem[%+v]", problemDetails)
+	} else if err != nil {
+		logger.GmmLog.Errorf("AM Policy Control Create Error[%+v]", err)
+	}
+
+	// Service Area Restriction are applicable only to 3GPP access
+	if anType == models.AccessType__3_GPP_ACCESS {
+		if ue.AmPolicyAssociation != nil && ue.AmPolicyAssociation.ServAreaRes != nil {
+			servAreaRes := ue.AmPolicyAssociation.ServAreaRes
+			if servAreaRes.RestrictionType == models.RestrictionType_ALLOWED_AREAS {
+				numOfallowedTAs := 0
+				for _, area := range servAreaRes.Areas {
+					numOfallowedTAs += len(area.Tacs)
+				}
+				if numOfallowedTAs < int(servAreaRes.MaxNumOfTAs) {
+					// TODO: based on AMF Policy, assign additional allowed area for UE,
+					// and the upper limit is servAreaRes.MaxNumOfTAs (TS 29.507 4.2.2.3)
+				}
+			}
+		}
+	}
 
 	// TODO (step 18 optional): If the AMF has changed and the old AMF has indicated an existing NGAP UE association towards a N3IWF, the new AMF
 	// creates an NGAP UE association towards the N3IWF to which the UE is connectedsend N2 AMF mobility request to N3IWF
@@ -799,6 +844,8 @@ func HandleInitialRegistration(ue *amf_context.AmfUe, anType models.AccessType) 
 }
 
 func HandleMobilityAndPeriodicRegistrationUpdating(ue *amf_context.AmfUe, anType models.AccessType, procedureCode int64) error {
+
+	logger.GmmLog.Infoln("[AMF] Handle MobilityAndPeriodicRegistrationUpdating")
 
 	amfSelf := amf_context.AMF_Self()
 	initialContextSetup := false
@@ -917,11 +964,6 @@ func HandleMobilityAndPeriodicRegistrationUpdating(ue *amf_context.AmfUe, anType
 
 		ue.ContextValid = true
 	}
-
-	// TODO (step 15 optional): PCF selection (TS 23.501 6.3.7)
-	// TODO (step 16 optional): new AMF performs an AM Policy Association Establishment as defined in clause 4.16.1.2. For an Emergency Registration,
-	// this step is skipped
-	// TODO: invoke Npcf_AMPolicyControl_Create
 
 	var reactivationResult *[16]bool
 	var errPduSessionId, errCause []uint8
@@ -1498,10 +1540,30 @@ func HandleServiceRequest(ue *amf_context.AmfUe, anType models.AccessType, proce
 
 		}
 	case nasMessage.ServiceTypeData:
-		// TODO: Add Service Reject for Ue is not in allowed Area or in non-allowed Area with Cause #28 Service area restrictions
-		err = sendServiceAccept(initCxt, ue, anType, ctxList, suList, acceptPduSessionPsi, reactivationResult, errPduSessionId, errCause)
-		if err != nil {
-			return
+		if anType == models.AccessType__3_GPP_ACCESS {
+			if ue.AmPolicyAssociation != nil && ue.AmPolicyAssociation.ServAreaRes != nil {
+				var accept bool
+				switch ue.AmPolicyAssociation.ServAreaRes.RestrictionType {
+				case models.RestrictionType_ALLOWED_AREAS:
+					accept = amf_context.TacInAreas(ue.Tai.Tac, ue.AmPolicyAssociation.ServAreaRes.Areas)
+				case models.RestrictionType_NOT_ALLOWED_AREAS:
+					accept = !amf_context.TacInAreas(ue.Tai.Tac, ue.AmPolicyAssociation.ServAreaRes.Areas)
+				}
+
+				if !accept {
+					gmm_message.SendServiceReject(ue.RanUe[anType], nil, nasMessage.Cause5GMMRestrictedServiceArea)
+					return nil
+				}
+			}
+			err = sendServiceAccept(initCxt, ue, anType, ctxList, suList, acceptPduSessionPsi, reactivationResult, errPduSessionId, errCause)
+			if err != nil {
+				return
+			}
+		} else {
+			err = sendServiceAccept(initCxt, ue, anType, ctxList, suList, acceptPduSessionPsi, reactivationResult, errPduSessionId, errCause)
+			if err != nil {
+				return
+			}
 		}
 	default:
 		return fmt.Errorf("Service Type[%d] is not supported", serviceType)
@@ -1523,9 +1585,9 @@ func sendServiceAccept(initCxt bool, ue *amf_context.AmfUe, anType models.Access
 			return err
 		}
 		if len(ctxList.List) != 0 {
-			ngap_message.SendInitialContextSetupRequest(ue, anType, nasPdu, nil, &ctxList, nil, nil, nil, nil)
+			ngap_message.SendInitialContextSetupRequest(ue, anType, nasPdu, nil, &ctxList, nil, nil, nil)
 		} else {
-			ngap_message.SendInitialContextSetupRequest(ue, anType, nasPdu, nil, nil, nil, nil, nil, nil)
+			ngap_message.SendInitialContextSetupRequest(ue, anType, nasPdu, nil, nil, nil, nil, nil)
 		}
 	} else if len(suList.List) != 0 {
 		nasPdu, err := gmm_message.BuildServiceAccept(ue, pDUSessionStatus, reactivationResult, errPduSessionId, errCause)
@@ -1821,8 +1883,24 @@ func HandleDeregistrationRequest(ue *amf_context.AmfUe, anType models.AccessType
 		}
 	}
 
-	// TODO: AMF-initiated AM Policy Association Termination procedure if there is any association with the PCF for this ue
-	// TS 23.502 4.16.3.2 (Npcf_AMPolicyControl_Delete)
+	if ue.AmPolicyAssociation != nil {
+		terminateAmPolicyAssocaition := true
+		switch anType {
+		case models.AccessType__3_GPP_ACCESS:
+			terminateAmPolicyAssocaition = ue.Sm[models.AccessType_NON_3_GPP_ACCESS].Check(gmm_state.DE_REGISTERED)
+		case models.AccessType_NON_3_GPP_ACCESS:
+			terminateAmPolicyAssocaition = ue.Sm[models.AccessType__3_GPP_ACCESS].Check(gmm_state.DE_REGISTERED)
+		}
+
+		if terminateAmPolicyAssocaition {
+			problemDetails, err := amf_consumer.AMPolicyControlDelete(ue)
+			if problemDetails != nil {
+				logger.GmmLog.Errorf("AM Policy Control Delete Failed Problem[%+v]", problemDetails)
+			} else if err != nil {
+				logger.GmmLog.Errorf("AM Policy Control Delete Error[%v]", err.Error())
+			}
+		}
+	}
 
 	// if Deregistration type is not switch-off, send Deregistration Accept
 	if deregistrationRequest.GetSwitchOff() == 0 {

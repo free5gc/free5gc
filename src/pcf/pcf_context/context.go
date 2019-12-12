@@ -16,7 +16,7 @@ func init() {
 	PCF_Self().DefaultBdtRefId = "BdtPolicyId-"
 	PCF_Self().NfService = make(map[models.ServiceName]models.NfService)
 	PCF_Self().PcfServiceUris = make(map[models.ServiceName]string)
-	PCF_Self().UePool = make(map[string]*PCFUeContext)
+	PCF_Self().UePool = make(map[string]*UeContext)
 }
 
 type PCFContext struct {
@@ -34,7 +34,7 @@ type PCFContext struct {
 	NotifiUri       string
 	BdtPolicyUri    string
 	BdtUri          string
-	UePool          map[string]*PCFUeContext
+	UePool          map[string]*UeContext
 }
 
 // Create new PCF context
@@ -47,10 +47,6 @@ func GetTimeformat() string {
 func GetPcfContext() PCFContext {
 	return pcfContext
 }
-
-// func GetAmpolicyUri() string {
-// 	return pcfContext.AmpolicyUri
-// }
 func GetUri(name models.ServiceName) string {
 	return pcfContext.PcfServiceUris[name]
 }
@@ -76,13 +72,12 @@ func (context *PCFContext) GetIPv4Uri() string {
 	return fmt.Sprintf("%s://%s:%d", context.UriScheme, context.HttpIPv4Address, context.HttpIpv4Port)
 }
 
-func (context *PCFContext) InitNFService(serviceName []string, version string) []models.NfService {
+func (context *PCFContext) InitNFService(serviceName []string, version string) {
 	tmpVersion := strings.Split(version, ".")
 	versionUri := "v" + tmpVersion[0]
-	NFServices := make([]models.NfService, len(serviceName))
 	for index, nameString := range serviceName {
 		name := models.ServiceName(nameString)
-		NFServices[index] = models.NfService{
+		context.NfService[name] = models.NfService{
 			ServiceInstanceId: strconv.Itoa(index),
 			ServiceName:       name,
 			Versions: &[]models.NfServiceVersion{
@@ -103,14 +98,14 @@ func (context *PCFContext) InitNFService(serviceName []string, version string) [
 			},
 		}
 	}
-	return NFServices
 }
 
-func (context *PCFContext) NewPCFUe(Supi string) (*PCFUeContext, error) {
-	if Supi != "" {
-		context.UePool[Supi] = &PCFUeContext{}
-		context.UePool[Supi].Pras = make(map[string]models.PresenceInfoRm)
-		context.UePool[Supi].SmPolicyData = make(map[string]*PCFUeSmPolicyData)
+func (context *PCFContext) NewPCFUe(Supi string) (*UeContext, error) {
+	if strings.HasPrefix(Supi, "imsi-") {
+		context.UePool[Supi] = &UeContext{}
+		context.UePool[Supi].SmPolicyData = make(map[string]*UeSmPolicyData)
+		context.UePool[Supi].AMPolicyData = make(map[string]*UeAMPolicyData)
+		context.UePool[Supi].PolAssociationIDGenerator = 1
 		context.UePool[Supi].Supi = Supi
 		return context.UePool[Supi], nil
 	} else {
@@ -118,7 +113,19 @@ func (context *PCFContext) NewPCFUe(Supi string) (*PCFUeContext, error) {
 	}
 }
 
-func (context *PCFContext) PCFUeFindByIPv4(v4 string) *PCFUeContext {
+func (context *PCFContext) PCFUeFindByPolicyId(PolicyId string) *UeContext {
+	index := strings.LastIndex(PolicyId, "-")
+	if index == -1 {
+		return nil
+	}
+	supi := PolicyId[:index]
+	if supi != "" {
+		return context.UePool[supi]
+	}
+	return nil
+}
+
+func (context *PCFContext) PCFUeFindByIPv4(v4 string) *UeContext {
 	for _, ue := range context.UePool {
 		if ue.SmPolicyControlStore.Context.Ipv4Address == v4 {
 			return ue
@@ -126,7 +133,7 @@ func (context *PCFContext) PCFUeFindByIPv4(v4 string) *PCFUeContext {
 	}
 	return nil
 }
-func (context *PCFContext) PCFUeFindByIPv6(v6 string) *PCFUeContext {
+func (context *PCFContext) PCFUeFindByIPv6(v6 string) *UeContext {
 	for _, ue := range context.UePool {
 		if ue.SmPolicyControlStore.Context.Ipv6AddressPrefix == v6 {
 			return ue

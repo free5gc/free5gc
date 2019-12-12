@@ -86,6 +86,13 @@ func AmfInit() {
 			},
 		},
 	}
+	ue.AccessAndMobilitySubscriptionData = &models.AccessAndMobilitySubscriptionData{
+		SubscribedUeAmbr: &models.AmbrRm{
+			Uplink:   "800 Kbps",
+			Downlink: "1000 Kbps",
+		},
+		RatRestrictions: []models.RatType{models.RatType_EUTRA},
+	}
 	ue.RatType = models.RatType_NR
 	ue.Kamf = strings.Repeat("1", 64)
 	ue.SecurityCapabilities.NRIntegrityProtectionAlgorithms = [2]byte{0x40, 0x00}

@@ -11,9 +11,9 @@ import (
 )
 
 var (
-	NRF_LOG_PATH = path_util.Gofree5gcPath("free5gc/src/nrf/Management/sslkeylog.log")
-	NRF_PEM_PATH = path_util.Gofree5gcPath("free5gc/support/TLS/nrf.pem")
-	NRF_KEY_PATH = path_util.Gofree5gcPath("free5gc/support/TLS/nrf.key")
+	NrfLogPath = path_util.Gofree5gcPath("free5gc/src/nrf/Management/sslkeylog.log")
+	NrfPemPath = path_util.Gofree5gcPath("free5gc/support/TLS/nrf.pem")
+	NrfKeyPath = path_util.Gofree5gcPath("free5gc/support/TLS/nrf.key")
 )
 
 func main() {
@@ -35,12 +35,12 @@ func main() {
 		c.JSON(http.StatusNoContent, gin.H{})
 	})
 
-	srv, err := http2_util.NewServer(":30678", NRF_LOG_PATH, router)
+	srv, err := http2_util.NewServer(":30678", NrfLogPath, router)
 	if err != nil {
 		log.Panic(err.Error())
 	}
 
-	err2 := srv.ListenAndServeTLS(NRF_PEM_PATH, NRF_KEY_PATH)
+	err2 := srv.ListenAndServeTLS(NrfPemPath, NrfKeyPath)
 	if err2 != nil && err2 != http.ErrServerClosed {
 		log.Panic(err2.Error())
 	}

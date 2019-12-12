@@ -1,4 +1,4 @@
-/*
+ /*
  * AUSF API
  *
  * OpenAPI specification for AUSF

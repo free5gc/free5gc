@@ -143,7 +143,8 @@ Status UpfConfigParse() {
                     do {
                         const char *apn = NULL;
                         const char *ipStr = NULL;
-                        const char * mask = NULL;
+                        const char *mask = NULL;
+                        const char *natifname = NULL;
 
                         if (SetProtocolIter(&apnList, &apnIter))
                             break;
@@ -152,7 +153,9 @@ Status UpfConfigParse() {
                             const char *apnKey = YamlIterGet(&apnIter, GET_KEY);
                             UTLT_Assert(apnKey, return STATUS_ERROR, "The apnKey is NULL");
 
-                            if (!strcmp(apnKey, "cidr")) {
+                            if (!strcmp(apnKey, "apn")) {
+                                apn = (char *)YamlIterGet(&apnIter, GET_VALUE);
+                            } else if (!strcmp(apnKey, "cidr")) {
                                 char *val = (char *)YamlIterGet(&apnIter, GET_VALUE);
                                 
                                 if (val) {
@@ -160,15 +163,16 @@ Status UpfConfigParse() {
                                     if (ipStr)
                                         mask = (const char *)val;
                                 }
-                            } else if (!strcmp(apnKey, "apn")) {
-                                apn = (char *)YamlIterGet(&apnIter, GET_VALUE);
+                            } else if (!strcmp(apnKey, "natifname")) {
+                                natifname = (char *)YamlIterGet(&apnIter, GET_VALUE);
                             } else {
                                 UTLT_Warning("Unknown key \"%s\" of apn_list", apnKey);
                             }
                         }
 
                         if (apn && ipStr && mask) {
-                            UTLT_Assert(!UpfApnAdd(apn, ipStr, mask), return STATUS_ERROR, "");
+                            UTLT_Assert(UpfApnAdd(apn, ipStr, mask, natifname) != NULL, 
+                                        return STATUS_ERROR, "");
                         }
                     } while (YamlIterType(&apnList) == YAML_SEQUENCE_NODE);
                 } else

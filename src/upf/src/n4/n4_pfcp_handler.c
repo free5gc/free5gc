@@ -12,6 +12,7 @@
 #include "pfcp_convert.h"
 #include "gtp_path.h"
 #include "n4_pfcp_build.h"
+#include "up/up_gtp_path.h"
 
 
 Status _AddGtpByPdrFar(UpfPdr *pdr, UpfFar *far) {

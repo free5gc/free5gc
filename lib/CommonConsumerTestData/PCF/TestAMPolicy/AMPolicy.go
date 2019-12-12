@@ -48,125 +48,74 @@ UserLoc :
 */
 //Success Test
 func GetAMreqdata() models.PolicyAssociationRequest {
+	timeNow := time.Now()
 	//d := time.Date(2019, 7, 5, 12, 30, 0, 0, time.UTC)
 	amCreateReqData := models.PolicyAssociationRequest{
-		NotificationUri: "abc@gmail.com",
-		Supi:            "46611123456789",
+		NotificationUri: "https://127.0.0.1:29518/namf-callback/v1/am-policy/imsi-2089300007487-1",
+		Supi:            "imsi-2089300007487",
 		SuppFeat:        "1",
 		Pei:             "123456789123456",
-		RatType:         "NR",
+		RatType:         models.RatType_NR,
 		Rfsp:            123,
-		AccessType:      "3GPP_ACCESS",
-		ServAreaRes: models.ServiceAreaRestriction{
+		AccessType:      models.AccessType__3_GPP_ACCESS,
+		ServAreaRes: &models.ServiceAreaRestriction{
 			RestrictionType: "ALLOWED_AREAS",
 			Areas: []models.Area{
 				{
 					Tacs: []string{
-						"0000",
+						"000001",
 					},
 					AreaCodes: "+886",
 				},
 			},
 			MaxNumOfTAs: 999,
 		},
-		UserLoc: models.UserLocation{
-			EutraLocation: &models.EutraLocation{
-				Tai: &models.Tai{
-					PlmnId: &models.PlmnId{
-						Mcc: "466",
-						Mnc: "11",
-					},
-					Tac: "0000",
-				},
-				Ecgi: &models.Ecgi{
-					PlmnId: &models.PlmnId{
-						Mcc: "466",
-						Mnc: "11",
-					},
-					EutraCellId: "string",
-				},
-				AgeOfLocationInformation: 0,
-				//UeLocationTimestamp:      d,
-				// UeLocationTimestamp: &time.Time{
-				// 	,
-				// },
-				GeographicalInformation: "0A9F",
-				GeodeticInformation:     "0A9F",
-				GlobalNgenbId: &models.GlobalRanNodeId{
-					PlmnId: &models.PlmnId{
-						Mcc: "466",
-						Mnc: "11",
-					},
-					N3IwfId: "string",
-					GNbId: &models.GNbId{
-						BitLength: 123,
-						GNBValue:  "string",
-					},
-					NgeNbId: "string",
-				},
-			},
+		UserLoc: &models.UserLocation{
 			NrLocation: &models.NrLocation{
 				Tai: &models.Tai{
 					PlmnId: &models.PlmnId{
-						Mcc: "466",
-						Mnc: "11",
+						Mcc: "208",
+						Mnc: "93",
 					},
-					Tac: "string",
+					Tac: "000001",
 				},
 				Ncgi: &models.Ncgi{
 					PlmnId: &models.PlmnId{
-						Mcc: "466",
-						Mnc: "11",
+						Mcc: "208",
+						Mnc: "93",
 					},
-					NrCellId: "string",
+					NrCellId: "000000001",
 				},
 				AgeOfLocationInformation: 123,
 				//UeLocationTimestamp:      "2019-04-15T09:47:35.505Z",
-				UeLocationTimestamp:     &time.Time{},
-				GeographicalInformation: "string",
-				GeodeticInformation:     "string",
+				UeLocationTimestamp: &timeNow,
 				GlobalGnbId: &models.GlobalRanNodeId{
 					PlmnId: &models.PlmnId{
-						Mcc: "466",
-						Mnc: "11",
+						Mcc: "208",
+						Mnc: "93",
 					},
-					N3IwfId: "string",
 					GNbId: &models.GNbId{
-						BitLength: 123,
-						GNBValue:  "string",
+						BitLength: 24,
+						GNBValue:  "000001",
 					},
-					NgeNbId: "string",
 				},
-			},
-			N3gaLocation: &models.N3gaLocation{
-				N3gppTai: &models.Tai{
-					PlmnId: &models.PlmnId{
-						Mcc: "466",
-						Mnc: "11",
-					},
-					Tac: "string",
-				},
-				N3IwfId:    "string",
-				UeIpv4Addr: "198.51.100.1",
-				UeIpv6Addr: "2001:db8:85a3::8a2e:370:7334",
-				PortNumber: 123,
 			},
 		},
-		ServingPlmn: models.NetworkId{
-			Mcc: "466",
-			Mnc: "11",
+		ServingPlmn: &models.NetworkId{
+			Mcc: "208",
+			Mnc: "93",
 		},
 		GroupIds: []string{
 			"groupids",
 		},
-		Guami: models.Guami{
+		Guami: &models.Guami{
 			PlmnId: &models.PlmnId{
-				Mcc: "466",
-				Mnc: "11",
+				Mcc: "208",
+				Mnc: "93",
 			},
-			AmfId: "string",
+			AmfId: "cafe00",
 		},
-		TimeZone: "string",
+		TimeZone: "+08:00+1h",
 		TraceReq: &models.TraceData{
 			TraceDepth:               "string",
 			TraceRef:                 "string",
@@ -181,31 +130,23 @@ func GetAMreqdata() models.PolicyAssociationRequest {
 }
 func GetAMUpdateReqData() models.PolicyAssociationUpdateRequest {
 	amUpdateReqData := models.PolicyAssociationUpdateRequest{
-		AllowedSnssais: []models.Snssai{
-			{
-				Sst: 123,
-				Sd:  "string",
-			},
-		},
 		Triggers: []models.RequestTrigger{
-			"LOC_CH",
-			"PRA_CH",
-			"RSFP_CH",
+			"RFSP_CH",
 			"SERV_AREA_CH",
 		},
 		ServAreaRes: &models.ServiceAreaRestriction{
-			RestrictionType: "string",
+			RestrictionType: "ALLOWED_AREAS",
 			Areas: []models.Area{
 				{
 					Tacs: []string{
-						"tacs",
+						"000002",
 					},
-					AreaCodes: "123",
+					AreaCodes: "+886",
 				},
 			},
 			MaxNumOfTAs: 123,
 		},
-		Rfsp: 123,
+		Rfsp: 100,
 		TraceReq: &models.TraceData{
 			TraceDepth:               "string",
 			TraceRef:                 "string",
@@ -215,135 +156,8 @@ func GetAMUpdateReqData() models.PolicyAssociationUpdateRequest {
 			CollectionEntityIpv6Addr: "2001:db8:85a3::8a2e:370:7334",
 			InterfaceList:            "string",
 		},
-		UserLoc: &models.UserLocation{
-			EutraLocation: &models.EutraLocation{
-				Tai: &models.Tai{
-					PlmnId: &models.PlmnId{
-						Mcc: "466",
-						Mnc: "11",
-					},
-					Tac: "123",
-				},
-				Ecgi: &models.Ecgi{
-					PlmnId: &models.PlmnId{
-						Mcc: "466",
-						Mnc: "11",
-					},
-					EutraCellId: "string",
-				},
-				AgeOfLocationInformation: 123,
-				//UeLocationTimestamp:      d,
-				// UeLocationTimestamp: &time.Time{
-				// 	,
-				// },
-				GeographicalInformation: "string",
-				GeodeticInformation:     "string",
-				GlobalNgenbId: &models.GlobalRanNodeId{
-					PlmnId: &models.PlmnId{
-						Mcc: "466",
-						Mnc: "11",
-					},
-					N3IwfId: "string",
-					GNbId: &models.GNbId{
-						BitLength: 123,
-						GNBValue:  "string",
-					},
-					NgeNbId: "string",
-				},
-			},
-			NrLocation: &models.NrLocation{
-				Tai: &models.Tai{
-					PlmnId: &models.PlmnId{
-						Mcc: "466",
-						Mnc: "11",
-					},
-					Tac: "string",
-				},
-				Ncgi: &models.Ncgi{
-					PlmnId: &models.PlmnId{
-						Mcc: "466",
-						Mnc: "11",
-					},
-					NrCellId: "string",
-				},
-				AgeOfLocationInformation: 123,
-				//UeLocationTimestamp:      "2019-04-15T09:47:35.505Z",
-				UeLocationTimestamp:     &time.Time{},
-				GeographicalInformation: "string",
-				GeodeticInformation:     "string",
-				GlobalGnbId: &models.GlobalRanNodeId{
-					PlmnId: &models.PlmnId{
-						Mcc: "466",
-						Mnc: "11",
-					},
-					N3IwfId: "string",
-					GNbId: &models.GNbId{
-						BitLength: 123,
-						GNBValue:  "string",
-					},
-					NgeNbId: "string",
-				},
-			},
-			N3gaLocation: &models.N3gaLocation{
-				N3gppTai: &models.Tai{
-					PlmnId: &models.PlmnId{
-						Mcc: "466",
-						Mnc: "11",
-					},
-					Tac: "string",
-				},
-				N3IwfId:    "string",
-				UeIpv4Addr: "198.51.100.1",
-				UeIpv6Addr: "2001:db8:85a3::8a2e:370:7334",
-				PortNumber: 123,
-			},
-		},
-		PraStatuses: map[string]models.PresenceInfo{
-			"Pras1": {PraId: "11111",
-				PresenceState: "IN_AREA",
-				TrackingAreaList: []models.Tai{
-					{Tac: "string",
-						PlmnId: &models.PlmnId{
-							Mcc: "string",
-							Mnc: "string",
-						},
-					},
-				},
-				EcgiList: []models.Ecgi{
-					{EutraCellId: "string",
-						PlmnId: &models.PlmnId{
-							Mcc: "string",
-							Mnc: "string",
-						},
-					},
-				},
-				NcgiList: []models.Ncgi{
-					{NrCellId: "string",
-						PlmnId: &models.PlmnId{
-							Mcc: "string",
-							Mnc: "string",
-						},
-					},
-				},
-				GlobalRanNodeIdList: []models.GlobalRanNodeId{
-					{
-						PlmnId: &models.PlmnId{
-							Mcc: "string",
-							Mnc: "string",
-						},
-						N3IwfId: "string",
-						GNbId: &models.GNbId{
-							BitLength: 123,
-							GNBValue:  "string",
-						},
-						NgeNbId: "string",
-					},
-				},
-			},
-		},
-		NotificationUri:   "string",
-		AltNotifIpv4Addrs: []string{"ipv4addr"},
-		AltNotifIpv6Addrs: []string{"ipv6addr"},
+		NotificationUri:   "https://127.0.0.1:29518/namf-callback/v1/am-policy-backbup/imsi-2089300007487-1",
+		AltNotifIpv4Addrs: []string{"https://127.0.0.1:29518/namf-callback/v1/am-policy/imsi-2089300007487-1"},
 	}
 	return amUpdateReqData
 }
@@ -354,397 +168,13 @@ func GetAMUpdateReqData() models.PolicyAssociationUpdateRequest {
 //Fail Test (Create part)
 func GetamCreatefailnotifyURIData() models.PolicyAssociationRequest {
 	//d := time.Date(2019, 7, 5, 12, 30, 0, 0, time.UTC)
-	amCreatefailnotifyURIData := models.PolicyAssociationRequest{
-		NotificationUri: "",
-		Supi:            "46611123456789",
-		SuppFeat:        "string",
-		Pei:             "string",
-		RatType:         "string",
-		Rfsp:            123,
-		AccessType:      "3GPP_ACCESS",
-		ServAreaRes: models.ServiceAreaRestriction{
-			RestrictionType: "string",
-			Areas: []models.Area{
-				{
-					Tacs: []string{
-						"tacs",
-					},
-					AreaCodes: "123",
-				},
-			},
-			MaxNumOfTAs: 123,
-		},
-		UserLoc: models.UserLocation{
-			EutraLocation: &models.EutraLocation{
-				Tai: &models.Tai{
-					PlmnId: &models.PlmnId{
-						Mcc: "466",
-						Mnc: "11",
-					},
-					Tac: "string",
-				},
-				Ecgi: &models.Ecgi{
-					PlmnId: &models.PlmnId{
-						Mcc: "466",
-						Mnc: "11",
-					},
-					EutraCellId: "string",
-				},
-				AgeOfLocationInformation: 123,
-				//UeLocationTimestamp:      d,
-				// UeLocationTimestamp: &time.Time{
-				// 	,
-				// },
-				GeographicalInformation: "string",
-				GeodeticInformation:     "string",
-				GlobalNgenbId: &models.GlobalRanNodeId{
-					PlmnId: &models.PlmnId{
-						Mcc: "466",
-						Mnc: "11",
-					},
-					N3IwfId: "string",
-					GNbId: &models.GNbId{
-						BitLength: 123,
-						GNBValue:  "string",
-					},
-					NgeNbId: "string",
-				},
-			},
-			NrLocation: &models.NrLocation{
-				Tai: &models.Tai{
-					PlmnId: &models.PlmnId{
-						Mcc: "466",
-						Mnc: "11",
-					},
-					Tac: "string",
-				},
-				Ncgi: &models.Ncgi{
-					PlmnId: &models.PlmnId{
-						Mcc: "466",
-						Mnc: "11",
-					},
-					NrCellId: "string",
-				},
-				AgeOfLocationInformation: 123,
-				//UeLocationTimestamp:      "2019-04-15T09:47:35.505Z",
-				UeLocationTimestamp:     &time.Time{},
-				GeographicalInformation: "string",
-				GeodeticInformation:     "string",
-				GlobalGnbId: &models.GlobalRanNodeId{
-					PlmnId: &models.PlmnId{
-						Mcc: "466",
-						Mnc: "11",
-					},
-					N3IwfId: "string",
-					GNbId: &models.GNbId{
-						BitLength: 123,
-						GNBValue:  "string",
-					},
-					NgeNbId: "string",
-				},
-			},
-			N3gaLocation: &models.N3gaLocation{
-				N3gppTai: &models.Tai{
-					PlmnId: &models.PlmnId{
-						Mcc: "466",
-						Mnc: "11",
-					},
-					Tac: "string",
-				},
-				N3IwfId:    "string",
-				UeIpv4Addr: "198.51.100.1",
-				UeIpv6Addr: "2001:db8:85a3::8a2e:370:7334",
-				PortNumber: 123,
-			},
-		},
-		ServingPlmn: models.NetworkId{
-			Mcc: "466",
-			Mnc: "11",
-		},
-		GroupIds: []string{
-			"groupids",
-		},
-		Guami: models.Guami{
-			PlmnId: &models.PlmnId{
-				Mcc: "466",
-				Mnc: "11",
-			},
-			AmfId: "string",
-		},
-		TimeZone: "string",
-		TraceReq: &models.TraceData{
-			TraceDepth:               "string",
-			TraceRef:                 "string",
-			NeTypeList:               "string",
-			EventList:                "string",
-			CollectionEntityIpv4Addr: "198.51.100.1",
-			CollectionEntityIpv6Addr: "2001:db8:85a3::8a2e:370:7334",
-			InterfaceList:            "string",
-		},
-	}
+	amCreatefailnotifyURIData := GetAMreqdata()
+	amCreatefailnotifyURIData.NotificationUri = ""
 	return amCreatefailnotifyURIData
 }
 func GetamCreatefailsupiData() models.PolicyAssociationRequest {
 	//d := time.Date(2019, 7, 5, 12, 30, 0, 0, time.UTC)
-	amCreatefailsupiData := models.PolicyAssociationRequest{
-		NotificationUri: "string",
-		Supi:            "",
-		SuppFeat:        "string",
-		Pei:             "string",
-		RatType:         "string",
-		Rfsp:            123,
-		AccessType:      "3GPP_ACCESS",
-		ServAreaRes: models.ServiceAreaRestriction{
-			RestrictionType: "string",
-			Areas: []models.Area{
-				{
-					Tacs: []string{
-						"tacs",
-					},
-					AreaCodes: "123",
-				},
-			},
-			MaxNumOfTAs: 123,
-		},
-		UserLoc: models.UserLocation{
-			EutraLocation: &models.EutraLocation{
-				Tai: &models.Tai{
-					PlmnId: &models.PlmnId{
-						Mcc: "466",
-						Mnc: "11",
-					},
-					Tac: "string",
-				},
-				Ecgi: &models.Ecgi{
-					PlmnId: &models.PlmnId{
-						Mcc: "466",
-						Mnc: "11",
-					},
-					EutraCellId: "string",
-				},
-				AgeOfLocationInformation: 123,
-				//UeLocationTimestamp:      d,
-				// UeLocationTimestamp: &time.Time{
-				// 	,
-				// },
-				GeographicalInformation: "string",
-				GeodeticInformation:     "string",
-				GlobalNgenbId: &models.GlobalRanNodeId{
-					PlmnId: &models.PlmnId{
-						Mcc: "466",
-						Mnc: "11",
-					},
-					N3IwfId: "string",
-					GNbId: &models.GNbId{
-						BitLength: 123,
-						GNBValue:  "string",
-					},
-					NgeNbId: "string",
-				},
-			},
-			NrLocation: &models.NrLocation{
-				Tai: &models.Tai{
-					PlmnId: &models.PlmnId{
-						Mcc: "466",
-						Mnc: "11",
-					},
-					Tac: "string",
-				},
-				Ncgi: &models.Ncgi{
-					PlmnId: &models.PlmnId{
-						Mcc: "466",
-						Mnc: "11",
-					},
-					NrCellId: "string",
-				},
-				AgeOfLocationInformation: 123,
-				//UeLocationTimestamp:      "2019-04-15T09:47:35.505Z",
-				UeLocationTimestamp:     &time.Time{},
-				GeographicalInformation: "string",
-				GeodeticInformation:     "string",
-				GlobalGnbId: &models.GlobalRanNodeId{
-					PlmnId: &models.PlmnId{
-						Mcc: "466",
-						Mnc: "11",
-					},
-					N3IwfId: "string",
-					GNbId: &models.GNbId{
-						BitLength: 123,
-						GNBValue:  "string",
-					},
-					NgeNbId: "string",
-				},
-			},
-			N3gaLocation: &models.N3gaLocation{
-				N3gppTai: &models.Tai{
-					PlmnId: &models.PlmnId{
-						Mcc: "466",
-						Mnc: "11",
-					},
-					Tac: "string",
-				},
-				N3IwfId:    "string",
-				UeIpv4Addr: "198.51.100.1",
-				UeIpv6Addr: "2001:db8:85a3::8a2e:370:7334",
-				PortNumber: 123,
-			},
-		},
-		ServingPlmn: models.NetworkId{
-			Mcc: "466",
-			Mnc: "11",
-		},
-		GroupIds: []string{
-			"groupids",
-		},
-		Guami: models.Guami{
-			PlmnId: &models.PlmnId{
-				Mcc: "466",
-				Mnc: "11",
-			},
-			AmfId: "string",
-		},
-		TimeZone: "string",
-		TraceReq: &models.TraceData{
-			TraceDepth:               "string",
-			TraceRef:                 "string",
-			NeTypeList:               "string",
-			EventList:                "string",
-			CollectionEntityIpv4Addr: "198.51.100.1",
-			CollectionEntityIpv6Addr: "2001:db8:85a3::8a2e:370:7334",
-			InterfaceList:            "string",
-		},
-	}
-	return amCreatefailsupiData
-}
-func GetamCreatefailsuppfeatData() models.PolicyAssociationRequest {
-	//d := time.Date(2019, 7, 5, 12, 30, 0, 0, time.UTC)
-	amCreatefailsuppfeatData := models.PolicyAssociationRequest{
-		NotificationUri: "string",
-		Supi:            "46611123456789",
-		SuppFeat:        "",
-		Pei:             "string",
-		RatType:         "string",
-		Rfsp:            123,
-		AccessType:      "3GPP_ACCESS",
-		ServAreaRes: models.ServiceAreaRestriction{
-			RestrictionType: "string",
-			Areas: []models.Area{
-				{
-					Tacs: []string{
-						"tacs",
-					},
-					AreaCodes: "123",
-				},
-			},
-			MaxNumOfTAs: 123,
-		},
-		UserLoc: models.UserLocation{
-			EutraLocation: &models.EutraLocation{
-				Tai: &models.Tai{
-					PlmnId: &models.PlmnId{
-						Mcc: "466",
-						Mnc: "11",
-					},
-					Tac: "string",
-				},
-				Ecgi: &models.Ecgi{
-					PlmnId: &models.PlmnId{
-						Mcc: "466",
-						Mnc: "11",
-					},
-					EutraCellId: "string",
-				},
-				AgeOfLocationInformation: 123,
-				//UeLocationTimestamp:      d,
-				// UeLocationTimestamp: &time.Time{
-				// 	,
-				// },
-				GeographicalInformation: "string",
-				GeodeticInformation:     "string",
-				GlobalNgenbId: &models.GlobalRanNodeId{
-					PlmnId: &models.PlmnId{
-						Mcc: "466",
-						Mnc: "11",
-					},
-					N3IwfId: "string",
-					GNbId: &models.GNbId{
-						BitLength: 123,
-						GNBValue:  "string",
-					},
-					NgeNbId: "string",
-				},
-			},
-			NrLocation: &models.NrLocation{
-				Tai: &models.Tai{
-					PlmnId: &models.PlmnId{
-						Mcc: "466",
-						Mnc: "11",
-					},
-					Tac: "string",
-				},
-				Ncgi: &models.Ncgi{
-					PlmnId: &models.PlmnId{
-						Mcc: "466",
-						Mnc: "11",
-					},
-					NrCellId: "string",
-				},
-				AgeOfLocationInformation: 123,
-				//UeLocationTimestamp:      "2019-04-15T09:47:35.505Z",
-				UeLocationTimestamp:     &time.Time{},
-				GeographicalInformation: "string",
-				GeodeticInformation:     "string",
-				GlobalGnbId: &models.GlobalRanNodeId{
-					PlmnId: &models.PlmnId{
-						Mcc: "466",
-						Mnc: "11",
-					},
-					N3IwfId: "string",
-					GNbId: &models.GNbId{
-						BitLength: 123,
-						GNBValue:  "string",
-					},
-					NgeNbId: "string",
-				},
-			},
-			N3gaLocation: &models.N3gaLocation{
-				N3gppTai: &models.Tai{
-					PlmnId: &models.PlmnId{
-						Mcc: "466",
-						Mnc: "11",
-					},
-					Tac: "string",
-				},
-				N3IwfId:    "string",
-				UeIpv4Addr: "198.51.100.1",
-				UeIpv6Addr: "2001:db8:85a3::8a2e:370:7334",
-				PortNumber: 123,
-			},
-		},
-		ServingPlmn: models.NetworkId{
-			Mcc: "466",
-			Mnc: "11",
-		},
-		GroupIds: []string{
-			"groupids",
-		},
-		Guami: models.Guami{
-			PlmnId: &models.PlmnId{
-				Mcc: "466",
-				Mnc: "11",
-			},
-			AmfId: "string",
-		},
-		TimeZone: "string",
-		TraceReq: &models.TraceData{
-			TraceDepth:               "string",
-			TraceRef:                 "string",
-			NeTypeList:               "string",
-			EventList:                "string",
-			CollectionEntityIpv4Addr: "198.51.100.1",
-			CollectionEntityIpv6Addr: "2001:db8:85a3::8a2e:370:7334",
-			InterfaceList:            "string",
-		},
-	}
-	return amCreatefailsuppfeatData
+	amCreatefailnotifysupiData := GetAMreqdata()
+	amCreatefailnotifysupiData.Supi = "dadfasdfasd"
+	return amCreatefailnotifysupiData
 }

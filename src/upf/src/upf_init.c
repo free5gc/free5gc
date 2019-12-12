@@ -22,7 +22,7 @@
 static Status SignalRegister();
 static void SignalHandler(int sigval);
 
-void UpThread(ThreadID id, void *data);
+void PacketReceiverThread(ThreadID id, void *data);
 
 // TODO : Add other init in this part for UPF
 Status UpfInit(char *configPath) {
@@ -54,7 +54,7 @@ Status UpfInit(char *configPath) {
     Self()->eventQ = EventQueueCreate(O_RDWR | O_NONBLOCK);
     if (Self()->eventQ <= 0) return STATUS_ERROR;
 
-    status = ThreadCreate(&Self()->pktRecvThread, UpThread, NULL);
+    status = ThreadCreate(&Self()->pktRecvThread, PacketReceiverThread, NULL);
     if (status != STATUS_OK) return status;
 
     status = GTPv1ServerInit();
@@ -66,6 +66,9 @@ Status UpfInit(char *configPath) {
     status = PfcpXactInit(&Self()->timerServiceList, UPF_EVENT_N4_T3_RESPONSE, UPF_EVENT_N4_T3_HOLDING); // init pfcp xact context
     if (status != STATUS_OK) return status;
 
+    status = GtpRouteInit();
+    if (status != STATUS_OK) return status;
+
     UTLT_Info("UPF initialized");
 
     return STATUS_OK;
@@ -74,6 +77,11 @@ Status UpfInit(char *configPath) {
 Status UpfTerminate() {
     Status status = STATUS_OK;
 
+    UTLT_Info("Terminating UPF...");
+
+    UTLT_Assert(GtpRouteTerminate() == STATUS_OK, status |= STATUS_ERROR,
+                "GTP routes removal failed");
+
     UTLT_Assert(PfcpServerTerminate() == STATUS_OK, status |= STATUS_ERROR,
                 "PFCP server terminate failed");
 
@@ -81,7 +89,7 @@ Status UpfTerminate() {
                 "GTPv1 server terminate failed");
 
     UTLT_Assert(ThreadDelete(Self()->pktRecvThread) == STATUS_OK, status |= STATUS_ERROR,
-                "Thread UpThread delete failed");
+                "Thread PacketReceiverThread delete failed");
 
     UTLT_Assert(EventQueueDelete(Self()->eventQ) == STATUS_OK, status |= STATUS_ERROR,
                 "Event queue delete failed");
@@ -168,7 +176,7 @@ static void SignalHandler(int sigval) {
     exit(0);
 }
 
-void UpThread(ThreadID id, void *data) {
+void PacketReceiverThread(ThreadID id, void *data) {
     Status status;
 
     int nfds;
@@ -187,7 +195,7 @@ void UpThread(ThreadID id, void *data) {
     }
 
     sem_post(((Thread *)id)->semaphore);
-    UTLT_Info("User Plane thread terminate");
+    UTLT_Info("Packet receiver thread terminated");
 
     return;
 }

@@ -129,6 +129,12 @@ func HandlePfcpSessionEstablishmentResponse(msg *pfcpUdp.Message) {
 
 	SEID := msg.PfcpMessage.Header.SEID
 	smContext := smf_context.GetSMContextBySEID(SEID)
+
+	if rsp.UPFSEID != nil {
+		UPFSEID := rsp.UPFSEID
+		smContext.RemoteSEID = UPFSEID.Seid
+	}
+
 	if rsp.Cause.CauseValue == pfcpType.CauseRequestAccepted {
 		smNasBuf, _ := smf_context.BuildGSMPDUSessionEstablishmentAccept(smContext)
 		n1n2Request := models.N1N2MessageTransferRequest{}

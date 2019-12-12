@@ -1,7 +1,20 @@
 #!/bin/bash
 
-sudo -v
+# Check OS
+if [ -f /etc/os-release ]; then
+    # freedesktop.org and systemd
+    . /etc/os-release
+    OS=$NAME
+    VER=$VERSION_ID
+else
+    # Fall back to uname, e.g. "Linux <version>", also works for BSD, etc.
+    OS=$(uname -s)
+    VER=$(uname -r)
+    echo "This Linux version is too old: $OS:$VER, we don't support!"
+    exit 1
+fi
 
+sudo -v
 if [ $? == 1 ]
 then
     echo "Without root permission, you cannot run the test due to our test is using namespace"
@@ -24,7 +37,11 @@ then
 fi
 
 GOPATH=$HOME/go
-GOROOT=/usr/local/go
+if [ $OS == "Ubuntu" ]; then
+    GOROOT=/usr/local/go
+elif [ $OS == "Fedora" ]; then
+    GOROOT=/usr/lib/golang
+fi
 PATH=$PATH:$GOPATH/bin:$GOROOT/bin
 GO111MODULE=off
 
@@ -40,6 +57,7 @@ sudo ip link add veth0 type veth peer name veth1
 sudo ip link set veth0 up
 sudo ip addr add 60.60.0.1 dev lo
 sudo ip addr add 10.200.200.1/24 dev veth0
+sudo ip addr add 10.200.200.2/24 dev veth0
 
 sudo ip link set veth1 netns ${UPFNS}
 
@@ -57,7 +75,6 @@ fi
 
 cd src/upf/build && ${EXEC_UPFNS} ./bin/free5gc-upfd -f config/upfcfg.test.yaml &
 sleep 2
-${EXEC_UPFNS} ip r add 60.60.0.0/24 dev free5GCgtp0
 
 cd src/test
 $GOROOT/bin/go test -v -vet=off -run $1

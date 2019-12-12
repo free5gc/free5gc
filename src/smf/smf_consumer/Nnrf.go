@@ -11,6 +11,8 @@ import (
 
 	"github.com/antihax/optional"
 	"github.com/mohae/deepcopy"
+	"strings"
+	"time"
 )
 
 func SendNFRegistration() error {
@@ -24,20 +26,32 @@ func SendNFRegistration() error {
 		NfServices:    smf_context.NFServices,
 		SmfInfo:       smf_context.SmfInfo,
 	}
+	var rep models.NfProfile
+	var res *http.Response
+	var err error
 
 	// Check data (Use RESTful PUT)
-	rep, res, err := smf_context.SMF_Self().NFManagementClient.NFInstanceIDDocumentApi.RegisterNFInstance(context.TODO(), smf_context.SMF_Self().NfInstanceID, profile)
+	for {
+		rep, res, err = smf_context.SMF_Self().NFManagementClient.NFInstanceIDDocumentApi.RegisterNFInstance(context.TODO(), smf_context.SMF_Self().NfInstanceID, profile)
+		if err != nil || res == nil {
+			logger.AppLog.Infof("SMF register to NRF Error[%s]", err.Error())
+			time.Sleep(2 * time.Second)
+			continue
+		}
 
-	if err != nil {
-		return err
-	}
-
-	if res != nil {
-		if status := res.StatusCode; status != http.StatusOK {
-			if status != http.StatusCreated {
-				logger.AppLog.Infof("handler returned wrong status code %d", status)
-				return fmt.Errorf("NRF return wrong status code %d", status)
-			}
+		status := res.StatusCode
+		if status == http.StatusOK {
+			// NFUpdate
+			break
+		} else if status == http.StatusCreated {
+			// NFRegister
+			resourceUri := res.Header.Get("Location")
+			// resouceNrfUri := resourceUri[strings.LastIndex(resourceUri, "/"):]
+			smf_context.SMF_Self().NfInstanceID = resourceUri[strings.LastIndex(resourceUri, "/")+1:]
+			break
+		} else {
+			logger.AppLog.Infof("handler returned wrong status code %d", status)
+			// fmt.Errorf("NRF return wrong status code %d", status)
 		}
 	}
 

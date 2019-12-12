@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"free5gc/lib/Namf_Communication"
-	"free5gc/lib/Npcf_SMPolicy"
+	"free5gc/lib/Npcf_SMPolicyControl"
 	"free5gc/lib/openapi/models"
 	"net"
 )
@@ -34,7 +34,8 @@ func GetSMContextCount() uint64 {
 type SMContext struct {
 	Ref string
 
-	SEID uint64
+	LocalSEID  uint64
+	RemoteSEID uint64
 
 	UnauthenticatedSupi bool
 	// SUPI or PEI
@@ -58,11 +59,12 @@ type SMContext struct {
 	UeTimeZone      string
 	AddUeLocation   *models.UserLocation
 	OldPduSessionId int32
+	HoState         models.HoState
 
 	PDUAddress net.IP
 
 	// Client
-	SMPolicyClient      *Npcf_SMPolicy.APIClient
+	SMPolicyClient      *Npcf_SMPolicyControl.APIClient
 	CommunicationClient *Namf_Communication.APIClient
 
 	AMFProfile models.NfProfile
@@ -96,7 +98,7 @@ func NewSMContext(identifier string, pduSessID int32) (smContext *SMContext) {
 
 	smContext.Identifier = identifier
 	smContext.PDUSessionID = pduSessID
-	smContext.SEID = GetSMContextCount()
+	smContext.LocalSEID = GetSMContextCount()
 	return smContext
 }
 
@@ -111,7 +113,7 @@ func RemoveSMContext(ref string) {
 
 func GetSMContextBySEID(SEID uint64) *SMContext {
 	for _, smCtx := range smContextPool {
-		if smCtx.SEID == SEID {
+		if smCtx.LocalSEID == SEID {
 			return smCtx
 		}
 	}

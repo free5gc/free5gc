@@ -324,7 +324,7 @@ func BuildSecurityModeCommand(ue *amf_context.AmfUe, eapSuccess bool, eapMessage
 	securityModeCommand.SpareHalfOctetAndNgksi = nasConvert.SpareHalfOctetAndNgksiToNas(ue.NgKsi)
 
 	securityModeCommand.ReplayedUESecurityCapabilities.SetLen(ue.NasUESecurityCapability.GetLen())
-	securityModeCommand.ReplayedUESecurityCapabilities.Octet = ue.NasUESecurityCapability.Octet
+	securityModeCommand.ReplayedUESecurityCapabilities.Buffer = ue.NasUESecurityCapability.Buffer
 
 	if ue.Pei != "" {
 		securityModeCommand.IMEISVRequest = nasType.NewIMEISVRequest(nasMessage.SecurityModeCommandIMEISVRequestType)
@@ -542,7 +542,12 @@ func BuildRegistrationAccept(
 		ue.NetworkSlicingSubscriptionChanged = false // reset the value
 	}
 
-	// TODO: service area list
+	if anType == models.AccessType__3_GPP_ACCESS && ue.AmPolicyAssociation != nil && ue.AmPolicyAssociation.ServAreaRes != nil {
+		registrationAccept.ServiceAreaList = nasType.NewServiceAreaList(nasMessage.RegistrationAcceptServiceAreaListType)
+		partialServiceAreaList := nasConvert.PartialServiceAreaListToNas(ue.PlmnId, *ue.AmPolicyAssociation.ServAreaRes)
+		registrationAccept.ServiceAreaList.SetLen(uint8(len(partialServiceAreaList)))
+		registrationAccept.ServiceAreaList.SetPartialServiceAreaList(partialServiceAreaList)
+	}
 
 	if anType == models.AccessType__3_GPP_ACCESS && ue.T3512Value != 0 {
 		registrationAccept.T3512Value = nasType.NewT3512Value(nasMessage.RegistrationAcceptT3512ValueType)

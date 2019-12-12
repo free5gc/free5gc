@@ -39,6 +39,17 @@ func InTaiList(servedTai models.Tai, taiList []models.Tai) bool {
 	return false
 }
 
+func TacInAreas(targetTac string, areas []models.Area) bool {
+	for _, area := range areas {
+		for _, tac := range area.Tacs {
+			if targetTac == tac {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 func GetSecurityCount(overflow uint16, sqn uint8) []uint8 {
 	var r = make([]byte, 4)
 	binary.BigEndian.PutUint16(r, overflow)

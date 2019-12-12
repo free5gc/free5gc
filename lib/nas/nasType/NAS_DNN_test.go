@@ -30,7 +30,7 @@ type nasTypetDNNData struct {
 }
 
 var nasTypeDNNTable = []nasTypetDNNData{
-	{2, []uint8{0x00, 0x01}, []uint8{0x00, 0x1}},
+	{8, []uint8{0x07, 0x64, 0x65, 0x66, 0x61, 0x75, 0x6c, 0x74}, []uint8{0x07, 0x64, 0x65, 0x66, 0x61, 0x75, 0x6c, 0x74}},
 }
 
 func TestNasTypeDNNGetSetDNNValue(t *testing.T) {}
@@ -41,11 +41,11 @@ type testDNNDataTemplate struct {
 }
 
 var DNNTestData = []nasType.DNN{
-	{0, 2, []byte{0x00, 0x00}}, //AuthenticationResult
+	{0, 7, []byte{0x64, 0x65, 0x66, 0x61, 0x75, 0x6c, 0x74}}, //AuthenticationResult
 }
 
 var DNNExpectedTestData = []nasType.DNN{
-	{0, 2, []byte{0x00, 0x00}}, //AuthenticationResult
+	{0, 8, []byte{0x07, 0x64, 0x65, 0x66, 0x61, 0x75, 0x6c, 0x74}}, //AuthenticationResult
 }
 
 var DNNTestTable = []testDNNDataTemplate{

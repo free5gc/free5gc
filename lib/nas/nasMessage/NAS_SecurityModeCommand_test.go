@@ -41,8 +41,8 @@ var nasMessageSecurityModeCommandTable = []nasMessageSecurityModeCommandData{
 		},
 		inNgksi: 0x01,
 		inReplayedUESecurityCapabilities: nasType.ReplayedUESecurityCapabilities{
-			Len:   8,
-			Octet: [8]uint8{0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01},
+			Len:    8,
+			Buffer: []uint8{0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01},
 		},
 		inIMEISVRequest: nasType.IMEISVRequest{
 			Octet: 0xE0,
@@ -67,9 +67,9 @@ var nasMessageSecurityModeCommandTable = []nasMessageSecurityModeCommandData{
 			Buffer: []uint8{0x01, 0x01},
 		},
 		inReplayedS1UESecurityCapabilities: nasType.ReplayedS1UESecurityCapabilities{
-			Iei:   nasMessage.SecurityModeCommandReplayedS1UESecurityCapabilitiesType,
-			Len:   5,
-			Octet: [5]uint8{0x01, 0x01},
+			Iei:    nasMessage.SecurityModeCommandReplayedS1UESecurityCapabilitiesType,
+			Len:    5,
+			Buffer: []uint8{0x01, 0x01, 0x01, 0x01, 0x01},
 		},
 	},
 }

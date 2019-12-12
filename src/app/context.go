@@ -37,6 +37,8 @@ type Logger struct {
 	NRF                NRF                `yaml:"NRF"`
 	NSSF               NSSF               `yaml:"NSSF"`
 	AUSF               AUSF               `yaml:"AUSF"`
+	N3IWF              N3IWF              `yaml:"N3IWF"`
+	WEBUI              WEBUI              `yaml:"WEBUI"`
 }
 
 type AMF struct {
@@ -75,6 +77,11 @@ type NSSF struct {
 }
 
 type AUSF struct {
+	DebugLevel   string `yaml:"debugLevel"`
+	ReportCaller bool   `yaml:"ReportCaller"`
+}
+
+type N3IWF struct {
 	DebugLevel   string `yaml:"debugLevel"`
 	ReportCaller bool   `yaml:"ReportCaller"`
 }
@@ -125,6 +132,11 @@ type Aper struct {
 }
 
 type CommonConsumerTest struct {
+	DebugLevel   string `yaml:"debugLevel"`
+	ReportCaller bool   `yaml:"ReportCaller"`
+}
+
+type WEBUI struct {
 	DebugLevel   string `yaml:"debugLevel"`
 	ReportCaller bool   `yaml:"ReportCaller"`
 }

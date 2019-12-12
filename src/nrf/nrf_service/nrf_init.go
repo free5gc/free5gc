@@ -21,7 +21,7 @@ import (
 	"free5gc/src/nrf/factory"
 	"free5gc/src/nrf/logger"
 	"free5gc/src/nrf/nrf_handler"
-	"free5gc/src/nrf/util"
+	"free5gc/src/nrf/nrf_util"
 )
 
 type NRF struct{}
@@ -109,9 +109,9 @@ func (nrf *NRF) Start() {
 
 	uri := fmt.Sprintf("%s:%d", factory.NrfConfig.Configuration.Sbi.IPv4Addr, factory.NrfConfig.Configuration.Sbi.Port)
 	initLog.Infoln(uri)
-	server, err := http2_util.NewServer(uri, util.NRF_LOG_PATH, router)
+	server, err := http2_util.NewServer(uri, nrf_util.NrfLogPath, router)
 	if err == nil && server != nil {
-		initLog.Infoln(server.ListenAndServeTLS(util.NRF_PEM_PATH, util.NRF_KEY_PATH))
+		initLog.Infoln(server.ListenAndServeTLS(nrf_util.NrfPemPath, nrf_util.NrfKeyPath))
 	}
 }
 

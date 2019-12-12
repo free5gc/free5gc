@@ -15,6 +15,7 @@ import (
 	"free5gc/lib/Nnrf_NFManagement"
 	"free5gc/lib/openapi/models"
 	"free5gc/src/nssf/nssf_context"
+	"time"
 )
 
 func BuildNFProfile(context *nssf_context.NSSFContext) (profile models.NfProfile, err error) {
@@ -33,27 +34,32 @@ func BuildNFProfile(context *nssf_context.NSSFContext) (profile models.NfProfile
 	return
 }
 
-func SendRegisterNFInstance(nrfUri, nfInstanceId string, profile models.NfProfile) (resourceNrfUri string, err error) {
+func SendRegisterNFInstance(nrfUri, nfInstanceId string, profile models.NfProfile) (resourceNrfUri string, retrieveNfInstanceId string, err error) {
 	configuration := Nnrf_NFManagement.NewConfiguration()
 	configuration.SetBasePath(nrfUri)
 	apiClient := Nnrf_NFManagement.NewAPIClient(configuration)
 
 	var res *http.Response
-	_, res, err = apiClient.NFInstanceIDDocumentApi.RegisterNFInstance(context.Background(), nfInstanceId, profile)
-	if err != nil {
-		return
-	}
-	if res != nil {
+	for {
+		_, res, err = apiClient.NFInstanceIDDocumentApi.RegisterNFInstance(context.TODO(), nfInstanceId, profile)
+		if err != nil || res == nil {
+			//TODO : add log
+			fmt.Println(fmt.Errorf("NSSF register to NRF Error[%s]", err.Error()))
+			time.Sleep(2 * time.Second)
+			continue
+		}
 		status := res.StatusCode
 		if status == http.StatusOK {
 			// NFUpdate
-			resourceNrfUri = nrfUri
+			break
 		} else if status == http.StatusCreated {
 			// NFRegister
 			resourceUri := res.Header.Get("Location")
-			resourceUri = resourceUri[:strings.Index(resourceUri, "/nnrf-nfm/")]
+			resourceNrfUri = resourceUri[:strings.Index(resourceUri, "/nnrf-nfm/")]
+			retrieveNfInstanceId = resourceUri[strings.LastIndex(resourceUri, "/")+1:]
+			break
 		} else {
-			err = fmt.Errorf("Unrecognized status code %d", status)
+			fmt.Println("NRF return wrong status code", status)
 		}
 	}
 	return

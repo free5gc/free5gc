@@ -4,10 +4,10 @@
 # -----
 # You can specify a custom docker image from Docker Hub as your build environment.
 image: golang:1.12
- 
+
 pipelines:
   pull-requests:
-    '**':
+    "**":
       - step:
           name: ENV setup
           script:
@@ -18,7 +18,7 @@ pipelines:
           name: Check coding style
           size: 2x
           script:
-            - curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | bash -s -- -b $GOPATH/bin v1.17.1
+            - curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | bash -s -- -b $GOPATH/bin v1.18.0
             - cd "${PACKAGE_PATH}"
             - golangci-lint run ./...
       - step:

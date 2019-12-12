@@ -183,3 +183,27 @@ func BuildPDUSessionResourceReleaseCommandTransfer(ctx *SMContext) (buf []byte, 
 	}
 	return
 }
+
+func BuildHandoverCommandTransfer(ctx *SMContext) (buf []byte, err error) {
+	var UpNode = ctx.Tunnel.Node
+	var teidOct = make([]byte, 4)
+	binary.BigEndian.PutUint32(teidOct, ctx.Tunnel.ULTEID)
+	handoverCommandTransfer := ngapType.HandoverCommandTransfer{}
+
+	handoverCommandTransfer.DLForwardingUPTNLInformation = new(ngapType.UPTransportLayerInformation)
+	handoverCommandTransfer.DLForwardingUPTNLInformation.Present = ngapType.UPTransportLayerInformationPresentGTPTunnel
+	handoverCommandTransfer.DLForwardingUPTNLInformation.GTPTunnel = new(ngapType.GTPTunnel)
+
+	gtpTunnel := handoverCommandTransfer.DLForwardingUPTNLInformation.GTPTunnel
+	gtpTunnel.GTPTEID.Value = teidOct
+	gtpTunnel.TransportLayerAddress.Value = aper.BitString{
+		Bytes:     UpNode.NodeID.NodeIdValue,
+		BitLength: uint64(len(UpNode.NodeID.NodeIdValue) * 8),
+	}
+
+	buf, err = aper.MarshalWithParams(handoverCommandTransfer, "valueExt")
+	if err != nil {
+		return nil, err
+	}
+	return
+}

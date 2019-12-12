@@ -25,7 +25,7 @@ type RanUeContext struct {
 
 func NewRanUeContext(supi string, ranUeNgapId int64, cipheringAlg, integrityAlg uint8) *RanUeContext {
 	ue := RanUeContext{}
-	ue.RanUeNgapId = 0
+	ue.RanUeNgapId = ranUeNgapId
 	ue.Supi = supi
 	ue.CipheringAlg = cipheringAlg
 	ue.IntegrityAlg = integrityAlg

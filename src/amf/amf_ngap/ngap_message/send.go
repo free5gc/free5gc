@@ -338,7 +338,6 @@ func SendInitialContextSetupRequest(
 	pduSessionResourceSetupRequestList *ngapType.PDUSessionResourceSetupListCxtReq,
 	rrcInactiveTransitionReportRequest *ngapType.RRCInactiveTransitionReportRequest,
 	coreNetworkAssistanceInfo *ngapType.CoreNetworkAssistanceInformation,
-	mobilityRestrictionList *ngapType.MobilityRestrictionList,
 	emergencyFallbackIndicator *ngapType.EmergencyFallbackIndicator) {
 
 	ngaplog.Info("[AMF] Send Initial Context Setup Request")
@@ -356,9 +355,9 @@ func SendInitialContextSetupRequest(
 	}
 
 	pkt, err := BuildInitialContextSetupRequest(amfUe, anType, nasPdu, oldAmf, pduSessionResourceSetupRequestList,
-		rrcInactiveTransitionReportRequest, coreNetworkAssistanceInfo, mobilityRestrictionList, emergencyFallbackIndicator)
+		rrcInactiveTransitionReportRequest, coreNetworkAssistanceInfo, emergencyFallbackIndicator)
 	if err != nil {
-		ngaplog.Errorf("Build PDUSessionResourceModifyRequest failed : %s", err.Error())
+		ngaplog.Errorf("Build InitialContextSetupRequest failed : %s", err.Error())
 		return
 	}
 	NasSendToRan(amfUe, pkt)
@@ -494,7 +493,7 @@ func SendHandoverRequest(sourceUe *amf_context.RanUe, targetRan *amf_context.Amf
 	ngaplog.Tracef("Target : AMF_UE_NGAP_ID[%d], RAN_UE_NGAP_ID[Unknown]", targetUe.AmfUeNgapId)
 	amf_context.AttachSourceUeTargetUe(sourceUe, targetUe)
 
-	pkt, err := BuildHandoverRequest(sourceUe, cause, pduSessionResourceSetupListHOReq, sourceToTargetTransparentContainer, nsci)
+	pkt, err := BuildHandoverRequest(targetUe, cause, pduSessionResourceSetupListHOReq, sourceToTargetTransparentContainer, nsci)
 	if err != nil {
 		ngaplog.Errorf("Build HandoverRequest failed : %s", err.Error())
 		return

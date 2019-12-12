@@ -1,15 +1,19 @@
 package ngap_message
 
 import (
+	"encoding/hex"
+
 	"free5gc/lib/aper"
 	"free5gc/lib/ngap"
 	"free5gc/lib/ngap/ngapConvert"
 	"free5gc/lib/ngap/ngapType"
 	"free5gc/src/n3iwf/n3iwf_context"
+	"free5gc/src/n3iwf/n3iwf_util"
 )
 
 func BuildNGSetupRequest() ([]byte, error) {
 
+	n3iwfSelf := n3iwf_context.N3IWFSelf()
 	var pdu ngapType.NGAPPDU
 	pdu.Present = ngapType.NGAPPDUPresentInitiatingMessage
 	pdu.InitiatingMessage = new(ngapType.InitiatingMessage)
@@ -36,16 +40,9 @@ func BuildNGSetupRequest() ([]byte, error) {
 	globalRANNodeID.GlobalN3IWFID = new(ngapType.GlobalN3IWFID)
 
 	globalN3IWFID := globalRANNodeID.GlobalN3IWFID
-	globalN3IWFID.PLMNIdentity.Value = aper.OctetString("\x20\x8f\x93")
+	globalN3IWFID.PLMNIdentity = n3iwf_util.PlmnIdToNgap(n3iwfSelf.NFInfo.GlobalN3IWFID.PLMNID)
 	globalN3IWFID.N3IWFID.Present = ngapType.N3IWFIDPresentN3IWFID
-	globalN3IWFID.N3IWFID.N3IWFID = new(aper.BitString)
-
-	n3IWFID := globalN3IWFID.N3IWFID.N3IWFID
-
-	*n3IWFID = aper.BitString{
-		Bytes:     []byte{0x45, 0x46},
-		BitLength: 16,
-	}
+	globalN3IWFID.N3IWFID.N3IWFID = n3iwf_util.N3iwfIdToNgap(n3iwfSelf.NFInfo.GlobalN3IWFID.N3IWFID)
 	nGSetupRequestIEs.List = append(nGSetupRequestIEs.List, ie)
 
 	// RANNodeName
@@ -56,7 +53,7 @@ func BuildNGSetupRequest() ([]byte, error) {
 	ie.Value.RANNodeName = new(ngapType.RANNodeName)
 
 	rANNodeName := ie.Value.RANNodeName
-	rANNodeName.Value = "free5GC-N3IWF"
+	rANNodeName.Value = n3iwfSelf.NFInfo.RanNodeName
 	nGSetupRequestIEs.List = append(nGSetupRequestIEs.List, ie)
 	// SupportedTAList
 	ie = ngapType.NGSetupRequestIEs{}
@@ -67,41 +64,58 @@ func BuildNGSetupRequest() ([]byte, error) {
 
 	supportedTAList := ie.Value.SupportedTAList
 
-	// SupportedTAItem in SupportedTAList
-	supportedTAItem := ngapType.SupportedTAItem{}
-	supportedTAItem.TAC.Value = aper.OctetString("\x00\x00\x01")
+	for _, supportedTAItemLocal := range n3iwfSelf.NFInfo.SupportedTAList {
+		// SupportedTAItem in SupportedTAList
+		supportedTAItem := ngapType.SupportedTAItem{}
+		supportedTAItem.TAC.Value, _ = hex.DecodeString(supportedTAItemLocal.TAC)
 
-	broadcastPLMNList := &supportedTAItem.BroadcastPLMNList
-	// BroadcastPLMNItem in BroadcastPLMNList
-	broadcastPLMNItem := ngapType.BroadcastPLMNItem{}
-	broadcastPLMNItem.PLMNIdentity.Value = aper.OctetString("\x20\x8f\x93")
+		broadcastPLMNList := &supportedTAItem.BroadcastPLMNList
 
-	sliceSupportList := &broadcastPLMNItem.TAISliceSupportList
-	// SliceSupportItem in SliceSupportList
-	sliceSupportItem := ngapType.SliceSupportItem{}
-	sliceSupportItem.SNSSAI.SST.Value = aper.OctetString("\x01")
-	// optional
-	sliceSupportItem.SNSSAI.SD = new(ngapType.SD)
-	sliceSupportItem.SNSSAI.SD.Value = aper.OctetString("\x01\x02\x03")
+		for _, broadcastPLMNListLocal := range supportedTAItemLocal.BroadcastPLMNList {
+			// BroadcastPLMNItem in BroadcastPLMNList
+			broadcastPLMNItem := ngapType.BroadcastPLMNItem{}
+			broadcastPLMNItem.PLMNIdentity = n3iwf_util.PlmnIdToNgap(broadcastPLMNListLocal.PLMNID)
 
-	sliceSupportList.List = append(sliceSupportList.List, sliceSupportItem)
+			sliceSupportList := &broadcastPLMNItem.TAISliceSupportList
 
-	broadcastPLMNList.List = append(broadcastPLMNList.List, broadcastPLMNItem)
+			for _, sliceSupportItemLocal := range broadcastPLMNListLocal.TAISliceSupportList {
+				// SliceSupportItem in SliceSupportList
+				sliceSupportItem := ngapType.SliceSupportItem{}
+				sliceSupportItem.SNSSAI.SST.Value, _ = hex.DecodeString(sliceSupportItemLocal.SNSSAI.SST)
 
-	supportedTAList.List = append(supportedTAList.List, supportedTAItem)
+				if sliceSupportItemLocal.SNSSAI.SD != "" {
+					sliceSupportItem.SNSSAI.SD = new(ngapType.SD)
+					sliceSupportItem.SNSSAI.SD.Value, _ = hex.DecodeString(sliceSupportItemLocal.SNSSAI.SD)
+				}
+
+				sliceSupportList.List = append(sliceSupportList.List, sliceSupportItem)
+			}
+
+			broadcastPLMNList.List = append(broadcastPLMNList.List, broadcastPLMNItem)
+		}
+
+		supportedTAList.List = append(supportedTAList.List, supportedTAItem)
+	}
 
 	nGSetupRequestIEs.List = append(nGSetupRequestIEs.List, ie)
 
-	// PagingDRX
-	ie = ngapType.NGSetupRequestIEs{}
-	ie.Id.Value = ngapType.ProtocolIEIDDefaultPagingDRX
-	ie.Criticality.Value = ngapType.CriticalityPresentIgnore
-	ie.Value.Present = ngapType.NGSetupRequestIEsPresentDefaultPagingDRX
-	ie.Value.DefaultPagingDRX = new(ngapType.PagingDRX)
+	/*
+		* The reason PagingDRX ie was commented is that in TS23.501
+		* PagingDRX was mentioned to be used only for 3GPP access.
+		* However, the question that if the paging function for N3IWF
+		* is needed requires verification.
 
-	pagingDRX := ie.Value.DefaultPagingDRX
-	pagingDRX.Value = ngapType.PagingDRXPresentV128
-	nGSetupRequestIEs.List = append(nGSetupRequestIEs.List, ie)
+			// PagingDRX
+			ie = ngapType.NGSetupRequestIEs{}
+			ie.Id.Value = ngapType.ProtocolIEIDDefaultPagingDRX
+			ie.Criticality.Value = ngapType.CriticalityPresentIgnore
+			ie.Value.Present = ngapType.NGSetupRequestIEsPresentDefaultPagingDRX
+			ie.Value.DefaultPagingDRX = new(ngapType.PagingDRX)
+
+			pagingDRX := ie.Value.DefaultPagingDRX
+			pagingDRX.Value = ngapType.PagingDRXPresentV128
+			nGSetupRequestIEs.List = append(nGSetupRequestIEs.List, ie)
+	*/
 
 	return ngap.Encoder(pdu)
 }
@@ -530,8 +544,71 @@ func BuildInitialUEMessage() ([]byte, error) {
 	return ngap.Encoder(pdu)
 }
 
-func BuildUplinkNASTransport() ([]byte, error) {
+func BuildUplinkNASTransport(ue *n3iwf_context.N3IWFUe, nasPdu []byte) ([]byte, error) {
 	var pdu ngapType.NGAPPDU
+	pdu.Present = ngapType.NGAPPDUPresentInitiatingMessage
+	pdu.InitiatingMessage = new(ngapType.InitiatingMessage)
+
+	initiatingMessage := pdu.InitiatingMessage
+	initiatingMessage.ProcedureCode.Value = ngapType.ProcedureCodeUplinkNASTransport
+	initiatingMessage.Criticality.Value = ngapType.CriticalityPresentIgnore
+
+	initiatingMessage.Value.Present = ngapType.InitiatingMessagePresentUplinkNASTransport
+	initiatingMessage.Value.UplinkNASTransport = new(ngapType.UplinkNASTransport)
+
+	uplinkNasTransport := initiatingMessage.Value.UplinkNASTransport
+	uplinkNasTransportIEs := &uplinkNasTransport.ProtocolIEs
+
+	// AMF UE NGAP ID
+	ie := ngapType.UplinkNASTransportIEs{}
+	ie.Id.Value = ngapType.ProtocolIEIDAMFUENGAPID
+	ie.Criticality.Value = ngapType.CriticalityPresentReject
+	ie.Value.Present = ngapType.UplinkNASTransportIEsPresentAMFUENGAPID
+	ie.Value.AMFUENGAPID = new(ngapType.AMFUENGAPID)
+
+	aMFUENGAPID := ie.Value.AMFUENGAPID
+	aMFUENGAPID.Value = ue.AmfUeNgapId
+
+	uplinkNasTransportIEs.List = append(uplinkNasTransportIEs.List, ie)
+
+	// RAN UE NGAP ID
+	ie = ngapType.UplinkNASTransportIEs{}
+	ie.Id.Value = ngapType.ProtocolIEIDRANUENGAPID
+	ie.Criticality.Value = ngapType.CriticalityPresentReject
+	ie.Value.Present = ngapType.UplinkNASTransportIEsPresentRANUENGAPID
+	ie.Value.RANUENGAPID = new(ngapType.RANUENGAPID)
+
+	rANUENGAPID := ie.Value.RANUENGAPID
+	rANUENGAPID.Value = ue.RanUeNgapId
+
+	uplinkNasTransportIEs.List = append(uplinkNasTransportIEs.List, ie)
+
+	// NAS-PDU
+	ie = ngapType.UplinkNASTransportIEs{}
+	ie.Id.Value = ngapType.ProtocolIEIDNASPDU
+	ie.Criticality.Value = ngapType.CriticalityPresentReject
+	ie.Value.Present = ngapType.UplinkNASTransportIEsPresentNASPDU
+	ie.Value.NASPDU = new(ngapType.NASPDU)
+	nASPDU := ie.Value.NASPDU
+	nASPDU.Value = nasPdu
+	uplinkNasTransportIEs.List = append(uplinkNasTransportIEs.List, ie)
+
+	// User Location Information
+	ie = ngapType.UplinkNASTransportIEs{}
+	ie.Id.Value = ngapType.ProtocolIEIDUserLocationInformation
+	ie.Criticality.Value = ngapType.CriticalityPresentIgnore
+	ie.Value.Present = ngapType.UplinkNASTransportIEsPresentUserLocationInformation
+	ie.Value.UserLocationInformation = new(ngapType.UserLocationInformation)
+
+	userLocationInformation := ie.Value.UserLocationInformation
+	userLocationInformation.Present = ngapType.UserLocationInformationPresentUserLocationInformationN3IWF
+	userLocationInformation.UserLocationInformationN3IWF = new(ngapType.UserLocationInformationN3IWF)
+	userLocationInformationN3IWF := userLocationInformation.UserLocationInformationN3IWF
+	userLocationInformationN3IWF.IPAddress = ngapConvert.IPAddressToNgap(ue.IPAddrv4, ue.IPAddrv6)
+	userLocationInformationN3IWF.PortNumber = ngapConvert.PortNumberToNgap(ue.PortNumber)
+
+	uplinkNasTransportIEs.List = append(uplinkNasTransportIEs.List, ie)
+
 	return ngap.Encoder(pdu)
 }
 
