@@ -1,0 +1,35 @@
+info:
+  version: 1.0.0
+  description: Routing information for UE
+
+ueRoutingInfo:
+  - IMSI: 0000000001
+    PathList:
+    - DestinationIP: 10.0.0.10
+      DestinationPort: 8888
+      UPF: !!seq
+        - Node1
+        - Node2
+
+    - DestinationIP: 10.0.0.11
+      DestinationPort: 9999
+      UPF: !!seq  
+        - Node1
+        - Node3
+
+  - IMSI: 0000000002
+    PathList:
+    - DestinationIP: 10.0.0.10
+      DestinationPort: 8888
+      UPF: !!seq
+        - Node1
+        - Node2
+
+  - IMSI: 0000000003
+    PathList:
+    - DestinationIP: 10.0.0.11
+      DestinationPort: 9999
+      UPF: !!seq  
+        - Node1
+        - Node3
+
