@@ -3,21 +3,45 @@ info:
   description: Routing information for UE
 
 ueRoutingInfo:
-  - IMSI: 0000000001
+  - SUPI: 0000000001
+    AN: 10.200.200.101
     PathList:
     - DestinationIP: 10.0.0.10
       DestinationPort: 8888
       UPF: !!seq
         - Node1
         - Node2
+        - Node5
 
     - DestinationIP: 10.0.0.11
       DestinationPort: 9999
       UPF: !!seq  
         - Node1
+        - Node2
+        - Node4
+
+    - DestinationIP: 10.0.0.12
+      DestinationPort: 7777
+      UPF: !!seq  
+        - Node1
         - Node3
 
-  - IMSI: 0000000002
+  - SUPI: 0000000004
+    AN: 10.200.200.102
+    PathList:
+    - DestinationIP: 10.0.0.10
+      DestinationPort: 8888
+      UPF: !!seq
+        - Node1
+        - Node4
+
+    - DestinationIP: 10.0.0.11
+      DestinationPort: 9999
+      UPF: !!seq  
+        - Node1
+        - Node5
+
+  - SUPI: 0000000002
     PathList:
     - DestinationIP: 10.0.0.10
       DestinationPort: 8888
@@ -25,7 +49,7 @@ ueRoutingInfo:
         - Node1
         - Node2
 
-  - IMSI: 0000000003
+  - SUPI: 0000000003
     PathList:
     - DestinationIP: 10.0.0.11
       DestinationPort: 9999
