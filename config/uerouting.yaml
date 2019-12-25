@@ -42,6 +42,7 @@ ueRoutingInfo:
         - Node5
 
   - SUPI: 0000000002
+    AN: 10.200.200.101
     PathList:
     - DestinationIP: 10.0.0.10
       DestinationPort: 8888
@@ -50,6 +51,7 @@ ueRoutingInfo:
         - Node2
 
   - SUPI: 0000000003
+    AN: 10.200.200.101
     PathList:
     - DestinationIP: 10.0.0.11
       DestinationPort: 9999
