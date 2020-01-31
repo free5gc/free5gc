@@ -31,7 +31,7 @@
     "html-webpack-plugin": "2.29.0",
     "jest": "20.0.4",
     "moment": "^2.18.1",
-    "npm": "^6.1.0",
+    "npm": "^6.13.4",
     "object-assign": "4.1.1",
     "pe7-icon": "^1.0.4",
     "postcss-flexbugs-fixes": "3.2.0",
