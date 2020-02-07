@@ -1,0 +1,51 @@
+# This is a sample build configuration for Go.
+# Check our guides at https://confluence.atlassian.com/x/5Q4SMw for more examples.
+# Only use spaces to indent your .yml configuration.
+# -----
+# You can specify a custom docker image from Docker Hub as your build environment.
+image: golang:1.12.9
+
+pipelines:
+  pull-requests:
+    "**":
+      - step:
+          name: Check coding style
+          size: 2x
+          script:
+            - curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.19.0
+            - golangci-lint run ./...
+      - step:
+          name: Build Project
+          trigger: manual
+          caches:
+            - gopackage
+          script:
+            - go get -v
+            - go build ./... -v
+            - go test ./... -v -cover -race
+  custom:
+    schedule:
+      - step:
+          name: Check coding style
+          size: 2x
+          script:
+            - curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.19.0
+            - golangci-lint run ./...
+      - step:
+          name: release patch and fork
+          caches:
+            - gopackage
+            - aptpackage
+          script:
+            - apt-get update && apt-get install -y rsync gcc cmake autoconf libtool pkg-config libmnl-dev libyaml-dev
+            - ./release/release.sh -w
+            - cd "./release/src/free5gc"
+            - git add -A
+            - git config user.name "free5GC" && git config user.email "free5gc.org@gmail.com"
+            - git commit -m "`date` Patch"
+            - git push origin master
+
+definitions:
+  caches:
+    gopackage: /go
+    aptpackage: /var/cache/apt
