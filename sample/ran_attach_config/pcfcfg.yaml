@@ -1,0 +1,23 @@
+info:
+  version: 1.0.0
+  description: PCF initial local configuration
+
+configuration:
+  pcfName: PCF
+  sbi:
+    scheme: http
+    registerIPv4: 127.0.0.1 # IP used to register to NRF
+    bindingIPv4: 127.0.0.1  # IP used to bind the service
+    port: 29507
+  timeFormat: 2019-01-02 15:04:05
+  defaultBdtRefId: BdtPolicyId-
+  nrfUri: http://localhost:29510
+  serviceList:
+    - serviceName: npcf-am-policy-control
+    - serviceName: npcf-smpolicycontrol
+      suppFeat: 3fff
+    - serviceName: npcf-bdtpolicycontrol
+    - serviceName: npcf-policyauthorization
+      suppFeat: 3
+    - serviceName: npcf-eventexposure
+    - serviceName: npcf-ue-policy-control

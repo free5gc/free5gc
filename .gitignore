@@ -1,0 +1,36 @@
+# Toolchain
+# Go vendor
+vendor/
+# Goland project folder
+.idea/
+# Visual Studio Code
+.vscode/
+# emacs/vim
+GPATH
+GRTAGS
+GTAGS
+TAGS
+tags
+cscope.*
+# mac
+.DS_Store
+
+# debug
+testkeylog/
+log/
+*.log
+*.pcap
+config/test/smfcfg.test.yaml
+
+# build
+bin/
+
+# release
+release/src
+
+# webconsole
+webconsole/bin
+webconsole/public
+
+packages/
+free5gc.zip

@@ -1,0 +1,31 @@
+info:
+  version: 1.0.0
+  description: UDR initial local configuration
+
+configuration:
+  sbi: # Service-based interface information
+    scheme: http # the protocol for sbi (http or https)
+    registerIPv4: 127.0.0.4 # IP used to register to NRF
+    bindingIPv4: 127.0.0.4  # IP used to bind the service
+    port: 8000 # port used to bind the service
+  mongodb:
+    name: free5gc # Database name in MongoDB
+    url: mongodb://localhost:27017 # URL of MongoDB
+  nrfUri: http://127.0.0.10:8000 # a valid URI of NRF
+
+# the kind of log output
+  # debugLevel: how detailed to output, value: trace, debug, info, warn, error, fatal, panic
+  # ReportCaller: enable the caller report or not, value: true or false
+logger:
+  UDR:
+    debugLevel: info
+    ReportCaller: false
+  MongoDBLibrary:
+    debugLevel: info
+    ReportCaller: false
+  PathUtil:
+    debugLevel: info
+    ReportCaller: false
+  OpenApi:
+    debugLevel: info
+    ReportCaller: false

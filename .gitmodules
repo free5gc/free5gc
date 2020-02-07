@@ -1,0 +1,33 @@
+[submodule "amf"]
+	path = NFs/amf
+	url = https://github.com/free5gc/amf.git
+[submodule "ausf"]
+	path = NFs/ausf
+	url = https://github.com/free5gc/ausf.git
+[submodule "n3iwf"]
+	path = NFs/n3iwf
+	url = https://github.com/free5gc/n3iwf.git
+[submodule "nrf"]
+	path = NFs/nrf
+	url = https://github.com/free5gc/nrf.git
+[submodule "nssf"]
+	path = NFs/nssf
+	url = https://github.com/free5gc/nssf.git
+[submodule "pcf"]
+	path = NFs/pcf
+	url = https://github.com/free5gc/pcf.git
+[submodule "smf"]
+	path = NFs/smf
+	url = https://github.com/free5gc/smf.git
+[submodule "udm"]
+	path = NFs/udm
+	url = https://github.com/free5gc/udm.git
+[submodule "udr"]
+	path = NFs/udr
+	url = https://github.com/free5gc/udr.git
+[submodule "upf"]
+	path = NFs/upf
+	url = https://github.com/free5gc/upf.git
+[submodule "webconsole"]
+	path = webconsole
+	url = https://github.com/free5gc/webconsole.git

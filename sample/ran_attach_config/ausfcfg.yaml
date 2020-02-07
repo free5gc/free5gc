@@ -1,0 +1,19 @@
+info:
+  version: 1.0.0
+  description: AUSF initial local configuration
+
+configuration:
+  sbi:
+    scheme: http
+    registerIPv4: 127.0.0.1 # IP used to register to NRF
+    bindingIPv4: 127.0.0.1  # IP used to bind the service
+    port: 29509
+  serviceNameList:
+    - nausf-auth
+  nrfUri: http://localhost:29510
+  plmnSupportList:
+    - mcc: 208
+      mnc: 93
+    - mcc: 123
+      mnc: 45
+  groupId: ausfGroup001

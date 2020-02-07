@@ -1,0 +1,33 @@
+info:
+  version: 1.0.0
+  description: AUSF initial local configuration
+
+configuration:
+  sbi: # Service-based interface information
+    scheme: http # the protocol for sbi (http or https)
+    registerIPv4: 127.0.0.9 # IP used to register to NRF
+    bindingIPv4: 127.0.0.9  # IP used to bind the service
+    port: 8000 # Port used to bind the service
+  serviceNameList: # the SBI services provided by this AUSF, refer to TS 29.509
+    - nausf-auth # Nausf_UEAuthentication service
+  nrfUri: http://127.0.0.10:8000 # a valid URI of NRF
+  plmnSupportList: # the PLMNs (Public Land Mobile Network) list supported by this AUSF
+    - mcc: 208 # Mobile Country Code (3 digits string, digit: 0~9)
+      mnc: 93  # Mobile Network Code (2 or 3 digits string, digit: 0~9)
+    - mcc: 123 # Mobile Country Code (3 digits string, digit: 0~9)
+      mnc: 45  # Mobile Network Code (2 or 3 digits string, digit: 0~9)
+  groupId: ausfGroup001 # ID for the group of the AUSF
+
+# the kind of log output
+  # debugLevel: how detailed to output, value: trace, debug, info, warn, error, fatal, panic
+  # ReportCaller: enable the caller report or not, value: true or false
+logger:
+  AUSF:
+    debugLevel: info
+    ReportCaller: false
+  PathUtil:
+    debugLevel: info
+    ReportCaller: false
+  OpenApi:
+    debugLevel: info
+    ReportCaller: false

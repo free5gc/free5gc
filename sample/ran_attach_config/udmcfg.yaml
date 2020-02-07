@@ -1,0 +1,42 @@
+info:
+  version: 1.0.0
+  description: UDM initial local configuration
+
+configuration:
+  serviceNameList:
+    - nudm-sdm
+    - nudm-uecm
+    - nudm-ueau
+    - nudm-ee
+    - nudm-pp
+  sbi:
+    scheme: http
+    registerIPv4: 127.0.0.1 # IP used to register to NRF
+    bindingIPv4: 127.0.0.1  # IP used to bind the service
+    port: 29503
+    tls:
+      log: free5gc/udmsslkey.log
+      pem: free5gc/support/TLS/udm.pem
+      key: free5gc/support/TLS/udm.key
+  
+  udrclient:
+    scheme: http
+    ipv4Addr: 127.0.0.1
+    port: 29504
+
+  nrfclient:
+    scheme: http
+    ipv4Addr: 127.0.0.1
+    port: 29510
+  nrfUri: http://localhost:29510
+
+  # test data set from TS33501-f60 Annex C.4
+  # udmProfileAHNPublicKey: 5a8d38864820197c3394b92613b20b91633cbd897119273bf8e4a6f4eec0a650
+  # udmProfileAHNPrivateKey: c53c22208b61860b06c62e5406a7b330c2b577aa5558981510d128247d38bd1d
+  # udmProfileBHNPublicKey: 0472DA71976234CE833A6907425867B82E074D44EF907DFB4B3E21C1C2256EBCD15A7DED52FCBB097A4ED250E036C7B9C8C7004C4EEDC4F068CD7BF8D3F900E3B4
+  # udmProfileBHNPrivateKey: F1AB1074477EBCC7F554EA1C5FC368B1616730155E0041AC447D6301975FECDA
+  keys:
+    udmProfileAHNPublicKey: 5a8d38864820197c3394b92613b20b91633cbd897119273bf8e4a6f4eec0a650
+    udmProfileAHNPrivateKey: c53c22208b61860b06c62e5406a7b330c2b577aa5558981510d128247d38bd1d
+    udmProfileBHNPublicKey: 0472DA71976234CE833A6907425867B82E074D44EF907DFB4B3E21C1C2256EBCD15A7DED52FCBB097A4ED250E036C7B9C8C7004C4EEDC4F068CD7BF8D3F900E3B4
+    udmProfileBHNPrivateKey: F1AB1074477EBCC7F554EA1C5FC368B1616730155E0041AC447D6301975FECDA

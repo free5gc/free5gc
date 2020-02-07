@@ -1,0 +1,14 @@
+info:
+  version: 1.0.0
+  description: UDR initial local configuration
+
+configuration:
+  sbi:
+    scheme: http
+    registerIPv4: 127.0.0.1 # IP used to register to NRF
+    bindingIPv4: 127.0.0.1  # IP used to bind the service
+    port: 29504
+  mongodb:
+    name: free5gc
+    url: mongodb://localhost:27017
+  nrfUri: http://localhost:29510

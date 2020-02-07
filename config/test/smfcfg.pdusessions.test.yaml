@@ -1,0 +1,111 @@
+info:
+  version: 1.0.0
+  description: AMF initial local configuration
+
+configuration:
+  smfName: SMF
+  sbi:
+    scheme: http
+    registerIPv4: 127.0.0.2 # IP used to register to NRF
+    bindingIPv4: 127.0.0.2  # IP used to bind the service
+    port: 8000
+    tls:
+      key: free5gc/support/TLS/smf.key
+      pem: free5gc/support/TLS/smf.pem
+  serviceNameList:
+    - nsmf-pdusession
+    - nsmf-event-exposure
+    - nsmf-oam
+  snssaiInfos:
+    - sNssai:
+        sst: 1
+        sd: 010203
+      dnnInfos:
+        - dnn: internet
+          dns: 
+            ipv4: 8.8.8.8
+            ipv6: 2001:4860:4860::8888
+          ueSubnet: 60.60.0.0/16
+    - sNssai:
+        sst: 1
+        sd: 112233
+      dnnInfos:
+        - dnn: internet2
+          dns: 
+            ipv4: 8.8.8.8
+            ipv6: 2001:4860:4860::8888
+          ueSubnet: 60.61.0.0/16
+  pfcp:
+    addr: 10.200.200.1
+  userplane_information:
+    up_nodes:
+      gNB1:
+        type: AN
+        an_ip: 192.188.2.3
+      AnchorUPF1:
+        type: UPF
+        node_id: 10.200.200.101
+        sNssaiUpfInfos:
+          - sNssai:
+              sst: 1
+              sd: 010203
+            dnnUpfInfoList:
+              - dnn: internet
+        interfaces:
+          - interfaceType: N3
+            endpoints:
+              - 10.200.200.101
+            networkInstance: internet
+          - interfaceType: N9
+            endpoints:
+              - 10.200.200.101
+            networkInstance: internet
+      AnchorUPF2:
+        type: UPF
+        node_id: 10.200.200.102
+        sNssaiUpfInfos:
+          - sNssai:
+              sst: 1
+              sd: 112233
+            dnnUpfInfoList:
+              - dnn: internet2
+        interfaces:
+          - interfaceType: N3
+            endpoints:
+              - 10.200.200.102
+            networkInstance: internet2
+          - interfaceType: N9
+            endpoints:
+              - 10.200.200.102
+            networkInstance: internet2
+    links:
+      - A: gNB1
+        B: AnchorUPF1
+      - A: gNB1
+        B: AnchorUPF2
+  ue_subnet: 60.60.0.0/16
+  nrfUri: http://127.0.0.10:8000
+  ulcl: false
+
+logger:
+  SMF:
+    debugLevel: info
+    ReportCaller: false
+  NAS:
+    debugLevel: info
+    ReportCaller: false
+  NGAP:
+    debugLevel: info
+    ReportCaller: false
+  Aper:
+    debugLevel: info
+    ReportCaller: false
+  PathUtil:
+    debugLevel: info
+    ReportCaller: false
+  OpenApi:
+    debugLevel: info
+    ReportCaller: false
+  PFCP:
+    debugLevel: info
+    ReportCaller: false

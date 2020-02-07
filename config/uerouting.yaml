@@ -1,0 +1,39 @@
+info:
+  version: 1.0.0
+  description: Routing information for UE
+
+ueRoutingInfo: # the list of UE routing information
+  - SUPI: imsi-2089300007487 # Subscription Permanent Identifier of the UE
+    AN: 10.200.200.101 # the IP address of RAN
+    PathList: # the pre-config paths for this SUPI
+      - DestinationIP: 60.60.0.101 # the destination IP address on Data Network (DN)
+        # the order of UPF nodes in this path. We use the UPF's name to represent each UPF node.
+        # The UPF's name should be consistent with smfcfg.yaml
+        UPF: !!seq
+          - BranchingUPF
+          - AnchorUPF1
+
+      - DestinationIP: 60.60.0.103 # the destination IP address on Data Network (DN)
+        # the order of UPF nodes in this path. We use the UPF's name to represent each UPF node.
+        # The UPF's name should be consistent with smfcfg.yaml
+        UPF: !!seq
+          - BranchingUPF
+          - AnchorUPF2
+
+  - SUPI: imsi-2089300007486 # Subscription Permanent Identifier of the UE
+    AN: 10.200.200.102 # the IP address of RAN
+    PathList: # the pre-config paths for this SUPI
+      - DestinationIP: 10.0.0.10 # the destination IP address on Data Network (DN)
+        # the order of UPF nodes in this path. We use the UPF's name to represent each UPF node.
+        # The UPF's name should be consistent with smfcfg.yaml
+        UPF: !!seq
+          - BranchingUPF
+          - AnchorUPF1
+
+      - DestinationIP: 10.0.0.11 # the destination IP address on Data Network (DN)
+        # the order of UPF nodes in this path. We use the UPF's name to represent each UPF node.
+        # The UPF's name should be consistent with smfcfg.yaml
+        UPF: !!seq
+          - BranchingUPF
+          - AnchorUPF2
+

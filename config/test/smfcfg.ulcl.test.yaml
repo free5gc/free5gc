@@ -1,0 +1,149 @@
+info:
+  version: 1.0.0
+  description: AMF initial local configuration
+
+configuration:
+  smfName: SMF
+  sbi:
+    scheme: http
+    registerIPv4: 127.0.0.2 # IP used to register to NRF
+    bindingIPv4: 127.0.0.2  # IP used to bind the service
+    port: 8000
+    tls:
+      key: free5gc/support/TLS/smf.key
+      pem: free5gc/support/TLS/smf.pem
+  serviceNameList:
+    - nsmf-pdusession
+    - nsmf-event-exposure
+    - nsmf-oam
+  snssaiInfos:
+    - sNssai:
+        sst: 1
+        sd: 010203
+      dnnInfos:
+        - dnn: internet
+          dns: 
+            ipv4: 8.8.8.8
+            ipv6: 2001:4860:4860::8888
+          ueSubnet: 60.60.0.0/16
+    - sNssai:
+        sst: 1
+        sd: 112233
+      dnnInfos:
+        - dnn: internet
+          dns: 
+            ipv4: 8.8.8.8
+            ipv6: 2001:4860:4860::8888
+          ueSubnet: 60.61.0.0/16
+    - sNssai:
+        sst: 2
+        sd: 112234
+      dnnInfos:
+        - dnn: internet
+          dns: 
+            ipv4: 8.8.8.8
+            ipv6: 2001:4860:4860::8888
+          ueSubnet: 60.62.0.0/16
+  pfcp:
+    addr: 10.200.200.1
+  userplane_information:
+    up_nodes:
+      gNB1:
+        type: AN
+        an_ip: 192.188.2.3
+
+      BranchingUPF:
+        type: UPF
+        node_id: 10.200.200.102
+        sNssaiUpfInfos:
+          - sNssai:
+              sst: 1
+              sd: 010203
+            dnnUpfInfoList:
+              - dnn: internet
+          - sNssai:
+              sst: 1
+              sd: 112233
+            dnnUpfInfoList:
+              - dnn: internet
+        interfaces:
+          - interfaceType: N3
+            endpoints:
+              - 10.200.200.102
+            networkInstance: internet
+          - interfaceType: N9
+            endpoints:
+              - 10.200.200.102
+            networkInstance: internet
+
+      AnchorUPF1:
+        type: UPF
+        node_id: 10.200.200.101
+        sNssaiUpfInfo:
+          sNssai:
+            sst: 1
+            sd: 010203
+          dnnUpfInfoList:
+            - dnn: internet
+        interfaces:
+          - interfaceType: N9
+            endpoints:
+              - 10.200.200.101
+            networkInstance: internet
+
+      AnchorUPF2:
+        type: UPF
+        node_id: 10.200.200.103
+        sNssaiUpfInfo:
+          sNssai:
+            sst: 1
+            sd: 010203
+          dnnUpfInfoList:
+            - dnn: internet
+        interfaces:
+          - interfaceType: N9
+            endpoints:
+              - 10.200.200.103
+            networkInstance: internet
+    links:
+      - A: gNB1
+        B: BranchingUPF
+      - A: BranchingUPF
+        B: AnchorUPF1
+      - A: BranchingUPF
+        B: AnchorUPF2
+  ue_subnet: 60.60.0.0/16
+  dnn:
+    internet:
+      dns:
+        ipv4: 8.8.8.8
+        ipv6: 2001:4860:4860::8888
+    internet2:
+      dns:
+        ipv4: 8.8.4.4
+        ipv6: 2001:4860:4860::8844
+  nrfUri: http://127.0.0.10:8000
+  ulcl: true
+
+logger:
+  SMF:
+    debugLevel: info
+    ReportCaller: false
+  NAS:
+    debugLevel: info
+    ReportCaller: false
+  NGAP:
+    debugLevel: info
+    ReportCaller: false
+  Aper:
+    debugLevel: info
+    ReportCaller: false
+  PathUtil:
+    debugLevel: info
+    ReportCaller: false
+  OpenApi:
+    debugLevel: info
+    ReportCaller: false
+  PFCP:
+    debugLevel: info
+    ReportCaller: false
