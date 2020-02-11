@@ -26,7 +26,6 @@ function terminate()
 
     for ((idx=${#PID_LIST[@]}-1;idx>=0;idx--)); do
         sudo kill -SIGKILL ${PID_LIST[$idx]}
-        sleep 0.5
     done
 }
 
