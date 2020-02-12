@@ -42,7 +42,7 @@ func init() {
 	flagSet := flag.NewFlagSet("free5gc", 0)
 	flagSet.String("smfcfg", "", "SMF Config Path")
 	cli := cli.NewContext(nil, flagSet, nil)
-	err := cli.Set("smfcfg", path_util.Gofree5gcPath("gofree5gc/config/smfcfg.conf"))
+	err := cli.Set("smfcfg", path_util.Gofree5gcPath("gofree5gc/config/smfcfg.test.conf"))
 	if err != nil {
 		log.Fatal("SMF test config error")
 		return
