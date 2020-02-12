@@ -43,7 +43,7 @@ elif [ $OS == "Fedora" ]; then
     GOROOT=/usr/lib/golang
 fi
 PATH=$PATH:$GOPATH/bin:$GOROOT/bin
-GO111MODULE=on
+GO111MODULE=off
 
 UPFNS="UPFns"
 EXEC_UPFNS="sudo ip netns exec ${UPFNS}"
