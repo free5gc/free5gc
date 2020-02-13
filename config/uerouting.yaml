@@ -57,5 +57,27 @@ ueRoutingInfo:
       DestinationPort: 9999
       UPF: !!seq  
         - Node1
+        - Node2
+        - Node7
+        - Node9
+    - DestinationIP: 10.0.0.12
+      DestinationPort: 9998
+      UPF: !!seq  
+        - Node1
+        - Node2
+        - Node7
+        - Node8
+    - DestinationIP: 10.0.0.13
+      DestinationPort: 9997
+      UPF: !!seq  
+        - Node1
         - Node3
+        - Node6
+    - DestinationIP: 10.0.0.14
+      DestinationPort: 9996
+      UPF: !!seq  
+        - Node1
+        - Node4
+        - Node5
+        - Node6
 
