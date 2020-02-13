@@ -1,0 +1,61 @@
+info:
+  version: 1.0.0
+  description: Routing information for UE
+
+ueRoutingInfo:
+  - SUPI: 0000000001
+    AN: 10.200.200.101
+    PathList:
+    - DestinationIP: 10.0.0.10
+      DestinationPort: 8888
+      UPF: !!seq
+        - Node1
+        - Node2
+        - Node5
+
+    - DestinationIP: 10.0.0.11
+      DestinationPort: 9999
+      UPF: !!seq  
+        - Node1
+        - Node2
+        - Node4
+
+    - DestinationIP: 10.0.0.12
+      DestinationPort: 7777
+      UPF: !!seq  
+        - Node1
+        - Node3
+
+  - SUPI: 0000000004
+    AN: 10.200.200.102
+    PathList:
+    - DestinationIP: 10.0.0.10
+      DestinationPort: 8888
+      UPF: !!seq
+        - Node1
+        - Node4
+
+    - DestinationIP: 10.0.0.11
+      DestinationPort: 9999
+      UPF: !!seq  
+        - Node1
+        - Node5
+
+  - SUPI: 0000000002
+    AN: 10.200.200.101
+    PathList:
+    - DestinationIP: 10.0.0.10
+      DestinationPort: 8888
+      UPF: !!seq
+        - Node1
+        - Node2
+
+  - SUPI: 0000000003
+    AN: 10.200.200.101
+    PathList:
+    - DestinationIP: 10.0.0.11
+      DestinationPort: 9999
+      UPF: !!seq  
+        - Node1
+        - Node3
+
