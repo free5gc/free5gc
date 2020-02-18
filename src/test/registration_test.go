@@ -118,7 +118,7 @@ func TestRegistration(t *testing.T) {
 	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
 		Len:    12, // suci
-		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
+		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0xff, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
 	}
 	registrationRequest := nasTestpacket.GetRegistrationRequestWith5GMM(nasMessage.RegistrationType5GSInitialRegistration, mobileIdentity5GS, nil, nil)
 	sendMsg, err = test.GetInitialUEMessage(ue.RanUeNgapId, registrationRequest, "")
@@ -313,7 +313,7 @@ func TestDeregistration(t *testing.T) {
 	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
 		Len:    12, // suci
-		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
+		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0xff, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
 	}
 	registrationRequest := nasTestpacket.GetRegistrationRequestWith5GMM(nasMessage.RegistrationType5GSInitialRegistration, mobileIdentity5GS, nil, nil)
 	sendMsg, err = test.GetInitialUEMessage(ue.RanUeNgapId, registrationRequest, "")
@@ -470,7 +470,7 @@ func TestServiceRequest(t *testing.T) {
 	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
 		Len:    12, // suci
-		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
+		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0xff, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
 	}
 	registrationRequest := nasTestpacket.GetRegistrationRequestWith5GMM(nasMessage.RegistrationType5GSInitialRegistration, mobileIdentity5GS, nil, nil)
 	sendMsg, err = test.GetInitialUEMessage(ue.RanUeNgapId, registrationRequest, "")
@@ -869,7 +869,7 @@ func TestXnHandover(t *testing.T) {
 	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
 		Len:    12, // suci
-		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
+		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0xff, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
 	}
 	registrationRequest := nasTestpacket.GetRegistrationRequestWith5GMM(nasMessage.RegistrationType5GSInitialRegistration, mobileIdentity5GS, nil, nil)
 	sendMsg, err = test.GetInitialUEMessage(ue.RanUeNgapId, registrationRequest, "")
@@ -1283,7 +1283,7 @@ func TestN2Handover(t *testing.T) {
 	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
 		Len:    12, // suci
-		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
+		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0xff, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
 	}
 	registrationRequest := nasTestpacket.GetRegistrationRequestWith5GMM(nasMessage.RegistrationType5GSInitialRegistration, mobileIdentity5GS, nil, nil)
 	sendMsg, err = test.GetInitialUEMessage(ue.RanUeNgapId, registrationRequest, "")
