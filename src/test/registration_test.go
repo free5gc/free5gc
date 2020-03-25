@@ -226,7 +226,7 @@ func TestRegistration(t *testing.T) {
 		TotalLen: 48,
 		TTL:      64,
 		Src:      net.ParseIP("60.60.0.1").To4(),
-		Dst:      net.ParseIP("60.60.0.100").To4(),
+		Dst:      net.ParseIP("60.60.0.101").To4(),
 		ID:       1,
 		Checksum: 0x01f0,
 	}
