@@ -2,9 +2,10 @@ package test
 
 import (
 	"encoding/json"
-	"go.mongodb.org/mongo-driver/bson"
 	"gofree5gc/lib/MongoDBLibrary"
 	"gofree5gc/lib/openapi/models"
+
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 func toBsonM(data interface{}) bson.M {
@@ -70,6 +71,37 @@ func GetAccessAndMobilitySubscriptionDataFromMongoDB(ueId string, servingPlmnId 
 
 func DelAccessAndMobilitySubscriptionDataFromMongoDB(ueId string, servingPlmnId string) {
 	collName := "subscriptionData.provisionedData.amData"
+	filter := bson.M{"ueId": ueId, "servingPlmnId": servingPlmnId}
+	MongoDBLibrary.RestfulAPIDeleteMany(collName, filter)
+}
+
+func InsertSessionManagementSubscriptionDataToMongoDB(ueId string, servingPlmnId string, smData models.SessionManagementSubscriptionData) {
+	collName := "subscriptionData.provisionedData.smData"
+	filter := bson.M{"ueId": ueId, "servingPlmnId": servingPlmnId}
+	putData := toBsonM(smData)
+	putData["ueId"] = ueId
+	putData["servingPlmnId"] = servingPlmnId
+	MongoDBLibrary.RestfulAPIPutOne(collName, filter, putData)
+}
+
+func GetSessionManagementDataFromMongoDB(ueId string, servingPlmnId string) (amData *models.SessionManagementSubscriptionData) {
+	collName := "subscriptionData.provisionedData.smData"
+	filter := bson.M{"ueId": ueId, "servingPlmnId": servingPlmnId}
+	getData := MongoDBLibrary.RestfulAPIGetOne(collName, filter)
+	if getData == nil {
+		return
+	}
+	tmp, err := json.Marshal(getData)
+	if err != nil {
+		return
+	}
+	amData = new(models.SessionManagementSubscriptionData)
+	_ = json.Unmarshal(tmp, amData)
+	return
+}
+
+func DelSessionManagementSubscriptionDataFromMongoDB(ueId string, servingPlmnId string) {
+	collName := "subscriptionData.provisionedData.smData"
 	filter := bson.M{"ueId": ueId, "servingPlmnId": servingPlmnId}
 	MongoDBLibrary.RestfulAPIDeleteMany(collName, filter)
 }
