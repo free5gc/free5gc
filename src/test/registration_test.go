@@ -2,7 +2,6 @@ package test_test
 
 import (
 	"encoding/hex"
-	"github.com/mohae/deepcopy"
 	"gofree5gc/lib/CommonConsumerTestData/UDM/TestGenAuthData"
 	"gofree5gc/lib/CommonConsumerTestData/UDR/TestRegistrationProcedure"
 	"gofree5gc/lib/nas/nasMessage"
@@ -10,6 +9,8 @@ import (
 	"gofree5gc/lib/nas/nasType"
 	"gofree5gc/lib/ngap"
 	"gofree5gc/lib/openapi/models"
+
+	"github.com/mohae/deepcopy"
 
 	// "gofree5gc/src/ausf/ausf_context"
 	"gofree5gc/src/test"
@@ -53,6 +54,10 @@ func getAccessAndMobilitySubscriptionData() (amData models.AccessAndMobilitySubs
 
 func getSmfSelectionSubscriptionData() (smfSelData models.SmfSelectionSubscriptionData) {
 	return TestRegistrationProcedure.TestSmfSelDataTable[TestRegistrationProcedure.FREE5GC_CASE]
+}
+
+func getSessionManagementSubscriptionData() (smfSelData models.SessionManagementSubscriptionData) {
+	return TestRegistrationProcedure.TestSmSelDataTable[TestRegistrationProcedure.FREE5GC_CASE]
 }
 
 func getAmPolicyData() (amPolicyData models.AmPolicyData) {
@@ -106,6 +111,12 @@ func TestRegistration(t *testing.T) {
 		smfSelData := getSmfSelectionSubscriptionData()
 		test.InsertSmfSelectionSubscriptionDataToMongoDB(ue.Supi, smfSelData, servingPlmnId)
 		getData := test.GetSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
+		assert.NotNil(t, getData)
+	}
+	{
+		smSelData := getSessionManagementSubscriptionData()
+		test.InsertSessionManagementSubscriptionDataToMongoDB(ue.Supi, servingPlmnId, smSelData)
+		getData := test.GetSessionManagementDataFromMongoDB(ue.Supi, servingPlmnId)
 		assert.NotNil(t, getData)
 	}
 	{
