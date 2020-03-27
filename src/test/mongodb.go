@@ -166,3 +166,33 @@ func DelAmPolicyDataFromMongoDB(ueId string) {
 	filter := bson.M{"ueId": ueId}
 	MongoDBLibrary.RestfulAPIDeleteMany(collName, filter)
 }
+
+func InsertSmPolicyDataToMongoDB(ueId string, smPolicyData models.SmPolicyData) {
+	collName := "policyData.ues.smData"
+	filter := bson.M{"ueId": ueId}
+	putData := toBsonM(smPolicyData)
+	putData["ueId"] = ueId
+	MongoDBLibrary.RestfulAPIPutOne(collName, filter, putData)
+}
+
+func GetSmPolicyDataFromMongoDB(ueId string) (smPolicyData *models.SmPolicyData) {
+	collName := "policyData.ues.smData"
+	filter := bson.M{"ueId": ueId}
+	getData := MongoDBLibrary.RestfulAPIGetOne(collName, filter)
+	if getData == nil {
+		return
+	}
+	tmp, err := json.Marshal(getData)
+	if err != nil {
+		return
+	}
+	smPolicyData = new(models.SmPolicyData)
+	_ = json.Unmarshal(tmp, smPolicyData)
+	return
+}
+
+func DelSmPolicyDataFromMongoDB(ueId string) {
+	collName := "policyData.ues.smData"
+	filter := bson.M{"ueId": ueId}
+	MongoDBLibrary.RestfulAPIDeleteMany(collName, filter)
+}
