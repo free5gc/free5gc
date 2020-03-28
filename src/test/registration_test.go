@@ -64,6 +64,10 @@ func getAmPolicyData() (amPolicyData models.AmPolicyData) {
 	return TestRegistrationProcedure.TestAmPolicyDataTable[TestRegistrationProcedure.FREE5GC_CASE]
 }
 
+func getSmPolicyData() (smPolicyData models.SmPolicyData) {
+	return TestRegistrationProcedure.TestSmPolicyDataTable[TestRegistrationProcedure.FREE5GC_CASE]
+}
+
 // Registration
 func TestRegistration(t *testing.T) {
 	var n int
@@ -123,6 +127,12 @@ func TestRegistration(t *testing.T) {
 		amPolicyData := getAmPolicyData()
 		test.InsertAmPolicyDataToMongoDB(ue.Supi, amPolicyData)
 		getData := test.GetAmPolicyDataFromMongoDB(ue.Supi)
+		assert.NotNil(t, getData)
+	}
+	{
+		smPolicyData := getSmPolicyData()
+		test.InsertSmPolicyDataToMongoDB(ue.Supi, smPolicyData)
+		getData := test.GetSmPolicyDataFromMongoDB(ue.Supi)
 		assert.NotNil(t, getData)
 	}
 
@@ -320,6 +330,12 @@ func TestDeregistration(t *testing.T) {
 		getData := test.GetAmPolicyDataFromMongoDB(ue.Supi)
 		assert.NotNil(t, getData)
 	}
+	{
+		smPolicyData := getSmPolicyData()
+		test.InsertSmPolicyDataToMongoDB(ue.Supi, smPolicyData)
+		getData := test.GetSmPolicyDataFromMongoDB(ue.Supi)
+		assert.NotNil(t, getData)
+	}
 
 	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
@@ -475,6 +491,12 @@ func TestServiceRequest(t *testing.T) {
 		amPolicyData := getAmPolicyData()
 		test.InsertAmPolicyDataToMongoDB(ue.Supi, amPolicyData)
 		getData := test.GetAmPolicyDataFromMongoDB(ue.Supi)
+		assert.NotNil(t, getData)
+	}
+	{
+		smPolicyData := getSmPolicyData()
+		test.InsertSmPolicyDataToMongoDB(ue.Supi, smPolicyData)
+		getData := test.GetSmPolicyDataFromMongoDB(ue.Supi)
 		assert.NotNil(t, getData)
 	}
 
@@ -876,6 +898,12 @@ func TestXnHandover(t *testing.T) {
 		getData := test.GetAmPolicyDataFromMongoDB(ue.Supi)
 		assert.NotNil(t, getData)
 	}
+	{
+		smPolicyData := getSmPolicyData()
+		test.InsertSmPolicyDataToMongoDB(ue.Supi, smPolicyData)
+		getData := test.GetSmPolicyDataFromMongoDB(ue.Supi)
+		assert.NotNil(t, getData)
+	}
 
 	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
@@ -1042,6 +1070,12 @@ func TestPaging(t *testing.T) {
 		amPolicyData := getAmPolicyData()
 		test.InsertAmPolicyDataToMongoDB(ue.Supi, amPolicyData)
 		getData := test.GetAmPolicyDataFromMongoDB(ue.Supi)
+		assert.NotNil(t, getData)
+	}
+	{
+		smPolicyData := getSmPolicyData()
+		test.InsertSmPolicyDataToMongoDB(ue.Supi, smPolicyData)
+		getData := test.GetSmPolicyDataFromMongoDB(ue.Supi)
 		assert.NotNil(t, getData)
 	}
 
@@ -1288,6 +1322,12 @@ func TestN2Handover(t *testing.T) {
 		amPolicyData := getAmPolicyData()
 		test.InsertAmPolicyDataToMongoDB(ue.Supi, amPolicyData)
 		getData := test.GetAmPolicyDataFromMongoDB(ue.Supi)
+		assert.NotNil(t, getData)
+	}
+	{
+		smPolicyData := getSmPolicyData()
+		test.InsertSmPolicyDataToMongoDB(ue.Supi, smPolicyData)
+		getData := test.GetSmPolicyDataFromMongoDB(ue.Supi)
 		assert.NotNil(t, getData)
 	}
 
