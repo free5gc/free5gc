@@ -2756,7 +2756,7 @@ License notice for gopkg.in/yaml.v2
    limitations under the License.
 
 ---------------------------------------------------------------------
-License notice for git.osmocom.org/libgtpnl.git
+License notice for github.com/PrinzOwO/libgtp5gnl
 ---------------------------------------------------------------------
                   GNU LESSER GENERAL PUBLIC LICENSE
                        Version 2.1, February 1999
@@ -3261,11 +3261,11 @@ necessary.  Here is a sample; alter the names:
 
 That's all there is to it!
 =======================================================================================
-This software uses the libgtpnl Library.
+This software uses the libgtp5gnl Library.
 
 Copyright (C) 1991, 1999 Free Software Foundation,
 
-The libgtpnl Library is licensed under the GNU Lesser General Public Library, version 2.1. You can find a copy of this license at https://www.gnu.org/licenses/lgpl-2.1.en.html
+The libgtp5gnl Library is licensed under the GNU Lesser General Public Library, version 2.1. You can find a copy of this license at https://www.gnu.org/licenses/lgpl-2.1.en.html
 
 ---------------------------------------------------------------------
 License notice for github.com/gin-contrib/cors
