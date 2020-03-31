@@ -2,7 +2,6 @@ package test_test
 
 import (
 	"encoding/hex"
-	"github.com/mohae/deepcopy"
 	"gofree5gc/lib/CommonConsumerTestData/UDM/TestGenAuthData"
 	"gofree5gc/lib/CommonConsumerTestData/UDR/TestRegistrationProcedure"
 	"gofree5gc/lib/nas/nasMessage"
@@ -10,6 +9,8 @@ import (
 	"gofree5gc/lib/nas/nasType"
 	"gofree5gc/lib/ngap"
 	"gofree5gc/lib/openapi/models"
+
+	"github.com/mohae/deepcopy"
 
 	// "gofree5gc/src/ausf/ausf_context"
 	"gofree5gc/src/test"
@@ -55,8 +56,16 @@ func getSmfSelectionSubscriptionData() (smfSelData models.SmfSelectionSubscripti
 	return TestRegistrationProcedure.TestSmfSelDataTable[TestRegistrationProcedure.FREE5GC_CASE]
 }
 
+func getSessionManagementSubscriptionData() (smfSelData models.SessionManagementSubscriptionData) {
+	return TestRegistrationProcedure.TestSmSelDataTable[TestRegistrationProcedure.FREE5GC_CASE]
+}
+
 func getAmPolicyData() (amPolicyData models.AmPolicyData) {
 	return TestRegistrationProcedure.TestAmPolicyDataTable[TestRegistrationProcedure.FREE5GC_CASE]
+}
+
+func getSmPolicyData() (smPolicyData models.SmPolicyData) {
+	return TestRegistrationProcedure.TestSmPolicyDataTable[TestRegistrationProcedure.FREE5GC_CASE]
 }
 
 // Registration
@@ -109,9 +118,21 @@ func TestRegistration(t *testing.T) {
 		assert.NotNil(t, getData)
 	}
 	{
+		smSelData := getSessionManagementSubscriptionData()
+		test.InsertSessionManagementSubscriptionDataToMongoDB(ue.Supi, servingPlmnId, smSelData)
+		getData := test.GetSessionManagementDataFromMongoDB(ue.Supi, servingPlmnId)
+		assert.NotNil(t, getData)
+	}
+	{
 		amPolicyData := getAmPolicyData()
 		test.InsertAmPolicyDataToMongoDB(ue.Supi, amPolicyData)
 		getData := test.GetAmPolicyDataFromMongoDB(ue.Supi)
+		assert.NotNil(t, getData)
+	}
+	{
+		smPolicyData := getSmPolicyData()
+		test.InsertSmPolicyDataToMongoDB(ue.Supi, smPolicyData)
+		getData := test.GetSmPolicyDataFromMongoDB(ue.Supi)
 		assert.NotNil(t, getData)
 	}
 
@@ -309,6 +330,12 @@ func TestDeregistration(t *testing.T) {
 		getData := test.GetAmPolicyDataFromMongoDB(ue.Supi)
 		assert.NotNil(t, getData)
 	}
+	{
+		smPolicyData := getSmPolicyData()
+		test.InsertSmPolicyDataToMongoDB(ue.Supi, smPolicyData)
+		getData := test.GetSmPolicyDataFromMongoDB(ue.Supi)
+		assert.NotNil(t, getData)
+	}
 
 	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
@@ -464,6 +491,12 @@ func TestServiceRequest(t *testing.T) {
 		amPolicyData := getAmPolicyData()
 		test.InsertAmPolicyDataToMongoDB(ue.Supi, amPolicyData)
 		getData := test.GetAmPolicyDataFromMongoDB(ue.Supi)
+		assert.NotNil(t, getData)
+	}
+	{
+		smPolicyData := getSmPolicyData()
+		test.InsertSmPolicyDataToMongoDB(ue.Supi, smPolicyData)
+		getData := test.GetSmPolicyDataFromMongoDB(ue.Supi)
 		assert.NotNil(t, getData)
 	}
 
@@ -865,6 +898,12 @@ func TestXnHandover(t *testing.T) {
 		getData := test.GetAmPolicyDataFromMongoDB(ue.Supi)
 		assert.NotNil(t, getData)
 	}
+	{
+		smPolicyData := getSmPolicyData()
+		test.InsertSmPolicyDataToMongoDB(ue.Supi, smPolicyData)
+		getData := test.GetSmPolicyDataFromMongoDB(ue.Supi)
+		assert.NotNil(t, getData)
+	}
 
 	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
@@ -1031,6 +1070,12 @@ func TestPaging(t *testing.T) {
 		amPolicyData := getAmPolicyData()
 		test.InsertAmPolicyDataToMongoDB(ue.Supi, amPolicyData)
 		getData := test.GetAmPolicyDataFromMongoDB(ue.Supi)
+		assert.NotNil(t, getData)
+	}
+	{
+		smPolicyData := getSmPolicyData()
+		test.InsertSmPolicyDataToMongoDB(ue.Supi, smPolicyData)
+		getData := test.GetSmPolicyDataFromMongoDB(ue.Supi)
 		assert.NotNil(t, getData)
 	}
 
@@ -1277,6 +1322,12 @@ func TestN2Handover(t *testing.T) {
 		amPolicyData := getAmPolicyData()
 		test.InsertAmPolicyDataToMongoDB(ue.Supi, amPolicyData)
 		getData := test.GetAmPolicyDataFromMongoDB(ue.Supi)
+		assert.NotNil(t, getData)
+	}
+	{
+		smPolicyData := getSmPolicyData()
+		test.InsertSmPolicyDataToMongoDB(ue.Supi, smPolicyData)
+		getData := test.GetSmPolicyDataFromMongoDB(ue.Supi)
 		assert.NotNil(t, getData)
 	}
 
