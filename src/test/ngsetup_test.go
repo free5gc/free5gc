@@ -3,6 +3,7 @@ package test_test
 import (
 	"flag"
 	"fmt"
+	"gofree5gc/lib/MongoDBLibrary"
 	"gofree5gc/lib/ngap"
 	"gofree5gc/lib/ngap/ngapSctp"
 	"gofree5gc/lib/path_util"
@@ -18,6 +19,8 @@ import (
 	"gofree5gc/src/udr/udr_service"
 	"log"
 	"net"
+	"os"
+	"sync"
 	"testing"
 	"time"
 
@@ -35,23 +38,39 @@ var NFs = []app.NetworkFunction{
 	&udm_service.UDM{},
 	&nssf_service.NSSF{},
 	&ausf_service.AUSF{},
+	//&n3iwf_service.N3IWF{},
 }
 
 func init() {
-	app.AppInitializeWillInitialize("")
-	flagSet := flag.NewFlagSet("free5gc", 0)
-	flagSet.String("smfcfg", "", "SMF Config Path")
-	cli := cli.NewContext(nil, flagSet, nil)
-	err := cli.Set("smfcfg", path_util.Gofree5gcPath("gofree5gc/config/smfcfg.test.conf"))
-	if err != nil {
-		log.Fatal("SMF test config error")
-		return
+	var init bool = true
+
+	for _, arg := range os.Args {
+		if arg == "noinit" {
+			init = false
+		}
 	}
-	for _, service := range NFs {
-		service.Initialize(cli)
-		go service.Start()
-		time.Sleep(200 * time.Millisecond)
+
+	if init {
+		app.AppInitializeWillInitialize("")
+		flagSet := flag.NewFlagSet("free5gc", 0)
+		flagSet.String("smfcfg", "", "SMF Config Path")
+		cli := cli.NewContext(nil, flagSet, nil)
+		err := cli.Set("smfcfg", path_util.Gofree5gcPath("gofree5gc/config/smfcfg.test.conf"))
+		if err != nil {
+			log.Fatal("SMF test config error")
+			return
+		}
+
+		for _, service := range NFs {
+			service.Initialize(cli)
+			go service.Start()
+			time.Sleep(200 * time.Millisecond)
+		}
+	} else {
+		MongoDBLibrary.SetMongoDB("free5gc", "mongodb://127.0.0.1:27017")
+		fmt.Println("MongoDB Set")
 	}
+
 }
 
 func getNgapIp(amfIP, ranIP string, amfPort, ranPort int) (amfAddr, ranAddr *sctp.SCTPAddr, err error) {
@@ -121,4 +140,61 @@ func TestNGSetup(t *testing.T) {
 
 	// close Connection
 	conn.Close()
+}
+
+func TestCN(t *testing.T) {
+	// New UE
+	ue := test.NewRanUeContext("imsi-2089300007487", 1, test.ALG_CIPHERING_128_NEA2, test.ALG_INTEGRITY_128_NIA2)
+	// ue := test.NewRanUeContext("imsi-2089300007487", 1, test.ALG_CIPHERING_128_NEA0, test.ALG_INTEGRITY_128_NIA0)
+	ue.AmfUeNgapId = 1
+	ue.AuthenticationSubs = getAuthSubscription()
+	// insert UE data to MongoDB
+
+	servingPlmnId := "20893"
+	test.InsertAuthSubscriptionToMongoDB(ue.Supi, ue.AuthenticationSubs)
+	getData := test.GetAuthSubscriptionFromMongoDB(ue.Supi)
+	assert.NotNil(t, getData)
+	{
+		amData := getAccessAndMobilitySubscriptionData()
+		test.InsertAccessAndMobilitySubscriptionDataToMongoDB(ue.Supi, amData, servingPlmnId)
+		getData := test.GetAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
+		assert.NotNil(t, getData)
+	}
+	{
+		smfSelData := getSmfSelectionSubscriptionData()
+		test.InsertSmfSelectionSubscriptionDataToMongoDB(ue.Supi, smfSelData, servingPlmnId)
+		getData := test.GetSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
+		assert.NotNil(t, getData)
+	}
+	{
+		smSelData := getSessionManagementSubscriptionData()
+		test.InsertSessionManagementSubscriptionDataToMongoDB(ue.Supi, servingPlmnId, smSelData)
+		getData := test.GetSessionManagementDataFromMongoDB(ue.Supi, servingPlmnId)
+		assert.NotNil(t, getData)
+	}
+	{
+		amPolicyData := getAmPolicyData()
+		test.InsertAmPolicyDataToMongoDB(ue.Supi, amPolicyData)
+		getData := test.GetAmPolicyDataFromMongoDB(ue.Supi)
+		assert.NotNil(t, getData)
+	}
+	{
+		smPolicyData := getSmPolicyData()
+		test.InsertSmPolicyDataToMongoDB(ue.Supi, smPolicyData)
+		getData := test.GetSmPolicyDataFromMongoDB(ue.Supi)
+		assert.NotNil(t, getData)
+	}
+
+	defer beforeClose(ue)
+
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	wg.Wait()
+}
+
+func beforeClose(ue *test.RanUeContext) {
+	// delete test data
+	test.DelAuthSubscriptionToMongoDB(ue.Supi)
+	test.DelAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, "20893")
+	test.DelSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, "20893")
 }
