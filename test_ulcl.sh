@@ -97,7 +97,7 @@ for i in $(seq -f "%02g" 1 $UPF_NUM); do
 
     sed -i -e "s/10.200.200.10./10.200.200.1${i}/g" ./src/upf/build/config/upfcfg.ulcl.yaml
     if [ ${i} -eq 02 ]; then
-        sed -i -e "s/internet/intranet/b" ./src/upf/build/config/upfcfg.ulcl.yaml
+        sed -i -e "s/internet/intranet/g" ./src/upf/build/config/upfcfg.ulcl.yaml
     else
         sed -i -e "s/intranet/internet/g" ./src/upf/build/config/upfcfg.ulcl.yaml
     fi
