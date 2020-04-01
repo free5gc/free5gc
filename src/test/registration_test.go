@@ -29,6 +29,23 @@ import (
 
 const ranIpAddr string = "10.200.200.1"
 
+func ipv4HeaderChecksum(hdr *ipv4.Header) uint32 {
+	var Checksum uint32
+	Checksum += uint32((hdr.Version<<4|(20>>2&0x0f))<<8 | hdr.TOS)
+	Checksum += uint32(hdr.TotalLen)
+	Checksum += uint32(hdr.ID)
+	Checksum += uint32((hdr.FragOff & 0x1fff) | (int(hdr.Flags) << 13))
+	Checksum += uint32((hdr.TTL << 8) | (hdr.Protocol))
+
+	src := hdr.Src.To4()
+	Checksum += uint32(src[0])<<8 | uint32(src[1])
+	Checksum += uint32(src[2])<<8 | uint32(src[3])
+	dst := hdr.Dst.To4()
+	Checksum += uint32(dst[0])<<8 | uint32(dst[1])
+	Checksum += uint32(dst[2])<<8 | uint32(dst[3])
+	return ^(Checksum&0xffff0000>>16 + Checksum&0xffff)
+}
+
 func getAuthSubscription() (authSubs models.AuthenticationSubscription) {
 	authSubs.PermanentKey = &models.PermanentKey{
 		PermanentKeyValue: TestGenAuthData.MilenageTestSet19.K,
@@ -249,8 +266,9 @@ func TestRegistration(t *testing.T) {
 		Src:      net.ParseIP("60.60.0.1").To4(),
 		Dst:      net.ParseIP("60.60.0.101").To4(),
 		ID:       1,
-		Checksum: 0x01f0,
 	}
+	checksum := ipv4HeaderChecksum(&ipv4hdr)
+	ipv4hdr.Checksum = int(checksum)
 
 	v4HdrBuf, err := ipv4hdr.Marshal()
 	assert.Nil(t, err)
@@ -1439,10 +1457,11 @@ func TestN2Handover(t *testing.T) {
 		TotalLen: 48,
 		TTL:      64,
 		Src:      net.ParseIP("60.60.0.1").To4(),
-		Dst:      net.ParseIP("60.60.0.100").To4(),
+		Dst:      net.ParseIP("60.60.0.101").To4(),
 		ID:       1,
-		Checksum: 0x01f0,
 	}
+	checksum := ipv4HeaderChecksum(&ipv4hdr)
+	ipv4hdr.Checksum = int(checksum)
 
 	v4HdrBuf, err := ipv4hdr.Marshal()
 	assert.Nil(t, err)
