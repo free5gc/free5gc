@@ -63,7 +63,7 @@ sudo ip link set veth1 netns ${UPFNS}
 
 ${EXEC_UPFNS} ip link set lo up
 ${EXEC_UPFNS} ip link set veth1 up
-${EXEC_UPFNS} ip addr add 60.60.0.100 dev lo
+${EXEC_UPFNS} ip addr add 60.60.0.101 dev lo
 ${EXEC_UPFNS} ip addr add 10.200.200.101/24 dev veth1
 ${EXEC_UPFNS} ip addr add 10.200.200.102/24 dev veth1
 
