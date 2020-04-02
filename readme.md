@@ -1,4 +1,6 @@
 # free5GC Stage 2 Installation Guide
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Ffree5gc%2Ffree5gc-stage-2.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Ffree5gc%2Ffree5gc-stage-2?ref=badge_shield)
+
 
 
 ## Minimum Requirement
@@ -182,3 +184,7 @@ You can get your SIM card from [**sysmocom**](http://shop.sysmocom.de/products/s
 ## v2.0.2
 + Add handover feature
 + Add webui
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Ffree5gc%2Ffree5gc-stage-2.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Ffree5gc%2Ffree5gc-stage-2?ref=badge_large)
