@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"gofree5gc/lib/CommonConsumerTestData/UDM/TestGenAuthData"
 	"gofree5gc/lib/nas"
 	"gofree5gc/lib/nas/nasMessage"
@@ -17,7 +18,9 @@ import (
 	"math/big"
 	"net"
 	"testing"
+	"time"
 
+	"github.com/sparrc/go-ping"
 	"github.com/stretchr/testify/assert"
 	"github.com/vishvananda/netlink"
 	"golang.org/x/sys/unix"
@@ -195,13 +198,13 @@ func generateKeyForChildSA(ikeSecurityAssociation *n3iwf_context.IKESecurityAsso
 		keyStream = append(keyStream, generatedKeyBlock...)
 	}
 
-	childSecurityAssociation.IncomingEncryptionKey = append(childSecurityAssociation.IncomingEncryptionKey, keyStream[:lengthEncryptionKeyIPSec]...)
+	childSecurityAssociation.InitiatorToResponderEncryptionKey = append(childSecurityAssociation.InitiatorToResponderEncryptionKey, keyStream[:lengthEncryptionKeyIPSec]...)
 	keyStream = keyStream[lengthEncryptionKeyIPSec:]
-	childSecurityAssociation.IncomingIntegrityKey = append(childSecurityAssociation.IncomingIntegrityKey, keyStream[:lengthIntegrityKeyIPSec]...)
+	childSecurityAssociation.InitiatorToResponderIntegrityKey = append(childSecurityAssociation.InitiatorToResponderIntegrityKey, keyStream[:lengthIntegrityKeyIPSec]...)
 	keyStream = keyStream[lengthIntegrityKeyIPSec:]
-	childSecurityAssociation.OutgoingEncryptionKey = append(childSecurityAssociation.OutgoingEncryptionKey, keyStream[:lengthEncryptionKeyIPSec]...)
+	childSecurityAssociation.ResponderToInitiatorEncryptionKey = append(childSecurityAssociation.ResponderToInitiatorEncryptionKey, keyStream[:lengthEncryptionKeyIPSec]...)
 	keyStream = keyStream[lengthEncryptionKeyIPSec:]
-	childSecurityAssociation.OutgoingIntegrityKey = append(childSecurityAssociation.OutgoingIntegrityKey, keyStream[:lengthIntegrityKeyIPSec]...)
+	childSecurityAssociation.ResponderToInitiatorIntegrityKey = append(childSecurityAssociation.ResponderToInitiatorIntegrityKey, keyStream[:lengthIntegrityKeyIPSec]...)
 
 	return nil
 
@@ -354,8 +357,8 @@ func buildEAP5GANParameters() []byte {
 func parseIPAddressInformationToChildSecurityAssociation(
 	childSecurityAssociation *n3iwf_context.ChildSecurityAssociation,
 	n3iwfPublicIPAddr net.IP,
-	trafficSelectorInitiator *ike_message.TrafficSelectorInitiator,
-	trafficSelectorResponder *ike_message.TrafficSelectorResponder) error {
+	trafficSelectorLocal *ike_message.IndividualTrafficSelector,
+	trafficSelectorRemote *ike_message.IndividualTrafficSelector) error {
 
 	if childSecurityAssociation == nil {
 		return errors.New("childSecurityAssociation is nil")
@@ -364,20 +367,20 @@ func parseIPAddressInformationToChildSecurityAssociation(
 	childSecurityAssociation.PeerPublicIPAddr = n3iwfPublicIPAddr
 	childSecurityAssociation.LocalPublicIPAddr = net.ParseIP("192.168.127.2")
 
-	childSecurityAssociation.TrafficSelectorInitiator = net.IPNet{
-		IP:   trafficSelectorInitiator.TrafficSelectors[0].StartAddress,
+	childSecurityAssociation.TrafficSelectorLocal = net.IPNet{
+		IP:   trafficSelectorLocal.StartAddress,
 		Mask: []byte{255, 255, 255, 255},
 	}
 
-	childSecurityAssociation.TrafficSelectorResponder = net.IPNet{
-		IP:   trafficSelectorResponder.TrafficSelectors[0].StartAddress,
+	childSecurityAssociation.TrafficSelectorRemote = net.IPNet{
+		IP:   trafficSelectorRemote.StartAddress,
 		Mask: []byte{255, 255, 255, 255},
 	}
 
 	return nil
 }
 
-func applyXFRMRule(childSecurityAssociation *n3iwf_context.ChildSecurityAssociation) error {
+func applyXFRMRule(ue_is_initiator bool, childSecurityAssociation *n3iwf_context.ChildSecurityAssociation) error {
 	// Build XFRM information data structure for incoming traffic.
 
 	// Mark
@@ -385,21 +388,37 @@ func applyXFRMRule(childSecurityAssociation *n3iwf_context.ChildSecurityAssociat
 		Value: 5,
 	}
 
-	// Direction: {private_network} -> this_server
+	// Direction: N3IWF -> UE
 	// State
-	xfrmEncryptionAlgorithm := &netlink.XfrmStateAlgo{
-		Name: ike_handler.XFRMEncryptionAlgorithmType(childSecurityAssociation.EncryptionAlgorithm).String(),
-		Key:  childSecurityAssociation.IncomingEncryptionKey,
-	}
-	xfrmIntegrityAlgorithm := &netlink.XfrmStateAlgo{
-		Name: ike_handler.XFRMIntegrityAlgorithmType(childSecurityAssociation.IntegrityAlgorithm).String(),
-		Key:  childSecurityAssociation.IncomingIntegrityKey,
+	var xfrmEncryptionAlgorithm, xfrmIntegrityAlgorithm *netlink.XfrmStateAlgo
+	if ue_is_initiator {
+		xfrmEncryptionAlgorithm = &netlink.XfrmStateAlgo{
+			Name: ike_handler.XFRMEncryptionAlgorithmType(childSecurityAssociation.EncryptionAlgorithm).String(),
+			Key:  childSecurityAssociation.ResponderToInitiatorEncryptionKey,
+		}
+		if childSecurityAssociation.IntegrityAlgorithm != 0 {
+			xfrmIntegrityAlgorithm = &netlink.XfrmStateAlgo{
+				Name: ike_handler.XFRMIntegrityAlgorithmType(childSecurityAssociation.IntegrityAlgorithm).String(),
+				Key:  childSecurityAssociation.ResponderToInitiatorIntegrityKey,
+			}
+		}
+	} else {
+		xfrmEncryptionAlgorithm = &netlink.XfrmStateAlgo{
+			Name: ike_handler.XFRMEncryptionAlgorithmType(childSecurityAssociation.EncryptionAlgorithm).String(),
+			Key:  childSecurityAssociation.InitiatorToResponderEncryptionKey,
+		}
+		if childSecurityAssociation.IntegrityAlgorithm != 0 {
+			xfrmIntegrityAlgorithm = &netlink.XfrmStateAlgo{
+				Name: ike_handler.XFRMIntegrityAlgorithmType(childSecurityAssociation.IntegrityAlgorithm).String(),
+				Key:  childSecurityAssociation.InitiatorToResponderIntegrityKey,
+			}
+		}
 	}
 
 	xfrmState := new(netlink.XfrmState)
 
-	xfrmState.Src = childSecurityAssociation.LocalPublicIPAddr
-	xfrmState.Dst = childSecurityAssociation.PeerPublicIPAddr
+	xfrmState.Src = childSecurityAssociation.PeerPublicIPAddr
+	xfrmState.Dst = childSecurityAssociation.LocalPublicIPAddr
 	xfrmState.Proto = netlink.XFRM_PROTO_ESP
 	xfrmState.Mode = netlink.XFRM_MODE_TUNNEL
 	xfrmState.Spi = int(childSecurityAssociation.SPI)
@@ -411,7 +430,7 @@ func applyXFRMRule(childSecurityAssociation *n3iwf_context.ChildSecurityAssociat
 	// Commit xfrm state to netlink
 	var err error
 	if err = netlink.XfrmStateAdd(xfrmState); err != nil {
-		return errors.New("Set XFRM state rule failed")
+		return fmt.Errorf("Set XFRM state rule failed: %+v", err)
 	}
 
 	// Policy
@@ -425,10 +444,14 @@ func applyXFRMRule(childSecurityAssociation *n3iwf_context.ChildSecurityAssociat
 
 	xfrmPolicy := new(netlink.XfrmPolicy)
 
-	xfrmPolicy.Src = &childSecurityAssociation.TrafficSelectorInitiator
-	xfrmPolicy.Dst = &childSecurityAssociation.TrafficSelectorResponder
+	if childSecurityAssociation.SelectedIPProtocol == 0 {
+		return errors.New("Protocol == 0")
+	}
+
+	xfrmPolicy.Src = &childSecurityAssociation.TrafficSelectorRemote
+	xfrmPolicy.Dst = &childSecurityAssociation.TrafficSelectorLocal
 	xfrmPolicy.Proto = netlink.Proto(childSecurityAssociation.SelectedIPProtocol)
-	xfrmPolicy.Dir = netlink.XFRM_DIR_OUT
+	xfrmPolicy.Dir = netlink.XFRM_DIR_IN
 	xfrmPolicy.Mark = mark
 	xfrmPolicy.Tmpls = []netlink.XfrmPolicyTmpl{
 		xfrmPolicyTemplate,
@@ -436,33 +459,42 @@ func applyXFRMRule(childSecurityAssociation *n3iwf_context.ChildSecurityAssociat
 
 	// Commit xfrm policy to netlink
 	if err = netlink.XfrmPolicyAdd(xfrmPolicy); err != nil {
-		return errors.New("Set XFRM policy rule failed")
+		return fmt.Errorf("Set XFRM policy rule failed: %+v", err)
 	}
 
-	// Direction: this_server -> {private_network}
+	// Direction: UE -> N3IWF
 	// State
-	xfrmEncryptionAlgorithm.Key = childSecurityAssociation.OutgoingEncryptionKey
-	xfrmIntegrityAlgorithm.Key = childSecurityAssociation.OutgoingIntegrityKey
+	if ue_is_initiator {
+		xfrmEncryptionAlgorithm.Key = childSecurityAssociation.InitiatorToResponderEncryptionKey
+		if childSecurityAssociation.IntegrityAlgorithm != 0 {
+			xfrmIntegrityAlgorithm.Key = childSecurityAssociation.InitiatorToResponderIntegrityKey
+		}
+	} else {
+		xfrmEncryptionAlgorithm.Key = childSecurityAssociation.ResponderToInitiatorEncryptionKey
+		if childSecurityAssociation.IntegrityAlgorithm != 0 {
+			xfrmIntegrityAlgorithm.Key = childSecurityAssociation.ResponderToInitiatorIntegrityKey
+		}
+	}
 
 	xfrmState.Src, xfrmState.Dst = xfrmState.Dst, xfrmState.Src
 
 	// Commit xfrm state to netlink
 	if err = netlink.XfrmStateAdd(xfrmState); err != nil {
-		return errors.New("Set XFRM state rule failed")
+		return fmt.Errorf("Set XFRM state rule failed: %+v", err)
 	}
 
 	// Policy
 	xfrmPolicyTemplate.Src, xfrmPolicyTemplate.Dst = xfrmPolicyTemplate.Dst, xfrmPolicyTemplate.Src
 
 	xfrmPolicy.Src, xfrmPolicy.Dst = xfrmPolicy.Dst, xfrmPolicy.Src
-	xfrmPolicy.Dir = netlink.XFRM_DIR_IN
+	xfrmPolicy.Dir = netlink.XFRM_DIR_OUT
 	xfrmPolicy.Tmpls = []netlink.XfrmPolicyTmpl{
 		xfrmPolicyTemplate,
 	}
 
 	// Commit xfrm policy to netlink
 	if err = netlink.XfrmPolicyAdd(xfrmPolicy); err != nil {
-		return errors.New("Set XFRM policy rule failed")
+		return fmt.Errorf("Set XFRM policy rule failed: %+v", err)
 	}
 
 	return nil
@@ -470,7 +502,7 @@ func applyXFRMRule(childSecurityAssociation *n3iwf_context.ChildSecurityAssociat
 
 func TestNon3GPPUE(t *testing.T) {
 	// New UE
-	ue := NewRanUeContext("imsi-2089300007487", 1, ALG_CIPHERING_128_NEA2, ALG_INTEGRITY_128_NIA2)
+	ue := NewRanUeContext("imsi-2089300007487", 1, ALG_CIPHERING_128_NEA0, ALG_INTEGRITY_128_NIA0)
 	ue.AmfUeNgapId = 1
 	ue.AuthenticationSubs = getAuthSubscription()
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
@@ -967,7 +999,7 @@ func TestNon3GPPUE(t *testing.T) {
 		t.Fatalf("[IKE] Create child security association context failed: %+v", err)
 		return
 	}
-	err = parseIPAddressInformationToChildSecurityAssociation(childSecurityAssociationContext, net.ParseIP("192.168.127.1"), responseTrafficSelectorInitiator, responseTrafficSelectorResponder)
+	err = parseIPAddressInformationToChildSecurityAssociation(childSecurityAssociationContext, net.ParseIP("192.168.127.1"), responseTrafficSelectorInitiator.TrafficSelectors[0], responseTrafficSelectorResponder.TrafficSelectors[0])
 	if err != nil {
 		t.Fatalf("[IKE] Parse IP address to child security association failed: %+v", err)
 		return
@@ -981,7 +1013,7 @@ func TestNon3GPPUE(t *testing.T) {
 	}
 
 	// Aplly XFRM rules
-	if err = applyXFRMRule(childSecurityAssociationContext); err != nil {
+	if err = applyXFRMRule(true, childSecurityAssociationContext); err != nil {
 		t.Fatalf("[IKE] Applying XFRM rules failed: %+v", err)
 		return
 	}
@@ -1027,8 +1059,242 @@ func TestNon3GPPUE(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = tcpConnWithN3IWF.Write([]byte("Dial"))
+	nasMsg := make([]byte, 65535)
+
+	_, err = tcpConnWithN3IWF.Read(nasMsg)
 	if err != nil {
 		t.Fatal(err)
+	}
+
+	t.Log("Receive NAS registration accept")
+
+	// send NAS Registration Complete Msg
+	pdu = nasTestpacket.GetRegistrationComplete(nil)
+	pdu, err = EncodeNasPduWithSecurity(ue, pdu)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("NAS length: %d\nNAS content: %s", len(pdu), hex.Dump(pdu))
+	_, err = tcpConnWithN3IWF.Write(pdu)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("NAS registration complete sent")
+
+	time.Sleep(500 * time.Millisecond)
+
+	// UE request PDU session setup
+	sNssai := models.Snssai{
+		Sst: 1,
+		Sd:  "010203",
+	}
+	pdu = nasTestpacket.GetUlNasTransport_PduSessionEstablishmentRequest(10, nasMessage.ULNASTransportRequestTypeInitialRequest, "internet", &sNssai)
+	pdu, err = EncodeNasPduWithSecurity(ue, pdu)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("NAS length: %d\nNAS content: %s", len(pdu), hex.Dump(pdu))
+	_, err = tcpConnWithN3IWF.Write(pdu)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("PDU session setup request sent")
+
+	// Receive N3IWF reply
+	n, _, err = udpConnection.ReadFromUDP(buffer)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ikeMessage, err = ike_message.Decode(buffer[:n])
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("IKE message exchange type: %d", ikeMessage.ExchangeType)
+	t.Logf("IKE message ID: %d", ikeMessage.MessageID)
+	encryptedPayload, ok = ikeMessage.IKEPayload[0].(*ike_message.Encrypted)
+	if !ok {
+		t.Fatal("Received pakcet is not and encrypted payload")
+	}
+	decryptedIKEPayload, err = decryptProcedure(ikeSecurityAssociation, ikeMessage, encryptedPayload)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var upIPAddr net.IP
+	for _, ikePayload := range decryptedIKEPayload {
+		switch ikePayload.Type() {
+		case ike_message.TypeSA:
+			responseSecurityAssociation = ikePayload.(*ike_message.SecurityAssociation)
+		case ike_message.TypeTSi:
+			responseTrafficSelectorInitiator = ikePayload.(*ike_message.TrafficSelectorInitiator)
+		case ike_message.TypeTSr:
+			responseTrafficSelectorResponder = ikePayload.(*ike_message.TrafficSelectorResponder)
+		case ike_message.TypeN:
+			notification := ikePayload.(*ike_message.Notification)
+			if notification.NotifyMessageType == ike_message.Vendor3GPPNotifyType5G_QOS_INFO {
+				t.Log("Received Qos Flow settings")
+			}
+			if notification.NotifyMessageType == ike_message.Vendor3GPPNotifyTypeUP_IP4_ADDRESS {
+				t.Logf("UP IP Address: %+v\n", notification.NotificationData)
+				upIPAddr = notification.NotificationData[:4]
+			}
+		case ike_message.TypeNiNr:
+			responseNonce := ikePayload.(*ike_message.Nonce)
+			ikeSecurityAssociation.ConcatenatedNonce = responseNonce.NonceData
+		}
+	}
+
+	// IKE CREATE_CHILD_SA response
+	ikeMessage = ike_message.BuildIKEHeader(ikeMessage.InitiatorSPI, ikeMessage.ResponderSPI, ike_message.CREATE_CHILD_SA, ike_message.ResponseBitCheck, ikeMessage.MessageID)
+
+	ikePayload = []ike_message.IKEPayloadType{}
+
+	// SA
+	ikePayload = append(ikePayload, responseSecurityAssociation)
+
+	// TSi
+	ikePayload = append(ikePayload, responseTrafficSelectorInitiator)
+
+	// TSr
+	ikePayload = append(ikePayload, responseTrafficSelectorResponder)
+
+	// Nonce
+	localNonce = ike_handler.GenerateRandomNumber().Bytes()
+	ikeSecurityAssociation.ConcatenatedNonce = append(ikeSecurityAssociation.ConcatenatedNonce, localNonce...)
+	nonce = ike_message.BuildNonce(localNonce)
+	ikePayload = append(ikePayload, nonce)
+
+	if err := encryptProcedure(ikeSecurityAssociation, ikePayload, ikeMessage); err != nil {
+		t.Fatal(err)
+	}
+
+	// Send to N3IWF
+	ikeMessageData, err = ike_message.Encode(ikeMessage)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = udpConnection.WriteToUDP(ikeMessageData, n3iwfUDPAddr)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	childSecurityAssociationContextUserPlane, err := createIKEChildSecurityAssociation(responseSecurityAssociation)
+	if err != nil {
+		t.Fatalf("[IKE] Create child security association context failed: %+v", err)
+		return
+	}
+	err = parseIPAddressInformationToChildSecurityAssociation(childSecurityAssociationContextUserPlane, net.ParseIP("192.168.127.1"), responseTrafficSelectorResponder.TrafficSelectors[0], responseTrafficSelectorInitiator.TrafficSelectors[0])
+	if err != nil {
+		t.Fatalf("[IKE] Parse IP address to child security association failed: %+v", err)
+		return
+	}
+	// Select GRE traffic
+	childSecurityAssociationContextUserPlane.SelectedIPProtocol = unix.IPPROTO_GRE
+
+	if err := generateKeyForChildSA(ikeSecurityAssociation, childSecurityAssociationContextUserPlane); err != nil {
+		t.Fatalf("[IKE] Generate key for child SA failed: %+v", err)
+		return
+	}
+
+	t.Logf("State function: encr: %d, auth: %d", childSecurityAssociationContextUserPlane.EncryptionAlgorithm, childSecurityAssociationContextUserPlane.IntegrityAlgorithm)
+	// Aplly XFRM rules
+	if err = applyXFRMRule(false, childSecurityAssociationContextUserPlane); err != nil {
+		t.Fatalf("[IKE] Applying XFRM rules failed: %+v", err)
+		return
+	}
+
+	// New GRE tunnel interface
+	newGRETunnel := &netlink.Gretun{
+		LinkAttrs: netlink.LinkAttrs{
+			Name: "gretun0",
+		},
+		Local:  ueAddr.IP,
+		Remote: upIPAddr,
+	}
+	if err := netlink.LinkAdd(newGRETunnel); err != nil {
+		t.Fatal(err)
+	}
+	// Get link info
+	links, err = netlink.LinkList()
+	if err != nil {
+		t.Fatal(err)
+	}
+	var linkGRE netlink.Link
+	for _, link := range links {
+		if link.Attrs() != nil {
+			if link.Attrs().Name == "gretun0" {
+				linkGRE = link
+				break
+			}
+		}
+	}
+	if linkGRE == nil {
+		t.Fatal("No link named gretun0")
+	}
+	// Link address 60.60.1.1/24
+	linkGREAddr := &netlink.Addr{
+		IPNet: &net.IPNet{
+			IP:   net.IPv4(60, 60, 0, 1),
+			Mask: net.IPv4Mask(255, 255, 255, 255),
+		},
+	}
+	if err := netlink.AddrAdd(linkGRE, linkGREAddr); err != nil {
+		t.Fatal(err)
+	}
+	// Set GRE interface up
+	if err := netlink.LinkSetUp(linkGRE); err != nil {
+		t.Fatal(err)
+	}
+	// Add route
+	upRoute := &netlink.Route{
+		LinkIndex: linkGRE.Attrs().Index,
+		Dst: &net.IPNet{
+			IP:   net.IPv4zero,
+			Mask: net.IPv4Mask(0, 0, 0, 0),
+		},
+	}
+	if err := netlink.RouteAdd(upRoute); err != nil {
+		t.Fatal(err)
+	}
+
+	defer func() {
+		_ = netlink.LinkSetDown(linkGRE)
+		_ = netlink.LinkDel(linkGRE)
+	}()
+
+	// Ping remote
+	pinger, err := ping.NewPinger("60.60.0.100")
+	if err != nil {
+		panic(err)
+	}
+
+	// Run with root
+	pinger.SetPrivileged(true)
+
+	pinger.OnRecv = func(pkt *ping.Packet) {
+		t.Logf("%d bytes from %s: icmp_seq=%d time=%v\n",
+			pkt.Nbytes, pkt.IPAddr, pkt.Seq, pkt.Rtt)
+	}
+	pinger.OnFinish = func(stats *ping.Statistics) {
+		t.Logf("\n--- %s ping statistics ---\n", stats.Addr)
+		t.Logf("%d packets transmitted, %d packets received, %v%% packet loss\n",
+			stats.PacketsSent, stats.PacketsRecv, stats.PacketLoss)
+		t.Logf("round-trip min/avg/max/stddev = %v/%v/%v/%v\n",
+			stats.MinRtt, stats.AvgRtt, stats.MaxRtt, stats.StdDevRtt)
+	}
+
+	pinger.Count = 5
+	pinger.Timeout = 10 * time.Second
+	pinger.Source = "60.60.0.1"
+
+	time.Sleep(3 * time.Second)
+
+	pinger.Run()
+
+	time.Sleep(1 * time.Second)
+
+	stats := pinger.Statistics()
+	if stats.PacketsSent != stats.PacketsRecv {
+		t.Fatal("Ping Failed")
 	}
 }
