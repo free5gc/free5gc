@@ -103,6 +103,8 @@ for i in $(seq -f "%02g" 1 $UPF_NUM); do
     fi
     cd src/upf/build && sudo ip netns exec "${UPFNS}${i}" ./bin/free5gc-upfd -f config/upfcfg.ulcl.yaml &
     sleep 1
+
+    sudo ip netns exec "${UPFNS}${i}" ip l set dev upfgtp0 mtu 1500
 done
 
 cd src/test
