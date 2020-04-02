@@ -2,7 +2,6 @@ package test
 
 import (
 	"encoding/binary"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"gofree5gc/lib/CommonConsumerTestData/UDM/TestGenAuthData"
@@ -83,7 +82,7 @@ func setupUDPSocket(t *testing.T) *net.UDPConn {
 	}
 	udpListener, err := net.ListenUDP("udp", udpAddr)
 	if err != nil {
-		t.Fatal("Listen UDP socket failed")
+		t.Fatalf("Listen UDP socket failed: %+v", err)
 	}
 	return udpListener
 }
@@ -606,9 +605,6 @@ func TestNon3GPPUE(t *testing.T) {
 		DiffieHellmanSharedKey: sharedKeyExchangeData,
 	}
 
-	t.Logf("Concatenated Nonce:\n%s\n", hex.Dump(ikeSecurityAssociation.ConcatenatedNonce))
-	t.Logf("Diffie-Hellman Value:\n%s\n", hex.Dump(ikeSecurityAssociation.DiffieHellmanSharedKey))
-
 	if err := generateKeyForIKESA(ikeSecurityAssociation); err != nil {
 		t.Fatalf("Generate key for IKE SA failed: %+v", err)
 	}
@@ -670,7 +666,7 @@ func TestNon3GPPUE(t *testing.T) {
 
 	decryptedIKEPayload, err := decryptProcedure(ikeSecurityAssociation, ikeMessage, encryptedPayload)
 	if err != nil {
-		t.Fatalf("[IKE] Decrypt IKE message failed: %+v", err)
+		t.Fatalf("Decrypt IKE message failed: %+v", err)
 	}
 
 	var eapIdentifier uint8
@@ -745,7 +741,7 @@ func TestNon3GPPUE(t *testing.T) {
 	}
 	decryptedIKEPayload, err = decryptProcedure(ikeSecurityAssociation, ikeMessage, encryptedPayload)
 	if err != nil {
-		t.Fatalf("[IKE] Decrypt IKE message failed: %+v", err)
+		t.Fatalf("Decrypt IKE message failed: %+v", err)
 	}
 
 	var eapReq *ike_message.EAP
@@ -996,25 +992,25 @@ func TestNon3GPPUE(t *testing.T) {
 
 	childSecurityAssociationContext, err := createIKEChildSecurityAssociation(ikeSecurityAssociation.IKEAuthResponseSA)
 	if err != nil {
-		t.Fatalf("[IKE] Create child security association context failed: %+v", err)
+		t.Fatalf("Create child security association context failed: %+v", err)
 		return
 	}
 	err = parseIPAddressInformationToChildSecurityAssociation(childSecurityAssociationContext, net.ParseIP("192.168.127.1"), responseTrafficSelectorInitiator.TrafficSelectors[0], responseTrafficSelectorResponder.TrafficSelectors[0])
 	if err != nil {
-		t.Fatalf("[IKE] Parse IP address to child security association failed: %+v", err)
+		t.Fatalf("Parse IP address to child security association failed: %+v", err)
 		return
 	}
 	// Select TCP traffic
 	childSecurityAssociationContext.SelectedIPProtocol = unix.IPPROTO_TCP
 
 	if err := generateKeyForChildSA(ikeSecurityAssociation, childSecurityAssociationContext); err != nil {
-		t.Fatalf("[IKE] Generate key for child SA failed: %+v", err)
+		t.Fatalf("Generate key for child SA failed: %+v", err)
 		return
 	}
 
 	// Aplly XFRM rules
 	if err = applyXFRMRule(true, childSecurityAssociationContext); err != nil {
-		t.Fatalf("[IKE] Applying XFRM rules failed: %+v", err)
+		t.Fatalf("Applying XFRM rules failed: %+v", err)
 		return
 	}
 
@@ -1066,20 +1062,16 @@ func TestNon3GPPUE(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	t.Log("Receive NAS registration accept")
-
 	// send NAS Registration Complete Msg
 	pdu = nasTestpacket.GetRegistrationComplete(nil)
 	pdu, err = EncodeNasPduWithSecurity(ue, pdu)
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Logf("NAS length: %d\nNAS content: %s", len(pdu), hex.Dump(pdu))
 	_, err = tcpConnWithN3IWF.Write(pdu)
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Log("NAS registration complete sent")
 
 	time.Sleep(500 * time.Millisecond)
 
@@ -1093,12 +1085,10 @@ func TestNon3GPPUE(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Logf("NAS length: %d\nNAS content: %s", len(pdu), hex.Dump(pdu))
 	_, err = tcpConnWithN3IWF.Write(pdu)
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Log("PDU session setup request sent")
 
 	// Receive N3IWF reply
 	n, _, err = udpConnection.ReadFromUDP(buffer)
@@ -1180,26 +1170,26 @@ func TestNon3GPPUE(t *testing.T) {
 
 	childSecurityAssociationContextUserPlane, err := createIKEChildSecurityAssociation(responseSecurityAssociation)
 	if err != nil {
-		t.Fatalf("[IKE] Create child security association context failed: %+v", err)
+		t.Fatalf("Create child security association context failed: %+v", err)
 		return
 	}
 	err = parseIPAddressInformationToChildSecurityAssociation(childSecurityAssociationContextUserPlane, net.ParseIP("192.168.127.1"), responseTrafficSelectorResponder.TrafficSelectors[0], responseTrafficSelectorInitiator.TrafficSelectors[0])
 	if err != nil {
-		t.Fatalf("[IKE] Parse IP address to child security association failed: %+v", err)
+		t.Fatalf("Parse IP address to child security association failed: %+v", err)
 		return
 	}
 	// Select GRE traffic
 	childSecurityAssociationContextUserPlane.SelectedIPProtocol = unix.IPPROTO_GRE
 
 	if err := generateKeyForChildSA(ikeSecurityAssociation, childSecurityAssociationContextUserPlane); err != nil {
-		t.Fatalf("[IKE] Generate key for child SA failed: %+v", err)
+		t.Fatalf("Generate key for child SA failed: %+v", err)
 		return
 	}
 
 	t.Logf("State function: encr: %d, auth: %d", childSecurityAssociationContextUserPlane.EncryptionAlgorithm, childSecurityAssociationContextUserPlane.IntegrityAlgorithm)
 	// Aplly XFRM rules
 	if err = applyXFRMRule(false, childSecurityAssociationContextUserPlane); err != nil {
-		t.Fatalf("[IKE] Applying XFRM rules failed: %+v", err)
+		t.Fatalf("Applying XFRM rules failed: %+v", err)
 		return
 	}
 
@@ -1231,7 +1221,7 @@ func TestNon3GPPUE(t *testing.T) {
 	if linkGRE == nil {
 		t.Fatal("No link named gretun0")
 	}
-	// Link address 60.60.1.1/24
+	// Link address 60.60.0.1/24
 	linkGREAddr := &netlink.Addr{
 		IPNet: &net.IPNet{
 			IP:   net.IPv4(60, 60, 0, 1),
@@ -1263,9 +1253,9 @@ func TestNon3GPPUE(t *testing.T) {
 	}()
 
 	// Ping remote
-	pinger, err := ping.NewPinger("60.60.0.100")
+	pinger, err := ping.NewPinger("60.60.0.101")
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	// Run with root
