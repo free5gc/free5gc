@@ -58,6 +58,8 @@ elif [ $OS == "Fedora" ]; then
     GOROOT=/usr/lib/golang
 fi
 PATH=$PATH:$GOPATH/bin:$GOROOT/bin
+cp config/smfcfg.ulcl.conf config/smfcfg.test.conf
+
 
 UPFNS="UPFns"
 
