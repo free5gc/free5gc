@@ -133,4 +133,5 @@ for i in $(seq -f "%02g" 1 $UPF_NUM); do
     fi
 
     sudo ip netns del "${UPFNS}${i}"
+    sudo ip link del "br-veth${i}"
 done
