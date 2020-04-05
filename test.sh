@@ -106,7 +106,7 @@ then
     cp -f config/amfcfg.n3test.conf config/amfcfg.conf
 
     # Run CN
-    cd src/test && $GOROOT/bin/go test -v -timeout 0 -run TestCN &
+    cd src/test && $GOROOT/bin/go test -v -vet=off -timeout 0 -run TestCN &
     sleep 10
 
     # Run N3IWF
@@ -115,7 +115,7 @@ then
 
     # Run Test UE
     cd src/test
-    ${EXEC_UENS} $GOROOT/bin/go test -v -timeout 0 -run TestNon3GPPUE -args noinit
+    ${EXEC_UENS} $GOROOT/bin/go test -v -vet=off -timeout 0 -run TestNon3GPPUE -args noinit
 
 else
     cd src/test
