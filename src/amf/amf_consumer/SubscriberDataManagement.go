@@ -128,3 +128,46 @@ func SDMSubscribe(ue *amf_context.AmfUe) (problemDetails *models.ProblemDetails,
 	}
 	return
 }
+
+func SDMGetSliceSelectionSubscriptionData(ue *amf_context.AmfUe) (problemDetails *models.ProblemDetails, err error) {
+	configuration := Nudm_SubscriberDataManagement.NewConfiguration()
+	configuration.SetBasePath(ue.NudmSDMUri)
+	client := Nudm_SubscriberDataManagement.NewAPIClient(configuration)
+
+	paramOpt := Nudm_SubscriberDataManagement.GetNssaiParamOpts{
+		PlmnId: optional.NewInterface(ue.PlmnId.Mcc + ue.PlmnId.Mnc),
+	}
+	nssai, httpResp, localErr := client.SliceSelectionSubscriptionDataRetrievalApi.GetNssai(context.Background(), ue.Supi, &paramOpt)
+	if localErr == nil {
+		for _, defaultSnssai := range nssai.DefaultSingleNssais {
+			subscribedSnssai := models.SubscribedSnssai{
+				SubscribedSnssai: &models.Snssai{
+					Sst: defaultSnssai.Sst,
+					Sd:  defaultSnssai.Sd,
+				},
+				DefaultIndication: true,
+			}
+			ue.SubscribedNssai = append(ue.SubscribedNssai, subscribedSnssai)
+		}
+		for _, snssai := range nssai.SingleNssais {
+			subscribedSnssai := models.SubscribedSnssai{
+				SubscribedSnssai: &models.Snssai{
+					Sst: snssai.Sst,
+					Sd:  snssai.Sd,
+				},
+				DefaultIndication: false,
+			}
+			ue.SubscribedNssai = append(ue.SubscribedNssai, subscribedSnssai)
+		}
+	} else if httpResp != nil {
+		if httpResp.Status != localErr.Error() {
+			err = localErr
+			return
+		}
+		problem := localErr.(common.GenericOpenAPIError).Model().(models.ProblemDetails)
+		problemDetails = &problem
+	} else {
+		err = common.ReportError("server no response")
+	}
+	return
+}

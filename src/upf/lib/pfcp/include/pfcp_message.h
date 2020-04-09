@@ -1016,6 +1016,8 @@ Status PfcpParseMessage(PfcpMessage *pfcpMessage, Bufblk *buf);
 
 Status PfcpBuildMessage(Bufblk **bufBlkPtr, PfcpMessage *pfcpMessage);
 
+  Status PfcpStructFree(PfcpMessage *pfcpMessage);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

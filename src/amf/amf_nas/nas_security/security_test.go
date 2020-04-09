@@ -59,7 +59,7 @@ func TestSecurity(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-	ngap_message.SendDownlinkNasTransport(ue.RanUe[models.AccessType__3_GPP_ACCESS], nasPdu)
+	ngap_message.SendDownlinkNasTransport(ue.RanUe[models.AccessType__3_GPP_ACCESS], nasPdu, nil)
 	msg, err := ranDecode(ue, nas.SecurityHeaderTypeIntegrityProtectedAndCiphered, nasPdu)
 	if err != nil {
 		t.Error(err.Error())

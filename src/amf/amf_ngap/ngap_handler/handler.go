@@ -1704,37 +1704,12 @@ func HandleInitialContextSetupResponse(ran *amf_context.AmfRan, message *ngapTyp
 		}
 	}
 
+	if ranUe.Ran.AnType == models.AccessType_NON_3_GPP_ACCESS {
+		ngap_message.SendDownlinkNasTransport(ranUe, amfUe.RegistrationAcceptForNon3GPPAccess, nil)
+	}
+
 	if criticalityDiagnostics != nil {
-		Ngaplog.Trace("Criticality Diagnostics")
-		if criticalityDiagnostics.ProcedureCriticality != nil {
-			switch criticalityDiagnostics.ProcedureCriticality.Value {
-			case ngapType.CriticalityPresentReject:
-				Ngaplog.Trace("Procedure Criticality: Reject")
-			case ngapType.CriticalityPresentIgnore:
-				Ngaplog.Trace("Procedure Criticality: Ignore")
-			case ngapType.CriticalityPresentNotify:
-				Ngaplog.Trace("Procedure Criticality: Notify")
-			}
-		}
-		if criticalityDiagnostics.IEsCriticalityDiagnostics != nil {
-			for _, ieCriticalityDiagnostics := range criticalityDiagnostics.IEsCriticalityDiagnostics.List {
-				Ngaplog.Tracef("IE ID: %d", ieCriticalityDiagnostics.IEID.Value)
-
-				switch ieCriticalityDiagnostics.IECriticality.Value {
-				case ngapType.CriticalityPresentReject:
-					Ngaplog.Trace("Criticality Reject")
-				case ngapType.CriticalityPresentNotify:
-					Ngaplog.Trace("Criticality Notify")
-				}
-
-				switch ieCriticalityDiagnostics.TypeOfError.Value {
-				case ngapType.TypeOfErrorPresentNotUnderstood:
-					Ngaplog.Trace("Type of error: Not understood")
-				case ngapType.TypeOfErrorPresentMissing:
-					Ngaplog.Trace("Type of error: Missing")
-				}
-			}
-		}
+		printCriticalityDiagnostics(criticalityDiagnostics)
 	}
 }
 
@@ -4085,6 +4060,18 @@ func printAndGetCause(cause *ngapType.Cause) (present int, value aper.Enumerated
 }
 
 func printCriticalityDiagnostics(criticalityDiagnostics *ngapType.CriticalityDiagnostics) {
+	Ngaplog.Trace("Criticality Diagnostics")
+
+	if criticalityDiagnostics.ProcedureCriticality != nil {
+		switch criticalityDiagnostics.ProcedureCriticality.Value {
+		case ngapType.CriticalityPresentReject:
+			Ngaplog.Trace("Procedure Criticality: Reject")
+		case ngapType.CriticalityPresentIgnore:
+			Ngaplog.Trace("Procedure Criticality: Ignore")
+		case ngapType.CriticalityPresentNotify:
+			Ngaplog.Trace("Procedure Criticality: Notify")
+		}
+	}
 
 	if criticalityDiagnostics.IEsCriticalityDiagnostics != nil {
 		for _, ieCriticalityDiagnostics := range criticalityDiagnostics.IEsCriticalityDiagnostics.List {

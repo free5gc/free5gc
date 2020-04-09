@@ -4,7 +4,9 @@ import (
 	"flag"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
+	"go.mongodb.org/mongo-driver/bson"
 	"free5gc/lib/CommonConsumerTestData/AMF/TestAmf"
+	"free5gc/lib/MongoDBLibrary"
 	"free5gc/lib/openapi/models"
 	"free5gc/src/amf/amf_consumer"
 	"free5gc/src/amf/logger"
@@ -12,6 +14,10 @@ import (
 	"testing"
 	"time"
 )
+
+const amPolicyDataColl = "policyData.ues.amData"
+
+var filterUeIdOnly bson.M
 
 func pcfInit() {
 	flags := flag.FlagSet{}
@@ -22,12 +28,28 @@ func pcfInit() {
 	time.Sleep(100 * time.Millisecond)
 }
 
+func insertDefaultAmPolicyToDb(ueId string) {
+	amPolicyData := models.AmPolicyData{
+		SubscCats: []string{
+			"free5gc",
+		},
+	}
+	filterUeIdOnly = bson.M{"ueId": ueId}
+	amPolicyDataBsonM := toBsonM(amPolicyData)
+	amPolicyDataBsonM["ueId"] = ueId
+	MongoDBLibrary.RestfulAPIPutOne(amPolicyDataColl, filterUeIdOnly, amPolicyDataBsonM)
+}
+
 func TestAmPolicyControlCreate(t *testing.T) {
 
 	logger.SetLogLevel(logrus.DebugLevel)
 
+	defer MongoDBLibrary.RestfulAPIDeleteMany(amPolicyDataColl, filterUeIdOnly)
+
 	nrfInit()
 	pcfInit()
+	udrinit()
+	insertDefaultAmPolicyToDb("imsi-2089300007487")
 
 	TestAmf.AmfInit()
 	TestAmf.UeAttach(models.AccessType__3_GPP_ACCESS)
@@ -37,11 +59,11 @@ func TestAmPolicyControlCreate(t *testing.T) {
 	ue.AccessAndMobilitySubscriptionData = &models.AccessAndMobilitySubscriptionData{
 		RfspIndex: 1,
 	}
-	problemDetails, err := amf_consumer.AMPolicyControlCreate(ue)
+	problemDetails, err := amf_consumer.AMPolicyControlCreate(ue, models.AccessType__3_GPP_ACCESS)
 	if err != nil {
 		t.Error(err)
 	} else if problemDetails != nil {
-		t.Logf("problemDetail: %+v", problemDetails)
+		t.Errorf("problemDetail: %+v", problemDetails)
 	} else {
 		t.Logf("Policy Association ID: %+v", ue.PolicyAssociationId)
 		t.Logf("AM Policy Association: %+v", ue.AmPolicyAssociation)
@@ -50,8 +72,12 @@ func TestAmPolicyControlCreate(t *testing.T) {
 
 func TestAmPolicyControlUpdate(t *testing.T) {
 
+	defer MongoDBLibrary.RestfulAPIDeleteMany(amPolicyDataColl, filterUeIdOnly)
+
 	nrfInit()
 	pcfInit()
+	udrinit()
+	insertDefaultAmPolicyToDb("imsi-2089300007487")
 
 	TestAmf.AmfInit()
 	TestAmf.UeAttach(models.AccessType__3_GPP_ACCESS)
@@ -63,11 +89,11 @@ func TestAmPolicyControlUpdate(t *testing.T) {
 	}
 
 	// Create an AM Policy Association
-	problemDetails, err := amf_consumer.AMPolicyControlCreate(ue)
+	problemDetails, err := amf_consumer.AMPolicyControlCreate(ue, models.AccessType__3_GPP_ACCESS)
 	if err != nil {
 		t.Error(err)
 	} else if problemDetails != nil {
-		t.Logf("problemDetail: %+v", problemDetails)
+		t.Errorf("problemDetail: %+v", problemDetails)
 	} else {
 		t.Logf("Policy Association ID: %+v", ue.PolicyAssociationId)
 		t.Logf("AM Policy Association: %+v", ue.AmPolicyAssociation)
@@ -85,7 +111,7 @@ func TestAmPolicyControlUpdate(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	} else if problemDetails != nil {
-		t.Logf("problemDetail: %+v", problemDetails)
+		t.Errorf("problemDetail: %+v", problemDetails)
 	} else {
 		t.Logf("AM Policy Association: %+v", ue.AmPolicyAssociation)
 	}
@@ -93,8 +119,12 @@ func TestAmPolicyControlUpdate(t *testing.T) {
 
 func TestAmPolicyControlDelete(t *testing.T) {
 
+	defer MongoDBLibrary.RestfulAPIDeleteMany(amPolicyDataColl, filterUeIdOnly)
+
 	nrfInit()
 	pcfInit()
+	udrinit()
+	insertDefaultAmPolicyToDb("imsi-2089300007487")
 
 	TestAmf.AmfInit()
 	TestAmf.UeAttach(models.AccessType__3_GPP_ACCESS)
@@ -106,7 +136,7 @@ func TestAmPolicyControlDelete(t *testing.T) {
 	}
 
 	// Create an AM Policy Association
-	problemDetails, err := amf_consumer.AMPolicyControlCreate(ue)
+	problemDetails, err := amf_consumer.AMPolicyControlCreate(ue, models.AccessType__3_GPP_ACCESS)
 	if err != nil {
 		t.Error(err)
 	} else if problemDetails != nil {
@@ -121,7 +151,7 @@ func TestAmPolicyControlDelete(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	} else if problemDetails != nil {
-		t.Logf("problemDetail: %+v", problemDetails)
+		t.Errorf("problemDetail: %+v", problemDetails)
 	} else {
 		t.Logf("AM Policy Control delete success")
 	}

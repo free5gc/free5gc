@@ -12,6 +12,7 @@ package SubscriberDataManagement_test
 import (
 	"context"
 	"fmt"
+	"github.com/antihax/optional"
 	Nudm_SDM_Client "free5gc/lib/Nudm_SubscriberDataManagement"
 	"free5gc/lib/http2_util"
 	"free5gc/lib/openapi/models"
@@ -20,7 +21,6 @@ import (
 	"free5gc/src/udm/logger"
 	"free5gc/src/udm/udm_context"
 	"free5gc/src/udm/udm_handler"
-	"free5gc/src/udm/udm_util"
 	"net/http"
 	"testing"
 
@@ -32,6 +32,7 @@ import (
 func TestGetTraceData(t *testing.T) {
 
 	go func() { // udm server
+		udm_context.TestInit()
 		router := gin.Default()
 		Nudm_SDM_Server.AddService(router)
 
@@ -46,21 +47,26 @@ func TestGetTraceData(t *testing.T) {
 		}
 	}()
 
-	udm_util.testInitUdmConfig()
+	udm_context.TestInit()
 	go udm_handler.Handle()
 
 	go func() { // fake udr server
 		router := gin.Default()
 
-		router.GET("/nudr-dr/v1/subscription-data/:ueId/:servingPlmnId/provisioned-data/trace-data", func(c *gin.Context) {
+		router.GET("/nudr-dr/v1/subscription-data/:ueId/provisioned-data/trace-data", func(c *gin.Context) { // :servingPlmnID
 			supi := c.Param("supi")
+			PlmnID := c.Param("plmn-id")
 			fmt.Println("==========GetTraceData - retrieve a UE's Trace Configuration Data==========")
 			fmt.Println("supi: ", supi)
+			fmt.Println("PlmnID: ", PlmnID)
 
 			var traceData models.TraceData
+			var traceDataResponse models.TraceDataResponse
 			traceData.TraceRef = "Test_00"
-			fmt.Println("traceData - ", traceData.TraceRef)
-			c.JSON(http.StatusNoContent, gin.H{})
+			traceDataResponse.SharedTraceDataId = "SharedTraceDataId"
+			traceDataResponse.TraceData = &traceData
+			fmt.Println("traceDataResponse - ", traceDataResponse.SharedTraceDataId)
+			c.JSON(http.StatusOK, traceData)
 		})
 
 		udrLogPath := path_util.Gofree5gcPath("free5gc/udrsslkey.log")
@@ -80,7 +86,9 @@ func TestGetTraceData(t *testing.T) {
 	clientAPI := Nudm_SDM_Client.NewAPIClient(cfg)
 
 	supi := "SDM1234"
-	_, resp, err := clientAPI.TraceConfigurationDataRetrievalApi.GetTraceData(context.TODO(), supi, nil)
+	var getTraceDataParamOpts Nudm_SDM_Client.GetTraceDataParamOpts
+	getTraceDataParamOpts.SupportedFeatures = optional.NewString("supportedFeatures")
+	_, resp, err := clientAPI.TraceConfigurationDataRetrievalApi.GetTraceData(context.TODO(), supi, &getTraceDataParamOpts)
 	if err != nil {
 		fmt.Println(err.Error())
 	} else {

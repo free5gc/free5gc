@@ -1,0 +1,45 @@
+Source: libgtp5gnl
+Maintainer: Yao-Wen Chang <yaowenowo@gmail.com>
+Section: libs
+Priority: optional
+Build-Depends: debhelper (>= 9),
+               autotools-dev,
+               autoconf,
+               automake,
+               libtool,
+               dh-autoreconf,
+               git,
+               pkg-config,
+               libmnl-dev
+Standards-Version: 3.9.8
+Vcs-Git: git://git.osmocom.org/libgtpnl.git
+Vcs-Browser: http://git.osmocom.org/gitweb?p=libgtpnl.git;a=summary
+Homepage: https://projects.osmocom.org/projects/openggsn
+
+Package: libgtp5gnl0
+Section: libs
+Architecture: any
+Multi-Arch: same
+Depends: ${shlibs:Depends},
+         ${misc:Depends}
+Description: Linux kernel 5G GTP-U netlink library
+
+Package: libgtp5gnl-dev
+Architecture: any
+Multi-Arch: same
+Section: libdevel
+Depends: libmnl-dev,
+         libgtp5gnl0 (= ${binary:Version}),
+         ${misc:Depends}
+Description: Development headers for Linux kernel 5G GTP-U 
+ netlink library. The header files provided by this package may be used
+ to develop applications against the libgtp5gnl library.
+
+Package: libgtp5gnl-dbg
+Architecture: any
+Multi-Arch: same
+Section: debug
+Priority: extra
+Depends: libgtp5gnl0 (= ${binary:Version}),
+         ${misc:Depends}
+Description: Debug symbols for Linux kernel 5G GTP-U netlink library

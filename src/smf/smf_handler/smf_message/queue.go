@@ -1,11 +1,17 @@
 package smf_message
 
 import (
-	"free5gc/lib/openapi/models"
+	"free5gc/lib/http_wrapper"
 )
+
+var RspQueue *ResponseQueue
 
 type ResponseQueue struct {
 	RspQueue map[uint32]*ResponseQueueItem
+}
+
+func init() {
+	RspQueue = NewQueue()
 }
 
 func NewQueue() *ResponseQueue {
@@ -14,11 +20,11 @@ func NewQueue() *ResponseQueue {
 	return &rq
 }
 
-func (rq ResponseQueue) PutItem(seqNum uint32, rspChan chan HandlerResponseMessage, responseBody models.UpdateSmContextResponse) {
+func (rq ResponseQueue) PutItem(seqNum uint32, rspChan chan HandlerResponseMessage, response http_wrapper.Response) {
 
 	Item := new(ResponseQueueItem)
 	Item.RspChan = rspChan
-	Item.ResponseBody = responseBody
+	Item.Response = response
 	rq.RspQueue[seqNum] = Item
 }
 

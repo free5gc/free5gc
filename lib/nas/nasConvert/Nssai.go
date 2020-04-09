@@ -5,6 +5,7 @@ package nasConvert
 import (
 	"encoding/hex"
 	"fmt"
+	"free5gc/lib/nas/nasMessage"
 	"free5gc/lib/nas/nasType"
 	"free5gc/lib/openapi/models"
 )
@@ -13,4 +14,4 @@ func RequestedNssaiToModels(nasNssai *nasType.RequestedNSSAI) (nssai []models.Sn
 
 func requestedSnssaiToModels(buf []byte) (snssai models.Snssai, length int) {}
 
-func RejectedNssaiToNas(rejectedNssai []models.Snssai, rejectCause []uint8) (rejectedNssaiNas nasType.RejectedNSSAI) {}
+func RejectedNssaiToNas(rejectedNssaiInPlmn []models.Snssai, rejectedNssaiInTa []models.Snssai) (rejectedNssaiNas nasType.RejectedNSSAI) {}

@@ -10,18 +10,29 @@ package main
 
 import (
 	"fmt"
-	"github.com/urfave/cli"
 	"free5gc/src/app"
 	"free5gc/src/ausf/ausf_service"
+	"free5gc/src/ausf/logger"
+	"free5gc/src/ausf/version"
 	"os"
+
+	"github.com/sirupsen/logrus"
+	"github.com/urfave/cli"
 )
 
 var AUSF = &ausf_service.AUSF{}
+
+var appLog *logrus.Entry
+
+func init() {
+	appLog = logger.AppLog
+}
 
 func main() {
 	app := cli.NewApp()
 	app.Name = "ausf"
 	fmt.Print(app.Name, "\n")
+	appLog.Infoln("AUSF version: ", version.GetVersion())
 	app.Usage = "-free5gccfg common configuration file -ausfcfg ausf configuration file"
 	app.Action = action
 	app.Flags = AUSF.GetCliCmd()

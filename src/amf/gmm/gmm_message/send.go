@@ -25,7 +25,7 @@ func SendDLNASTransport(ue *amf_context.RanUe, payloadContainerType uint8, nasPd
 		logger.GmmLog.Error(err.Error())
 		return
 	}
-	ngap_message.SendDownlinkNasTransport(ue, nasMsg)
+	ngap_message.SendDownlinkNasTransport(ue, nasMsg, nil)
 }
 
 func SendNotification(ue *amf_context.RanUe, nasMsg []byte) {
@@ -39,7 +39,7 @@ func SendNotification(ue *amf_context.RanUe, nasMsg []byte) {
 	}
 	amf_util.StartT3565(ue)
 	amfUe.LastNotificationPkg = nasMsg
-	ngap_message.SendDownlinkNasTransport(ue, nasMsg)
+	ngap_message.SendDownlinkNasTransport(ue, nasMsg, nil)
 }
 
 func SendIdentityRequest(ue *amf_context.RanUe, typeOfIdentity uint8) {
@@ -51,7 +51,7 @@ func SendIdentityRequest(ue *amf_context.RanUe, typeOfIdentity uint8) {
 		logger.GmmLog.Error(err.Error())
 		return
 	}
-	ngap_message.SendDownlinkNasTransport(ue, nasMsg)
+	ngap_message.SendDownlinkNasTransport(ue, nasMsg, nil)
 }
 
 func SendAuthenticationRequest(ue *amf_context.RanUe) {
@@ -74,7 +74,7 @@ func SendAuthenticationRequest(ue *amf_context.RanUe) {
 		logger.GmmLog.Error(err.Error())
 		return
 	}
-	ngap_message.SendDownlinkNasTransport(ue, nasMsg)
+	ngap_message.SendDownlinkNasTransport(ue, nasMsg, nil)
 
 	amf_util.StartT3560(ue, amf_message.EventGMMT3560ForAuthenticationRequest, nil, nil)
 }
@@ -88,7 +88,7 @@ func SendServiceAccept(ue *amf_context.RanUe, pDUSessionStatus *[16]bool, reacti
 		logger.GmmLog.Error(err.Error())
 		return
 	}
-	ngap_message.SendDownlinkNasTransport(ue, nasMsg)
+	ngap_message.SendDownlinkNasTransport(ue, nasMsg, nil)
 }
 
 func SendConfigurationUpdateCommand(amfUe *amf_context.AmfUe, accessType models.AccessType, networkSlicingIndication *nasType.NetworkSlicingIndication) {
@@ -100,7 +100,8 @@ func SendConfigurationUpdateCommand(amfUe *amf_context.AmfUe, accessType models.
 		logger.GmmLog.Error(err.Error())
 		return
 	}
-	ngap_message.SendDownlinkNasTransport(amfUe.RanUe[accessType], nasMsg)
+	mobilityRestrictionList := ngap_message.BuildIEMobilityRestrictionList(amfUe)
+	ngap_message.SendDownlinkNasTransport(amfUe.RanUe[accessType], nasMsg, &mobilityRestrictionList)
 }
 
 func SendAuthenticationReject(ue *amf_context.RanUe, eapMsg string) {
@@ -112,7 +113,7 @@ func SendAuthenticationReject(ue *amf_context.RanUe, eapMsg string) {
 		logger.GmmLog.Error(err.Error())
 		return
 	}
-	ngap_message.SendDownlinkNasTransport(ue, nasMsg)
+	ngap_message.SendDownlinkNasTransport(ue, nasMsg, nil)
 }
 
 func SendAuthenticationResult(ue *amf_context.RanUe, eapSuccess bool, eapMsg string) {
@@ -129,7 +130,7 @@ func SendAuthenticationResult(ue *amf_context.RanUe, eapSuccess bool, eapMsg str
 		logger.GmmLog.Error(err.Error())
 		return
 	}
-	ngap_message.SendDownlinkNasTransport(ue, nasMsg)
+	ngap_message.SendDownlinkNasTransport(ue, nasMsg, nil)
 }
 func SendServiceReject(ue *amf_context.RanUe, pDUSessionStatus *[16]bool, cause uint8) {
 
@@ -140,7 +141,7 @@ func SendServiceReject(ue *amf_context.RanUe, pDUSessionStatus *[16]bool, cause 
 		logger.GmmLog.Error(err.Error())
 		return
 	}
-	ngap_message.SendDownlinkNasTransport(ue, nasMsg)
+	ngap_message.SendDownlinkNasTransport(ue, nasMsg, nil)
 }
 
 // T3502: This IE may be included to indicate a value for timer T3502 during the initial registration
@@ -154,7 +155,7 @@ func SendRegistrationReject(ue *amf_context.RanUe, cause5GMM uint8, eapMessage s
 		logger.GmmLog.Error(err.Error())
 		return
 	}
-	ngap_message.SendDownlinkNasTransport(ue, nasMsg)
+	ngap_message.SendDownlinkNasTransport(ue, nasMsg, nil)
 }
 
 // eapSuccess: only used when authType is EAP-AKA', set the value to false if authType is not EAP-AKA'
@@ -168,7 +169,7 @@ func SendSecurityModeCommand(ue *amf_context.RanUe, eapSuccess bool, eapMessage 
 		logger.GmmLog.Error(err.Error())
 		return
 	}
-	ngap_message.SendDownlinkNasTransport(ue, nasMsg)
+	ngap_message.SendDownlinkNasTransport(ue, nasMsg, nil)
 
 	amf_util.StartT3560(ue, amf_message.EventGMMT3560ForSecurityModeCommand, &eapSuccess, &eapMessage)
 }
@@ -182,7 +183,7 @@ func SendDeregistrationRequest(ue *amf_context.RanUe, accessType uint8, reRegist
 		logger.GmmLog.Error(err.Error())
 		return
 	}
-	ngap_message.SendDownlinkNasTransport(ue, nasMsg)
+	ngap_message.SendDownlinkNasTransport(ue, nasMsg, nil)
 
 	amf_util.StartT3522(ue, &accessType, &reRegistrationRequired, &cause5GMM)
 }
@@ -196,7 +197,7 @@ func SendDeregistrationAccept(ue *amf_context.RanUe) {
 		logger.GmmLog.Error(err.Error())
 		return
 	}
-	ngap_message.SendDownlinkNasTransport(ue, nasMsg)
+	ngap_message.SendDownlinkNasTransport(ue, nasMsg, nil)
 }
 
 func SendRegistrationAccept(
@@ -227,5 +228,5 @@ func SendStatus5GMM(ue *amf_context.RanUe, cause uint8) {
 		logger.GmmLog.Error(err.Error())
 		return
 	}
-	ngap_message.SendDownlinkNasTransport(ue, nasMsg)
+	ngap_message.SendDownlinkNasTransport(ue, nasMsg, nil)
 }

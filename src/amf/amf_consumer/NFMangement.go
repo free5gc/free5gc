@@ -4,9 +4,11 @@ import (
 	"context"
 	"fmt"
 	"free5gc/lib/Nnrf_NFManagement"
+	"free5gc/lib/openapi/common"
 	"free5gc/lib/openapi/models"
 	"free5gc/src/amf/amf_context"
 	"free5gc/src/amf/amf_util"
+	"free5gc/src/amf/logger"
 	"net/http"
 	"strings"
 	"time"
@@ -71,7 +73,7 @@ func SendRegisterNFInstance(nrfUri, nfInstanceId string, profile models.NfProfil
 		_, res, err = client.NFInstanceIDDocumentApi.RegisterNFInstance(context.TODO(), nfInstanceId, profile)
 		if err != nil || res == nil {
 			//TODO : add log
-			fmt.Println(fmt.Errorf("AFM register to NRF Error[%s]", err.Error()))
+			fmt.Println(fmt.Errorf("AMF register to NRF Error[%s]", err.Error()))
 			time.Sleep(2 * time.Second)
 			continue
 		}
@@ -89,6 +91,33 @@ func SendRegisterNFInstance(nrfUri, nfInstanceId string, profile models.NfProfil
 			fmt.Println(fmt.Errorf("handler returned wrong status code %d", status))
 			fmt.Println(fmt.Errorf("NRF return wrong status code %d", status))
 		}
+	}
+	return
+}
+
+func SendDeregisterNFInstance() (problemDetails *models.ProblemDetails, err error) {
+
+	logger.ConsumerLog.Infof("[AMF] Send Deregister NFInstance")
+
+	amfSelf := amf_context.AMF_Self()
+	// Set client and set url
+	configuration := Nnrf_NFManagement.NewConfiguration()
+	configuration.SetBasePath(amfSelf.NrfUri)
+	client := Nnrf_NFManagement.NewAPIClient(configuration)
+
+	var res *http.Response
+
+	res, err = client.NFInstanceIDDocumentApi.DeregisterNFInstance(context.Background(), amfSelf.NfId)
+	if err == nil {
+		return
+	} else if res != nil {
+		if res.Status != err.Error() {
+			return
+		}
+		problem := err.(common.GenericOpenAPIError).Model().(models.ProblemDetails)
+		problemDetails = &problem
+	} else {
+		err = common.ReportError("server no response")
 	}
 	return
 }

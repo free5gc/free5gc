@@ -19,6 +19,7 @@ import (
 
 	"free5gc/src/nssf/logger"
 	"free5gc/src/nssf/nssf_service"
+	"free5gc/src/nssf/version"
 )
 
 var NSSF = &nssf_service.NSSF{}
@@ -33,6 +34,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "nssf"
 	fmt.Print(app.Name, "\n")
+	appLog.Infoln("NSSF version: ", version.GetVersion())
 	app.Usage = "-free5gccfg common configuration file -nssfcfg nssf configuration file"
 	app.Action = action
 	app.Flags = NSSF.GetCliCmd()

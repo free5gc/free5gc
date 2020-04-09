@@ -15,18 +15,23 @@ void UpfDispatcher(const Event *event) {
         Bufblk *bufBlk = NULL;
         PfcpXact *xact = NULL;
 
-        uint64_t *seid = (uint64_t*)event->arg0;
-        uint16_t *pdrId = (uint16_t*)event->arg1;
+        uint64_t seid = (uint64_t)event->arg0;
+        uint16_t pdrId = (uint16_t)event->arg1;
 
-        UpfSession *session = UpfSessionFindBySeid(*seid);
-        UTLT_Assert(session != NULL, return, "Session not find by seid: %d", *seid);
+        UpfSession *session = UpfSessionFindBySeid(seid);
+        UTLT_Assert(session != NULL, return,
+                    "Session not find by seid: %d", seid);
 
         memset(&header, 0, sizeof(PfcpHeader));
         header.type = PFCP_SESSION_REPORT_REQUEST;
-        header.seid = *seid;
+        header.seid = seid;
 
-        status = UpfN4BuildSessionReportRequestDownlinkDataReport(&bufBlk, header.type, session, *pdrId);
-        UTLT_Assert(status == STATUS_OK, return, "Build Session Report Request error");
+        status = UpfN4BuildSessionReportRequestDownlinkDataReport(&bufBlk,
+                                                                  header.type,
+                                                                  session,
+                                                                  pdrId);
+        UTLT_Assert(status == STATUS_OK, return,
+                    "Build Session Report Request error");
 
         xact = PfcpXactLocalCreate(session->pfcpNode, &header, bufBlk);
         UTLT_Assert(xact, return, "pfcpXactLocalCreate error");
@@ -34,7 +39,7 @@ void UpfDispatcher(const Event *event) {
         status = PfcpXactCommit(xact);
         UTLT_Assert(status == STATUS_OK, return, "xact commit error");
 
-	BufblkFree(bufBlk);
+        BufblkFree(bufBlk);
 
         break;
     }
@@ -49,12 +54,12 @@ void UpfDispatcher(const Event *event) {
 
         UTLT_Assert(recvBufBlk, return, "recv buffer no data");
         bufBlk = BufblkAlloc(1, sizeof(PfcpMessage));
-        UTLT_Assert(bufBlk, return, "create buffer error");
+        UTLT_Assert(bufBlk, goto freeRecvBuf, "create buffer error");
         pfcpMessage = bufBlk->buf;
-        UTLT_Assert(pfcpMessage, return, "pfcpMessage assigned error");
+        UTLT_Assert(pfcpMessage, goto freeBuf, "pfcpMessage assigned error");
 
         status = PfcpParseMessage(pfcpMessage, recvBufBlk);
-        UTLT_Assert(status == STATUS_OK, return, "PfcpParseMessage error");
+        UTLT_Assert(status == STATUS_OK, goto freeBuf, "PfcpParseMessage error");
 
         if (pfcpMessage->header.seidP) {
 
@@ -64,89 +69,91 @@ void UpfDispatcher(const Event *event) {
                 if (pfcpMessage->header.type == PFCP_SESSION_ESTABLISHMENT_REQUEST) {
                     session = UpfSessionAddByMessage(pfcpMessage);
                 } else {
-                    UTLT_Assert(0, BufblkFree(recvBufBlk); BufblkFree(bufBlk); return,
-                            "no SEID but not SESSION ESTABLISHMENT");
+                    UTLT_Assert(0, goto freeBuf,
+                                "no SEID but not SESSION ESTABLISHMENT");
                 }
             } else {
                 // with SEID
                 session = UpfSessionFindBySeid(pfcpMessage->header.seid);
             }
 
-            UTLT_Assert(session, BufblkFree(recvBufBlk); BufblkFree(bufBlk); return,
-                    "do not find / establish session");
+            UTLT_Assert(session, goto freeBuf,
+                        "do not find / establish session");
 
             if (pfcpMessage->header.type != PFCP_SESSION_REPORT_RESPONSE) {
                 session->pfcpNode = upf;
             }
 
-            status = PfcpXactReceive(session->pfcpNode, &pfcpMessage->header, &xact);
-
-            if (status != STATUS_OK) {
-                BufblkFree(bufBlk);
-                BufblkFree(recvBufBlk);
-                break;
-            }
+            status = PfcpXactReceive(session->pfcpNode,
+                                     &pfcpMessage->header, &xact);
+            UTLT_Assert(status == STATUS_OK, goto freeBuf, "");
         } else {
             status = PfcpXactReceive(upf, &pfcpMessage->header, &xact);
-
-            if (status != STATUS_OK) {
-                BufblkFree(bufBlk);
-                BufblkFree(recvBufBlk);
-                break;
-            }
+            UTLT_Assert(status == STATUS_OK, goto freeBuf, "");
         }
 
         switch (pfcpMessage->header.type) {
         case PFCP_HEARTBEAT_REQUEST:
-            UpfN4HandleHeartbeatRequest(
-                xact, &pfcpMessage->heartbeatRequest);
+            UTLT_Info("[PFCP] Handle PFCP heartbeat request");
+            UpfN4HandleHeartbeatRequest(xact, &pfcpMessage->heartbeatRequest);
             break;
         case PFCP_HEARTBEAT_RESPONSE:
-            UpfN4HandleHeartbeatResponse(
-                xact, &pfcpMessage->heartbeatResponse);
+            UTLT_Info("[PFCP] Handle PFCP heartbeat response");
+            UpfN4HandleHeartbeatResponse(xact, &pfcpMessage->heartbeatResponse);
             break;
         case PFCP_ASSOCIATION_SETUP_REQUEST:
-            UpfN4HandleAssociationSetupRequest(
-                xact, &pfcpMessage->pFCPAssociationSetupRequest);
+            UTLT_Info("[PFCP] Handle PFCP association setup request");
+            UpfN4HandleAssociationSetupRequest(xact,
+                                               &pfcpMessage->pFCPAssociationSetupRequest);
             break;
         case PFCP_ASSOCIATION_UPDATE_REQUEST:
-            UpfN4HandleAssociationUpdateRequest(
-                xact, &pfcpMessage->pFCPAssociationUpdateRequest);
+            UTLT_Info("[PFCP] Handle PFCP association update request");
+            UpfN4HandleAssociationUpdateRequest(xact,
+                                                &pfcpMessage->pFCPAssociationUpdateRequest);
             break;
         case PFCP_ASSOCIATION_RELEASE_RESPONSE:
-            UpfN4HandleAssociationReleaseRequest(
-                xact, &pfcpMessage->pFCPAssociationReleaseRequest);
+            UTLT_Info("[PFCP] Handle PFCP association release response");
+            UpfN4HandleAssociationReleaseRequest(xact,
+                                                 &pfcpMessage->pFCPAssociationReleaseRequest);
             break;
         case PFCP_SESSION_ESTABLISHMENT_REQUEST:
-            UpfN4HandleSessionEstablishmentRequest(session,
-                xact, &pfcpMessage->pFCPSessionEstablishmentRequest);
+            UTLT_Info("[PFCP] Handle PFCP session establishment request");
+            UpfN4HandleSessionEstablishmentRequest(session, xact,
+                                                   &pfcpMessage->pFCPSessionEstablishmentRequest);
             break;
         case PFCP_SESSION_MODIFICATION_REQUEST:
-            UpfN4HandleSessionModificationRequest(session,
-                xact, &pfcpMessage->pFCPSessionModificationRequest);
+            UTLT_Info("[PFCP] Handle PFCP session modification request");
+            UpfN4HandleSessionModificationRequest(session, xact,
+                                                  &pfcpMessage->pFCPSessionModificationRequest);
             break;
         case PFCP_SESSION_DELETION_REQUEST:
-            UpfN4HandleSessionDeletionRequest(session,
-                xact, &pfcpMessage->pFCPSessionDeletionRequest);
+            UTLT_Info("[PFCP] Handle PFCP session deletion request");
+            UpfN4HandleSessionDeletionRequest(session, xact,
+                                              &pfcpMessage->pFCPSessionDeletionRequest);
             break;
         case PFCP_SESSION_REPORT_RESPONSE:
-            UpfN4HandleSessionReportResponse(session,
-                xact, &pfcpMessage->pFCPSessionReportResponse);
+            UTLT_Info("[PFCP] Handle PFCP session report response");
+            UpfN4HandleSessionReportResponse(session, xact,
+                                             &pfcpMessage->pFCPSessionReportResponse);
             break;
         default:
             UTLT_Error("No implement pfcp type: %d", pfcpMessage->header.type);
         }
+        freeBuf:
+        PfcpStructFree(pfcpMessage);
         BufblkFree(bufBlk);
+        freeRecvBuf:
         BufblkFree(recvBufBlk);
-
         break;
     }
     case UPF_EVENT_N4_T3_RESPONSE:
-    case UPF_EVENT_N4_T3_HOLDING: {
-        uint8_t type;
-        PfcpXactTimeout(*((uint32_t*)event->arg0), (UpfEvent)event->type, &type);
-        break;
-    }
+    case UPF_EVENT_N4_T3_HOLDING:
+        {
+            uint8_t type;
+            PfcpXactTimeout((uint32_t) event->arg0,
+                            (UpfEvent)event->type, &type);
+            break;
+        }
     default: {
         UTLT_Error("No handler for event type: %d", event->type);
         break;

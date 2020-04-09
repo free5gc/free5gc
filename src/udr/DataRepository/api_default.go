@@ -206,6 +206,9 @@ func PolicyDataSubsToNotifyPost(c *gin.Context) {
 	rsp := <-handlerMsg.ResponseChan
 
 	HTTPResponse := rsp.HTTPResponse
+	for key, val := range HTTPResponse.Header {
+		c.Header(key, val[0])
+	}
 
 	c.JSON(HTTPResponse.Status, HTTPResponse.Body)
 }

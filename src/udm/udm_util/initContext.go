@@ -1,16 +1,6 @@
 package udm_util
 
-import (
-	"fmt"
-	"free5gc/lib/openapi/models"
-	"free5gc/src/udm/factory"
-	"free5gc/src/udm/logger"
-	"free5gc/src/udm/udm_context"
-
-	"github.com/google/uuid"
-)
-
-func InitUDMContext(context *udm_context.UDMContext) {
+/*func InitUDMContext(context *udm_context.UDMContext) {
 	config := factory.UdmConfig
 	logger.UtilLog.Infof("udmconfig Info: Version[%s] Description[%s]", config.Info.Version, config.Info.Description)
 	configuration := config.Configuration
@@ -19,7 +9,7 @@ func InitUDMContext(context *udm_context.UDMContext) {
 		context.Name = configuration.UdmName
 	}
 	nrfclient := config.Configuration.Nrfclient
-	context.NrfUri = fmt.Sprintf("%s://%s:%d", nrfclient.Scheme, nrfclient.Ipv4Adrr, nrfclient.Port)
+	context.NrfUri = fmt.Sprintf("%s://%s:%d", nrfclient.Scheme, nrfclient.Ipv4Addr, nrfclient.Port)
 	sbi := configuration.Sbi
 	context.UriScheme = models.UriScheme(sbi.Scheme)
 	context.HttpIpv4Port = 29503
@@ -34,4 +24,4 @@ func InitUDMContext(context *udm_context.UDMContext) {
 	}
 	servingNameList := configuration.ServiceNameList
 	context.InitNFService(servingNameList, config.Info.Version)
-}
+}*/

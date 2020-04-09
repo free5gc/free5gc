@@ -4,15 +4,17 @@ import (
 	"context"
 	"fmt"
 	"free5gc/lib/Nnrf_NFDiscovery"
+	"free5gc/lib/Nudm_SubscriberDataManagement"
 	"free5gc/lib/openapi/models"
 	"free5gc/src/smf/logger"
 	"free5gc/src/smf/smf_context"
 	"net/http"
 
-	"github.com/antihax/optional"
-	"github.com/mohae/deepcopy"
 	"strings"
 	"time"
+
+	"github.com/antihax/optional"
+	"github.com/mohae/deepcopy"
 )
 
 func SendNFRegistration() error {
@@ -90,14 +92,14 @@ func SendNFDeregistration() {
 }
 
 func SendNFDiscoveryUDM() {
-	// Set targetNfType
-	targetNfType := models.NfType_UDM
-	// Set requestNfType
-	requesterNfType := models.NfType_SMF
+	if smf_context.SMF_Self().SubscriberDataManagementClient != nil {
+		return
+	}
+
 	localVarOptionals := Nnrf_NFDiscovery.SearchNFInstancesParamOpts{}
 
 	// Check data
-	rep, res, err := smf_context.SMF_Self().NFDiscoveryClient.NFInstancesStoreApi.SearchNFInstances(context.TODO(), targetNfType, requesterNfType, &localVarOptionals)
+	rep, res, err := smf_context.SMF_Self().NFDiscoveryClient.NFInstancesStoreApi.SearchNFInstances(context.TODO(), models.NfType_UDM, models.NfType_SMF, &localVarOptionals)
 	if err != nil {
 		return
 	}
@@ -107,8 +109,19 @@ func SendNFDiscoveryUDM() {
 		}
 	}
 
-	smf_context.SMF_Self().UDMProfiles = rep.NfInstances
-	//logger.AppLog.Info(smf_context.UDMNFProfile)
+	smf_context.SMF_Self().UDMProfile = rep.NfInstances[0]
+
+	for _, service := range *smf_context.SMF_Self().UDMProfile.NfServices {
+		if service.ServiceName == models.ServiceName_NUDM_SDM {
+			SDMConf := Nudm_SubscriberDataManagement.NewConfiguration()
+			SDMConf.SetBasePath(service.ApiPrefix)
+			smf_context.SMF_Self().SubscriberDataManagementClient = Nudm_SubscriberDataManagement.NewAPIClient(SDMConf)
+		}
+	}
+
+	if smf_context.SMF_Self().SubscriberDataManagementClient == nil {
+		logger.AppLog.Warnln("sdm client failed")
+	}
 }
 
 func SendNFDiscoveryPCF() {
@@ -130,8 +143,7 @@ func SendNFDiscoveryPCF() {
 		}
 	}
 
-	smf_context.SMF_Self().PCFProfiles = rep.NfInstances
-	//logger.AppLog.Info(smf_context.PCFNFProfile)
+	logger.AppLog.Traceln(rep.NfInstances)
 }
 
 func SendNFDiscoveryServingAMF(smContext *smf_context.SMContext) {

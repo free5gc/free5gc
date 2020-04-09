@@ -162,7 +162,7 @@ func TestBuildDownlinkNasTransport(t *testing.T) {
 		Value: aper.OctetString("\x01\x02"),
 	}
 
-	pdu, err := ngap_message.BuildDownlinkNasTransport(ue.RanUe[models.AccessType__3_GPP_ACCESS], nasPdu.Value)
+	pdu, err := ngap_message.BuildDownlinkNasTransport(ue.RanUe[models.AccessType__3_GPP_ACCESS], nasPdu.Value, nil)
 
 	if err != nil {
 		t.Errorf("Encode is FAILED: %+v", err)
@@ -392,8 +392,6 @@ func TestBuildInitialContextSetupRequest(t *testing.T) {
 		Mcc: "208",
 		Mnc: "93",
 	}
-	ue.AccessAndMobilitySubscriptionData = &models.AccessAndMobilitySubscriptionData{}
-	ue.AccessAndMobilitySubscriptionData.RatRestrictions = append(ue.AccessAndMobilitySubscriptionData.RatRestrictions, models.RatType_EUTRA)
 
 	ue.AmPolicyAssociation = &models.PolicyAssociation{}
 	ue.AmPolicyAssociation.ServAreaRes = &models.ServiceAreaRestriction{}

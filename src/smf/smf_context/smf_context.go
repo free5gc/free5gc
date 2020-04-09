@@ -6,13 +6,15 @@ import (
 
 	"free5gc/lib/Nnrf_NFDiscovery"
 	"free5gc/lib/Nnrf_NFManagement"
+	"free5gc/lib/Nudm_SubscriberDataManagement"
 	"free5gc/src/smf/factory"
 	"free5gc/src/smf/logger"
 
-	"github.com/google/uuid"
 	"free5gc/lib/openapi/models"
 	"free5gc/lib/pfcp/pfcpType"
 	"free5gc/lib/pfcp/pfcpUdp"
+
+	"github.com/google/uuid"
 )
 
 func init() {
@@ -28,11 +30,11 @@ type SMFContext struct {
 	URIScheme   models.UriScheme
 	HTTPAddress string
 	HTTPPort    int
+	CPNodeID    pfcpType.NodeID
 
-	CPNodeID pfcpType.NodeID
+	UDMProfile models.NfProfile
 
-	UDMProfiles []models.NfProfile
-	PCFProfiles []models.NfProfile
+	SnssaiInfos []models.SnssaiSmfInfoItem
 
 	UPNodeIDs []pfcpType.NodeID
 	Key       string
@@ -42,9 +44,16 @@ type SMFContext struct {
 	UESubNet      *net.IPNet
 	UEAddressTemp net.IP
 
-	NrfUri             string
-	NFManagementClient *Nnrf_NFManagement.APIClient
-	NFDiscoveryClient  *Nnrf_NFDiscovery.APIClient
+	NrfUri                         string
+	NFManagementClient             *Nnrf_NFManagement.APIClient
+	NFDiscoveryClient              *Nnrf_NFDiscovery.APIClient
+	SubscriberDataManagementClient *Nudm_SubscriberDataManagement.APIClient
+
+	UserPlaneInformation UserPlaneInformation
+	//*** For ULCL ** //
+	ULCLSupport     bool
+	UERoutingPaths  map[string][]factory.Path
+	UERoutingGraphs map[string]*UEDataPathGraph
 }
 
 func AllocUEIP() net.IP {
@@ -115,9 +124,53 @@ func InitSmfContext(config *factory.Config) {
 	NFDiscovryConfig.SetBasePath(SMF_Self().NrfUri)
 	smfContext.NFDiscoveryClient = Nnrf_NFDiscovery.NewAPIClient(NFDiscovryConfig)
 
-	SetupNFProfile()
+	smfContext.ULCLSupport = configuration.ULCL
+
+	smfContext.SnssaiInfos = configuration.SNssaiInfo
+
+	processUPTopology(&configuration.UserPlaneInformation)
+
+	SetupNFProfile(config)
+}
+
+func InitSMFUERouting(routingConfig *factory.RoutingConfig) {
+
+	if routingConfig == nil {
+		logger.CtxLog.Infof("Routing Config is nil")
+	}
+
+	logger.CtxLog.Infof("ue routing config Info: Version[%s] Description[%s]",
+		routingConfig.Info.Version, routingConfig.Info.Description)
+
+	UERoutingInfo := routingConfig.UERoutingInfo
+	smfContext.UERoutingPaths = make(map[string][]factory.Path)
+	smfContext.UERoutingGraphs = make(map[string]*UEDataPathGraph)
+
+	for _, routingInfo := range UERoutingInfo {
+
+		supi := routingInfo.SUPI
+
+		smfContext.UERoutingPaths[supi] = routingInfo.PathList
+	}
+
+	for supi := range smfContext.UERoutingPaths {
+
+		graph, err := NewUEDataPathGraph(supi)
+
+		if err != nil {
+			logger.CtxLog.Warnln(err)
+			continue
+		}
+
+		smfContext.UERoutingGraphs[supi] = graph
+	}
+
 }
 
 func SMF_Self() *SMFContext {
 	return &smfContext
+}
+
+func GetUserPlaneInformation() *UserPlaneInformation {
+	return &smfContext.UserPlaneInformation
 }

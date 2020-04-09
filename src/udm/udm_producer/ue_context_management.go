@@ -12,6 +12,7 @@ import (
 	"free5gc/src/udm/udm_consumer"
 	"free5gc/src/udm/udm_context"
 	"free5gc/src/udm/udm_handler/udm_message"
+	"free5gc/src/udm/udm_producer/udm_producer_callback"
 	"net/http"
 	"strconv"
 	"strings"
@@ -31,7 +32,7 @@ func createUDMClientToUDR(id string, nonUe bool) *Nudr_DataRepository.APIClient 
 		}
 		config := factory.UdmConfig
 		udrclient := config.Configuration.Udrclient
-		addr = fmt.Sprintf("%s://%s:%d", udrclient.Scheme, udrclient.Ipv4Adrr, udrclient.Port)
+		addr = fmt.Sprintf("%s://%s:%d", udrclient.Scheme, udrclient.Ipv4Addr, udrclient.Port)
 	}
 	cfg := Nudr.NewConfiguration()
 	cfg.SetBasePath(addr)
@@ -107,12 +108,15 @@ func HandleGetAmfNon3gppAccess(respChan chan udm_message.HandlerResponseMessage,
 	udm_message.SendHttpResponseMessage(respChan, nil, http.StatusOK, amfNon3GppAccessRegistration)
 }
 
+// TS 29.503 5.3.2.2.2
 func HandleRegistrationAmf3gppAccess(respChan chan udm_message.HandlerResponseMessage, ueID string, body models.Amf3GppAccessRegistration) {
-	contextExisted := false
-	udm_context.CreateAmf3gppRegContext(ueID, body)
-	if !udm_context.UdmAmf3gppRegContextNotExists(ueID) {
-		contextExisted = true
+	// TODO: EPS interworking with N26 is not supported yet in this stage
+	var oldAmf3GppAccessRegContext *models.Amf3GppAccessRegistration
+	if udm_context.UdmAmf3gppRegContextExists(ueID) {
+		oldAmf3GppAccessRegContext = udm_context.UDM_Self().UdmUePool[ueID].Amf3GppAccessRegistration
 	}
+
+	udm_context.CreateAmf3gppRegContext(ueID, body)
 
 	clientAPI := createUDMClientToUDR(ueID, false)
 	var createAmfContext3gppParamOpts Nudr_DataRepository.CreateAmfContext3gppParamOpts
@@ -126,8 +130,15 @@ func HandleRegistrationAmf3gppAccess(respChan chan udm_message.HandlerResponseMe
 		return
 	}
 
-	if contextExisted {
+	// TS 23.502 4.2.2.2.2 14d: UDM initiate a Nudm_UECM_DeregistrationNotification to the old AMF
+	// corresponding to the same (e.g. 3GPP) access, if one exists
+	if oldAmf3GppAccessRegContext != nil {
 		udm_message.SendHttpResponseMessage(respChan, nil, http.StatusNoContent, nil)
+		deregistData := models.DeregistrationData{
+			DeregReason: models.DeregistrationReason_SUBSCRIPTION_WITHDRAWN,
+			AccessType:  models.AccessType__3_GPP_ACCESS,
+		}
+		go udm_producer_callback.SendOnDeregistrationNotification(ueID, oldAmf3GppAccessRegContext.DeregCallbackUri, deregistData) // Deregistration Notify Triggered
 	} else {
 		h := make(http.Header)
 		udmUe := udm_context.UDM_Self().UdmUePool[ueID]
@@ -136,12 +147,14 @@ func HandleRegistrationAmf3gppAccess(respChan chan udm_message.HandlerResponseMe
 	}
 }
 
+// TS 29.503 5.3.2.2.3
 func HandleRegisterAmfNon3gppAccess(respChan chan udm_message.HandlerResponseMessage, ueID string, body models.AmfNon3GppAccessRegistration) {
-	contextExisted := false
-	udm_context.CreateAmfNon3gppRegContext(ueID, body)
-	if !udm_context.UdmAmfNon3gppRegContextNotExists(ueID) {
-		contextExisted = true
+	var oldAmfNon3GppAccessRegContext *models.AmfNon3GppAccessRegistration
+	if udm_context.UdmAmfNon3gppRegContextExists(ueID) {
+		oldAmfNon3GppAccessRegContext = udm_context.UDM_Self().UdmUePool[ueID].AmfNon3GppAccessRegistration
 	}
+
+	udm_context.CreateAmfNon3gppRegContext(ueID, body)
 
 	clientAPI := createUDMClientToUDR(ueID, false)
 	var createAmfContextNon3gppParamOpts Nudr_DataRepository.CreateAmfContextNon3gppParamOpts
@@ -155,8 +168,15 @@ func HandleRegisterAmfNon3gppAccess(respChan chan udm_message.HandlerResponseMes
 		return
 	}
 
-	if contextExisted {
+	// TS 23.502 4.2.2.2.2 14d: UDM initiate a Nudm_UECM_DeregistrationNotification to the old AMF
+	// corresponding to the same (e.g. 3GPP) access, if one exists
+	if oldAmfNon3GppAccessRegContext != nil {
 		udm_message.SendHttpResponseMessage(respChan, nil, http.StatusNoContent, nil)
+		deregistData := models.DeregistrationData{
+			DeregReason: models.DeregistrationReason_SUBSCRIPTION_WITHDRAWN,
+			AccessType:  models.AccessType_NON_3_GPP_ACCESS,
+		}
+		go udm_producer_callback.SendOnDeregistrationNotification(ueID, oldAmfNon3GppAccessRegContext.DeregCallbackUri, deregistData) // Deregistration Notify Triggered
 	} else {
 		h := make(http.Header)
 		udmUe := udm_context.UDM_Self().UdmUePool[ueID]

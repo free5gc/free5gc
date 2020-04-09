@@ -7,5 +7,5 @@ package ngapType
 /* Sequence of = 35, FULL Name = struct RATRestrictions */
 /* RATRestrictionsItem */
 type RATRestrictions struct {
-	List []RATRestrictionsItem `aper:"valueExt,sizeLB:16,sizeUB:16"`
+	List []RATRestrictionsItem `aper:"valueExt,sizeLB:0,sizeUB:16"`
 }

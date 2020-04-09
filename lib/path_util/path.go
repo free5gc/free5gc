@@ -3,10 +3,10 @@
 package path_util
 
 import (
+	"bufio"
 	"free5gc/lib/path_util/logger"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 )
 
@@ -35,3 +35,7 @@ func Gofree5gcPath(path string) string {}
 func Exists(fpath string) bool {}
 
 func FindRoot(path string, rootCode string, objName string) (string, bool) {}
+
+func FindModuleRoot(path string, rootCode string) (string, bool) {}
+
+func GetParentDirectory(dirctory string) string {}

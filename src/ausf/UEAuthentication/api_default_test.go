@@ -13,67 +13,31 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/hex"
+	"flag"
 	"fmt"
+	"free5gc/lib/CommonConsumerTestData/AUSF/TestUEAuth"
+
 	"github.com/antihax/optional"
 	"github.com/bronze1man/radius"
-	"github.com/gin-gonic/gin"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
-	"github.com/stretchr/testify/assert"
-	"free5gc/lib/CommonConsumerTestData/AUSF/TestUEAuth"
+	"github.com/urfave/cli"
+
 	// "free5gc/lib/CommonConsumerTestData/UDM/TestGenAuthData"
 	Nausf_UEAU_Client "free5gc/lib/Nausf_UEAuthentication"
-	"free5gc/lib/http2_util"
 	"free5gc/lib/openapi/models"
-	"free5gc/lib/path_util"
-	Nausf_UEAU_Server "free5gc/src/ausf/UEAuthentication"
 	"free5gc/src/ausf/ausf_context"
-	"free5gc/src/ausf/ausf_handler"
 	"free5gc/src/ausf/ausf_producer"
-	"free5gc/src/ausf/logger"
-	// Nudm_UEAU "free5gc/src/udm/UEAuthentication"
+	"free5gc/src/ausf/ausf_service"
+	"free5gc/src/nrf/nrf_service"
+	"free5gc/src/udm/udm_service"
+	"free5gc/src/udr/udr_service"
+
 	// "free5gc/src/udm/udm_handler"
 	"math/rand"
-	"net/http"
-	"strings"
 	"testing"
 	"time"
 )
-
-func fakeUdmUeauGenerateAuthDataHandlerFunc(c *gin.Context) {
-	c.Params = append(c.Params, gin.Param{"supiOrSuci", c.Param("supi")})
-	if strings.ToUpper("Post") == c.Request.Method {
-		func(c *gin.Context) {
-			supiOrSuci := c.Param("supiOrSuci")
-			fmt.Printf("Fake UDM with supi %s\n", supiOrSuci)
-			var authInfoResult models.AuthenticationInfoResult
-			authInfoResult.AuthenticationVector = new(models.AuthenticationVector)
-			authInfoResult.Supi = supiOrSuci
-
-			test5GAKA := 1
-			if test5GAKA == 1 { // 5G AKA
-				authInfoResult.AuthType = models.AuthType__5_G_AKA
-				authInfoResult.AuthenticationVector.AvType = models.AvType__5_G_HE_AKA
-				authInfoResult.AuthenticationVector.Rand = "81e92b6c0ee0e12ebceba8d92a99dfa5"
-				authInfoResult.AuthenticationVector.Autn = "bb52e91c747ac3ab2a5c23d15ee351d5"
-				authInfoResult.AuthenticationVector.XresStar = "123456789"
-				authInfoResult.AuthenticationVector.Kausf = "81e92b6c0ee0e12ebceba8d92a99dfa5bb52e91c747ac3ab2a5c23d15ee351d5"
-
-			} else { // EAP-AKA' - Test data from RFC 5448 test vector 1 and TS35208 test set 19
-				authInfoResult.AuthType = models.AuthType_EAP_AKA_PRIME
-				authInfoResult.AuthenticationVector.AvType = models.AvType_EAP_AKA_PRIME
-				authInfoResult.AuthenticationVector.Rand = "81e92b6c0ee0e12ebceba8d92a99dfa5"
-				authInfoResult.AuthenticationVector.Autn = "bb52e91c747ac3ab2a5c23d15ee351d5"
-				authInfoResult.AuthenticationVector.Xres = "28d7b0f2a2ec3de5"
-				authInfoResult.AuthenticationVector.IkPrime = "ccfc230ca74fcc96c0a5d61164f5a76c"
-				authInfoResult.AuthenticationVector.CkPrime = "0093962d0dd84aa5684b045c9edffa04"
-			}
-			c.JSON(http.StatusOK, authInfoResult)
-		}(c)
-		return
-	}
-	c.String(http.StatusNotFound, "404 page not found")
-}
 
 // EapAuthMethod -
 func TestEapAuthMethod(t *testing.T) {
@@ -87,115 +51,48 @@ func TestUeAuthenticationsAuthCtxId5gAkaConfirmationPut(t *testing.T) {
 
 // UeAuthenticationsPost -
 func TestUeAuthenticationsPost(t *testing.T) {
-	go func() { // ausf server
-		ausf_context.TestInit()
-		router := gin.Default()
-		Nausf_UEAU_Server.AddService(router)
+	// NRF
+	flag_nrf := flag.FlagSet{}
+	cli_nrf := cli.NewContext(nil, &flag_nrf, nil)
+	nrf := &nrf_service.NRF{}
+	nrf.Initialize(cli_nrf)
+	go nrf.Start()
+	time.Sleep(100 * time.Millisecond)
 
-		ausfLogPath := path_util.Gofree5gcPath("free5gc/ausfsslkey.log")
-		ausfPemPath := path_util.Gofree5gcPath("free5gc/support/TLS/ausf.pem")
-		ausfKeyPath := path_util.Gofree5gcPath("free5gc/support/TLS/ausf.key")
+	// AUSF
+	flag_ausf := flag.FlagSet{}
+	cli_ausf := cli.NewContext(nil, &flag_ausf, nil)
+	ausf := &ausf_service.AUSF{}
+	ausf.Initialize(cli_ausf)
+	go ausf.Start()
+	time.Sleep(100 * time.Millisecond)
 
-		server, err := http2_util.NewServer(":29509", ausfLogPath, router)
-		if err == nil && server != nil {
-			logger.InitLog.Infoln(server.ListenAndServeTLS(ausfPemPath, ausfKeyPath))
-			assert.True(t, err == nil)
-		}
-	}()
-	go ausf_handler.Handle()
+	// UDM
+	flag_udm := flag.FlagSet{}
+	cli_udm := cli.NewContext(nil, &flag_udm, nil)
+	udm := &udm_service.UDM{}
+	udm.Initialize(cli_udm)
+	go udm.Start()
+	time.Sleep(100 * time.Millisecond)
 
-	go func() { // fake udm server
-		router := gin.Default()
-
-		var fakeUdmUeauGenerateAuthDataPath = "/nudm-ueau/v1/:supi/security-information/generate-auth-data"
-		router.POST(fakeUdmUeauGenerateAuthDataPath, fakeUdmUeauGenerateAuthDataHandlerFunc)
-
-		router.POST("/nudm-ueau/v1/:supi/auth-events", func(c *gin.Context) {
-			c.JSON(http.StatusCreated, gin.H{})
-		})
-
-		udmLogPath := path_util.Gofree5gcPath("free5gc/udmsslkey.log")
-		udmPemPath := path_util.Gofree5gcPath("free5gc/support/TLS/udm.pem")
-		udmKeyPath := path_util.Gofree5gcPath("free5gc/support/TLS/udm.key")
-
-		server, err := http2_util.NewServer(":29503", udmLogPath, router)
-		if err == nil && server != nil {
-			logger.InitLog.Infoln(server.ListenAndServeTLS(udmPemPath, udmKeyPath))
-			assert.True(t, err == nil)
-		}
-	}()
-
-	/*go func() { // udm server
-		// router := gin.Default()
-		router := Nudm_UEAU.NewRouter()
-		Nausf_UEAU_Server.AddService(router)
-
-		udmLogPath := path_util.Gofree5gcPath("free5gc/udmsslkey.log")
-		udmPemPath := path_util.Gofree5gcPath("free5gc/support/TLS/udm.pem")
-		udmKeyPath := path_util.Gofree5gcPath("free5gc/support/TLS/udm.key")
-
-		server, err := http2_util.NewServer(":29503", udmLogPath, router)
-		if err == nil && server != nil {
-			logger.InitLog.Infoln(server.ListenAndServeTLS(udmPemPath, udmKeyPath))
-			assert.True(t, err == nil)
-		}
-	}()
-	go udm_handler.Handle()
-
-	go func() { // fake udr server
-		router := gin.Default()
-
-		router.GET("/nudr-dr/v1/subscription-data/:ueId/authentication-data/authentication-subscription", func(c *gin.Context) {
-			ueId := c.Param("ueId")
-			fmt.Println("==========Retrieves the authentication subscription data of a UE==========")
-			fmt.Println("ueId: ", ueId)
-			var authSubs models.AuthenticationSubscription
-			var pk models.PermanentKey
-			var opc models.Opc
-			var var_milenage models.Milenage
-			var op models.Op
-
-			pk.PermanentKeyValue = TestGenAuthData.MilenageTestSet19.K
-			opc.OpcValue = TestGenAuthData.MilenageTestSet19.OPC
-			op.OpValue = TestGenAuthData.MilenageTestSet19.OP
-			var_milenage.Op = &op
-
-			authSubs.PermanentKey = &pk
-			authSubs.Opc = &opc
-			authSubs.Milenage = &var_milenage
-			authSubs.SequenceNumber = TestGenAuthData.MilenageTestSet19.SQN
-			authSubs.AuthenticationMethod = models.AuthMethod__5_G_AKA
-			// authSubs.AuthenticationMethod = models.AuthMethod_EAP_AKA_PRIME
-
-			c.JSON(http.StatusOK, authSubs)
-		})
-
-		router.PUT("/nudr-dr/v1/subscription-data/:ueId/authentication-data/authentication-status", func(c *gin.Context) {
-			ueId := c.Param("ueId")
-			fmt.Println("==========To store the Authentication Status data of a UE==========")
-			fmt.Println("ueId: ", ueId)
-			c.JSON(http.StatusNoContent, gin.H{})
-		})
-
-		udrLogPath := path_util.Gofree5gcPath("free5gc/udrsslkey.log")
-		udrPemPath := path_util.Gofree5gcPath("free5gc/support/TLS/udr.pem")
-		udrKeyPath := path_util.Gofree5gcPath("free5gc/support/TLS/udr.key")
-
-		server, err := http2_util.NewServer(":29504", udrLogPath, router)
-		if err == nil && server != nil {
-			logger.InitLog.Infoln(server.ListenAndServeTLS(udrPemPath, udrKeyPath))
-			assert.True(t, err == nil)
-		}
-	}()*/
+	// UDR
+	flag_udr := flag.FlagSet{}
+	cli_udr := cli.NewContext(nil, &flag_udr, nil)
+	udr := &udr_service.UDR{}
+	udr.Initialize(cli_udr)
+	go udr.Start()
+	time.Sleep(100 * time.Millisecond)
 
 	cfg := Nausf_UEAU_Client.NewConfiguration()
 	cfg.SetBasePath("https://localhost:29509")
 	client := Nausf_UEAU_Client.NewAPIClient(cfg)
 
 	rand.Seed(time.Now().UnixNano())
-	testSUPI := TestUEAuth.SUPI
+	// choose one from null scheme, profileA, or profileB
+	testSUCI := TestUEAuth.TEST_SUCI_PROFILE_A
+
 	var authInfo models.AuthenticationInfo
-	authInfo.SupiOrSuci = testSUPI
+	authInfo.SupiOrSuci = testSUCI
 	authInfo.ServingNetworkName = TestUEAuth.SUCCESS_SERVING_NETWORK_NAME
 	ueAuthCtx, resp, err := client.DefaultApi.UeAuthenticationsPost(context.TODO(), authInfo)
 	fmt.Println("=====")
@@ -209,29 +106,26 @@ func TestUeAuthenticationsPost(t *testing.T) {
 	switch ueAuthCtx.AuthType {
 	case models.AuthType__5_G_AKA:
 		fmt.Println("5G AKA")
-		/*var5g := ueAuthCtx.Var5gAuthData.(map[string]interface{})
-		for k, v := range var5g {
-			fmt.Println(k, v)
-		}*/
+
 		// 5G AKA Confirmation - success case
 		var confirmationData1 models.ConfirmationData
 		confirmationData1.ResStar = TestUEAuth.TestUe5gAuthTable[TestUEAuth.SUCCESS_CASE].ResStar
 		var ueAuthenticationsAuthCtxId5gAkaConfirmationPut1 Nausf_UEAU_Client.UeAuthenticationsAuthCtxId5gAkaConfirmationPutParamOpts
 		ueAuthenticationsAuthCtxId5gAkaConfirmationPut1.ConfirmationData = optional.NewInterface(confirmationData1)
-		client.DefaultApi.UeAuthenticationsAuthCtxId5gAkaConfirmationPut(context.Background(), testSUPI, &ueAuthenticationsAuthCtxId5gAkaConfirmationPut1)
+		client.DefaultApi.UeAuthenticationsAuthCtxId5gAkaConfirmationPut(context.Background(), testSUCI, &ueAuthenticationsAuthCtxId5gAkaConfirmationPut1)
 
 		// 5G AKA Confirmation - failure case
 		var confirmationData2 models.ConfirmationData
 		confirmationData2.ResStar = TestUEAuth.TestUe5gAuthTable[TestUEAuth.FAILURE_CASE].ResStar
 		var ueAuthenticationsAuthCtxId5gAkaConfirmationPut2 Nausf_UEAU_Client.UeAuthenticationsAuthCtxId5gAkaConfirmationPutParamOpts
 		ueAuthenticationsAuthCtxId5gAkaConfirmationPut2.ConfirmationData = optional.NewInterface(confirmationData2)
-		client.DefaultApi.UeAuthenticationsAuthCtxId5gAkaConfirmationPut(context.Background(), testSUPI, &ueAuthenticationsAuthCtxId5gAkaConfirmationPut2)
+		client.DefaultApi.UeAuthenticationsAuthCtxId5gAkaConfirmationPut(context.Background(), testSUCI, &ueAuthenticationsAuthCtxId5gAkaConfirmationPut2)
 
 	case models.AuthType_EAP_AKA_PRIME:
 		fmt.Println("eap aka prime")
 		var eapConfirmData Nausf_UEAU_Client.EapAuthMethodParamOpts
 		var eapSess models.EapSession
-		eapSess.Supi = testSUPI
+		eapSess.Supi = testSUCI
 
 		respEap, _ := base64.StdEncoding.DecodeString(ueAuthCtx.Var5gAuthData.(string))
 		eapGoPkt := gopacket.NewPacket(respEap, layers.LayerTypeEAP, gopacket.Default)
@@ -272,7 +166,7 @@ func TestUeAuthenticationsPost(t *testing.T) {
 		fmt.Printf("eapSess: %x\n", encodedPktAfterMAC)
 		fmt.Println("---------------------")
 		eapConfirmData.EapSession = optional.NewInterface(eapSess)
-		rtnSess, _, _ := client.DefaultApi.EapAuthMethod(context.Background(), testSUPI, &eapConfirmData)
+		rtnSess, _, _ := client.DefaultApi.EapAuthMethod(context.Background(), testSUCI, &eapConfirmData)
 		rtnDecode, _ := base64.StdEncoding.DecodeString(rtnSess.EapPayload)
 		// fmt.Printf("rtnSess: %x\n", rtnDecode)
 
@@ -289,7 +183,7 @@ func TestUeAuthenticationsPost(t *testing.T) {
 			eapSess2.EapPayload = eapPkt2
 
 			eapConfirmData2.EapSession = optional.NewInterface(eapSess2)
-			rtnSess2, _, _ := client.DefaultApi.EapAuthMethod(context.Background(), testSUPI, &eapConfirmData2)
+			rtnSess2, _, _ := client.DefaultApi.EapAuthMethod(context.Background(), testSUCI, &eapConfirmData2)
 			rtnDecode2, _ := base64.StdEncoding.DecodeString(rtnSess2.EapPayload)
 			// fmt.Printf("rtnSess2: %x\n", rtnDecode2)
 			if rtnDecode2[0] == 0x04 { // failure

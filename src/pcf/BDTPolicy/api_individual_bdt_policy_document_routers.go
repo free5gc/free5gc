@@ -32,7 +32,7 @@ func GetBDTPolicy(c *gin.Context) {
 // UpdateBDTPolicy - Update an Individual BDT policy
 func UpdateBDTPolicy(c *gin.Context) {
 	var bdtPolicyDataPatch models.BdtPolicyDataPatch
-	c.BindJSON(&bdtPolicyDataPatch)
+	c.ShouldBindJSON(&bdtPolicyDataPatch)
 
 	req := http_wrapper.NewRequest(c.Request, bdtPolicyDataPatch)
 	req.Params["bdtPolicyId"] = c.Params.ByName("bdtPolicyId")

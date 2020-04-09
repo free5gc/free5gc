@@ -47,7 +47,7 @@ func NewRouter() *gin.Engine {
 }
 
 func genAuthDataHandlerFunc(c *gin.Context) {
-	c.Params = append(c.Params, gin.Param{"supiOrSuci", c.Param("supi")})
+	c.Params = append(c.Params, gin.Param{Key: "supiOrSuci", Value: c.Param("supi")})
 	if strings.ToUpper("Post") == c.Request.Method {
 		GenerateAuthData(c)
 		return

@@ -223,7 +223,7 @@ type nasTypeReplayedUESecurityCapabilitiesEEA0 struct {
 }
 
 var nasTypeReplayedUESecurityCapabilitiesEEA0Table = []nasTypeReplayedUESecurityCapabilitiesEEA0{
-	{1, 0x01, 0x01},
+	{4, 0x01, 0x01},
 }
 
 func TestNasTypeReplayedUESecurityCapabilitiesGetSetEEA0(t *testing.T) {}
@@ -235,7 +235,7 @@ type nasTypeReplayedUESecurityCapabilitiesEEA1_128 struct {
 }
 
 var nasTypeReplayedUESecurityCapabilitiesEEA1_128Table = []nasTypeReplayedUESecurityCapabilitiesEEA1_128{
-	{1, 0x01, 0x01},
+	{4, 0x01, 0x01},
 }
 
 func TestNasTypeReplayedUESecurityCapabilitiesGetSetEEA1_128(t *testing.T) {}
@@ -247,7 +247,7 @@ type nasTypeReplayedUESecurityCapabilitiesEEA2_128 struct {
 }
 
 var nasTypeReplayedUESecurityCapabilitiesEEA2_128Table = []nasTypeReplayedUESecurityCapabilitiesEEA2_128{
-	{1, 0x01, 0x01},
+	{4, 0x01, 0x01},
 }
 
 func TestNasTypeReplayedUESecurityCapabilitiesGetSetEEA2_128(t *testing.T) {}
@@ -259,7 +259,7 @@ type nasTypeReplayedUESecurityCapabilitiesEEA3_128 struct {
 }
 
 var nasTypeReplayedUESecurityCapabilitiesEEA3_128Table = []nasTypeReplayedUESecurityCapabilitiesEEA3_128{
-	{1, 0x01, 0x01},
+	{4, 0x01, 0x01},
 }
 
 func TestNasTypeReplayedUESecurityCapabilitiesGetSetEEA3_128(t *testing.T) {}
@@ -271,7 +271,7 @@ type nasTypeReplayedUESecurityCapabilitiesEEA4 struct {
 }
 
 var nasTypeReplayedUESecurityCapabilitiesEEA4Table = []nasTypeReplayedUESecurityCapabilitiesEEA4{
-	{1, 0x01, 0x01},
+	{4, 0x01, 0x01},
 }
 
 func TestNasTypeReplayedUESecurityCapabilitiesGetSetEEA4(t *testing.T) {}
@@ -283,7 +283,7 @@ type nasTypeReplayedUESecurityCapabilitiesEEA5 struct {
 }
 
 var nasTypeReplayedUESecurityCapabilitiesEEA5Table = []nasTypeReplayedUESecurityCapabilitiesEEA5{
-	{1, 0x01, 0x01},
+	{4, 0x01, 0x01},
 }
 
 func TestNasTypeReplayedUESecurityCapabilitiesGetSetEEA5(t *testing.T) {}
@@ -295,7 +295,7 @@ type nasTypeReplayedUESecurityCapabilitiesEEA6 struct {
 }
 
 var nasTypeReplayedUESecurityCapabilitiesEEA6Table = []nasTypeReplayedUESecurityCapabilitiesEEA6{
-	{1, 0x01, 0x01},
+	{4, 0x01, 0x01},
 }
 
 func TestNasTypeReplayedUESecurityCapabilitiesGetSetEEA6(t *testing.T) {}
@@ -307,7 +307,7 @@ type nasTypeReplayedUESecurityCapabilitiesEEA7 struct {
 }
 
 var nasTypeReplayedUESecurityCapabilitiesEEA7Table = []nasTypeReplayedUESecurityCapabilitiesEEA7{
-	{1, 0x01, 0x01},
+	{4, 0x01, 0x01},
 }
 
 func TestNasTypeReplayedUESecurityCapabilitiesGetSetEEA7(t *testing.T) {}
@@ -319,7 +319,7 @@ type nasTypeReplayedUESecurityCapabilitiesEIA0 struct {
 }
 
 var nasTypeReplayedUESecurityCapabilitiesEIA0Table = []nasTypeReplayedUESecurityCapabilitiesEIA0{
-	{2, 0x01, 0x01},
+	{4, 0x01, 0x01},
 }
 
 func TestNasTypeReplayedUESecurityCapabilitiesGetSetEIA0(t *testing.T) {}
@@ -331,7 +331,7 @@ type nasTypeReplayedUESecurityCapabilitiesEIA1_128 struct {
 }
 
 var nasTypeReplayedUESecurityCapabilitiesEIA1_128Table = []nasTypeReplayedUESecurityCapabilitiesEIA1_128{
-	{2, 0x01, 0x01},
+	{4, 0x01, 0x01},
 }
 
 func TestNasTypeReplayedUESecurityCapabilitiesGetSetEIA1_128(t *testing.T) {}
@@ -343,7 +343,7 @@ type nasTypeReplayedUESecurityCapabilitiesEIA2_128 struct {
 }
 
 var nasTypeReplayedUESecurityCapabilitiesEIA2_128Table = []nasTypeReplayedUESecurityCapabilitiesEIA2_128{
-	{2, 0x01, 0x01},
+	{4, 0x01, 0x01},
 }
 
 func TestNasTypeReplayedUESecurityCapabilitiesGetSetEIA2_128(t *testing.T) {}
@@ -355,7 +355,7 @@ type nasTypeReplayedUESecurityCapabilitiesEIA3_128 struct {
 }
 
 var nasTypeReplayedUESecurityCapabilitiesEIA3_128Table = []nasTypeReplayedUESecurityCapabilitiesEIA3_128{
-	{2, 0x01, 0x01},
+	{4, 0x01, 0x01},
 }
 
 func TestNasTypeReplayedUESecurityCapabilitiesGetSetEIA3_128(t *testing.T) {}
@@ -367,7 +367,7 @@ type nasTypeReplayedUESecurityCapabilitiesEIA4 struct {
 }
 
 var nasTypeReplayedUESecurityCapabilitiesEIA4Table = []nasTypeReplayedUESecurityCapabilitiesEIA4{
-	{2, 0x01, 0x01},
+	{4, 0x01, 0x01},
 }
 
 func TestNasTypeReplayedUESecurityCapabilitiesGetSetEIA4(t *testing.T) {}
@@ -379,7 +379,7 @@ type nasTypeReplayedUESecurityCapabilitiesEIA5 struct {
 }
 
 var nasTypeReplayedUESecurityCapabilitiesEIA5Table = []nasTypeReplayedUESecurityCapabilitiesEIA4{
-	{2, 0x01, 0x01},
+	{4, 0x01, 0x01},
 }
 
 func TestNasTypeReplayedUESecurityCapabilitiesGetSetEIA5(t *testing.T) {}
@@ -391,7 +391,7 @@ type nasTypeReplayedUESecurityCapabilitiesEIA6 struct {
 }
 
 var nasTypeReplayedUESecurityCapabilitiesEIA6Table = []nasTypeReplayedUESecurityCapabilitiesEIA6{
-	{2, 0x01, 0x01},
+	{4, 0x01, 0x01},
 }
 
 func TestNasTypeReplayedUESecurityCapabilitiesGetSetEIA6(t *testing.T) {}
@@ -403,7 +403,7 @@ type nasTypeReplayedUESecurityCapabilitiesEIA7 struct {
 }
 
 var nasTypeReplayedUESecurityCapabilitiesEIA7Table = []nasTypeReplayedUESecurityCapabilitiesEIA7{
-	{2, 0x01, 0x01},
+	{4, 0x01, 0x01},
 }
 
 func TestNasTypeReplayedUESecurityCapabilitiesGetSetEIA7(t *testing.T) {}

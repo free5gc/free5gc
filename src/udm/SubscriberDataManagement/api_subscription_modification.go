@@ -10,6 +10,7 @@
 package SubscriberDataManagement
 
 import (
+	"fmt"
 	"free5gc/lib/http_wrapper"
 	"free5gc/lib/openapi/models"
 	"free5gc/src/udm/logger"
@@ -22,6 +23,7 @@ import (
 
 // Modify - modify the subscription
 func Modify(c *gin.Context) {
+	fmt.Println("asdasd")
 
 	var sdmSubsModificationReq models.SdmSubsModification
 	err := c.ShouldBindJSON(&sdmSubsModificationReq)
@@ -41,7 +43,7 @@ func Modify(c *gin.Context) {
 	req.Params["supi"] = c.Params.ByName("supi")
 	req.Params["subscriptionId"] = c.Params.ByName("subscriptionId")
 
-	handleMsg := udm_message.NewHandlerMessage(udm_message.EventSubscribe, req)
+	handleMsg := udm_message.NewHandlerMessage(udm_message.EventModify, req)
 	udm_handler.SendMessage(handleMsg)
 
 	rsp := <-handleMsg.ResponseChan
@@ -73,7 +75,7 @@ func ModifyForSharedData(c *gin.Context) {
 	req.Params["supi"] = c.Params.ByName("supi")
 	req.Params["subscriptionId"] = c.Params.ByName("subscriptionId")
 
-	handleMsg := udm_message.NewHandlerMessage(udm_message.EventSubscribe, req)
+	handleMsg := udm_message.NewHandlerMessage(udm_message.EventModifyForSharedData, req)
 	udm_handler.SendMessage(handleMsg)
 
 	rsp := <-handleMsg.ResponseChan

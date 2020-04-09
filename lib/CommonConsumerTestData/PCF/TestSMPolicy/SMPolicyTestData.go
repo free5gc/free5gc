@@ -21,7 +21,7 @@ func CreateTestData() models.SmPolicyContextData {
 		// 	AnChargIpv6Addr: "2001:db8:85a3::8a2e:370:7334",
 		// },
 		Supi:       "imsi-2089300007487",
-		SuppFeat:   "1",
+		SuppFeat:   "3fff",
 		Pei:        "123456789123456",
 		RatType:    models.RatType_NR,
 		AccessType: models.AccessType__3_GPP_ACCESS,
@@ -71,8 +71,8 @@ func CreateTestData() models.SmPolicyContextData {
 		Ipv6AddressPrefix: "2001:db8:abcd:12::0/64",
 		IpDomain:          "free5gc.org",
 		SubsSessAmbr: &models.Ambr{
-			Uplink:   "800Kbps",
-			Downlink: "1000Kbps",
+			Uplink:   "800 Kbps",
+			Downlink: "1000 Kbps",
 		},
 		SubsDefQos: &models.SubscribedDefaultQos{
 			Var5qi: 9,
@@ -123,8 +123,8 @@ func UpdateTestData(trigger []models.PolicyControlRequestTrigger, op *models.Rul
 			PriorityLevel: 8,
 		},
 		SubsSessAmbr: &models.Ambr{
-			Uplink:   "1.2Mbps",
-			Downlink: "1.3Mbps",
+			Uplink:   "1.2 Mbps",
+			Downlink: "1.3 Mbps",
 		},
 		UserLocationInfo: &models.UserLocation{
 			NrLocation: &models.NrLocation{
@@ -175,8 +175,8 @@ func UpdateTestData(trigger []models.PolicyControlRequestTrigger, op *models.Rul
 			Precedence: 1,
 			ReqQos: &models.RequestedQos{
 				Var5qi: 2,
-				GbrDl:  "30Mbps",
-				GbrUl:  "30.5Mbps",
+				GbrDl:  "30 Mbps",
+				GbrUl:  "30.5 Mbps",
 			},
 			PackFiltInfo: []models.PacketFilterInfo{
 				{
@@ -194,7 +194,7 @@ func UpdateTestData(trigger []models.PolicyControlRequestTrigger, op *models.Rul
 			}
 			return data
 		case models.RuleOperation_MODIFY_PCC_RULE_AND_ADD_PACKET_FILTERS:
-			ueInitResReq.ReqQos.GbrDl = "30.5Mbps"
+			ueInitResReq.ReqQos.GbrDl = "30.5 Mbps"
 			ueInitResReq.PackFiltInfo[0] = models.PacketFilterInfo{
 				PackFiltCont:  "permit out ip from any to assigned",
 				FlowDirection: models.FlowDirection_UPLINK,
@@ -206,8 +206,8 @@ func UpdateTestData(trigger []models.PolicyControlRequestTrigger, op *models.Rul
 			ueInitResReq.ReqQos = nil
 			ueInitResReq.PackFiltInfo[0].PackFiltId = "PackFiltId-1"
 		case models.RuleOperation_MODIFY_PCC_RULE_WITHOUT_MODIFY_PACKET_FILTERS:
-			ueInitResReq.ReqQos.GbrUl = "50Mbps"
-			ueInitResReq.ReqQos.GbrDl = "50.5Mbps"
+			ueInitResReq.ReqQos.GbrUl = "50 Mbps"
+			ueInitResReq.ReqQos.GbrDl = "50.5 Mbps"
 		}
 		data.UeInitResReq = &ueInitResReq
 	}

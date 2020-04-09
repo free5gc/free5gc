@@ -6,7 +6,6 @@ import (
 	"context"
 	"encoding/json"
 	"free5gc/lib/MongoDBLibrary/logger"
-	"free5gc/lib/openapi/models"
 	"time"
 
 	jsonpatch "github.com/evanphx/json-patch"
@@ -34,7 +33,7 @@ func RestfulAPIDeleteOne(collName string, filter bson.M) {}
 
 func RestfulAPIDeleteMany(collName string, filter bson.M) {}
 
-func RestfulAPIMergePatch(collName string, filter bson.M, patchData map[string]interface{}) models.ProblemDetails {}
+func RestfulAPIMergePatch(collName string, filter bson.M, patchData map[string]interface{}) bool {}
 
 func RestfulAPIJSONPatch(collName string, filter bson.M, patchJSON []byte) bool {}
 

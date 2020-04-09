@@ -27,13 +27,12 @@ typedef struct _ListNode {
 #define ListIsEmpty(__namePtr) ((__namePtr)->next == NULL)
 
 #define ListAppend(__namePtr, __newPtr) do { \
-    ((ListNode *)(__newPtr))->prev = (__namePtr)->prev; \
+    ListNode *iter = (__namePtr); \
+    while (iter->next) \
+        iter = ListNext(iter); \
+    ((ListNode *)(__newPtr))->prev = iter; \
     ((ListNode *)(__newPtr))->next = NULL; \
-    if ((__namePtr)->prev) \
-        ((__namePtr)->prev)->next = (ListNode *)(__newPtr); \
-    else \
-        (__namePtr)->next = (ListNode *)(__newPtr); \
-    ((__namePtr)->prev) = (ListNode *)(__newPtr); \
+    iter->next = (ListNode *)(__newPtr); \
 } while (0)
 
 #define ListInsertToPrev(__namePtr, __nodePtr, __newPtr) do { \
@@ -47,17 +46,12 @@ typedef struct _ListNode {
 } while (0)
 
 #define ListRemove(__namePtr, __nodePtr) do { \
-    ListNode *iter = (__namePtr)->next; \
-    while (iter) { \
-        if (iter == (ListNode *)(__nodePtr)) { \
-            if (iter->prev) \
-                iter->prev->next = iter->next; \
-            else \
-                (__namePtr)->next = iter->next; \
+    ListNode *iter = (__namePtr); \
+    while (iter->next) { \
+        if (iter->next == (ListNode *)(__nodePtr)) { \
+            iter->next = ((ListNode *)(__nodePtr))->next; \
             if (iter->next) \
-                iter->next->prev = iter->prev; \
-            else \
-                (__namePtr)->prev = iter->prev; \
+                iter->next->prev = (ListNode *)iter; \
             break; \
         } \
         iter = iter->next; \

@@ -1,4 +1,4 @@
- /*
+/*
  * Nsmf_PDUSession
  *
  * SMF PDU Session Service
@@ -22,10 +22,11 @@ type APIClient struct {
 	common service // Reuse a single struct instead of allocating one for each service on the heap.
 
 	// API Services
-	IndividualPDUSessionHSMFApi *IndividualPDUSessionHSMFApiService
-	IndividualSMContextApi      *IndividualSMContextApiService
-	PDUSessionsCollectionApi    *PDUSessionsCollectionApiService
-	SMContextsCollectionApi     *SMContextsCollectionApiService
+	IndividualPDUSessionHSMFApi        *IndividualPDUSessionHSMFApiService
+	IndividualSMContextApi             *IndividualSMContextApiService
+	IndividualSMContextNotificationApi *IndividualSMContextNotificationApiService
+	PDUSessionsCollectionApi           *PDUSessionsCollectionApiService
+	SMContextsCollectionApi            *SMContextsCollectionApiService
 }
 
 type service struct {
@@ -48,6 +49,7 @@ func NewAPIClient(cfg *Configuration) *APIClient {
 
 	// API Services
 	c.IndividualPDUSessionHSMFApi = (*IndividualPDUSessionHSMFApiService)(&c.common)
+	c.IndividualSMContextNotificationApi = (*IndividualSMContextNotificationApiService)(&c.common)
 	c.IndividualSMContextApi = (*IndividualSMContextApiService)(&c.common)
 	c.PDUSessionsCollectionApi = (*PDUSessionsCollectionApiService)(&c.common)
 	c.SMContextsCollectionApi = (*SMContextsCollectionApiService)(&c.common)

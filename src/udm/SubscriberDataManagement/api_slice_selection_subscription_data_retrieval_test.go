@@ -10,17 +10,30 @@
 package SubscriberDataManagement_test
 
 import (
+	"context"
+	"fmt"
+	"github.com/antihax/optional"
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
+	Nudm_SDM_Client "free5gc/lib/Nudm_SubscriberDataManagement"
+	"free5gc/lib/http2_util"
+	"free5gc/lib/openapi/models"
+	"free5gc/lib/path_util"
+	Nudm_SDM_Server "free5gc/src/udm/SubscriberDataManagement"
+	"free5gc/src/udm/logger"
+	"free5gc/src/udm/udm_context"
+	"free5gc/src/udm/udm_handler"
+	"log"
+	"net/http"
 	"testing"
 )
 
 // GetNssai - retrieve a UE's subscribed NSSAI
 func TestGetNssai(t *testing.T) {
 
-	/*go udm_handler.Handle()
 	go func() { // udm server
 		router := gin.Default()
 		Nudm_SDM_Server.AddService(router)
-
 		udmLogPath := path_util.Gofree5gcPath("free5gc/udmsslkey.log")
 		udmPemPath := path_util.Gofree5gcPath("free5gc/support/TLS/udm.pem")
 		udmKeyPath := path_util.Gofree5gcPath("free5gc/support/TLS/udm.key")
@@ -31,25 +44,33 @@ func TestGetNssai(t *testing.T) {
 		}
 	}()
 
+	udm_context.TestInit()
+	go udm_handler.Handle()
 	go func() { // fake udr server
+
 		router := gin.Default()
-
-		router.GET("/nudr-dr/v1/subscription-data/:ueId/servingPlmnId/provisioned-data/am-data", func(c *gin.Context) {
+		router.GET("/nudr-dr/v1/subscription-data/:ueId/provisioned-data/am-data", func(c *gin.Context) {
 			supi := c.Param("supi")
-			fmt.Println("==========GetNssai - retrieve a UE's subscribed NSSAI==========")
+			fmt.Println("========== GetNssai - retrieve a UE's subscribed NSSAI ==========")
 			fmt.Println("supi: ", supi)
-
-			var testAmData models.AccessAndMobilitySubscriptionData
 			var testNssai models.Nssai
-			testAmData.Nssai.SupportedFeatures = "Test00"
-			testNssai.SupportedFeatures = testAmData.Nssai.SupportedFeatures
+			testNssai.SupportedFeatures = "SupportedFeatures"
+			testNssai.DefaultSingleNssais = []models.Snssai{
+				{
+					Sst: 1,
+					Sd:  "Sd1",
+				},
+				{
+					Sst: 2,
+					Sd:  "Sd2",
+				},
+			}
 			c.JSON(http.StatusOK, testNssai)
 		})
 
 		udrLogPath := path_util.Gofree5gcPath("free5gc/udrsslkey.log")
 		udrPemPath := path_util.Gofree5gcPath("free5gc/support/TLS/udr.pem")
 		udrKeyPath := path_util.Gofree5gcPath("free5gc/support/TLS/udr.key")
-
 		server, err := http2_util.NewServer(":29504", udrLogPath, router)
 		if err == nil && server != nil {
 			logger.InitLog.Infoln(server.ListenAndServeTLS(udrPemPath, udrKeyPath))
@@ -63,12 +84,22 @@ func TestGetNssai(t *testing.T) {
 	clientAPI := Nudm_SDM_Client.NewAPIClient(cfg)
 
 	supi := "SDM1234"
-	accessAndMobilitySubscriptionDataResp, resp, err := clientAPI.AccessAndMobilitySubscriptionDataRetrievalApi.GetAmData(context.Background(), supi, nil)
+	var getAmDataParamOpts Nudm_SDM_Client.GetAmDataParamOpts
+	getAmDataParamOpts.SupportedFeatures = optional.NewString("SupportedFeatures")
+	amSubsDataResp, resp, err := clientAPI.AccessAndMobilitySubscriptionDataRetrievalApi.GetAmData(context.Background(), supi, &getAmDataParamOpts)
 	if err != nil {
-		fmt.Println(err.Error())
+		var problemDetails models.ProblemDetails
+		if resp == nil {
+			log.Panic(err)
+		} else if err.Error() != resp.Status {
+			log.Panic(err)
+		} else {
+			problemDetails.Cause = "problems"
+			fmt.Println("problemDetails: ", problemDetails)
+		}
+		return
 	} else {
 		fmt.Println("resp: ", resp)
-		fmt.Println("accessAndMobilitySubscriptionDataResp: ", accessAndMobilitySubscriptionDataResp.Nssai.SupportedFeatures)
+		fmt.Println("Nssai: ", amSubsDataResp.Nssai)
 	}
-	*/
 }

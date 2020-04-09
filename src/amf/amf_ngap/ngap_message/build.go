@@ -305,7 +305,7 @@ func BuildNGResetAcknowledge(partOfNGInterface *ngapType.UEAssociatedLogicalNGCo
 	return ngap.Encoder(pdu)
 }
 
-func BuildDownlinkNasTransport(ue *amf_context.RanUe, nasPdu []byte) ([]byte, error) {
+func BuildDownlinkNasTransport(ue *amf_context.RanUe, nasPdu []byte, mobilityRestrictionList *ngapType.MobilityRestrictionList) ([]byte, error) {
 
 	var pdu ngapType.NGAPPDU
 
@@ -360,6 +360,19 @@ func BuildDownlinkNasTransport(ue *amf_context.RanUe, nasPdu []byte) ([]byte, er
 	// Old AMF (optional)
 	// RAN Paging Priority (optional)
 	// Mobility Restriction List (optional)
+	if ue.Ran.AnType == models.AccessType__3_GPP_ACCESS && mobilityRestrictionList != nil {
+		amfUe := ue.AmfUe
+		if amfUe == nil {
+			return nil, fmt.Errorf("amfUe is nil")
+		}
+
+		ie = ngapType.DownlinkNASTransportIEs{}
+		ie.Id.Value = ngapType.ProtocolIEIDMobilityRestrictionList
+		ie.Criticality.Value = ngapType.CriticalityPresentIgnore
+		ie.Value.Present = ngapType.DownlinkNASTransportIEsPresentMobilityRestrictionList
+		ie.Value.MobilityRestrictionList = mobilityRestrictionList
+		downlinkNasTransportIEs.List = append(downlinkNasTransportIEs.List, ie)
+	}
 	// Index to RAT/Frequency Selection Priority (optional)
 	// UE Aggregate Maximum Bit Rate (optional)
 	// Allowed NSSAI (optional)
@@ -975,9 +988,9 @@ func BuildInitialContextSetupRequest(
 
 	allowedNSSAI := ie.Value.AllowedNSSAI
 
-	for _, snssai := range amfUe.AllowedNssai[anType] {
+	for _, allowedSnssai := range amfUe.AllowedNssai[anType] {
 		allowedNSSAIItem := ngapType.AllowedNSSAIItem{}
-		ngapSnssai := ngapConvert.SNssaiToNgap(snssai)
+		ngapSnssai := ngapConvert.SNssaiToNgap(*allowedSnssai.AllowedSnssai)
 		allowedNSSAIItem.SNSSAI = ngapSnssai
 		allowedNSSAI.List = append(allowedNSSAI.List, allowedNSSAIItem)
 	}
@@ -1037,60 +1050,8 @@ func BuildInitialContextSetupRequest(
 		ie.Value.Present = ngapType.InitialContextSetupRequestIEsPresentMobilityRestrictionList
 		ie.Value.MobilityRestrictionList = new(ngapType.MobilityRestrictionList)
 
-		mobilityRestrictionList := ie.Value.MobilityRestrictionList
-		mobilityRestrictionList.ServingPLMN = ngapConvert.PlmnIdToNgap(amfUe.PlmnId)
-
-		if len(amfUe.AccessAndMobilitySubscriptionData.RatRestrictions) > 0 {
-			mobilityRestrictionList.RATRestrictions = new(ngapType.RATRestrictions)
-			ratRestrictions := mobilityRestrictionList.RATRestrictions
-			for _, ratType := range amfUe.AccessAndMobilitySubscriptionData.RatRestrictions {
-				item := ngapType.RATRestrictionsItem{}
-				item.PLMNIdentity = ngapConvert.PlmnIdToNgap(amfUe.PlmnId)
-				item.RATRestrictionInformation = ngapConvert.RATRestrictionInformationToNgap(ratType)
-				ratRestrictions.List = append(ratRestrictions.List, item)
-			}
-		}
-
-		if len(amfUe.AccessAndMobilitySubscriptionData.ForbiddenAreas) > 0 {
-			mobilityRestrictionList.ForbiddenAreaInformation = new(ngapType.ForbiddenAreaInformation)
-			forbiddenAreaInformation := mobilityRestrictionList.ForbiddenAreaInformation
-			for _, info := range amfUe.AccessAndMobilitySubscriptionData.ForbiddenAreas {
-				item := ngapType.ForbiddenAreaInformationItem{}
-				item.PLMNIdentity = ngapConvert.PlmnIdToNgap(amfUe.PlmnId)
-				for _, tac := range info.Tacs {
-					tacBytes, _ := hex.DecodeString(tac)
-					tacNgap := ngapType.TAC{}
-					tacNgap.Value = tacBytes
-					item.ForbiddenTACs.List = append(item.ForbiddenTACs.List, tacNgap)
-				}
-				forbiddenAreaInformation.List = append(forbiddenAreaInformation.List, item)
-			}
-		}
-
-		if amfUe.AmPolicyAssociation.ServAreaRes != nil {
-			mobilityRestrictionList.ServiceAreaInformation = new(ngapType.ServiceAreaInformation)
-			serviceAreaInformation := mobilityRestrictionList.ServiceAreaInformation
-
-			item := ngapType.ServiceAreaInformationItem{}
-			item.PLMNIdentity = ngapConvert.PlmnIdToNgap(amfUe.PlmnId)
-			var tacList []ngapType.TAC
-			for _, area := range amfUe.AmPolicyAssociation.ServAreaRes.Areas {
-				for _, tac := range area.Tacs {
-					tacBytes, _ := hex.DecodeString(tac)
-					tacNgap := ngapType.TAC{}
-					tacNgap.Value = tacBytes
-					tacList = append(tacList, tacNgap)
-				}
-			}
-			if amfUe.AmPolicyAssociation.ServAreaRes.RestrictionType == models.RestrictionType_ALLOWED_AREAS {
-				item.AllowedTACs = new(ngapType.AllowedTACs)
-				item.AllowedTACs.List = append(item.AllowedTACs.List, tacList...)
-			} else {
-				item.NotAllowedTACs = new(ngapType.NotAllowedTACs)
-				item.NotAllowedTACs.List = append(item.NotAllowedTACs.List, tacList...)
-			}
-			serviceAreaInformation.List = append(serviceAreaInformation.List, item)
-		}
+		mobilityRestrictionList := BuildIEMobilityRestrictionList(amfUe)
+		ie.Value.MobilityRestrictionList = &mobilityRestrictionList
 
 		initialContextSetupRequestIEs.List = append(initialContextSetupRequestIEs.List, ie)
 	}

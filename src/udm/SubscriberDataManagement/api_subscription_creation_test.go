@@ -10,13 +10,27 @@
 package SubscriberDataManagement_test
 
 import (
+	"context"
+	"fmt"
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
+	Nudm_SDM_Client "free5gc/lib/Nudm_SubscriberDataManagement"
+	"free5gc/lib/http2_util"
+	"free5gc/lib/openapi/models"
+	"free5gc/lib/path_util"
+	Nudm_SDM_Server "free5gc/src/udm/SubscriberDataManagement"
+	"free5gc/src/udm/logger"
+	"free5gc/src/udm/udm_context"
+	"free5gc/src/udm/udm_handler"
+	"net/http"
 	"testing"
 )
 
 // Subscribe - subscribe to notifications
 func TestSubscribe(t *testing.T) {
 
-	/*go func() { // udm server
+	go func() { // udm server
+
 		router := gin.Default()
 		Nudm_SDM_Server.AddService(router)
 
@@ -30,14 +44,13 @@ func TestSubscribe(t *testing.T) {
 			assert.True(t, err == nil)
 		}
 	}()
-
-	udm_util.testInitUdmConfig()
+	udm_context.TestInit()
 	go udm_handler.Handle()
 
 	go func() { // fake udr server
 		router := gin.Default()
 
-		router.POST("/nudr-dr/v1/subscription-data/context-data/sdm-subscriptions/:subsId", func(c *gin.Context) {
+		router.POST("/nudr-dr/v1/subscription-data/:ueId/context-data/sdm-subscriptions", func(c *gin.Context) {
 			supi := c.Param("supi")
 			fmt.Println("==========Subscribe - subscribe to notifications==========")
 			fmt.Println("supi: ", supi)
@@ -48,8 +61,10 @@ func TestSubscribe(t *testing.T) {
 				c.JSON(http.StatusInternalServerError, gin.H{})
 				return
 			}
-			fmt.Println("sdmSubscription - ", sdmSubscription.NfInstanceId)
-			c.JSON(http.StatusCreated, gin.H{})
+			var sdmSubscriptionResponse models.SdmSubscription
+			sdmSubscriptionResponse.NfInstanceId = sdmSubscription.NfInstanceId
+			fmt.Println("sdmSubscription : ", sdmSubscriptionResponse.NfInstanceId)
+			c.JSON(http.StatusCreated, sdmSubscription)
 		})
 
 		udrLogPath := path_util.Gofree5gcPath("free5gc/udrsslkey.log")
@@ -71,11 +86,11 @@ func TestSubscribe(t *testing.T) {
 	supi := "SDM1234"
 	var sdmSubscription models.SdmSubscription
 	sdmSubscription.NfInstanceId = "Test_NfinstanceId"
-
-	_, resp, err := clientAPI.SubscriptionCreationApi.Subscribe(context.TODO(), supi, sdmSubscription)
+	sdmSubscription.Dnn = "3"
+	_, resp, err := clientAPI.SubscriptionCreationApi.Subscribe(context.Background(), supi, sdmSubscription)
 	if err != nil {
 		fmt.Println(err.Error())
 	} else {
 		fmt.Println("resp: ", resp)
-	}*/
+	}
 }

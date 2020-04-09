@@ -13,7 +13,9 @@ import (
 	"free5gc/src/app"
 	"free5gc/src/n3iwf/factory"
 	"free5gc/src/n3iwf/logger"
+	"free5gc/src/n3iwf/n3iwf_data_relay"
 	"free5gc/src/n3iwf/n3iwf_handler"
+	"free5gc/src/n3iwf/n3iwf_ike/udp_server"
 	"free5gc/src/n3iwf/n3iwf_ngap/n3iwf_sctp"
 	"free5gc/src/n3iwf/n3iwf_util"
 	//"free5gc/src/n3iwf/n3iwf_context"
@@ -93,22 +95,43 @@ func (n3iwf *N3IWF) FilterCli(c *cli.Context) (args []string) {
 func (n3iwf *N3IWF) Start() {
 	initLog.Infoln("Server started")
 
-	n3iwf_util.InitN3IWFContext()
-
-	go n3iwf_handler.Handle()
+	if !n3iwf_util.InitN3IWFContext() {
+		initLog.Error("Initicating context failed")
+		return
+	}
 
 	wg := sync.WaitGroup{}
 
+	// N3IWF handler
+	go n3iwf_handler.Handle()
+	wg.Add(1)
+
+	// NGAP
 	n3iwf_sctp.InitiateSCTP(&wg)
 
-	wg.Wait()
+	// Relay listeners
+	// Control plane
+	if err := n3iwf_data_relay.SetupNASTCPServer(); err != nil {
+		initLog.Errorf("Listen N1 control plane traffic failed: %+v", err)
+	} else {
+		initLog.Info("NAS TCP server successfully started.")
+	}
+	// User plane
+	if err := n3iwf_data_relay.ListenN1UPTraffic(); err != nil {
+		initLog.Errorf("Listen N1 user plane traffic failed: %+v", err)
+		return
+	} else {
+		initLog.Info("Listening N1 user plane traffic")
+	}
+	wg.Add(2)
 
-	//self := n3iwf_context.N3IWFSelf()
-	//self := amf_context.AMF_Self()
-	//supi := "imsi-0010202"
-	//ue := self.NewAmfUe(supi)
-	//ue.GroupID = "12121212-208-93-01010101"
-	//ue.TimeZone = "UTC"
+	// IKE
+	udp_server.Run()
+	wg.Add(1)
+
+	initLog.Info("N3IWF running...")
+
+	wg.Wait()
 
 }
 

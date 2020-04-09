@@ -10,13 +10,29 @@
 package SubscriberDataManagement_test
 
 import (
+	"context"
+	"fmt"
+	"github.com/antihax/optional"
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
+	Nudm_SDM_Client "free5gc/lib/Nudm_SubscriberDataManagement"
+	"free5gc/lib/http2_util"
+	"free5gc/lib/openapi/common"
+	"free5gc/lib/openapi/models"
+	"free5gc/lib/path_util"
+	Nudm_SDM_Server "free5gc/src/udm/SubscriberDataManagement"
+	"free5gc/src/udm/logger"
+	"free5gc/src/udm/udm_context"
+	"free5gc/src/udm/udm_handler"
+	"log"
+	"net/http"
 	"testing"
 )
 
 // GetIdTranslationResult - retrieve a UE's SUPI
 func TestGetIdTranslationResult(t *testing.T) {
 
-	/*go udm_handler.Handle()
+	go udm_handler.Handle()
 	go func() { // udm server
 		router := gin.Default()
 		Nudm_SDM_Server.AddService(router)
@@ -31,6 +47,7 @@ func TestGetIdTranslationResult(t *testing.T) {
 		}
 	}()
 
+	udm_context.TestInit()
 	go func() { // fake udr server
 		router := gin.Default()
 
@@ -60,12 +77,22 @@ func TestGetIdTranslationResult(t *testing.T) {
 	clientAPI := Nudm_SDM_Client.NewAPIClient(cfg)
 
 	gpsi := "SDM1234"
-	idTranslationResult, resp, err := clientAPI.GPSIToSUPITranslationApi.GetIdTranslationResult(context.Background(), gpsi, nil)
-
+	var getIdTranslationResultParamOpts Nudm_SDM_Client.GetIdTranslationResultParamOpts
+	getIdTranslationResultParamOpts.SupportedFeatures = optional.NewString("supportedFeatures")
+	idTranslationResult, resp, err := clientAPI.GPSIToSUPITranslationApi.GetIdTranslationResult(context.Background(), gpsi, &getIdTranslationResultParamOpts)
 	if err != nil {
-		fmt.Println(err.Error())
+		var problemDetails models.ProblemDetails
+		if resp == nil {
+			log.Panic(err)
+		} else if err.Error() != resp.Status {
+			log.Panic(err)
+		} else {
+			problemDetails.Cause = err.(common.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
+			fmt.Println("problemDetails: ", problemDetails)
+		}
+		return
 	} else {
 		fmt.Println("resp: ", resp)
 		fmt.Println("idTranslationResult: ", idTranslationResult)
-	}*/
+	}
 }

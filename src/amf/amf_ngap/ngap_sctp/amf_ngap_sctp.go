@@ -1,7 +1,7 @@
 package amf_ngap_sctp
 
 import (
-	"github.com/ishidawataru/sctp"
+	"git.cs.nctu.edu.tw/calee/sctp"
 	"free5gc/src/amf/amf_handler/amf_message"
 	"net"
 	"sync"
@@ -67,7 +67,7 @@ func (l *SCTPListener) Close() {
 		delete(l.conn, key)
 		amf_message.SendMessage(msg)
 	}
-	logger.NgapLog.Errorln(l.ln.Addr())
+	logger.NgapLog.Infoln(l.ln.Addr())
 	l.ln.Close()
 	time.Sleep(10 * time.Millisecond)
 	l.mtx.Unlock()

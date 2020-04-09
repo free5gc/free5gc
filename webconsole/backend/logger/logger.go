@@ -13,6 +13,7 @@ var log *logrus.Logger
 var AppLog *logrus.Entry
 var InitLog *logrus.Entry
 var WebUILog *logrus.Entry
+var ContextLog *logrus.Entry
 
 func init() {
 	log = logrus.New()
@@ -32,7 +33,6 @@ func init() {
 		FieldMap:                  nil,
 		CallerPrettyfier: func(f *runtime.Frame) (string, string) {
 			orgFilename, _ := os.Getwd()
-			log.Traceln("orgFilename", orgFilename)
 			repopath := orgFilename
 			repopath = strings.Replace(repopath, "/bin", "", 1)
 			filename := strings.Replace(f.File, repopath, "", -1)
@@ -43,6 +43,7 @@ func init() {
 	AppLog = log.WithFields(logrus.Fields{"WebUI": "app"})
 	InitLog = log.WithFields(logrus.Fields{"WebUI": "init"})
 	WebUILog = log.WithFields(logrus.Fields{"WebUI": "WebUI"})
+	ContextLog = log.WithFields(logrus.Fields{"WebUI": "Context"})
 }
 
 func SetLogLevel(level logrus.Level) {

@@ -10,12 +10,27 @@
 package EventExposure_test
 
 import (
+	"context"
+	"fmt"
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
+	Nudm_EE_Client "free5gc/lib/Nudm_EventExposure"
+	"free5gc/lib/http2_util"
+	"free5gc/lib/openapi/models"
+	"free5gc/lib/path_util"
+	Nudm_EE_Server "free5gc/src/udm/EventExposure"
+	"free5gc/src/udm/logger"
+	"free5gc/src/udm/udm_context"
+	"free5gc/src/udm/udm_handler"
+	"net/http"
 	"testing"
 )
 
 // UpdateEeSubscription - Patch
 func TestUpdateEeSubscription(t *testing.T) {
-	/*go udm_handler.Handle()
+
+	udm_context.TestInit()
+	go udm_handler.Handle()
 	go func() { // udm server
 		router := gin.Default()
 		Nudm_EE_Server.AddService(router)
@@ -33,18 +48,18 @@ func TestUpdateEeSubscription(t *testing.T) {
 	go func() { // fake udr server
 		router := gin.Default()
 
-		router.PATCH("/nudr-dr/v1/:ueIdentity/ee-subscriptions/:subscriptionId", func(c *gin.Context) {
+		router.PUT("/nudr-dr/v1/subscription-data/:ueId/context-data/ee-subscriptions", func(c *gin.Context) {
 			ueIdentity := c.Param("ueIdentity")
-			fmt.Println("==========CreateEeSubscription - Subscribe==========")
+			fmt.Println("==========Update EeSubscription - Modify ==========")
 			fmt.Println("ueIdentity: ", ueIdentity)
-			var patchItems []models.PatchItem
+			var patchItems models.PatchItem
 			if err := c.ShouldBindJSON(&patchItems); err != nil {
 				fmt.Println("fake udm server error: ", err.Error())
 				c.JSON(http.StatusInternalServerError, gin.H{})
 				return
 			}
 			fmt.Println("patchItems: ", patchItems)
-			c.JSON(http.StatusCreated, gin.H{})
+			c.JSON(http.StatusNoContent, gin.H{})
 		})
 
 		udrLogPath := path_util.Gofree5gcPath("free5gc/udrsslkey.log")
@@ -67,11 +82,9 @@ func TestUpdateEeSubscription(t *testing.T) {
 	subscriptionId := "Test001"
 	ueIdentity := "SDM1234"
 	resp, err := clientAPI.UpdateEESubscriptionApi.UpdateEeSubscription(context.Background(), ueIdentity, subscriptionId, patchItem)
-
 	if err != nil {
 		fmt.Println(err.Error())
 	} else {
 		fmt.Println("resp: ", resp)
 	}
-	*/
 }

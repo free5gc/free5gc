@@ -10,6 +10,7 @@ import (
 	"free5gc/src/app"
 	"free5gc/src/nrf/logger"
 	"free5gc/src/nrf/nrf_service"
+	"free5gc/src/nrf/version"
 	"os"
 
 	"github.com/sirupsen/logrus"
@@ -28,6 +29,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "nrf"
 	fmt.Print(app.Name, "\n")
+	appLog.Infoln("NRF version: ", version.GetVersion())
 	app.Usage = "-free5gccfg common configuration file -nrfcfg nrf configuration file"
 	app.Action = action
 	app.Flags = NRF.GetCliCmd()

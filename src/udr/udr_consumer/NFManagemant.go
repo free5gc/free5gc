@@ -3,29 +3,24 @@ package udr_consumer
 import (
 	"context"
 	"fmt"
-	"github.com/google/uuid"
 	"free5gc/lib/Nnrf_NFManagement"
 	"free5gc/lib/openapi/models"
 	"free5gc/src/udr/factory"
+	"free5gc/src/udr/udr_context"
 	"net/http"
 	"strings"
 	"time"
 )
 
-func BuildNFInstance() (profile models.NfProfile) {
+func BuildNFInstance(context *udr_context.UDRContext) (profile models.NfProfile) {
 	config := factory.UdrConfig
-	sbi := config.Configuration.Sbi
-	profile.NfInstanceId = uuid.New().String()
+	profile.NfInstanceId = context.NfId
 	profile.NfType = models.NfType_UDR
 	profile.NfStatus = models.NfStatus_REGISTERED
-	// var plmns []models.PlmnId
-	// for _, plmnItem := range context.PlmnSupportList {
-	// 	plmns = append(plmns, plmnItem.PlmnId)
-	// }
 	version := config.Info.Version
 	tmpVersion := strings.Split(version, ".")
 	versionUri := "v" + tmpVersion[0]
-	apiPrefix := fmt.Sprintf("%s://%s:%d", sbi.Scheme, sbi.IPv4Addr, sbi.Port)
+	apiPrefix := fmt.Sprintf("%s://%s:%d", context.UriScheme, context.HttpIPv4Address, context.HttpIpv4Port)
 	services := []models.NfService{
 		{
 			ServiceInstanceId: "DataRepository",
@@ -36,14 +31,14 @@ func BuildNFInstance() (profile models.NfProfile) {
 					ApiVersionInUri: versionUri,
 				},
 			},
-			Scheme:          models.UriScheme(sbi.Scheme),
+			Scheme:          models.UriScheme(context.UriScheme),
 			NfServiceStatus: models.NfServiceStatus_REGISTERED,
 			ApiPrefix:       apiPrefix,
 			IpEndPoints: &[]models.IpEndPoint{
 				{
-					Ipv4Address: sbi.IPv4Addr,
+					Ipv4Address: context.HttpIPv4Address,
 					Transport:   models.TransportProtocol_TCP,
-					Port:        int32(sbi.Port),
+					Port:        int32(context.HttpIpv4Port),
 				},
 			},
 		},

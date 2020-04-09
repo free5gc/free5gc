@@ -9,17 +9,13 @@
 
 package models
 
-// BdtPolicyData - Describes the authorization data of an Individual BDT policy resource.
+// Describes the authorization data of an Individual BDT policy resource.
 type BdtPolicyData struct {
-
 	// string identifying a BDT Reference ID as defined in subclause 5.3.3 of 3GPP TS 29.154.
-	BdtRefId string `json:"bdtRefId"`
-
+	BdtRefId string `json:"bdtRefId" yaml:"bdtRefId" bson:"bdtRefId" mapstructure:"BdtRefId"`
 	// Contains transfer policies.
-	TransfPolicies []TransferPolicy `json:"transfPolicies"`
-
+	TransfPolicies []TransferPolicy `json:"transfPolicies" yaml:"transfPolicies" bson:"transfPolicies" mapstructure:"TransfPolicies"`
 	// Contains an identity of the selected transfer policy.
-	SelTransPolicyId int32 `json:"selTransPolicyId,omitempty"`
-
-	SuppFeat string `json:"suppFeat,omitempty"`
+	SelTransPolicyId int32  `json:"selTransPolicyId,omitempty" yaml:"selTransPolicyId" bson:"selTransPolicyId" mapstructure:"SelTransPolicyId"`
+	SuppFeat         string `json:"suppFeat,omitempty" yaml:"suppFeat" bson:"suppFeat" mapstructure:"SuppFeat"`
 }

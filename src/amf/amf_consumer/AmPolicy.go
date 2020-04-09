@@ -10,7 +10,7 @@ import (
 	"regexp"
 )
 
-func AMPolicyControlCreate(ue *amf_context.AmfUe) (problemDetails *models.ProblemDetails, err error) {
+func AMPolicyControlCreate(ue *amf_context.AmfUe, anType models.AccessType) (problemDetails *models.ProblemDetails, err error) {
 
 	configuration := Npcf_AMPolicy.NewConfiguration()
 	configuration.SetBasePath(ue.PcfUri)
@@ -23,6 +23,7 @@ func AMPolicyControlCreate(ue *amf_context.AmfUe) (problemDetails *models.Proble
 		Supi:            ue.Supi,
 		Pei:             ue.Pei,
 		Gpsi:            ue.Gpsi,
+		AccessType:      anType,
 		ServingPlmn: &models.NetworkId{
 			Mcc: ue.PlmnId.Mcc,
 			Mnc: ue.PlmnId.Mnc,
@@ -36,12 +37,27 @@ func AMPolicyControlCreate(ue *amf_context.AmfUe) (problemDetails *models.Proble
 
 	res, httpResp, localErr := client.DefaultApi.PoliciesPost(context.Background(), policyAssociationRequest)
 	if localErr == nil {
-		ue.AmPolicyAssociation = &res
 		locationHeader := httpResp.Header.Get("Location")
 		logger.ConsumerLog.Debugf("location header: %+v", locationHeader)
+		ue.AmPolicyUri = locationHeader
+
 		re := regexp.MustCompile("/policies/.*")
 		match := re.FindStringSubmatch(locationHeader)
+
 		ue.PolicyAssociationId = match[0][10:]
+		ue.AmPolicyAssociation = &res
+
+		if res.Triggers != nil {
+			for _, trigger := range res.Triggers {
+				if trigger == models.RequestTrigger_LOC_CH {
+					ue.RequestTriggerLocationChange = true
+				}
+				if trigger == models.RequestTrigger_PRA_CH {
+					// TODO: Presence Reporting Area handling (TS 23.503 6.1.2.5, TS 23.501 5.6.11)
+				}
+			}
+		}
+
 		logger.ConsumerLog.Debugf("UE AM Policy Association ID: %s", ue.PolicyAssociationId)
 		logger.ConsumerLog.Debugf("AmPolicyAssociation: %+v", ue.AmPolicyAssociation)
 	} else if httpResp != nil {
@@ -70,8 +86,15 @@ func AMPolicyControlUpdate(ue *amf_context.AmfUe, updateRequest models.PolicyAss
 		if res.Rfsp != 0 {
 			ue.AmPolicyAssociation.Rfsp = res.Rfsp
 		}
-		if len(res.Triggers) > 0 {
-			ue.AmPolicyAssociation.Triggers = res.Triggers
+		ue.AmPolicyAssociation.Triggers = res.Triggers
+		ue.RequestTriggerLocationChange = false
+		for _, trigger := range res.Triggers {
+			if trigger == models.RequestTrigger_LOC_CH {
+				ue.RequestTriggerLocationChange = true
+			}
+			if trigger == models.RequestTrigger_PRA_CH {
+				// TODO: Presence Reporting Area handling (TS 23.503 6.1.2.5, TS 23.501 5.6.11)
+			}
 		}
 		return
 	} else if httpResp != nil {
@@ -95,7 +118,7 @@ func AMPolicyControlDelete(ue *amf_context.AmfUe) (problemDetails *models.Proble
 
 	httpResp, localErr := client.DefaultApi.PoliciesPolAssoIdDelete(context.Background(), ue.PolicyAssociationId)
 	if localErr == nil {
-		return
+		ue.RemoveAmPolicyAssociation()
 	} else if httpResp != nil {
 		if httpResp.Status != localErr.Error() {
 			err = localErr

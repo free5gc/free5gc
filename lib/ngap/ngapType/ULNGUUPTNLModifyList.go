@@ -7,5 +7,5 @@ package ngapType
 /* Sequence of = 35, FULL Name = struct UL_NGU_UP_TNLModifyList */
 /* ULNGUUPTNLModifyItem */
 type ULNGUUPTNLModifyList struct {
-	List []ULNGUUPTNLModifyItem `aper:"valueExt,sizeLB:4,sizeUB:4"`
+	List []ULNGUUPTNLModifyItem `aper:"valueExt,sizeLB:0,sizeUB:4"`
 }

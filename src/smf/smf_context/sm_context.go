@@ -1,12 +1,21 @@
 package smf_context
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
-	"github.com/google/uuid"
 	"free5gc/lib/Namf_Communication"
+	"free5gc/lib/Nnrf_NFDiscovery"
 	"free5gc/lib/Npcf_SMPolicyControl"
+	"free5gc/lib/nas/nasConvert"
+	"free5gc/lib/nas/nasMessage"
+	"free5gc/lib/openapi/common"
 	"free5gc/lib/openapi/models"
+	"free5gc/src/smf/logger"
 	"net"
+	"net/http"
+
+	"github.com/google/uuid"
 )
 
 var smContextPool map[string]*SMContext
@@ -61,17 +70,24 @@ type SMContext struct {
 	OldPduSessionId int32
 	HoState         models.HoState
 
-	PDUAddress net.IP
+	PDUAddress             net.IP
+	SelectedPDUSessionType uint8
+
+	DnnConfiguration models.DnnConfiguration
+	SessionRule      models.SessionRule
 
 	// Client
 	SMPolicyClient      *Npcf_SMPolicyControl.APIClient
 	CommunicationClient *Namf_Communication.APIClient
 
-	AMFProfile models.NfProfile
+	AMFProfile         models.NfProfile
+	SelectedPCFProfile models.NfProfile
+	SmStatusNotifyUri  string
 
 	SMState SMState
 
-	Tunnel *UPTunnel
+	Tunnel    *UPTunnel
+	BPManager *BPManager
 }
 
 func canonicalName(identifier string, pduSessID int32) (canonical string) {
@@ -142,4 +158,71 @@ func (smContext *SMContext) BuildCreatedData() (createdData *models.SmContextCre
 	createdData = new(models.SmContextCreatedData)
 	createdData.SNssai = smContext.Snssai
 	return
+}
+
+func (smContext *SMContext) PDUAddressToNAS() (addr [12]byte, addrLen uint8) {
+	copy(addr[:], smContext.PDUAddress)
+	switch smContext.SelectedPDUSessionType {
+	case nasMessage.PDUSessionTypeIPv4:
+		addrLen = 4 + 1
+	case nasMessage.PDUSessionTypeIPv6:
+	case nasMessage.PDUSessionTypeIPv4IPv6:
+		addrLen = 12 + 1
+	}
+	return
+}
+
+// PCFSelection will select PCF for this SM Context
+func (smContext *SMContext) PCFSelection() (err error) {
+
+	// Send NFDiscovery for find PCF
+	localVarOptionals := Nnrf_NFDiscovery.SearchNFInstancesParamOpts{}
+
+	rep, res, err := SMF_Self().NFDiscoveryClient.NFInstancesStoreApi.SearchNFInstances(context.TODO(), models.NfType_PCF, models.NfType_SMF, &localVarOptionals)
+	if err != nil {
+		return
+	}
+
+	if res != nil {
+		if status := res.StatusCode; status != http.StatusOK {
+			apiError := err.(common.GenericOpenAPIError)
+			problemDetails := apiError.Model().(models.ProblemDetails)
+
+			logger.CtxLog.Warningf("NFDiscovery PCF return status: %d\n", status)
+			logger.CtxLog.Warningf("Detail: %v\n", problemDetails.Title)
+		}
+	}
+
+	// Select PCF from available PCF
+
+	smContext.SelectedPCFProfile = rep.NfInstances[0]
+
+	SelectedPCFProfileString, _ := json.MarshalIndent(smContext.SelectedPCFProfile, "", "  ")
+	logger.CtxLog.Tracef("Select PCF Profile: %s\n", SelectedPCFProfileString)
+
+	// Create SMPolicyControl Client for this SM Context
+	for _, service := range *smContext.SelectedPCFProfile.NfServices {
+		if service.ServiceName == models.ServiceName_NPCF_SMPOLICYCONTROL {
+			SmPolicyControlConf := Npcf_SMPolicyControl.NewConfiguration()
+			SmPolicyControlConf.SetBasePath(service.ApiPrefix)
+			smContext.SMPolicyClient = Npcf_SMPolicyControl.NewAPIClient(SmPolicyControlConf)
+		}
+	}
+
+	return
+}
+
+func (smContext *SMContext) isAllowedPDUSessionType(nasPDUSessionType uint8) bool {
+	dnnPDUSessionType := smContext.DnnConfiguration.PduSessionTypes
+	if dnnPDUSessionType == nil {
+		logger.CtxLog.Errorf("this SMContext[%s] has no subscription pdu session type info\n", smContext.Ref)
+		return false
+	}
+
+	for _, allowedPDUSessionType := range smContext.DnnConfiguration.PduSessionTypes.AllowedSessionTypes {
+		if allowedPDUSessionType == nasConvert.PDUSessionTypeToModels(nasPDUSessionType) {
+			return true
+		}
+	}
+	return false
 }

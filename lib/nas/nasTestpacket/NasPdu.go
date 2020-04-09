@@ -25,6 +25,8 @@ const (
 
 func GetRegistrationRequest(registrationType uint8, mobileIdentity nasType.MobileIdentity5GS, requestedNSSAI *nasType.RequestedNSSAI, uplinkDataStatus *nasType.UplinkDataStatus) (nasPdu []byte) {}
 
+func GetRegistrationRequestWith5GMM(registrationType uint8, mobileIdentity nasType.MobileIdentity5GS, requestedNSSAI *nasType.RequestedNSSAI, uplinkDataStatus *nasType.UplinkDataStatus) (nasPdu []byte) {}
+
 func GetPduSessionEstablishmentRequest(pduSessionId uint8) (nasPdu []byte) {}
 
 func GetUlNasTransport_PduSessionEstablishmentRequest(pduSessionId uint8, requestType uint8, dnnString string, sNssai *models.Snssai) (nasPdu []byte) {}
@@ -61,8 +63,8 @@ func GetAuthenticationFailure(cause5GMM uint8, authenticationFailureParam []uint
 
 func GetRegistrationComplete(sorTransparentContainer []uint8) (nasPdu []byte) {}
 
-// TODO: finish it; TS 24.501 8.2.26
-func GetSecurityModeComplete() (nasPdu []byte) {}
+// TS 24.501 8.2.26
+func GetSecurityModeComplete(nasMessageContainer []uint8) (nasPdu []byte) {}
 
 func GetSecurityModeReject(cause5GMM uint8) (nasPdu []byte) {}
 

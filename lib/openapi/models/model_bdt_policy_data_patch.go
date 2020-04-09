@@ -9,9 +9,8 @@
 
 package models
 
-// BdtPolicyDataPatch - A JSON Merge Patch body schema containing modification instruction to be performed on the BdtPolicy data structure to select a transfer policy. Adds selTransPolicyId to BdtPolicyData data structure.
+// A JSON Merge Patch body schema containing modification instruction to be performed on the BdtPolicy data structure to select a transfer policy. Adds selTransPolicyId to BdtPolicyData data structure.
 type BdtPolicyDataPatch struct {
-
 	// Contains an identity (i.e. transPolicyId value) of the selected transfer policy.
-	SelTransPolicyId int32 `json:"selTransPolicyId"`
+	SelTransPolicyId int32 `json:"selTransPolicyId" yaml:"selTransPolicyId" bson:"selTransPolicyId" mapstructure:"SelTransPolicyId"`
 }

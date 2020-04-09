@@ -47,6 +47,10 @@ func AddService(engine *gin.Engine) *gin.RouterGroup {
 			group.GET(route.Pattern, route.HandlerFunc)
 		case "POST":
 			group.POST(route.Pattern, route.HandlerFunc)
+		case "PUT":
+			group.PUT(route.Pattern, route.HandlerFunc)
+		case "DELETE":
+			group.DELETE(route.Pattern, route.HandlerFunc)
 		case "PATCH":
 			group.PATCH(route.Pattern, route.HandlerFunc)
 		}
@@ -63,7 +67,7 @@ var routes = Routes{
 	{
 		"Index",
 		"GET",
-		"",
+		"/",
 		Index,
 	},
 

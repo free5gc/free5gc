@@ -10,13 +10,28 @@
 package SubscriberDataManagement_test
 
 import (
+	"context"
+	"fmt"
+	"github.com/antihax/optional"
+	Nudm_SDM_Client "free5gc/lib/Nudm_SubscriberDataManagement"
+	"free5gc/lib/http2_util"
+	"free5gc/lib/openapi/models"
+	"free5gc/lib/path_util"
+	Nudm_SDM_Server "free5gc/src/udm/SubscriberDataManagement"
+	"free5gc/src/udm/logger"
+	"free5gc/src/udm/udm_context"
+	"free5gc/src/udm/udm_handler"
+	"net/http"
 	"testing"
+
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
 )
 
 // GetUeContextInSmfData - retrieve a UE's UE Context In SMF Data
 func TestGetUeContextInSmfData(t *testing.T) {
 
-	/*go udm_handler.Handle()
+	go udm_handler.Handle()
 	go func() { // udm server
 		router := gin.Default()
 		Nudm_SDM_Server.AddService(router)
@@ -31,6 +46,8 @@ func TestGetUeContextInSmfData(t *testing.T) {
 		}
 	}()
 
+	udm_context.TestInit()
+
 	go func() { // fake udr server
 		router := gin.Default()
 
@@ -40,7 +57,7 @@ func TestGetUeContextInSmfData(t *testing.T) {
 			fmt.Println("supi: ", supi)
 
 			var testueContextInSmfData models.UeContextInSmfData
-			testueContextInSmfData.EmergencyInfo.PgwFqdn = "TEst_00"
+			// testueContextInSmfData.EmergencyInfo.PgwFqdn = "TEst_00"
 			c.JSON(http.StatusOK, testueContextInSmfData)
 		})
 
@@ -61,11 +78,12 @@ func TestGetUeContextInSmfData(t *testing.T) {
 	clientAPI := Nudm_SDM_Client.NewAPIClient(cfg)
 
 	supi := "SDM1234"
-	_, resp, err := clientAPI.UEContextInSMFDataRetrievalApi.GetUeContextInSmfData(context.Background(), supi, nil)
+	var getUeContextInSmfDataParamOpts Nudm_SDM_Client.GetUeContextInSmfDataParamOpts
+	getUeContextInSmfDataParamOpts.SupportedFeatures = optional.NewString("supportedFeatures")
+	_, resp, err := clientAPI.UEContextInSMFDataRetrievalApi.GetUeContextInSmfData(context.Background(), supi, &getUeContextInSmfDataParamOpts)
 	if err != nil {
 		fmt.Println(err.Error())
 	} else {
 		fmt.Println("resp: ", resp)
 	}
-	*/
 }

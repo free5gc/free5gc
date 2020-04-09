@@ -31,7 +31,10 @@ func SendToRan(ran *amf_context.AmfRan, packet []byte) {
 
 	ngaplog.Debugf("[NGAP] Send To Ran [IP: %s]", ran.Conn.RemoteAddr().String())
 
-	ngapSctp.SendMsg(ran.Conn, packet)
+	if err := ngapSctp.SendMsg(ran.Conn, packet); err != nil {
+		ngaplog.Error("Send error")
+		return
+	}
 }
 
 func SendToRanUe(ue *amf_context.RanUe, packet []byte) {
@@ -130,7 +133,7 @@ func SendNGResetAcknowledge(ran *amf_context.AmfRan, partOfNGInterface *ngapType
 	SendToRan(ran, pkt)
 }
 
-func SendDownlinkNasTransport(ue *amf_context.RanUe, nasPdu []byte) {
+func SendDownlinkNasTransport(ue *amf_context.RanUe, nasPdu []byte, mobilityRestrictionList *ngapType.MobilityRestrictionList) {
 
 	ngaplog.Info("[AMF] Send Downlink Nas Transport")
 
@@ -143,9 +146,9 @@ func SendDownlinkNasTransport(ue *amf_context.RanUe, nasPdu []byte) {
 		ngaplog.Errorf("[Send DownlinkNasTransport] Error: nasPdu is nil")
 	}
 
-	pkt, err := BuildDownlinkNasTransport(ue, nasPdu)
+	pkt, err := BuildDownlinkNasTransport(ue, nasPdu, mobilityRestrictionList)
 	if err != nil {
-		ngaplog.Errorf("Build NGResetAcknowledge failed : %s", err.Error())
+		ngaplog.Errorf("Build DownlinkNasTransport failed : %s", err.Error())
 		return
 	}
 	SendToRanUe(ue, pkt)

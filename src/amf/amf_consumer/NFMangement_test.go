@@ -26,10 +26,23 @@ func TestRegisterNFInstance(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	uri, err1 := amf_consumer.SendRegisterNFInstance(TestAmf.TestAmf.NrfUri, TestAmf.TestAmf.NfId, nfprofile)
+	uri, nfId, err1 := amf_consumer.SendRegisterNFInstance(TestAmf.TestAmf.NrfUri, TestAmf.TestAmf.NfId, nfprofile)
 	if err1 != nil {
 		t.Error(err1.Error())
 	} else {
+		t.Logf("Retrieve NfInstanceId: %s", nfId)
 		TestAmf.Config.Dump(uri)
+	}
+}
+
+func TestDeregisterNFInstance(t *testing.T) {
+
+	TestRegisterNFInstance(t)
+
+	problemDetails, err := amf_consumer.SendDeregisterNFInstance()
+	if err != nil {
+		t.Error(err.Error())
+	} else if problemDetails != nil {
+		t.Errorf("Problem Detail[%+v]", problemDetails)
 	}
 }

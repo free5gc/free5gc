@@ -111,7 +111,7 @@ func BuildNGSetupRequest() (pdu ngapType.NGAPPDU) {
 	return
 }
 
-func BuildNGReset() (pdu ngapType.NGAPPDU) {
+func BuildNGReset(partOfNGInterface *ngapType.UEAssociatedLogicalNGConnectionList) (pdu ngapType.NGAPPDU) {
 
 	pdu.Present = ngapType.NGAPPDUPresentInitiatingMessage
 	pdu.InitiatingMessage = new(ngapType.InitiatingMessage)
@@ -148,10 +148,15 @@ func BuildNGReset() (pdu ngapType.NGAPPDU) {
 	ie.Value.ResetType = new(ngapType.ResetType)
 
 	resetType := ie.Value.ResetType
-	resetType.Present = ngapType.ResetTypePresentNGInterface
-	resetType.NGInterface = new(ngapType.ResetAll)
-
-	resetType.NGInterface.Value = ngapType.ResetAllPresentResetAll
+	if partOfNGInterface == nil {
+		resetType.Present = ngapType.ResetTypePresentNGInterface
+		resetType.NGInterface = new(ngapType.ResetAll)
+		resetType.NGInterface.Value = ngapType.ResetAllPresentResetAll
+	} else {
+		resetType.Present = ngapType.ResetTypePresentPartOfNGInterface
+		resetType.PartOfNGInterface = new(ngapType.UEAssociatedLogicalNGConnectionList)
+		resetType.PartOfNGInterface = partOfNGInterface
+	}
 
 	nGResetIEs.List = append(nGResetIEs.List, ie)
 
@@ -1238,6 +1243,62 @@ func BuildAMFConfigurationUpdateFailure() (pdu ngapType.NGAPPDU) {
 
 }
 
+func BuildUERadioCapabilityCheckRequest(amfUeNgapID, ranUeNgapID int64) (pdu ngapType.NGAPPDU) {
+
+	pdu.Present = ngapType.NGAPPDUPresentInitiatingMessage
+	pdu.InitiatingMessage = new(ngapType.InitiatingMessage)
+
+	initiatingMessage := pdu.InitiatingMessage
+	initiatingMessage.ProcedureCode.Value = ngapType.ProcedureCodeUERadioCapabilityCheck
+	initiatingMessage.Criticality.Value = ngapType.CriticalityPresentReject
+
+	initiatingMessage.Value.Present = ngapType.InitiatingMessagePresentUERadioCapabilityCheckRequest
+	initiatingMessage.Value.UERadioCapabilityCheckRequest = new(ngapType.UERadioCapabilityCheckRequest)
+
+	uERadioCapabilityCheckRequest := initiatingMessage.Value.UERadioCapabilityCheckRequest
+	uERadioCapabilityCheckRequestIEs := &uERadioCapabilityCheckRequest.ProtocolIEs
+	// AMFUENGAPID
+	{
+		ie := ngapType.UERadioCapabilityCheckRequestIEs{}
+		ie.Id.Value = ngapType.ProtocolIEIDAMFUENGAPID
+		ie.Criticality.Value = ngapType.CriticalityPresentReject
+		ie.Value.Present = ngapType.UERadioCapabilityCheckRequestIEsPresentAMFUENGAPID
+		ie.Value.AMFUENGAPID = new(ngapType.AMFUENGAPID)
+
+		aMFUENGAPID := ie.Value.AMFUENGAPID
+		aMFUENGAPID.Value = amfUeNgapID
+		uERadioCapabilityCheckRequestIEs.List = append(uERadioCapabilityCheckRequestIEs.List, ie)
+	}
+	// RANUENGAPID
+	{
+		ie := ngapType.UERadioCapabilityCheckRequestIEs{}
+		ie.Id.Value = ngapType.ProtocolIEIDRANUENGAPID
+		ie.Criticality.Value = ngapType.CriticalityPresentReject
+		ie.Value.Present = ngapType.UERadioCapabilityCheckRequestIEsPresentRANUENGAPID
+		ie.Value.RANUENGAPID = new(ngapType.RANUENGAPID)
+
+		rANUENGAPID := ie.Value.RANUENGAPID
+		rANUENGAPID.Value = ranUeNgapID
+		uERadioCapabilityCheckRequestIEs.List = append(uERadioCapabilityCheckRequestIEs.List, ie)
+	}
+	// UERadioCapability
+	{
+		ie := ngapType.UERadioCapabilityCheckRequestIEs{}
+		ie.Id.Value = ngapType.ProtocolIEIDUERadioCapability
+		ie.Criticality.Value = ngapType.CriticalityPresentIgnore
+		ie.Value.Present = ngapType.UERadioCapabilityCheckRequestIEsPresentUERadioCapability
+		ie.Value.UERadioCapability = new(ngapType.UERadioCapability)
+
+		uERadioCapability := ie.Value.UERadioCapability
+		uERadioCapability.Value = aper.OctetString("\x00\x00\x01")
+
+		uERadioCapabilityCheckRequestIEs.List = append(uERadioCapabilityCheckRequestIEs.List, ie)
+	}
+
+	return
+
+}
+
 func BuildUERadioCapabilityCheckResponse() (pdu ngapType.NGAPPDU) {
 
 	pdu.Present = ngapType.NGAPPDUPresentSuccessfulOutcome
@@ -2247,6 +2308,99 @@ func BuildRanConfigurationUpdate() (pdu ngapType.NGAPPDU) {
 	return
 }
 
+func BuildRanConfigurationUpdateAck(diagnostics *ngapType.CriticalityDiagnostics) (pdu ngapType.NGAPPDU) {
+
+	pdu.Present = ngapType.NGAPPDUPresentSuccessfulOutcome
+	pdu.SuccessfulOutcome = new(ngapType.SuccessfulOutcome)
+
+	successfulOutcome := pdu.SuccessfulOutcome
+	successfulOutcome.ProcedureCode.Value = ngapType.ProcedureCodeRANConfigurationUpdate
+	successfulOutcome.Criticality.Value = ngapType.CriticalityPresentReject
+
+	successfulOutcome.Value.Present = ngapType.SuccessfulOutcomePresentRANConfigurationUpdateAcknowledge
+	successfulOutcome.Value.RANConfigurationUpdateAcknowledge = new(ngapType.RANConfigurationUpdateAcknowledge)
+
+	rANConfigurationUpdateAcknowledge := successfulOutcome.Value.RANConfigurationUpdateAcknowledge
+	rANConfigurationUpdateAcknowledgeIEs := &rANConfigurationUpdateAcknowledge.ProtocolIEs
+	// CriticalityDiagnostics
+	if diagnostics != nil {
+		ie := ngapType.RANConfigurationUpdateAcknowledgeIEs{}
+		ie.Id.Value = ngapType.ProtocolIEIDCriticalityDiagnostics
+		ie.Criticality.Value = ngapType.CriticalityPresentIgnore
+		ie.Value.Present = ngapType.RANConfigurationUpdateAcknowledgeIEsPresentCriticalityDiagnostics
+		ie.Value.CriticalityDiagnostics = new(ngapType.CriticalityDiagnostics)
+
+		criticalityDiagnostics := ie.Value.CriticalityDiagnostics
+		*criticalityDiagnostics = *diagnostics
+
+		rANConfigurationUpdateAcknowledgeIEs.List = append(rANConfigurationUpdateAcknowledgeIEs.List, ie)
+	}
+
+	return
+}
+
+func BuildRanConfigurationUpdateFailure(
+	time *ngapType.TimeToWait,
+	diagnostics *ngapType.CriticalityDiagnostics) (pdu ngapType.NGAPPDU) {
+
+	pdu.Present = ngapType.NGAPPDUPresentUnsuccessfulOutcome
+	pdu.UnsuccessfulOutcome = new(ngapType.UnsuccessfulOutcome)
+
+	unsuccessfulOutcome := pdu.UnsuccessfulOutcome
+	unsuccessfulOutcome.ProcedureCode.Value = ngapType.ProcedureCodeRANConfigurationUpdate
+	unsuccessfulOutcome.Criticality.Value = ngapType.CriticalityPresentReject
+
+	unsuccessfulOutcome.Value.Present = ngapType.UnsuccessfulOutcomePresentRANConfigurationUpdateFailure
+	unsuccessfulOutcome.Value.RANConfigurationUpdateFailure = new(ngapType.RANConfigurationUpdateFailure)
+
+	rANConfigurationUpdateFailure := unsuccessfulOutcome.Value.RANConfigurationUpdateFailure
+	rANConfigurationUpdateFailureIEs := &rANConfigurationUpdateFailure.ProtocolIEs
+	// Cause
+	{
+		ie := ngapType.RANConfigurationUpdateFailureIEs{}
+		ie.Id.Value = ngapType.ProtocolIEIDCause
+		ie.Criticality.Value = ngapType.CriticalityPresentIgnore
+		ie.Value.Present = ngapType.RANConfigurationUpdateFailureIEsPresentCause
+		ie.Value.Cause = new(ngapType.Cause)
+
+		cause := ie.Value.Cause
+		cause.Present = ngapType.CausePresentMisc
+		cause.Misc = &ngapType.CauseMisc{
+			Value: ngapType.CauseMiscPresentControlProcessingOverload,
+		}
+
+		rANConfigurationUpdateFailureIEs.List = append(rANConfigurationUpdateFailureIEs.List, ie)
+	}
+	// TimeToWait
+	if time != nil {
+		ie := ngapType.RANConfigurationUpdateFailureIEs{}
+		ie.Id.Value = ngapType.ProtocolIEIDTimeToWait
+		ie.Criticality.Value = ngapType.CriticalityPresentIgnore
+		ie.Value.Present = ngapType.RANConfigurationUpdateFailureIEsPresentTimeToWait
+		ie.Value.TimeToWait = new(ngapType.TimeToWait)
+
+		timeToWait := ie.Value.TimeToWait
+		*timeToWait = *time
+
+		rANConfigurationUpdateFailureIEs.List = append(rANConfigurationUpdateFailureIEs.List, ie)
+	}
+	// CriticalityDiagnostics
+	if diagnostics != nil {
+		ie := ngapType.RANConfigurationUpdateFailureIEs{}
+		ie.Id.Value = ngapType.ProtocolIEIDCriticalityDiagnostics
+		ie.Criticality.Value = ngapType.CriticalityPresentIgnore
+		ie.Value.Present = ngapType.RANConfigurationUpdateFailureIEsPresentCriticalityDiagnostics
+		ie.Value.CriticalityDiagnostics = new(ngapType.CriticalityDiagnostics)
+
+		criticalityDiagnostics := ie.Value.CriticalityDiagnostics
+		*criticalityDiagnostics = *diagnostics
+
+		rANConfigurationUpdateFailureIEs.List = append(rANConfigurationUpdateFailureIEs.List, ie)
+	}
+
+	return
+}
+
 func BuildAMFStatusIndication() (pdu ngapType.NGAPPDU) {
 	return
 }
@@ -2705,6 +2859,116 @@ func BuildAMFConfigurationUpdateAcknowledge() (pdu ngapType.NGAPPDU) {
 	return
 }
 
+func BuildAMFConfigurationUpdate(amfName string, guamiList []ngapType.ServedGUAMIItem, plmnList []ngapType.PLMNSupportItem, amfRelativeCapacity int64,
+	addList *ngapType.AMFTNLAssociationToAddList, removeList *ngapType.AMFTNLAssociationToRemoveList, updateList *ngapType.AMFTNLAssociationToUpdateList) (pdu ngapType.NGAPPDU) {
+
+	pdu.Present = ngapType.NGAPPDUPresentInitiatingMessage
+	pdu.InitiatingMessage = new(ngapType.InitiatingMessage)
+
+	initiatingMessage := pdu.InitiatingMessage
+	initiatingMessage.ProcedureCode.Value = ngapType.ProcedureCodeAMFConfigurationUpdate
+	initiatingMessage.Criticality.Value = ngapType.CriticalityPresentReject
+
+	initiatingMessage.Value.Present = ngapType.InitiatingMessagePresentAMFConfigurationUpdate
+	initiatingMessage.Value.AMFConfigurationUpdate = new(ngapType.AMFConfigurationUpdate)
+
+	aMFConfigurationUpdate := initiatingMessage.Value.AMFConfigurationUpdate
+	aMFConfigurationUpdateIEs := &aMFConfigurationUpdate.ProtocolIEs
+	// AMFName
+	{
+		ie := ngapType.AMFConfigurationUpdateIEs{}
+		ie.Id.Value = ngapType.ProtocolIEIDAMFName
+		ie.Criticality.Value = ngapType.CriticalityPresentReject
+		ie.Value.Present = ngapType.AMFConfigurationUpdateIEsPresentAMFName
+		ie.Value.AMFName = new(ngapType.AMFName)
+
+		aMFName := ie.Value.AMFName
+		aMFName.Value = amfName
+
+		aMFConfigurationUpdateIEs.List = append(aMFConfigurationUpdateIEs.List, ie)
+	}
+	// ServedGUAMIList
+	{
+		ie := ngapType.AMFConfigurationUpdateIEs{}
+		ie.Id.Value = ngapType.ProtocolIEIDServedGUAMIList
+		ie.Criticality.Value = ngapType.CriticalityPresentReject
+		ie.Value.Present = ngapType.AMFConfigurationUpdateIEsPresentServedGUAMIList
+		ie.Value.ServedGUAMIList = new(ngapType.ServedGUAMIList)
+
+		servedGUAMIList := ie.Value.ServedGUAMIList
+		servedGUAMIList.List = guamiList
+
+		aMFConfigurationUpdateIEs.List = append(aMFConfigurationUpdateIEs.List, ie)
+	}
+	// RelativeAMFCapacity
+	{
+		ie := ngapType.AMFConfigurationUpdateIEs{}
+		ie.Id.Value = ngapType.ProtocolIEIDRelativeAMFCapacity
+		ie.Criticality.Value = ngapType.CriticalityPresentIgnore
+		ie.Value.Present = ngapType.AMFConfigurationUpdateIEsPresentRelativeAMFCapacity
+		ie.Value.RelativeAMFCapacity = new(ngapType.RelativeAMFCapacity)
+
+		relativeAMFCapacity := ie.Value.RelativeAMFCapacity
+		relativeAMFCapacity.Value = amfRelativeCapacity
+
+		aMFConfigurationUpdateIEs.List = append(aMFConfigurationUpdateIEs.List, ie)
+	}
+	// PLMNSupportList
+	{
+		ie := ngapType.AMFConfigurationUpdateIEs{}
+		ie.Id.Value = ngapType.ProtocolIEIDPLMNSupportList
+		ie.Criticality.Value = ngapType.CriticalityPresentReject
+		ie.Value.Present = ngapType.AMFConfigurationUpdateIEsPresentPLMNSupportList
+		ie.Value.PLMNSupportList = new(ngapType.PLMNSupportList)
+
+		pLMNSupportList := ie.Value.PLMNSupportList
+		pLMNSupportList.List = plmnList
+
+		aMFConfigurationUpdateIEs.List = append(aMFConfigurationUpdateIEs.List, ie)
+	}
+	// AMFTNLAssociationToAddList
+	if addList != nil {
+		ie := ngapType.AMFConfigurationUpdateIEs{}
+		ie.Id.Value = ngapType.ProtocolIEIDAMFTNLAssociationToAddList
+		ie.Criticality.Value = ngapType.CriticalityPresentIgnore
+		ie.Value.Present = ngapType.AMFConfigurationUpdateIEsPresentAMFTNLAssociationToAddList
+		ie.Value.AMFTNLAssociationToAddList = new(ngapType.AMFTNLAssociationToAddList)
+
+		aMFTNLAssociationToAddList := ie.Value.AMFTNLAssociationToAddList
+		*aMFTNLAssociationToAddList = *addList
+
+		aMFConfigurationUpdateIEs.List = append(aMFConfigurationUpdateIEs.List, ie)
+	}
+	// AMFTNLAssociationToRemoveList
+	if removeList != nil {
+		ie := ngapType.AMFConfigurationUpdateIEs{}
+		ie.Id.Value = ngapType.ProtocolIEIDAMFTNLAssociationToRemoveList
+		ie.Criticality.Value = ngapType.CriticalityPresentIgnore
+		ie.Value.Present = ngapType.AMFConfigurationUpdateIEsPresentAMFTNLAssociationToRemoveList
+		ie.Value.AMFTNLAssociationToRemoveList = new(ngapType.AMFTNLAssociationToRemoveList)
+
+		aMFTNLAssociationToRemoveList := ie.Value.AMFTNLAssociationToRemoveList
+		*aMFTNLAssociationToRemoveList = *removeList
+
+		aMFConfigurationUpdateIEs.List = append(aMFConfigurationUpdateIEs.List, ie)
+	}
+	// AMFTNLAssociationToUpdateList
+	if updateList != nil {
+		ie := ngapType.AMFConfigurationUpdateIEs{}
+		ie.Id.Value = ngapType.ProtocolIEIDAMFTNLAssociationToUpdateList
+		ie.Criticality.Value = ngapType.CriticalityPresentIgnore
+		ie.Value.Present = ngapType.AMFConfigurationUpdateIEsPresentAMFTNLAssociationToUpdateList
+		ie.Value.AMFTNLAssociationToUpdateList = new(ngapType.AMFTNLAssociationToUpdateList)
+
+		aMFTNLAssociationToUpdateList := ie.Value.AMFTNLAssociationToUpdateList
+		*aMFTNLAssociationToUpdateList = *updateList
+
+		aMFConfigurationUpdateIEs.List = append(aMFConfigurationUpdateIEs.List, ie)
+	}
+
+	return
+}
+
 func BuildHandoverRequired(amfUeNgapID, ranUeNgapID int64, targetGNBID []byte, targetCellID []byte) (pdu ngapType.NGAPPDU) {
 
 	pdu.Present = ngapType.NGAPPDUPresentInitiatingMessage
@@ -2986,9 +3250,56 @@ func buildPDUSessionResourceModifyUnsuccessfulTransfer() (data ngapType.PDUSessi
 	return
 }
 
-func buildPDUSessionResourceReleaseResponseTransfer() (data ngapType.PDUSessionResourceReleaseResponse) {
+func buildPDUSessionResourceReleaseResponseTransfer() (data ngapType.PDUSessionResourceReleaseResponseTransfer) {
 	// PDU Session Resource Release Response Transfer
 
+	return
+}
+
+func buildPDUSessionResourceNotifyTransfer(qfis []int64, notiCause []uint64, relQfis []int64) (data ngapType.PDUSessionResourceNotifyTransfer) {
+
+	if len(qfis) > 0 {
+		data.QosFlowNotifyList = new(ngapType.QosFlowNotifyList)
+	}
+	if len(relQfis) > 0 {
+		data.QosFlowReleasedList = new(ngapType.QosFlowList)
+	}
+	for i, qfi := range qfis {
+		item := ngapType.QosFlowNotifyItem{
+			QosFlowIdentifier: ngapType.QosFlowIdentifier{
+				Value: qfi,
+			},
+			NotificationCause: ngapType.NotificationCause{
+				Value: aper.Enumerated(notiCause[i]),
+			},
+		}
+		data.QosFlowNotifyList.List = append(data.QosFlowNotifyList.List, item)
+	}
+	for _, qfi := range relQfis {
+		item := ngapType.QosFlowItem{
+			QosFlowIdentifier: ngapType.QosFlowIdentifier{
+				Value: qfi,
+			},
+			Cause: ngapType.Cause{
+				Present: ngapType.CausePresentMisc,
+				Misc: &ngapType.CauseMisc{
+					Value: ngapType.CauseMiscPresentNotEnoughUserPlaneProcessingResources,
+				},
+			},
+		}
+		data.QosFlowReleasedList.List = append(data.QosFlowReleasedList.List, item)
+	}
+	return
+}
+
+func buildPDUSessionResourceNotifyReleasedTransfer() (data ngapType.PDUSessionResourceNotifyReleasedTransfer) {
+	// Cause
+	data.Cause = ngapType.Cause{
+		Present: ngapType.CausePresentRadioNetwork,
+		RadioNetwork: &ngapType.CauseRadioNetwork{
+			Value: ngapType.CauseRadioNetworkPresentUnknownPDUSessionID,
+		},
+	}
 	return
 }
 
@@ -3034,13 +3345,44 @@ func buildPDUSessionResourceModifyIndicationTransfer() (data ngapType.PDUSession
 	return
 }
 
+func buildPDUSessionResourceModifyConfirmTransfer(qfis []int64) (data ngapType.PDUSessionResourceModifyConfirmTransfer) {
+	for _, qfi := range qfis {
+		item := ngapType.QosFlowModifyConfirmItem{
+			QosFlowIdentifier: ngapType.QosFlowIdentifier{
+				Value: qfi,
+			},
+		}
+		data.QosFlowModifyConfirmList.List = append(data.QosFlowModifyConfirmList.List, item)
+	}
+	return
+}
+
+func buildPDUSessionResourceModifyIndicationUnsuccessfulTransfer() (data ngapType.PDUSessionResourceModifyIndicationUnsuccessfulTransfer) {
+	data.Cause = ngapType.Cause{
+		Present: ngapType.CausePresentTransport,
+		Transport: &ngapType.CauseTransport{
+			Value: ngapType.CauseTransportPresentTransportResourceUnavailable,
+		},
+	}
+	return
+}
+func buildPDUSessionResourceReleaseCommandTransferr() (data ngapType.PDUSessionResourceReleaseCommandTransfer) {
+	// Cause
+	data.Cause = ngapType.Cause{
+		Present: ngapType.CausePresentNas,
+		Nas: &ngapType.CauseNas{
+			Value: ngapType.CauseNasPresentNormalRelease,
+		},
+	}
+	return
+}
 func buildPathSwitchRequestSetupFailedTransfer() (data ngapType.PathSwitchRequestSetupFailedTransfer) {
 
 	// Cause
 	data.Cause = ngapType.Cause{
-		Present: ngapType.CausePresentRadioNetwork,
-		RadioNetwork: &ngapType.CauseRadioNetwork{
-			Value: ngapType.CauseRadioNetworkPresentUpConfidentialityProtectionNotPossible,
+		Present: ngapType.CausePresentTransport,
+		Transport: &ngapType.CauseTransport{
+			Value: ngapType.CauseTransportPresentTransportResourceUnavailable,
 		},
 	}
 
@@ -3153,6 +3495,24 @@ func GetPDUSessionResourceModifyUnsuccessfulTransfer() []byte {
 	return encodeData
 }
 
+func GetPDUSessionResourceModifyConfirmTransfer(qfis []int64) []byte {
+	data := buildPDUSessionResourceModifyConfirmTransfer(qfis)
+	encodeData, _ := aper.MarshalWithParams(data, "valueExt")
+	return encodeData
+}
+
+func GetPDUSessionResourceModifyIndicationUnsuccessfulTransfer() []byte {
+	data := buildPDUSessionResourceModifyIndicationUnsuccessfulTransfer()
+	encodeData, _ := aper.MarshalWithParams(data, "valueExt")
+	return encodeData
+}
+
+func GetPDUSessionResourceReleaseCommandTransfer() []byte {
+	data := buildPDUSessionResourceReleaseCommandTransferr()
+	encodeData, _ := aper.MarshalWithParams(data, "valueExt")
+	return encodeData
+}
+
 func GetPathSwitchRequestTransfer() []byte {
 	data := buildPathSwitchRequestTransfer()
 	encodeData, _ := aper.MarshalWithParams(data, "valueExt")
@@ -3173,6 +3533,17 @@ func GetPDUSessionResourceModifyIndicationTransfer() []byte {
 
 func GetPDUSessionResourceReleaseResponseTransfer() []byte {
 	data := buildPDUSessionResourceReleaseResponseTransfer()
+	encodeData, _ := aper.MarshalWithParams(data, "valueExt")
+	return encodeData
+}
+
+func GetPDUSessionResourceNotifyTransfer(qfis []int64, notiCause []uint64, relQfis []int64) []byte {
+	data := buildPDUSessionResourceNotifyTransfer(qfis, notiCause, relQfis)
+	encodeData, _ := aper.MarshalWithParams(data, "valueExt")
+	return encodeData
+}
+func GetPDUSessionResourceNotifyReleasedTransfer() []byte {
+	data := buildPDUSessionResourceNotifyReleasedTransfer()
 	encodeData, _ := aper.MarshalWithParams(data, "valueExt")
 	return encodeData
 }
@@ -3380,6 +3751,298 @@ func BuildPDUSessionResourceReleaseResponseForReleaseTest(amfUeNgapID, ranUeNgap
 	pDUSessionResourceReleasedListRelRes.List = append(pDUSessionResourceReleasedListRelRes.List, pDUSessionResourceReleasedItemRelRes)
 
 	pDUSessionResourceReleaseResponseIEs.List = append(pDUSessionResourceReleaseResponseIEs.List, ie)
+
+	return
+}
+
+func BuildNGSetupResponse(amfName string, guamiList []ngapType.ServedGUAMIItem, plmnList []ngapType.PLMNSupportItem, amfRelativeCapacity int64) (pdu ngapType.NGAPPDU) {
+
+	pdu.Present = ngapType.NGAPPDUPresentSuccessfulOutcome
+	pdu.SuccessfulOutcome = new(ngapType.SuccessfulOutcome)
+
+	successfulOutcome := pdu.SuccessfulOutcome
+	successfulOutcome.ProcedureCode.Value = ngapType.ProcedureCodeNGSetup
+	successfulOutcome.Criticality.Value = ngapType.CriticalityPresentReject
+	successfulOutcome.Value.Present = ngapType.SuccessfulOutcomePresentNGSetupResponse
+	successfulOutcome.Value.NGSetupResponse = new(ngapType.NGSetupResponse)
+
+	nGSetupResponse := successfulOutcome.Value.NGSetupResponse
+	nGSetupResponseIEs := &nGSetupResponse.ProtocolIEs
+
+	// AMFName
+	ie := ngapType.NGSetupResponseIEs{}
+	ie.Id.Value = ngapType.ProtocolIEIDAMFName
+	ie.Criticality.Value = ngapType.CriticalityPresentReject
+	ie.Value.Present = ngapType.NGSetupResponseIEsPresentAMFName
+	ie.Value.AMFName = new(ngapType.AMFName)
+
+	aMFName := ie.Value.AMFName
+	aMFName.Value = amfName
+
+	nGSetupResponseIEs.List = append(nGSetupResponseIEs.List, ie)
+
+	// ServedGUAMIList
+	ie = ngapType.NGSetupResponseIEs{}
+	ie.Id.Value = ngapType.ProtocolIEIDServedGUAMIList
+	ie.Criticality.Value = ngapType.CriticalityPresentReject
+	ie.Value.Present = ngapType.NGSetupResponseIEsPresentServedGUAMIList
+	ie.Value.ServedGUAMIList = new(ngapType.ServedGUAMIList)
+
+	servedGUAMIList := ie.Value.ServedGUAMIList
+	servedGUAMIList.List = guamiList
+
+	nGSetupResponseIEs.List = append(nGSetupResponseIEs.List, ie)
+
+	// relativeAMFCapacity
+	ie = ngapType.NGSetupResponseIEs{}
+	ie.Id.Value = ngapType.ProtocolIEIDRelativeAMFCapacity
+	ie.Criticality.Value = ngapType.CriticalityPresentIgnore
+	ie.Value.Present = ngapType.NGSetupResponseIEsPresentRelativeAMFCapacity
+	ie.Value.RelativeAMFCapacity = new(ngapType.RelativeAMFCapacity)
+	relativeAMFCapacity := ie.Value.RelativeAMFCapacity
+	relativeAMFCapacity.Value = amfRelativeCapacity
+
+	nGSetupResponseIEs.List = append(nGSetupResponseIEs.List, ie)
+
+	// PLMNSupportList
+	ie = ngapType.NGSetupResponseIEs{}
+	ie.Id.Value = ngapType.ProtocolIEIDPLMNSupportList
+	ie.Criticality.Value = ngapType.CriticalityPresentReject
+	ie.Value.Present = ngapType.NGSetupResponseIEsPresentPLMNSupportList
+	ie.Value.PLMNSupportList = new(ngapType.PLMNSupportList)
+
+	pLMNSupportList := ie.Value.PLMNSupportList
+	pLMNSupportList.List = plmnList
+
+	nGSetupResponseIEs.List = append(nGSetupResponseIEs.List, ie)
+
+	return
+}
+
+func BuildPDUSessionResourceModifyConfirm(
+	amfUeNgapId int64,
+	ranUeNgapId int64,
+	pduSessionResourceModifyConfirmList ngapType.PDUSessionResourceModifyListModCfm,
+	pduSessionResourceFailedToModifyList ngapType.PDUSessionResourceFailedToModifyListModCfm,
+	criticalityDiagnostics *ngapType.CriticalityDiagnostics) (pdu ngapType.NGAPPDU) {
+
+	pdu.Present = ngapType.NGAPPDUPresentSuccessfulOutcome
+	pdu.SuccessfulOutcome = new(ngapType.SuccessfulOutcome)
+
+	successfulOutcome := pdu.SuccessfulOutcome
+	successfulOutcome.ProcedureCode.Value = ngapType.ProcedureCodePDUSessionResourceModifyIndication
+	successfulOutcome.Criticality.Value = ngapType.CriticalityPresentReject
+
+	successfulOutcome.Value.Present = ngapType.SuccessfulOutcomePresentPDUSessionResourceModifyConfirm
+	successfulOutcome.Value.PDUSessionResourceModifyConfirm = new(ngapType.PDUSessionResourceModifyConfirm)
+
+	pDUSessionResourceModifyConfirm := successfulOutcome.Value.PDUSessionResourceModifyConfirm
+	pDUSessionResourceModifyConfirmIEs := &pDUSessionResourceModifyConfirm.ProtocolIEs
+
+	// AMF UE NGAP ID
+	ie := ngapType.PDUSessionResourceModifyConfirmIEs{}
+	ie.Id.Value = ngapType.ProtocolIEIDAMFUENGAPID
+	ie.Criticality.Value = ngapType.CriticalityPresentIgnore
+	ie.Value.Present = ngapType.PDUSessionResourceModifyConfirmIEsPresentAMFUENGAPID
+	ie.Value.AMFUENGAPID = new(ngapType.AMFUENGAPID)
+
+	aMFUENGAPID := ie.Value.AMFUENGAPID
+	aMFUENGAPID.Value = amfUeNgapId
+
+	pDUSessionResourceModifyConfirmIEs.List = append(pDUSessionResourceModifyConfirmIEs.List, ie)
+
+	// RAN UE NGAP ID
+	ie = ngapType.PDUSessionResourceModifyConfirmIEs{}
+	ie.Id.Value = ngapType.ProtocolIEIDRANUENGAPID
+	ie.Criticality.Value = ngapType.CriticalityPresentIgnore
+	ie.Value.Present = ngapType.PDUSessionResourceModifyConfirmIEsPresentRANUENGAPID
+	ie.Value.RANUENGAPID = new(ngapType.RANUENGAPID)
+
+	rANUENGAPID := ie.Value.RANUENGAPID
+	rANUENGAPID.Value = ranUeNgapId
+
+	pDUSessionResourceModifyConfirmIEs.List = append(pDUSessionResourceModifyConfirmIEs.List, ie)
+
+	// PDU Session Resource Modify Confirm List
+	ie = ngapType.PDUSessionResourceModifyConfirmIEs{}
+	ie.Id.Value = ngapType.ProtocolIEIDPDUSessionResourceModifyListModCfm
+	ie.Criticality.Value = ngapType.CriticalityPresentIgnore
+	ie.Value.Present = ngapType.PDUSessionResourceModifyConfirmIEsPresentPDUSessionResourceModifyListModCfm
+	ie.Value.PDUSessionResourceModifyListModCfm = &pduSessionResourceModifyConfirmList
+	pDUSessionResourceModifyConfirmIEs.List = append(pDUSessionResourceModifyConfirmIEs.List, ie)
+
+	// PDU Session Resource Failed to Modify List
+	if len(pduSessionResourceFailedToModifyList.List) > 0 {
+		ie = ngapType.PDUSessionResourceModifyConfirmIEs{}
+		ie.Id.Value = ngapType.ProtocolIEIDPDUSessionResourceFailedToModifyListModCfm
+		ie.Criticality.Value = ngapType.CriticalityPresentIgnore
+		ie.Value.Present = ngapType.PDUSessionResourceModifyConfirmIEsPresentPDUSessionResourceFailedToModifyListModCfm
+		ie.Value.PDUSessionResourceFailedToModifyListModCfm = &pduSessionResourceFailedToModifyList
+		pDUSessionResourceModifyConfirmIEs.List = append(pDUSessionResourceModifyConfirmIEs.List, ie)
+	}
+
+	// Criticality Diagnostics (optional)
+	if criticalityDiagnostics != nil {
+		ie = ngapType.PDUSessionResourceModifyConfirmIEs{}
+		ie.Id.Value = ngapType.ProtocolIEIDCriticalityDiagnostics
+		ie.Criticality.Value = ngapType.CriticalityPresentIgnore
+		ie.Value.Present = ngapType.PDUSessionResourceModifyConfirmIEsPresentCriticalityDiagnostics
+		ie.Value.CriticalityDiagnostics = criticalityDiagnostics
+		pDUSessionResourceModifyConfirmIEs.List = append(pDUSessionResourceModifyConfirmIEs.List, ie)
+	}
+
+	return
+}
+
+func BuildPDUSessionResourceReleaseCommand(
+	amfUeNgapId int64,
+	ranUeNgapId int64,
+	pagingPriority *ngapType.RANPagingPriority,
+	nasPdu []byte,
+	pduSessionResourceReleasedList ngapType.PDUSessionResourceToReleaseListRelCmd) (pdu ngapType.NGAPPDU) {
+
+	pdu.Present = ngapType.NGAPPDUPresentInitiatingMessage
+	pdu.InitiatingMessage = new(ngapType.InitiatingMessage)
+
+	initiatingMessage := pdu.InitiatingMessage
+	initiatingMessage.ProcedureCode.Value = ngapType.ProcedureCodePDUSessionResourceRelease
+	initiatingMessage.Criticality.Value = ngapType.CriticalityPresentReject
+	initiatingMessage.Value.Present = ngapType.InitiatingMessagePresentPDUSessionResourceReleaseCommand
+	initiatingMessage.Value.PDUSessionResourceReleaseCommand = new(ngapType.PDUSessionResourceReleaseCommand)
+
+	pDUSessionResourceReleaseCommand := initiatingMessage.Value.PDUSessionResourceReleaseCommand
+	PDUSessionResourceReleaseCommandIEs := &pDUSessionResourceReleaseCommand.ProtocolIEs
+
+	// AMFUENGAPID
+	ie := ngapType.PDUSessionResourceReleaseCommandIEs{}
+	ie.Id.Value = ngapType.ProtocolIEIDAMFUENGAPID
+	ie.Criticality.Value = ngapType.CriticalityPresentReject
+	ie.Value.Present = ngapType.PDUSessionResourceReleaseCommandIEsPresentAMFUENGAPID
+	ie.Value.AMFUENGAPID = new(ngapType.AMFUENGAPID)
+
+	aMFUENGAPID := ie.Value.AMFUENGAPID
+	aMFUENGAPID.Value = amfUeNgapId
+
+	PDUSessionResourceReleaseCommandIEs.List = append(PDUSessionResourceReleaseCommandIEs.List, ie)
+
+	// RANUENGAPID
+	ie = ngapType.PDUSessionResourceReleaseCommandIEs{}
+	ie.Id.Value = ngapType.ProtocolIEIDRANUENGAPID
+	ie.Criticality.Value = ngapType.CriticalityPresentReject
+	ie.Value.Present = ngapType.PDUSessionResourceReleaseCommandIEsPresentRANUENGAPID
+	ie.Value.RANUENGAPID = new(ngapType.RANUENGAPID)
+
+	rANUENGAPID := ie.Value.RANUENGAPID
+	rANUENGAPID.Value = ranUeNgapId
+
+	PDUSessionResourceReleaseCommandIEs.List = append(PDUSessionResourceReleaseCommandIEs.List, ie)
+
+	// RAN Paging Priority (optional)
+
+	if pagingPriority != nil {
+		ie = ngapType.PDUSessionResourceReleaseCommandIEs{}
+		ie.Id.Value = ngapType.ProtocolIEIDPagingPriority
+		ie.Criticality.Value = ngapType.CriticalityPresentIgnore
+		ie.Value.Present = ngapType.PDUSessionResourceReleaseCommandIEsPresentRANPagingPriority
+		ie.Value.RANPagingPriority = pagingPriority
+
+		PDUSessionResourceReleaseCommandIEs.List = append(PDUSessionResourceReleaseCommandIEs.List, ie)
+	}
+
+	// NAS-PDU (optional)
+	if nasPdu != nil {
+		ie = ngapType.PDUSessionResourceReleaseCommandIEs{}
+		ie.Id.Value = ngapType.ProtocolIEIDNASPDU
+		ie.Criticality.Value = ngapType.CriticalityPresentIgnore
+		ie.Value.Present = ngapType.PDUSessionResourceReleaseCommandIEsPresentNASPDU
+		ie.Value.NASPDU = new(ngapType.NASPDU)
+
+		ie.Value.NASPDU.Value = nasPdu
+
+		PDUSessionResourceReleaseCommandIEs.List = append(PDUSessionResourceReleaseCommandIEs.List, ie)
+	}
+
+	// PDUSessionResourceToReleaseListRelCmd
+	ie = ngapType.PDUSessionResourceReleaseCommandIEs{}
+	ie.Id.Value = ngapType.ProtocolIEIDPDUSessionResourceToReleaseListRelCmd
+	ie.Criticality.Value = ngapType.CriticalityPresentReject
+	ie.Value.Present = ngapType.PDUSessionResourceReleaseCommandIEsPresentPDUSessionResourceToReleaseListRelCmd
+	ie.Value.PDUSessionResourceToReleaseListRelCmd = &pduSessionResourceReleasedList
+	PDUSessionResourceReleaseCommandIEs.List = append(PDUSessionResourceReleaseCommandIEs.List, ie)
+
+	return
+}
+
+func BuildOverloadStart(
+	action *ngapType.OverloadAction,
+	ind *int64,
+	list []ngapType.OverloadStartNSSAIItem) (pdu ngapType.NGAPPDU) {
+
+	pdu.Present = ngapType.NGAPPDUPresentInitiatingMessage
+	pdu.InitiatingMessage = new(ngapType.InitiatingMessage)
+
+	initiatingMessage := pdu.InitiatingMessage
+	initiatingMessage.ProcedureCode.Value = ngapType.ProcedureCodeOverloadStart
+	initiatingMessage.Criticality.Value = ngapType.CriticalityPresentIgnore
+
+	initiatingMessage.Value.Present = ngapType.InitiatingMessagePresentOverloadStart
+	initiatingMessage.Value.OverloadStart = new(ngapType.OverloadStart)
+
+	overloadStart := initiatingMessage.Value.OverloadStart
+	overloadStartIEs := &overloadStart.ProtocolIEs
+	// AMFOverloadResponse
+	if action != nil {
+		ie := ngapType.OverloadStartIEs{}
+		ie.Id.Value = ngapType.ProtocolIEIDAMFOverloadResponse
+		ie.Criticality.Value = ngapType.CriticalityPresentReject
+		ie.Value.Present = ngapType.OverloadStartIEsPresentAMFOverloadResponse
+		ie.Value.AMFOverloadResponse = new(ngapType.OverloadResponse)
+
+		aMFOverloadResponse := ie.Value.AMFOverloadResponse
+		aMFOverloadResponse.Present = ngapType.OverloadResponsePresentOverloadAction
+		aMFOverloadResponse.OverloadAction = action
+
+		overloadStartIEs.List = append(overloadStartIEs.List, ie)
+	}
+	// AMFTrafficLoadReductionIndication
+	if ind != nil {
+		ie := ngapType.OverloadStartIEs{}
+		ie.Id.Value = ngapType.ProtocolIEIDAMFTrafficLoadReductionIndication
+		ie.Criticality.Value = ngapType.CriticalityPresentIgnore
+		ie.Value.Present = ngapType.OverloadStartIEsPresentAMFTrafficLoadReductionIndication
+		ie.Value.AMFTrafficLoadReductionIndication = new(ngapType.TrafficLoadReductionIndication)
+
+		aMFTrafficLoadReductionIndication := ie.Value.AMFTrafficLoadReductionIndication
+		aMFTrafficLoadReductionIndication.Value = *ind
+
+		overloadStartIEs.List = append(overloadStartIEs.List, ie)
+	}
+	// OverloadStartNSSAIList
+	if len(list) > 0 {
+		ie := ngapType.OverloadStartIEs{}
+		ie.Id.Value = ngapType.ProtocolIEIDOverloadStartNSSAIList
+		ie.Criticality.Value = ngapType.CriticalityPresentIgnore
+		ie.Value.Present = ngapType.OverloadStartIEsPresentOverloadStartNSSAIList
+		ie.Value.OverloadStartNSSAIList = new(ngapType.OverloadStartNSSAIList)
+
+		overloadStartNSSAIList := ie.Value.OverloadStartNSSAIList
+		overloadStartNSSAIList.List = list
+
+		overloadStartIEs.List = append(overloadStartIEs.List, ie)
+	}
+	return
+}
+
+func BuildOverloadStop() (pdu ngapType.NGAPPDU) {
+	pdu.Present = ngapType.NGAPPDUPresentInitiatingMessage
+	pdu.InitiatingMessage = new(ngapType.InitiatingMessage)
+
+	initiatingMessage := pdu.InitiatingMessage
+	initiatingMessage.ProcedureCode.Value = ngapType.ProcedureCodeOverloadStop
+	initiatingMessage.Criticality.Value = ngapType.CriticalityPresentReject
+
+	initiatingMessage.Value.Present = ngapType.InitiatingMessagePresentOverloadStop
+	initiatingMessage.Value.OverloadStop = new(ngapType.OverloadStop)
 
 	return
 }

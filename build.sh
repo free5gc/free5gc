@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-NF_LIST="amf ausf nrf nssf pcf smf udm udr"
+NF_LIST="amf ausf nrf nssf pcf smf udm udr n3iwf"
 
 for NF in ${NF_LIST}; do 
     echo "Start build ${NF}...."

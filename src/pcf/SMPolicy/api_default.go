@@ -23,7 +23,7 @@ import (
 func SmPoliciesPost(c *gin.Context) {
 
 	var smPolicyContextData models.SmPolicyContextData
-	err := c.BindJSON(&smPolicyContextData)
+	err := c.ShouldBindJSON(&smPolicyContextData)
 	if err != nil {
 		rsp := pcf_util.GetProblemDetail("Malformed request syntax", pcf_util.ERROR_INITIAL_PARAMETERS)
 		logger.HandlerLog.Errorln(rsp.Detail)
@@ -76,7 +76,7 @@ func SmPoliciesSmPolicyIdGet(c *gin.Context) {
 // SmPoliciesSmPolicyIdUpdatePost -
 func SmPoliciesSmPolicyIdUpdatePost(c *gin.Context) {
 	var smPolicyUpdateContextData models.SmPolicyUpdateContextData
-	c.BindJSON(&smPolicyUpdateContextData)
+	c.ShouldBindJSON(&smPolicyUpdateContextData)
 	req := http_wrapper.NewRequest(c.Request, smPolicyUpdateContextData)
 	req.Params["smPolicyId"] = c.Params.ByName("smPolicyId")
 	channelMsg := pcf_message.NewHttpChannelMessage(pcf_message.EventSMPolicyUpdate, req)

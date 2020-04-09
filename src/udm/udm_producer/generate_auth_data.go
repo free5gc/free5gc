@@ -14,6 +14,7 @@ import (
 	"free5gc/lib/openapi/models"
 	"free5gc/src/udm/logger"
 	"free5gc/src/udm/udm_handler/udm_message"
+	"free5gc/lib/util_3gpp/suci"
 	"math/rand"
 	"net/http"
 	"time"
@@ -24,8 +25,16 @@ func HandleGenerateAuthData(respChan chan udm_message.HandlerResponseMessage, su
 	var problemDetails models.ProblemDetails
 	rand.Seed(time.Now().UnixNano())
 
-	client := createUDMClientToUDR(supiOrSuci, false)
-	authSubs, _, err := client.AuthenticationDataDocumentApi.QueryAuthSubsData(context.Background(), supiOrSuci, nil)
+	supi, suciToSupiErr := suci.ToSupi(supiOrSuci)
+	if suciToSupiErr != nil {
+		logger.UeauLog.Errorln("suciToSupi error: ", suciToSupiErr.Error())
+		problemDetails.Cause = "AUTHENTICATION_REJECTED"
+		udm_message.SendHttpResponseMessage(respChan, nil, http.StatusForbidden, response)
+	}
+	logger.UeauLog.Infof("supi conversion => %s\n", supi)
+
+	client := createUDMClientToUDR(supi, false)
+	authSubs, _, err := client.AuthenticationDataDocumentApi.QueryAuthSubsData(context.Background(), supi, nil)
 	if err != nil {
 		logger.UeauLog.Errorln("Return from UDR QueryAuthSubsData error")
 		problemDetails.Cause = "AUTHENTICATION_REJECTED"
@@ -176,7 +185,7 @@ func HandleGenerateAuthData(respChan chan udm_message.HandlerResponseMessage, su
 		av.IkPrime = hex.EncodeToString(ikPrime)
 	}
 	response.AuthenticationVector = &av
-	response.Supi = supiOrSuci
+	response.Supi = supi
 	udm_message.SendHttpResponseMessage(respChan, nil, http.StatusOK, response)
 }
 

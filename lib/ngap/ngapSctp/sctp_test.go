@@ -11,7 +11,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/ishidawataru/sctp"
+	"git.cs.nctu.edu.tw/calee/sctp"
 
 	"free5gc/lib/ngap/logger"
 	"free5gc/lib/ngap/ngapSctp"

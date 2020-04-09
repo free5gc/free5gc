@@ -30,8 +30,8 @@ func NewRouter() *gin.Engine {
 }
 
 func AddService(engine *gin.Engine) *gin.RouterGroup {
-	group := engine.Group("/npcf-smpolicycontrol/v1")
-	// https://localhost:29507/npcf-smpolicycontrol/v1/nudr-notify/
+	group := engine.Group("/npcf-callback/v1")
+	// https://localhost:29507/npcf-callback/v1/route
 	for _, route := range routes {
 		switch route.Method {
 		case "POST":
@@ -59,5 +59,12 @@ var routes = Routes{
 		strings.ToUpper("Post"),
 		"/nudr-notify/:supi",
 		NudrNotify,
+	},
+
+	{
+		"AmfStatusChangeNotify",
+		strings.ToUpper("Post"),
+		"/amfstatus",
+		AmfStatusChangeNotify,
 	},
 }

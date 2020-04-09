@@ -4,12 +4,12 @@ package ngapSctp
 
 import (
 	"encoding/binary"
-	"flag"
+	"errors"
 	"net"
 	"strings"
 	"unsafe"
 
-	"github.com/ishidawataru/sctp"
+	"git.cs.nctu.edu.tw/calee/sctp"
 
 	"free5gc/lib/ngap/logger"
 )
@@ -45,7 +45,7 @@ func Accept(sctpLn *sctp.SCTPListener) (*sctp.SCTPConn, error) {}
 func Start(conn *sctp.SCTPConn, readChan chan ConnData) {}
 
 // SendMsg - used to send out message to SCTP connection
-func SendMsg(conn net.Conn, msg []byte) {}
+func SendMsg(conn net.Conn, msg []byte) error {}
 
 func closeConnection(conn net.Conn) {}
 

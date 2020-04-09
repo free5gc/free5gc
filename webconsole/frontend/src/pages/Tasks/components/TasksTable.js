@@ -1,6 +1,5 @@
 import React from 'react';
 import Constants from "../../../config/Constants";
-import TaskActions from "./TaskActions";
 
 const TasksTable = ({data, targetTask: targetTaskUuid}) => (
   <div className="card card-plain">
@@ -29,7 +28,7 @@ const TasksTable = ({data, targetTask: targetTaskUuid}) => (
             <td>{item['created_by'] === null ? '-' : item['created_by']}</td>
             <td>{item['created_at']}</td>
             <td>
-              <TaskActions taskItem={item}/>
+              &nbsp;
             </td>
           </tr>
         ))}

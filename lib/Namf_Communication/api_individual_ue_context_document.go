@@ -550,7 +550,7 @@ func (a *IndividualUeContextDocumentApiService) ReleaseUEContext(ctx context.Con
 	}
 	switch localVarHttpResponse.StatusCode {
 	case 204:
-		return localVarHttpResponse, apiError
+		return localVarHttpResponse, nil
 	case 400:
 		var v models.ProblemDetails
 		err = common.Decode(&v, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))

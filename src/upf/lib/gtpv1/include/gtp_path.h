@@ -28,7 +28,7 @@ Status GtpServerListCreate(int epfd, int domain, ListNode *sockList, int port, S
 Status GtpServerListFree(int epfd, ListNode *sockList);
 
 Status GtpDevListCreate(int epfd, int domain, ListNode *sockList, SockHandler handler, void *data);
-Status GtpTunListFree(int epfd, ListNode *sockList);
+Status GtpDevListFree(int epfd, ListNode *sockList);
 
 SockNode *GtpFindSockNodeByIp(ListNode *list, Ip *ip);
 SockNode *GtpAddSockNodeWithIp(ListNode *list, Ip *ip, int port);

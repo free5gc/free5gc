@@ -10,6 +10,7 @@ import (
 	"free5gc/src/udr/factory"
 	"free5gc/src/udr/logger"
 	"free5gc/src/udr/udr_consumer"
+	"free5gc/src/udr/udr_context"
 	"free5gc/src/udr/udr_handler"
 	"free5gc/src/udr/udr_util"
 	"os/exec"
@@ -94,9 +95,7 @@ func (udr *UDR) FilterCli(c *cli.Context) (args []string) {
 func (udr *UDR) Start() {
 	// get config file info
 	config := factory.UdrConfig
-	sbi := config.Configuration.Sbi
 	mongodb := config.Configuration.Mongodb
-	nrfUri := config.Configuration.NrfUri
 
 	initLog.Infof("UDR Config Info: Version[%s] Description[%s]", config.Info.Version, config.Info.Description)
 
@@ -112,19 +111,17 @@ func (udr *UDR) Start() {
 	udrLogPath := udr_util.UdrLogPath
 	udrPemPath := udr_util.UdrPemPath
 	udrKeyPath := udr_util.UdrKeyPath
-	if sbi.Tls != nil {
-		udrLogPath = path_util.Gofree5gcPath(sbi.Tls.Log)
-		udrPemPath = path_util.Gofree5gcPath(sbi.Tls.Pem)
-		udrKeyPath = path_util.Gofree5gcPath(sbi.Tls.Key)
-	}
 
-	addr := fmt.Sprintf("%s:%d", sbi.IPv4Addr, sbi.Port)
-	profile := udr_consumer.BuildNFInstance()
+	self := udr_context.UDR_Self()
+	udr_util.InitUdrContext(self)
+
+	addr := fmt.Sprintf("%s:%d", self.HttpIPv4Address, self.HttpIpv4Port)
+	profile := udr_consumer.BuildNFInstance(self)
 	var newNrfUri string
 	var err error
-	newNrfUri, profile.NfInstanceId, err = udr_consumer.SendRegisterNFInstance(nrfUri, profile.NfInstanceId, profile)
+	newNrfUri, self.NfId, err = udr_consumer.SendRegisterNFInstance(self.NrfUri, profile.NfInstanceId, profile)
 	if err == nil {
-		config.Configuration.NrfUri = newNrfUri
+		self.NrfUri = newNrfUri
 	} else {
 		initLog.Errorf("Send Register NFInstance Error[%s]", err.Error())
 	}

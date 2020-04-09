@@ -4,6 +4,7 @@ import config from '../config/config';
 axios.defaults.baseURL = config.API_URL;
 axios.defaults.headers.common.Accept = 'application/json';
 axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+axios.defaults.crossdomain = true;
 
 // Request interceptor
 axios.interceptors.request.use(config => {

@@ -2,11 +2,11 @@ package amf_consumer_test
 
 import (
 	"context"
-	"encoding/json"
 	"flag"
 	"github.com/urfave/cli"
 	"go.mongodb.org/mongo-driver/bson"
 	"free5gc/lib/CommonConsumerTestData/AMF/TestAmf"
+	"free5gc/lib/CommonConsumerTestData/UDR/TestRegistrationProcedure"
 	"free5gc/lib/MongoDBLibrary"
 	"free5gc/lib/openapi/models"
 	"free5gc/src/amf/amf_consumer"
@@ -19,6 +19,8 @@ import (
 
 var testflags flag.FlagSet
 var testC = cli.NewContext(nil, &testflags, nil)
+var testAmData = TestRegistrationProcedure.TestAmDataTable[TestRegistrationProcedure.FREE5GC_CASE]
+var servingPlmnId = "20893"
 
 func udminit() {
 	udm := &udm_service.UDM{}
@@ -32,6 +34,21 @@ func udrinit() {
 	udr.Initialize(testC)
 	go udr.Start()
 	time.Sleep(100 * time.Millisecond)
+}
+
+func insertAccessAndMobilitySubscriptionDataToMongoDB(ueId string, amData models.AccessAndMobilitySubscriptionData, servingPlmnId string) {
+	collName := "subscriptionData.provisionedData.amData"
+	filter := bson.M{"ueId": ueId, "servingPlmnId": servingPlmnId}
+	putData := toBsonM(amData)
+	putData["ueId"] = ueId
+	putData["servingPlmnId"] = servingPlmnId
+	MongoDBLibrary.RestfulAPIPutOne(collName, filter, putData)
+}
+
+func delAccessAndMobilitySubscriptionDataFromMongoDB(ueId string, servingPlmnId string) {
+	collName := "subscriptionData.provisionedData.amData"
+	filter := bson.M{"ueId": ueId, "servingPlmnId": servingPlmnId}
+	MongoDBLibrary.RestfulAPIDeleteMany(collName, filter)
 }
 
 func TestPutUpuAck(t *testing.T) {
@@ -54,7 +71,7 @@ func TestPutUpuAck(t *testing.T) {
 }
 
 func TestSDMGetAmData(t *testing.T) {
-
+	nrfInit()
 	if len(TestAmf.TestAmf.AmfRanPool) == 0 {
 		udminit()
 		udrinit()
@@ -69,40 +86,24 @@ func TestSDMGetAmData(t *testing.T) {
 	}
 
 	// Set test data
-	ueId := "imsi-2089300007487"
-	servingPlmnId := "20893"
-	testData := models.AccessAndMobilitySubscriptionData{
-		UeUsageType: 1,
-	}
-	tmp, _ := json.Marshal(testData)
-	var insertTestData = bson.M{}
-	if err := json.Unmarshal(tmp, &insertTestData); err != nil {
-		t.Error(err)
-	}
-	insertTestData["ueId"] = ueId
-	insertTestData["servingPlmnId"] = servingPlmnId
-	if result, err := collection.InsertOne(context.TODO(), insertTestData); err != nil {
-		t.Errorf("insert test data error: %+v", err)
-	} else {
-		t.Logf("insert test data result: %+v", result)
-	}
+	insertAccessAndMobilitySubscriptionDataToMongoDB("imsi-2089300007487", testAmData, servingPlmnId)
 
 	time.Sleep(100 * time.Millisecond)
 	TestAmf.AmfInit()
 	TestAmf.UeAttach(models.AccessType__3_GPP_ACCESS)
 	ue := TestAmf.TestAmf.UePool["imsi-2089300007487"]
 
-	// udmUri := "https://localhost:29503"
+	ue.NudmSDMUri = "https://localhost:29503"
 	problemDetails, err := amf_consumer.SDMGetAmData(ue)
 	if err != nil {
 		t.Error(err.Error())
 	} else if problemDetails != nil {
 		t.Logf("ProblemDetails: %+v", problemDetails)
+	} else {
+		t.Logf("Get AM Data: %+v", ue.AccessAndMobilitySubscriptionData)
 	}
 
-	if _, err := collection.DeleteOne(context.TODO(), bson.M{"ueId": "imsi-2089300007487"}); err != nil {
-		t.Error(err.Error())
-	}
+	delAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
 }
 
 func TestSDMGetSmfSelectData(t *testing.T) {
@@ -163,4 +164,31 @@ func TestSDMSubscribe(t *testing.T) {
 	} else if problemDetails != nil {
 		t.Logf("ProblemDetails: %+v", problemDetails)
 	}
+}
+
+func TestSDMGetSliceSelectionSubscriptionData(t *testing.T) {
+	nrfInit()
+	if len(TestAmf.TestAmf.AmfRanPool) == 0 {
+		udminit()
+		udrinit()
+	}
+
+	time.Sleep(100 * time.Millisecond)
+	TestAmf.AmfInit()
+	TestAmf.UeAttach(models.AccessType__3_GPP_ACCESS)
+	ue := TestAmf.TestAmf.UePool["imsi-2089300007487"]
+
+	insertAccessAndMobilitySubscriptionDataToMongoDB("imsi-2089300007487", testAmData, servingPlmnId)
+
+	ue.NudmSDMUri = "https://localhost:29503"
+	problemDetails, err := amf_consumer.SDMGetSliceSelectionSubscriptionData(ue)
+	if err != nil {
+		t.Error(err.Error())
+	} else if problemDetails != nil {
+		t.Logf("ProblemDetails: %+v", problemDetails)
+	} else {
+		t.Logf("Get Nssai: %+v", ue.SubscribedNssai)
+	}
+
+	delAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
 }

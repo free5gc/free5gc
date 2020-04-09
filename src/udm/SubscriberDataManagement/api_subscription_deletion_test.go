@@ -19,7 +19,6 @@ import (
 	"free5gc/src/udm/logger"
 	"free5gc/src/udm/udm_context"
 	"free5gc/src/udm/udm_handler"
-	"free5gc/src/udm/udm_util"
 	"net/http"
 	"testing"
 
@@ -45,7 +44,7 @@ func TestUnsubscribe(t *testing.T) {
 		}
 	}()
 
-	udm_util.testInitUdmConfig()
+	udm_context.TestInit()
 	go udm_handler.Handle()
 
 	go func() { // fake udr server
@@ -84,5 +83,4 @@ func TestUnsubscribe(t *testing.T) {
 	} else {
 		fmt.Println("resp: ", resp)
 	}
-
 }

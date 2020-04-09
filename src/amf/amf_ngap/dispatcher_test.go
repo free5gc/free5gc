@@ -3,8 +3,8 @@ package amf_ngap_test
 import (
 	"encoding/hex"
 	"flag"
+	"git.cs.nctu.edu.tw/calee/sctp"
 	"github.com/gin-gonic/gin"
-	"github.com/ishidawataru/sctp"
 	"github.com/mohae/deepcopy"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
@@ -213,7 +213,7 @@ func TestDispatchNGReset(t *testing.T) {
 	TestAmf.SctpConnectToServer(models.AccessType__3_GPP_ACCESS)
 	time.Sleep(100 * time.Millisecond)
 
-	message := ngapTestpacket.BuildNGReset()
+	message := ngapTestpacket.BuildNGReset(nil)
 	msg, err := ngap.Encoder(message)
 	if err != nil {
 		amf_ngap.Ngaplog.Errorln(err)

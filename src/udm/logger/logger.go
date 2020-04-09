@@ -20,6 +20,7 @@ var SdmLog *logrus.Entry
 var PpLop *logrus.Entry
 var EeLog *logrus.Entry
 var UtilLog *logrus.Entry
+var CallbackLog *logrus.Entry
 
 func init() {
 	log = logrus.New()
@@ -39,7 +40,6 @@ func init() {
 		FieldMap:                  nil,
 		CallerPrettyfier: func(f *runtime.Frame) (string, string) {
 			orgFilename, _ := os.Getwd()
-			log.Traceln("orgFilename", orgFilename)
 			repopath := orgFilename
 			repopath = strings.Replace(repopath, "/bin", "", 1)
 			filename := strings.Replace(f.File, repopath, "", -1)
@@ -57,6 +57,7 @@ func init() {
 	PpLop = log.WithFields(logrus.Fields{"UDM": "PP"})
 	EeLog = log.WithFields(logrus.Fields{"UDM": "EE"})
 	UtilLog = log.WithFields(logrus.Fields{"UDM": "Util"})
+	CallbackLog = log.WithFields(logrus.Fields{"UDM": "Callback"})
 }
 
 func SetLogLevel(level logrus.Level) {

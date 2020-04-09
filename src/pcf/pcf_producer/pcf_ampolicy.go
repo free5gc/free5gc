@@ -11,6 +11,7 @@ import (
 	"free5gc/src/pcf/pcf_handler/pcf_message"
 	"free5gc/src/pcf/pcf_util"
 	"net/http"
+	"reflect"
 )
 
 func DeletePoliciesPolAssoId(httpChannel chan pcf_message.HttpResponseMessage, polAssoId string) {
@@ -137,6 +138,7 @@ func UpdatePostPoliciesPolAssoId(httpChannel chan pcf_message.HttpResponseMessag
 
 }
 
+// Create AM Policy
 func PostPolicies(httpChannel chan pcf_message.HttpResponseMessage, request models.PolicyAssociationRequest) {
 	var rsp models.PolicyAssociation
 	var err error
@@ -148,6 +150,7 @@ func PostPolicies(httpChannel chan pcf_message.HttpResponseMessage, request mode
 	if ue == nil {
 		ue, err = pcfSelf.NewPCFUe(request.Supi)
 		if err != nil {
+			// supi format dose not match "imsi-..."
 			rsp := pcf_util.GetProblemDetail("Supi Format Error", pcf_util.ERROR_REQUEST_PARAMETERS)
 			logger.AMpolicylog.Errorln(err.Error())
 			pcf_message.SendHttpResponseMessage(httpChannel, nil, int(rsp.Status), rsp)
@@ -156,9 +159,10 @@ func PostPolicies(httpChannel chan pcf_message.HttpResponseMessage, request mode
 	}
 	udrUri := getUdrUri(ue)
 	if udrUri == "" {
+		// Can't find any UDR support this Ue
 		delete(pcfSelf.UePool, ue.Supi)
 		rsp := pcf_util.GetProblemDetail("Ue is not supported in PCF", pcf_util.USER_UNKNOWN)
-		logger.AMpolicylog.Warnf("Ue[%s] is not supported in PCF", ue.Supi)
+		logger.AMpolicylog.Errorf("Ue[%s] is not supported in PCF", ue.Supi)
 		pcf_message.SendHttpResponseMessage(httpChannel, nil, int(rsp.Status), rsp)
 		return
 	}
@@ -166,20 +170,38 @@ func PostPolicies(httpChannel chan pcf_message.HttpResponseMessage, request mode
 
 	rsp.Request = deepcopy.Copy(&request).(*models.PolicyAssociationRequest)
 	assolId := fmt.Sprintf("%s-%d", ue.Supi, ue.PolAssociationIDGenerator)
-	amPolicyData := ue.NewUeAMPolicyData(assolId, request)
-	// TODO: according to PCF Policy to determine ServAreaRes, Rfsp, SuppFeat
-	// amPolicyData.ServAreaRes =
-	// amPolicyData.Rfsp =
-	// amPolicyData.SuppFeat =
-	if amPolicyData.Rfsp != 0 {
-		rsp.Rfsp = amPolicyData.Rfsp
+	amPolicy := ue.AMPolicyData[assolId]
+
+	if amPolicy == nil || amPolicy.AmPolicyData == nil {
+		client := pcf_util.GetNudrClient(udrUri)
+		var response *http.Response
+		amData, response, err := client.DefaultApi.PolicyDataUesUeIdAmDataGet(context.Background(), ue.Supi)
+		if err != nil || response == nil || response.StatusCode != http.StatusOK {
+			rsp := pcf_util.GetProblemDetail("Can't find UE AM Policy Data in UDR", pcf_util.USER_UNKNOWN)
+			logger.AMpolicylog.Errorf("Can't find UE[%s] AM Policy Data in UDR", ue.Supi)
+			pcf_message.SendHttpResponseMessage(httpChannel, nil, int(rsp.Status), rsp)
+			return
+		}
+		if amPolicy == nil {
+			amPolicy = ue.NewUeAMPolicyData(assolId, request)
+		}
+		amPolicy.AmPolicyData = &amData
 	}
-	rsp.SuppFeat = amPolicyData.SuppFeat
+
+	// TODO: according to PCF Policy to determine ServAreaRes, Rfsp, SuppFeat
+	// amPolicy.ServAreaRes =
+	// amPolicy.Rfsp =
+	amPolicy.SuppFeat = pcf_util.GetNegotiateSuppFeat(request.SuppFeat, pcfSelf.PcfSuppFeats[models.ServiceName_NPCF_AM_POLICY_CONTROL])
+	if amPolicy.Rfsp != 0 {
+		rsp.Rfsp = amPolicy.Rfsp
+	}
+	rsp.SuppFeat = amPolicy.SuppFeat
 	// TODO: add Reports
 	// rsp.Triggers
 	// rsp.Pras
 	ue.PolAssociationIDGenerator++
-	locationHeader := fmt.Sprintf("%s/policies/%s", pcfSelf.PcfServiceUris[models.ServiceName_NPCF_AM_POLICY_CONTROL], assolId)
+	// Create location header for update, delete, get
+	locationHeader := pcf_util.GetResourceUri(models.ServiceName_NPCF_AM_POLICY_CONTROL, assolId)
 	headers := http.Header{
 		"Location": {locationHeader},
 	}
@@ -187,24 +209,18 @@ func PostPolicies(httpChannel chan pcf_message.HttpResponseMessage, request mode
 	pcf_message.SendHttpResponseMessage(httpChannel, headers, http.StatusCreated, rsp)
 
 	if request.Guami != nil {
-		amfUri := pcf_consumer.SendNFIntancesAMF(pcfSelf.NrfUri, *request.Guami, models.ServiceName_NAMF_COMM)
-		if amfUri != "" {
-			client := pcf_util.GetNamfClient(amfUri)
-			//TODO: Add AMF status Notify Handler
-			subscriptiondata := models.SubscriptionData{
-				AmfStatusUri: fmt.Sprintf("%s/policies/%s/amfstatus", pcfSelf.GetIPv4Uri(), assolId),
-				GuamiList: []models.Guami{
-					*request.Guami,
-				},
-			}
-			subscriptionData, response, err := client.SubscriptionsCollectionDocumentApi.AMFStatusChangeSubscribe(context.Background(), subscriptiondata)
-			if err == nil && response.StatusCode == http.StatusCreated {
-				amPolicyData.AmfStatusUri = subscriptionData.AmfStatusUri
+		// if consumer is AMF then subscribe this AMF Status
+		for _, statusSubsData := range pcfSelf.AMFStatusSubsData {
+			for _, guami := range statusSubsData.GuamiList {
+				if reflect.DeepEqual(guami, request.Guami) {
+					amPolicy.AmfStatusChangeSubscription = &statusSubsData
+				}
 			}
 		}
 	}
 }
 
+// Send AM Policy Update to AMF if policy has changed
 func SendAMPolicyUpdateNotification(ue *pcf_context.UeContext, PolId string, request models.PolicyUpdate) {
 	if ue == nil {
 		logger.AMpolicylog.Warnln("Policy Update Notification Error[Ue is nil]")
@@ -232,6 +248,7 @@ func SendAMPolicyUpdateNotification(ue *pcf_context.UeContext, PolId string, req
 			return
 		}
 		if rsp.StatusCode == http.StatusTemporaryRedirect {
+			// for redirect case, resend the notification to redirect target
 			uRI, err := rsp.Location()
 			if err != nil {
 				logger.AMpolicylog.Warnln("Policy Update Notification Redirect Need Supply URI")
@@ -247,6 +264,7 @@ func SendAMPolicyUpdateNotification(ue *pcf_context.UeContext, PolId string, req
 
 }
 
+// Send AM Policy Update to AMF if policy has been terminated
 func SendAMPolicyTerminationRequestNotification(ue *pcf_context.UeContext, PolId string, request models.TerminationNotification) {
 	if ue == nil {
 		logger.AMpolicylog.Warnln("Policy Assocition Termination Request Notification Error[Ue is nil]")
@@ -274,6 +292,7 @@ func SendAMPolicyTerminationRequestNotification(ue *pcf_context.UeContext, PolId
 			return
 		}
 		if rsp.StatusCode == http.StatusTemporaryRedirect {
+			// for redirect case, resend the notification to redirect target
 			uRI, err := rsp.Location()
 			if err != nil {
 				logger.AMpolicylog.Warnln("Policy Assocition Termination Request Notification Redirect Need Supply URI")
@@ -287,6 +306,7 @@ func SendAMPolicyTerminationRequestNotification(ue *pcf_context.UeContext, PolId
 
 }
 
+// returns UDR Uri of Ue, if ue.UdrUri dose not exist, query NRF to get supported Udr Uri
 func getUdrUri(ue *pcf_context.UeContext) string {
 	if ue.UdrUri != "" {
 		return ue.UdrUri

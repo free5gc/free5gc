@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ishidawataru/sctp"
+	"git.cs.nctu.edu.tw/calee/sctp"
 
 	"github.com/davecgh/go-spew/spew"
 
@@ -49,6 +49,10 @@ func AmfInit() {
 	if err := gmm.InitAmfUeSm(ue); err != nil {
 		log.Printf("InitAmfUeSm error: %v", err)
 	}
+	ue.PlmnId = models.PlmnId{
+		Mcc: "208",
+		Mnc: "93",
+	}
 	ue.GroupID = "12121212-208-93-01010101"
 	ue.TimeZone = "+08:00+1h"
 	ue.Location = models.UserLocation{
@@ -70,10 +74,12 @@ func AmfInit() {
 		},
 	}
 	ue.Tai = *ue.Location.NrLocation.Tai
-	ue.AllowedNssai[models.AccessType__3_GPP_ACCESS] = []models.Snssai{
+	ue.AllowedNssai[models.AccessType__3_GPP_ACCESS] = []models.AllowedSnssai{
 		{
-			Sst: 1,
-			Sd:  "010203",
+			AllowedSnssai: &models.Snssai{
+				Sst: 1,
+				Sd:  "010203",
+			},
 		},
 	}
 	ue.SmfSelectionData = &models.SmfSelectionSubscriptionData{
@@ -91,7 +97,6 @@ func AmfInit() {
 			Uplink:   "800 Kbps",
 			Downlink: "1000 Kbps",
 		},
-		RatRestrictions: []models.RatType{models.RatType_EUTRA},
 	}
 	ue.RatType = models.RatType_NR
 	ue.Kamf = strings.Repeat("1", 64)
@@ -227,9 +232,11 @@ func UeAttach(anType models.AccessType) {
 	ue := TestAmf.UePool["imsi-2089300007487"]
 	ran.SupportedTAList = []amf_context.SupportedTAI{
 		{
-			Tai:        ue.Tai,
-			SNssaiList: ue.AllowedNssai[anType],
+			Tai: ue.Tai,
 		},
+	}
+	for _, allowedSnssai := range ue.AllowedNssai[anType] {
+		ran.SupportedTAList[0].SNssaiList = append(ran.SupportedTAList[0].SNssaiList, *allowedSnssai.AllowedSnssai)
 	}
 	ue.AttachRanUe(ranUe)
 }

@@ -6,7 +6,7 @@ import (
 	"net"
 	"sync"
 
-	"github.com/ishidawataru/sctp"
+	"git.cs.nctu.edu.tw/calee/sctp"
 	"github.com/sirupsen/logrus"
 
 	"free5gc/src/n3iwf/factory"
@@ -15,10 +15,10 @@ import (
 )
 
 type SCTPSession struct {
-	Address   string
-	Port      int
-	SessionID string
-	Conn      *sctp.SCTPConn
+	Address  string
+	Port     int
+	SCTPAddr string
+	Conn     *sctp.SCTPConn
 }
 
 var ngapLog *logrus.Entry
@@ -32,7 +32,7 @@ func init() {
 	ngapLog = logger.NgapLog
 }
 
-func (session *SCTPSession) Connect() (sessionID string, err error) {
+func (session *SCTPSession) Connect() (sctpAddr string, err error) {
 	// Check Address defined.
 	var ipAddr *net.IPAddr
 
@@ -86,13 +86,13 @@ func (session *SCTPSession) Connect() (sessionID string, err error) {
 		return
 	}
 
-	session.SessionID = session.Conn.RemoteAddr().String()
-	sessionID = session.SessionID
+	session.SCTPAddr = session.Conn.RemoteAddr().String()
+	sctpAddr = session.SCTPAddr
 
 	// Send EventSCTPConnectMessage to trigger NGSetup procedure
 	handlerMessage := n3iwf_message.HandlerMessage{
-		Event:         n3iwf_message.EventSCTPConnectMessage,
-		SCTPSessionID: sessionID,
+		Event:    n3iwf_message.EventSCTPConnectMessage,
+		SCTPAddr: sctpAddr,
 	}
 	n3iwf_message.SendMessage(handlerMessage)
 
@@ -110,17 +110,16 @@ func (session *SCTPSession) ClientListen(wg *sync.WaitGroup) {
 			n, info, err := session.Conn.SCTPRead(readData)
 
 			if err != nil {
-				ngapLog.Errorf("[SCTP] SCTPRead(): %s", err.Error())
-				ngapLog.Error("[SCTP] Failed to read from SCTP connection.")
-				ngapLog.Debugf("[SCTP] AMF Address: %s\n[SCTP] Port: %d\n[SCTP] Session ID: %s", session.Address, session.Port, session.SessionID)
+				ngapLog.Debugf("[SCTP] AMF Address: %s\n[SCTP] Port: %d\n[SCTP] AMF Server Address: %s", session.Address, session.Port, session.SCTPAddr)
 
 				if err == io.EOF || err == io.ErrUnexpectedEOF {
 					ngapLog.Warn("[SCTP] Close connection.")
-					ReleaseSession(session.SessionID)
+					ReleaseSession(session.SCTPAddr)
 					wg.Done()
 					return
 				}
-
+				ngapLog.Errorf("[SCTP] SCTPRead(): %s", err.Error())
+				ngapLog.Error("[SCTP] Failed to read from SCTP connection.")
 			} else {
 				ngapLog.Infof("[SCTP] Successfully read %d bytes.", n)
 
@@ -130,9 +129,9 @@ func (session *SCTPSession) ClientListen(wg *sync.WaitGroup) {
 				}
 
 				handlerMessage := n3iwf_message.HandlerMessage{
-					Event:         n3iwf_message.EventNGAPMessage,
-					SCTPSessionID: session.SessionID,
-					Value:         readData,
+					Event:    n3iwf_message.EventNGAPMessage,
+					SCTPAddr: session.SCTPAddr,
+					Value:    readData,
 				}
 				n3iwf_message.SendMessage(handlerMessage)
 
@@ -172,9 +171,15 @@ func (session *SCTPSession) Close() (err error) {
 
 // InitiateSCTP initiate the N3IWF SCTP process.
 func InitiateSCTP(wg *sync.WaitGroup) {
+	config := factory.N3iwfConfig.Configuration
+	if config == nil {
+		ngapLog.Error("[SCTP] InitiateSCTP(): Configuation is nil. Aborted.")
+		return
+	}
+	SetupSCTPConnection(config.AMFAddress, wg)
+}
 
-	amfAddr := factory.N3iwfConfig.Configuration.AMFAddress
-
+func SetupSCTPConnection(amfAddr []factory.ConfigAMFAddr, wg *sync.WaitGroup) {
 	for _, iterator := range amfAddr {
 		// Create the session
 		sctpSession := &SCTPSession{
@@ -183,7 +188,7 @@ func InitiateSCTP(wg *sync.WaitGroup) {
 		}
 
 		// Connect the session
-		sessionID, err := sctpSession.Connect()
+		sctpAddr, err := sctpSession.Connect()
 		if err != nil {
 			ngapLog.Errorf("[SCTP] %s", err.Error())
 			ngapLog.Debugf("[SCTP] AMF address: %s\n[SCTP] Remote port: %d", sctpSession.Address, sctpSession.Port)
@@ -191,20 +196,20 @@ func InitiateSCTP(wg *sync.WaitGroup) {
 		}
 
 		// Add the session to map
-		_, ok := peerAMFs[sessionID]
+		_, ok := peerAMFs[sctpAddr]
 		if ok {
 			ngapLog.Warn("[SCTP] InitiateSCTP(): SCTP session exists. The existing session will be released.")
-			ngapLog.Debugf("[SCTP] Session ID: %s", sessionID)
+			ngapLog.Debugf("[SCTP] AMF Server Address: %s", sctpAddr)
 
-			if ok := ReleaseSession(sessionID); !ok {
+			if ok := ReleaseSession(sctpAddr); !ok {
 				// Improvement: retry mechanism
 				continue
 			} else {
-				peerAMFs[sessionID] = sctpSession
+				peerAMFs[sctpAddr] = sctpSession
 			}
 
 		} else {
-			peerAMFs[sessionID] = sctpSession
+			peerAMFs[sctpAddr] = sctpSession
 		}
 
 		// Add wait group number
@@ -215,8 +220,15 @@ func InitiateSCTP(wg *sync.WaitGroup) {
 	}
 }
 
-func Send(sessionID string, data []byte) (ok bool) {
-	if value, ok := peerAMFs[sessionID]; ok {
+func assignPort(port int) int {
+	if port == 0 {
+		return 38412
+	}
+	return port
+}
+
+func Send(sctpAddr string, data []byte) (ok bool) {
+	if value, ok := peerAMFs[sctpAddr]; ok {
 		if err := value.Send(data); err != nil {
 			ngapLog.Errorf("[SCTP] %s", err.Error())
 			return false
@@ -224,32 +236,25 @@ func Send(sessionID string, data []byte) (ok bool) {
 		return true
 	} else {
 		ngapLog.Error("[SCTP] Send(): SCTP session not found.")
-		ngapLog.Debugf("[SCTP] Session ID: %s", sessionID)
+		ngapLog.Debugf("[SCTP] AMF Server Address: %s", sctpAddr)
 		return false
 	}
 }
 
-func ReleaseSession(sessionID string) (ok bool) {
-	if value, ok := peerAMFs[sessionID]; ok {
+func ReleaseSession(sctpAddr string) (ok bool) {
+	if value, ok := peerAMFs[sctpAddr]; ok {
 		if err := value.Close(); err != nil {
 			ngapLog.Errorf("[SCTP] %s", err.Error())
-			ngapLog.Debugf("[SCTP] Session ID: %s", sessionID)
+			ngapLog.Debugf("[SCTP] AMF Server Address: %s", sctpAddr)
 			return false
 		}
 
-		delete(peerAMFs, sessionID)
+		delete(peerAMFs, sctpAddr)
 
 		return true
 	} else {
 		ngapLog.Error("[SCTP] ReleaseSession(): SCTP session not found.")
-		ngapLog.Debugf("[SCTP] Session ID: %s", sessionID)
+		ngapLog.Debugf("[SCTP] AMF Server Address: %s", sctpAddr)
 		return false
 	}
-}
-
-func assignPort(port int) int {
-	if port == 0 {
-		return 38412
-	}
-	return port
 }

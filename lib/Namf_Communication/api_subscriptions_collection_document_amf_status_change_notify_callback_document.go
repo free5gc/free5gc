@@ -27,9 +27,9 @@ func (a *AmfStatusChangeCallbackDocumentApiService) AmfStatusChangeNotify(ctx co
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 
-	localVarHttpContentTypes := []string{"application / json"}
+	localVarHttpContentTypes := []string{"application/json"}
 	localVarHeaderParams["Content-Type"] = localVarHttpContentTypes[0] // use the first content type specified in 'consumes'
-
+	localVarPostBody = &request
 	// to determine the Accept header
 	localVarHttpHeaderAccepts := []string{"application/problem+json"}
 

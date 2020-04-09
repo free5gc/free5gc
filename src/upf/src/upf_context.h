@@ -18,17 +18,21 @@
 #include "pfcp_node.h"
 #include "gtp_path.h"
 #include "pfcp_message.h"
+#include "libgtp5gnl/gtp5g.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-typedef struct _UpfUeIp     UpfUeIp;
-typedef struct _UpfDev      UpfDev;
-typedef struct _UpfFar      UpfFar;
-typedef struct _UpfBar      UpfBar;
-typedef struct _UpfQer      UpfQer;
-typedef struct _UpfUrr      UpfUrr;
+typedef struct _UpfUeIp      UpfUeIp;
+typedef struct _UpfDev       UpfDev;
+typedef struct gtp5g_pdr     UpfPdr;
+typedef struct gtp5g_far     UpfFar;
+typedef struct _UpfBufPacket UpfBufPacket;
+typedef struct _UpfPdrId     UpfPdrId;
+typedef struct _UpfBar       UpfBar;
+typedef struct _UpfQer       UpfQer;
+typedef struct _UpfUrr       UpfUrr;
 
 typedef enum _UpfEvent {
 
@@ -44,6 +48,7 @@ typedef enum _UpfEvent {
 typedef struct {
     const char      *gtpDevNamePrefix;   // Default : "upfgtp"
 
+    ListNode        gtpInterfaceList;    // name of interface (char*)
     // Add context related to GTP-U here
     uint16_t        gtpv1Port;           // Default : GTP_V1_PORT
     int             gtpv1DevSN;          // Serial number for naming gtpv1Dev, gtpv1v6Dev
@@ -61,6 +66,13 @@ typedef struct {
     SockAddr        *pfcpAddr;           // IPv4 Address
     SockAddr        *pfcpAddr6;          // IPv6 Address
 
+    /* Use Array or Hash for better performance
+     * Because max size of the list is 65536 due to the max of PDR ID
+     * We can use array for O(1) search instead of O(N) search in list
+     * Trade off of speed and memory size
+     */
+    //ListNode        bufPacketList;       // save pdrId and buffer here
+
     // DNS
 #define MAX_NUM_OF_DNS          2
     const char      *dns[MAX_NUM_OF_DNS];
@@ -72,8 +84,7 @@ typedef struct {
     ListNode        apnList;
 
     // Different list of policy rule
-    ListNode        pdrList;
-    ListNode        farList;
+    // TODO: if implementing QER in kernel, remove these list
     ListNode        qerList;
     ListNode        urrList;
 
@@ -87,6 +98,17 @@ typedef struct {
 
     // Session : hash(IMSI+APN)
     Hash            *sessionHash;
+    // Save buffer packet here
+    Hash            *bufPacketHash;
+    // Use spin lock to protect data write
+    pthread_spinlock_t buffLock;
+    // TODO: read from config
+    // no reason, just want to bigger than /tmp/free5gc_unix_sock
+#define MAX_SOCK_PATH_LEN 64
+    char            buffSockPath[MAX_SOCK_PATH_LEN];
+    // Buffering socket for recv packet from kernel
+    Sock            *buffSock;
+
 
     // Config file
     const char      *configFilePath;
@@ -122,71 +144,28 @@ typedef struct _UpfSession {
     /* GTP, PFCP context */
     //SockNode        *gtpNode;
     PfcpNode        *pfcpNode;
-    ListNode        dlPdrList;
-    ListNode        ulPdrList;
+    ListNode        pdrIdList;
 
-    /* Buff the un-tunnel packet */
-#define MAX_NUM_OF_PACKET_BUFFER_SIZE 0xff
-    int             pktBufIdx;
-    Bufblk          *packetBuffer[MAX_NUM_OF_PACKET_BUFFER_SIZE];
-    pthread_mutex_t bufLock;
 } UpfSession;
 
-typedef struct _UpfPdr {
-    ListNode        node;               // Node List
+// Used for buffering, Index type for each PDR
+typedef struct _UpfBufPacket {
+    //ListNode        node;
     int             index;
 
-    uint32_t        upfGtpUTeid;
-    uint8_t         ulDl;               // UL(0) or DL(1) PDR
+    // If sessionPtr == NULL, this PDR don't exist
+    // TS 29.244 5.2.1 shows that PDR won't cross session
+    const UpfSession *sessionPtr;
     uint16_t        pdrId;
+    Bufblk          *packetBuffer;
+} UpfBufPakcet;
 
-#define SMF_TEID_IP_DESC_IPV4   1
-#define SMF_TEID_IP_DESC_IPV6   2
-    // Upf Ip (with upfGtpUTeid conbine to F-TEID)
-    union {
-        /* IPV4 */
-        struct in_addr      addr4;
-        /* IPV6 */
-        struct in6_addr     addr6;
-        /* BOTH */
-        struct {
-            struct in_addr  addr4;
-            struct in6_addr addr6;
-        } dualStack;
-    };
-
-    UpfUeIp         ueIp;
-
-    uint32_t        precedence;
-    uint8_t         outerHeaderRemove;
-    uint8_t         sourceInterface;
-
-    UpfFar          *far;
-    UpfQer          *qer;
-    UpfUrr          *urr;
-
-    PfcpNode        *pfcpNode;
-    UpfSession      *session;
-} UpfPdr;
-
-typedef struct _UpfFar {
+typedef struct _UpfPdrId {
     ListNode        node;
     int             index;
 
-    uint32_t        farId;
-    uint8_t         applyAction;
-    uint8_t         destinationInterface;
-
-    uint16_t        referenceCount; // for reported usage
-    uint8_t         created;
-
-    uint32_t        upfN3Teid;
-    Ip              ranIp;
-
-    UpfBar          *bar;
-    PfcpNode        *pfcpNode;
-    //SockNode        *gtpNode; // TODO: check if can used
-} UpfFar;
+    uint16_t        pdrId;
+} UpfPdrId;
 
 typedef struct _UpfUrr {
     ListNode        node;
@@ -233,15 +212,18 @@ Status UpfContextTerminate();
 // APN / PDR / FAR
 ApnNode *UpfApnAdd(const char *apnName, const char *ip, const char *prefix, const char *natifname);
 Status UpfApnRemoveAll();
-UpfPdr *UpfPdrAdd(UpfSession *session);
-Status UpfPdrRemove(UpfPdr *pdr);
-UpfPdr *UpfPdrFindByPdrId(uint16_t pdrId);
-UpfPdr *UpfPdrFindByFarId(uint32_t farId);
-UpfPdr *UpfPdrFidByUpfGtpUTeid(uint32_t teid);
-UpfFar *UpfFarAdd();
-Status UpfFarRemove(UpfFar *far);
-UpfFar *UpfFarFindByFarId(uint32_t farId);
 
+// BufPacket
+HashIndex *UpfBufPacketFirst();
+HashIndex *UpfBufPacketNext(HashIndex *hashIdx);
+UpfPdrId *UpfPdrIdAdd(uint16_t pdrId);
+Status UpfPdrIdRemove(UpfPdrId *pdrIdPtr);
+UpfBufPacket *UpfBufPacketThis(HashIndex *hashIdx);
+UpfBufPacket *UpfBufPacketFindByPdrId(uint16_t pdrId);
+UpfBufPacket *UpfBufPacketAdd(const UpfSession * const session,
+                              const uint16_t pdrId);
+Status UpfBufPacketRemove(UpfBufPacket *bufPacket);
+Status UpfBufPacketRemoveAll();
 // Session
 HashIndex *UpfSessionFirst();
 HashIndex *UpfSessionNext(HashIndex *hashIdx);

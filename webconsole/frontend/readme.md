@@ -1,6 +1,8 @@
-# free5GC Web Console
+# free5GC Web Console Frontend
 
-## Environment Setup
+Note that this tutorial is for frontend development ONLY, not the whole web console!
+
+## Environment Setup for Frontend Development
 
 Install yarn
 ```bash
@@ -14,7 +16,10 @@ Install required packages
 yarn install
 ```
 
-## Run the Web Server
+Note that the default api server base request url is defined in:
+`webconsole/frontend/src/config/config.js`
+
+## Run the Frontend Dev Web Server
 ```bash
 yarn start
 ```

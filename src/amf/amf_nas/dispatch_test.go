@@ -42,9 +42,9 @@ import (
 	"testing"
 	"time"
 
+	"git.cs.nctu.edu.tw/calee/sctp"
 	"github.com/bronze1man/radius"
 	"github.com/gin-gonic/gin"
-	"github.com/ishidawataru/sctp"
 	"github.com/mohae/deepcopy"
 	"github.com/stretchr/testify/assert"
 	"go.mongodb.org/mongo-driver/bson"

@@ -36,6 +36,7 @@ type APIClient struct {
 	SMSFNon3GPPAccessRegistrationInfoRetrievalApi          *SMSFNon3GPPAccessRegistrationInfoRetrievalApiService
 	SMSFRegistrationFor3GPPAccessApi                       *SMSFRegistrationFor3GPPAccessApiService
 	SMSFRegistrationForNon3GPPAccessApi                    *SMSFRegistrationForNon3GPPAccessApiService
+	DeregistrationNotificationCallbackApi                  *DeregistrationNotificationCallbackApiService
 }
 
 type service struct {
@@ -71,6 +72,7 @@ func NewAPIClient(cfg *Configuration) *APIClient {
 	c.SMSFNon3GPPAccessRegistrationInfoRetrievalApi = (*SMSFNon3GPPAccessRegistrationInfoRetrievalApiService)(&c.common)
 	c.SMSFRegistrationFor3GPPAccessApi = (*SMSFRegistrationFor3GPPAccessApiService)(&c.common)
 	c.SMSFRegistrationForNon3GPPAccessApi = (*SMSFRegistrationForNon3GPPAccessApiService)(&c.common)
+	c.DeregistrationNotificationCallbackApi = (*DeregistrationNotificationCallbackApiService)(&c.common)
 
 	return c
 }

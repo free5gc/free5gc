@@ -6,6 +6,6 @@ package factory
 
 type Udrclient struct {
 	Scheme   string `yaml:"scheme"`
-	Ipv4Adrr string `yaml:"ipv4Adrr,omitempty"`
+	Ipv4Addr string `yaml:"ipv4Addr,omitempty"`
 	Port     int    `yaml:"port,omitempty"`
 }

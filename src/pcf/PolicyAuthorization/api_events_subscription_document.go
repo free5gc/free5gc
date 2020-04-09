@@ -12,7 +12,9 @@ package PolicyAuthorization
 import (
 	"free5gc/lib/http_wrapper"
 	"free5gc/lib/openapi/models"
+	"free5gc/src/pcf/logger"
 	"free5gc/src/pcf/pcf_handler/pcf_message"
+	"free5gc/src/pcf/pcf_util"
 
 	"github.com/gin-gonic/gin"
 )
@@ -34,7 +36,19 @@ func DeleteEventsSubsc(c *gin.Context) {
 // UpdateEventsSubsc - creates or modifies an Events Subscription subresource
 func UpdateEventsSubsc(c *gin.Context) {
 	var eventsSubscReqData models.EventsSubscReqData
-	c.BindJSON(&eventsSubscReqData)
+	err := c.ShouldBindJSON(&eventsSubscReqData)
+	if err != nil {
+		rsp := pcf_util.GetProblemDetail("Malformed request syntax", pcf_util.ERROR_REQUEST_PARAMETERS)
+		logger.HandlerLog.Errorln(rsp.Detail)
+		c.JSON(int(rsp.Status), rsp)
+		return
+	}
+	if eventsSubscReqData.Events == nil || eventsSubscReqData.NotifUri == "" {
+		rsp := pcf_util.GetProblemDetail("Errorneous/Missing Mandotory IE", pcf_util.ERROR_REQUEST_PARAMETERS)
+		logger.HandlerLog.Errorln(rsp.Detail)
+		c.JSON(int(rsp.Status), rsp)
+		return
+	}
 
 	req := http_wrapper.NewRequest(c.Request, eventsSubscReqData)
 	req.Params["appSessionId"], _ = c.Params.Get("appSessionId")

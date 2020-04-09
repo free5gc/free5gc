@@ -16,6 +16,7 @@ import (
 	"free5gc/src/app"
 	"free5gc/src/smf/logger"
 	"free5gc/src/smf/smf_service"
+	"free5gc/src/smf/version"
 	"os"
 )
 
@@ -31,6 +32,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "smf"
 	fmt.Print(app.Name, "\n")
+	appLog.Infoln("SMF version: ", version.GetVersion())
 	app.Usage = "-free5gccfg common configuration file -smfcfg smf configuration file"
 	app.Action = action
 	app.Flags = SMF.GetCliCmd()

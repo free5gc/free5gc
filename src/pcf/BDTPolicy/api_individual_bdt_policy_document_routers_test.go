@@ -2,77 +2,86 @@ package BDTPolicy_test
 
 import (
 	"context"
-	TestBDTPolicy "free5gc/lib/CommonConsumerTestData/PCF/TestBDTPolicy"
-	Npcf_BDTPolicy "free5gc/lib/Npcf_BDTPolicy"
-	"free5gc/src/pcf/pcf_context"
-	"free5gc/src/pcf/pcf_util"
-	"testing"
-
 	"github.com/stretchr/testify/assert"
+	TestBDTPolicy "free5gc/lib/CommonConsumerTestData/PCF/TestBDTPolicy"
+	"free5gc/lib/Npcf_BDTPolicyControl"
+	"free5gc/lib/openapi/models"
+	"net/http"
+	"strings"
+	"testing"
+	"time"
 )
 
 func TestGetUpdateBDTPolicy(t *testing.T) {
-	pcfInit()
 
-	configuration := Npcf_BDTPolicy.NewConfiguration()
-	configuration.SetBasePath(pcf_util.PCF_BASIC_PATH + pcf_context.BdtUri)
-	client := Npcf_BDTPolicy.NewAPIClient(configuration)
+	configuration := Npcf_BDTPolicyControl.NewConfiguration()
+	configuration.SetBasePath("https://127.0.0.1:29507")
+	client := Npcf_BDTPolicyControl.NewAPIClient(configuration)
 
+	var bdtPolicyId string
 	// get test data
-	bdtReqData1, bdtReqData2, bdtReqData3, bdtReqDataNil := TestBDTPolicy.GetCreateTestData()
-	bdtPolicyDataPatch := TestBDTPolicy.GetUpdateTestData()
+	bdtReqData := TestBDTPolicy.GetCreateTestData()
 
 	// test create service
-	_, httpRsp, err := client.BDTPoliciesCollectionApi.CreateBDTPolicy(context.Background(), bdtReqData1)
-	assert.True(t, err == nil)
-	assert.True(t, httpRsp != nil)
-	assert.Equal(t, "201 Created", httpRsp.Status)
+	{
+		rsp, httpRsp, err := client.BDTPoliciesCollectionApi.CreateBDTPolicy(context.Background(), bdtReqData)
+		assert.True(t, err == nil)
+		assert.True(t, httpRsp != nil)
+		if assert.Equal(t, http.StatusCreated, httpRsp.StatusCode) {
+			if assert.NotNil(t, rsp.BdtReqData) {
+				assert.Equal(t, *rsp.BdtReqData, bdtReqData)
+			}
+			if assert.NotNil(t, rsp.BdtPolData) {
+				assert.True(t, rsp.BdtPolData.SelTransPolicyId == 1)
+				assert.Equal(t, rsp.BdtPolData.SuppFeat, "")
+				if assert.True(t, len(rsp.BdtPolData.TransfPolicies) == 1) {
+					assert.Equal(t, rsp.BdtPolData.TransfPolicies[0], models.TransferPolicy{
+						RatingGroup:   1,
+						RecTimeInt:    bdtReqData.DesTimeInt,
+						TransPolicyId: 1,
+					})
+				}
+			}
+			locationHeader := httpRsp.Header.Get("Location")
+			index := strings.LastIndex(locationHeader, "/")
+			assert.True(t, index != -1)
+			bdtPolicyId = locationHeader[index+1:]
+			assert.True(t, strings.HasPrefix(bdtPolicyId, "BdtPolicyId-1"))
 
-	// test get service
-	_, httpRsp, err = client.IndividualBDTPolicyDocumentApi.GetBDTPolicy(context.Background(), pcf_context.DefaultBdtRefId+bdtReqData1.AspId)
-	assert.True(t, err == nil)
-	assert.True(t, httpRsp != nil)
-	assert.Equal(t, "200 OK", httpRsp.Status)
+		}
+	}
 
+	time.Sleep(30 * time.Millisecond)
 	// test update service
-	_, httpRsp, err = client.IndividualBDTPolicyDocumentApi.UpdateBDTPolicy(context.Background(), pcf_context.DefaultBdtRefId+bdtReqData1.AspId, bdtPolicyDataPatch)
-	assert.True(t, err == nil)
-	assert.True(t, httpRsp != nil)
-	assert.Equal(t, "204 No Content", httpRsp.Status)
-
-	///////////// test error////////////////
-	// test nil
-	_, httpRsp, err = client.BDTPoliciesCollectionApi.CreateBDTPolicy(context.Background(), bdtReqDataNil)
-	assert.True(t, err != nil)
-	assert.True(t, httpRsp != nil)
-	assert.Equal(t, "404 Not Found", httpRsp.Status)
-
-	/////////////  Multiple data //////////////
-	// test mutiple create
-	_, httpRsp, err = client.BDTPoliciesCollectionApi.CreateBDTPolicy(context.Background(), bdtReqData2)
-	assert.True(t, err == nil)
-	assert.True(t, httpRsp != nil)
-	assert.Equal(t, "201 Created", httpRsp.Status)
-
-	_, httpRsp, err = client.BDTPoliciesCollectionApi.CreateBDTPolicy(context.Background(), bdtReqData3)
-	assert.True(t, err == nil)
-	assert.True(t, httpRsp != nil)
-	assert.Equal(t, "201 Created", httpRsp.Status)
-	// test mutiple get
-	_, httpRsp, err = client.IndividualBDTPolicyDocumentApi.GetBDTPolicy(context.Background(), pcf_context.DefaultBdtRefId+bdtReqData2.AspId)
-	assert.True(t, err == nil)
-	assert.True(t, httpRsp != nil)
-	assert.Equal(t, "200 OK", httpRsp.Status)
-
-	_, httpRsp, err = client.IndividualBDTPolicyDocumentApi.GetBDTPolicy(context.Background(), pcf_context.DefaultBdtRefId+bdtReqData3.AspId)
-	assert.True(t, err == nil)
-	assert.True(t, httpRsp != nil)
-	assert.Equal(t, "200 OK", httpRsp.Status)
-
-	// recreate test
-	_, httpRsp, err = client.BDTPoliciesCollectionApi.CreateBDTPolicy(context.Background(), bdtReqData1)
-	assert.True(t, err == nil)
-	assert.True(t, httpRsp != nil)
-	assert.Equal(t, "200 OK", httpRsp.Status)
+	{
+		bdtPolicyDataPatch := TestBDTPolicy.GetUpdateTestData()
+		_, httpRsp, err := client.IndividualBDTPolicyDocumentApi.UpdateBDTPolicy(context.Background(), bdtPolicyId, bdtPolicyDataPatch)
+		assert.True(t, err == nil)
+		assert.True(t, httpRsp != nil)
+		assert.Equal(t, http.StatusOK, httpRsp.StatusCode)
+	}
+	time.Sleep(30 * time.Millisecond)
+	// test get service
+	{
+		rsp, httpRsp, err := client.IndividualBDTPolicyDocumentApi.GetBDTPolicy(context.Background(), bdtPolicyId)
+		assert.True(t, err == nil)
+		assert.True(t, httpRsp != nil)
+		if assert.Equal(t, http.StatusOK, httpRsp.StatusCode) {
+			if assert.NotNil(t, rsp.BdtReqData) {
+				assert.Equal(t, *rsp.BdtReqData, bdtReqData)
+			}
+			if assert.NotNil(t, rsp.BdtPolData) {
+				assert.True(t, rsp.BdtPolData.SelTransPolicyId == 1)
+				assert.Equal(t, rsp.BdtPolData.SuppFeat, "")
+				if assert.True(t, len(rsp.BdtPolData.TransfPolicies) == 1) {
+					assert.Equal(t, rsp.BdtPolData.TransfPolicies[0], models.TransferPolicy{
+						RatingGroup:   1,
+						RecTimeInt:    bdtReqData.DesTimeInt,
+						TransPolicyId: 1,
+					})
+				}
+			}
+		}
+	}
 
 }

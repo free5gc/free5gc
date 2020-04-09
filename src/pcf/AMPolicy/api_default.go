@@ -46,7 +46,7 @@ func PoliciesPolAssoIdGet(c *gin.Context) {
 // PoliciesPolAssoIdUpdatePost -
 func PoliciesPolAssoIdUpdatePost(c *gin.Context) {
 	var policyAssociationUpdateRequest models.PolicyAssociationUpdateRequest
-	err := c.BindJSON(&policyAssociationUpdateRequest)
+	err := c.ShouldBindJSON(&policyAssociationUpdateRequest)
 	if err != nil {
 		rsp := pcf_util.GetProblemDetail("Malformed request syntax", pcf_util.ERROR_REQUEST_PARAMETERS)
 		logger.HandlerLog.Errorln(rsp.Detail)
@@ -66,7 +66,7 @@ func PoliciesPolAssoIdUpdatePost(c *gin.Context) {
 // PoliciesPost -
 func PoliciesPost(c *gin.Context) {
 	var policyAssociationRequest models.PolicyAssociationRequest
-	err := c.BindJSON(&policyAssociationRequest)
+	err := c.ShouldBindJSON(&policyAssociationRequest)
 	if err != nil {
 		rsp := pcf_util.GetProblemDetail("Malformed request syntax", pcf_util.ERROR_REQUEST_PARAMETERS)
 		logger.HandlerLog.Errorln(rsp.Detail)
