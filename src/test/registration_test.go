@@ -343,6 +343,12 @@ func TestDeregistration(t *testing.T) {
 		assert.NotNil(t, getData)
 	}
 	{
+		smSelData := getSessionManagementSubscriptionData()
+		test.InsertSessionManagementSubscriptionDataToMongoDB(ue.Supi, servingPlmnId, smSelData)
+		getData := test.GetSessionManagementDataFromMongoDB(ue.Supi, servingPlmnId)
+		assert.NotNil(t, getData)
+	}
+	{
 		amPolicyData := getAmPolicyData()
 		test.InsertAmPolicyDataToMongoDB(ue.Supi, amPolicyData)
 		getData := test.GetAmPolicyDataFromMongoDB(ue.Supi)
@@ -503,6 +509,12 @@ func TestServiceRequest(t *testing.T) {
 		smfSelData := getSmfSelectionSubscriptionData()
 		test.InsertSmfSelectionSubscriptionDataToMongoDB(ue.Supi, smfSelData, servingPlmnId)
 		getData := test.GetSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
+		assert.NotNil(t, getData)
+	}
+	{
+		smSelData := getSessionManagementSubscriptionData()
+		test.InsertSessionManagementSubscriptionDataToMongoDB(ue.Supi, servingPlmnId, smSelData)
+		getData := test.GetSessionManagementDataFromMongoDB(ue.Supi, servingPlmnId)
 		assert.NotNil(t, getData)
 	}
 	{
@@ -710,9 +722,21 @@ func TestPDUSessionReleaseRequest(t *testing.T) {
 		assert.NotNil(t, getData)
 	}
 	{
+		smSelData := getSessionManagementSubscriptionData()
+		test.InsertSessionManagementSubscriptionDataToMongoDB(ue.Supi, servingPlmnId, smSelData)
+		getData := test.GetSessionManagementDataFromMongoDB(ue.Supi, servingPlmnId)
+		assert.NotNil(t, getData)
+	}
+	{
 		amPolicyData := getAmPolicyData()
 		test.InsertAmPolicyDataToMongoDB(ue.Supi, amPolicyData)
 		getData := test.GetAmPolicyDataFromMongoDB(ue.Supi)
+		assert.NotNil(t, getData)
+	}
+	{
+		smPolicyData := getSmPolicyData()
+		test.InsertSmPolicyDataToMongoDB(ue.Supi, smPolicyData)
+		getData := test.GetSmPolicyDataFromMongoDB(ue.Supi)
 		assert.NotNil(t, getData)
 	}
 
@@ -911,6 +935,12 @@ func TestXnHandover(t *testing.T) {
 		assert.NotNil(t, getData)
 	}
 	{
+		smSelData := getSessionManagementSubscriptionData()
+		test.InsertSessionManagementSubscriptionDataToMongoDB(ue.Supi, servingPlmnId, smSelData)
+		getData := test.GetSessionManagementDataFromMongoDB(ue.Supi, servingPlmnId)
+		assert.NotNil(t, getData)
+	}
+	{
 		amPolicyData := getAmPolicyData()
 		test.InsertAmPolicyDataToMongoDB(ue.Supi, amPolicyData)
 		getData := test.GetAmPolicyDataFromMongoDB(ue.Supi)
@@ -1082,6 +1112,12 @@ func TestPaging(t *testing.T) {
 		smfSelData := getSmfSelectionSubscriptionData()
 		test.InsertSmfSelectionSubscriptionDataToMongoDB(ue.Supi, smfSelData, servingPlmnId)
 		getData := test.GetSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
+		assert.NotNil(t, getData)
+	}
+	{
+		smSelData := getSessionManagementSubscriptionData()
+		test.InsertSessionManagementSubscriptionDataToMongoDB(ue.Supi, servingPlmnId, smSelData)
+		getData := test.GetSessionManagementDataFromMongoDB(ue.Supi, servingPlmnId)
 		assert.NotNil(t, getData)
 	}
 	{
@@ -1334,6 +1370,12 @@ func TestN2Handover(t *testing.T) {
 		smfSelData := getSmfSelectionSubscriptionData()
 		test.InsertSmfSelectionSubscriptionDataToMongoDB(ue.Supi, smfSelData, servingPlmnId)
 		getData := test.GetSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
+		assert.NotNil(t, getData)
+	}
+	{
+		smSelData := getSessionManagementSubscriptionData()
+		test.InsertSessionManagementSubscriptionDataToMongoDB(ue.Supi, servingPlmnId, smSelData)
+		getData := test.GetSessionManagementDataFromMongoDB(ue.Supi, servingPlmnId)
 		assert.NotNil(t, getData)
 	}
 	{
