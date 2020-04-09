@@ -15,13 +15,14 @@ static Status AddGtpv1EndpointWithName(const char *host, const char *ifname);
 static yaml_document_t *document = NULL;
 
 Status UpfLoadConfigFile(const char *configFilePath) {
+    Status status = STATUS_OK;
     FILE *file;
     yaml_parser_t parser;
 
     file = fopen(configFilePath, "rb");
     UTLT_Assert(file, return STATUS_ERROR, "Fail to open yaml file");
 
-    UTLT_Assert(yaml_parser_initialize(&parser), return STATUS_ERROR, "Fail to initialize parser");
+    UTLT_Assert(yaml_parser_initialize(&parser), status = STATUS_ERROR; goto FREEFD, "Fail to initialize parser");
     yaml_parser_set_input_file(&parser, file);
 
     document = UTLT_Calloc(1, sizeof(yaml_document_t));
@@ -29,10 +30,12 @@ Status UpfLoadConfigFile(const char *configFilePath) {
     if (!yaml_parser_load(&parser, document)) {
         UTLT_Free(document);
         yaml_parser_delete(&parser);
-        UTLT_Assert(!fclose(file), return STATUS_ERROR, "Fail to close yaml file");
     }
 
-    return STATUS_OK;
+FREEFD:
+    UTLT_Assert(!fclose(file), status = STATUS_ERROR, "Fail to close yaml file");
+
+    return status;
 }
 
 Status UpfConfigParse() {

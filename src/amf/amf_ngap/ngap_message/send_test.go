@@ -2,7 +2,7 @@ package ngap_message_test
 
 import (
 	"encoding/hex"
-	"github.com/ishidawataru/sctp"
+	"git.cs.nctu.edu.tw/calee/sctp"
 	"free5gc/lib/CommonConsumerTestData/AMF/TestAmf"
 	"free5gc/lib/CommonConsumerTestData/AMF/TestComm"
 	"free5gc/lib/aper"
@@ -111,7 +111,7 @@ func TestSendDownlinkNasTransport(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-	ngap_message.SendDownlinkNasTransport(ue.RanUe[models.AccessType__3_GPP_ACCESS], nasPdu)
+	ngap_message.SendDownlinkNasTransport(ue.RanUe[models.AccessType__3_GPP_ACCESS], nasPdu, nil)
 }
 
 func TestSendPDUSessionResourceReleaseCommand(t *testing.T) {

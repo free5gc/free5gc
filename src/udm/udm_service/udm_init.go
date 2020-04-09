@@ -16,7 +16,6 @@ import (
 	"free5gc/src/udm/udm_consumer"
 	"free5gc/src/udm/udm_context"
 	"free5gc/src/udm/udm_handler"
-	"free5gc/src/udm/udm_util"
 
 	"os/exec"
 	"sync"
@@ -126,7 +125,8 @@ func (udm *UDM) Start() {
 	addr := fmt.Sprintf("%s:%d", sbi.IPv4Addr, sbi.Port)
 
 	self := udm_context.UDM_Self()
-	udm_util.InitUDMContext(self)
+	// udm_util.InitUDMContext(self)
+	udm_context.Init()
 	udm_context.UDM_Self().InitNFService(serviceName, config.Info.Version)
 
 	proflie, err := udm_consumer.BuildNFInstance(self)

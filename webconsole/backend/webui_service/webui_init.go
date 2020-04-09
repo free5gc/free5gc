@@ -10,6 +10,7 @@ import (
 	"free5gc/src/udr/factory"
 	"free5gc/webconsole/backend/WebUI"
 	"free5gc/webconsole/backend/logger"
+	"free5gc/webconsole/backend/webui_context"
 	"os/exec"
 	"sync"
 
@@ -108,7 +109,8 @@ func (webui *WEBUI) Start() {
 		MaxAge:           86400,
 	}))
 
-	// router.Use(cors.Default())
+	self := webui_context.WEBUI_Self()
+	self.UpdateNfProfiles()
 
 	router.NoRoute(ReturnPublic())
 

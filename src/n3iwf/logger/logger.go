@@ -2,10 +2,11 @@ package logger
 
 import (
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"os"
 	"runtime"
 	"strings"
+
+	"github.com/sirupsen/logrus"
 )
 
 var log *logrus.Logger
@@ -14,6 +15,8 @@ var InitLog *logrus.Entry
 var NgapLog *logrus.Entry
 var HandlerLog *logrus.Entry
 var ContextLog *logrus.Entry
+var IKELog *logrus.Entry
+var RelayLog *logrus.Entry
 
 func init() {
 	log = logrus.New()
@@ -33,7 +36,6 @@ func init() {
 		FieldMap:                  nil,
 		CallerPrettyfier: func(f *runtime.Frame) (string, string) {
 			orgFilename, _ := os.Getwd()
-			log.Traceln("orgFilename", orgFilename)
 			repopath := orgFilename
 			repopath = strings.Replace(repopath, "/bin", "", 1)
 			filename := strings.Replace(f.File, repopath, "", -1)
@@ -46,6 +48,8 @@ func init() {
 	NgapLog = log.WithFields(logrus.Fields{"N3IWF": "NGAP"})
 	HandlerLog = log.WithFields(logrus.Fields{"N3IWF": "handler"})
 	ContextLog = log.WithFields(logrus.Fields{"N3IWF": "context"})
+	IKELog = log.WithFields(logrus.Fields{"N3IWF": "IKE"})
+	RelayLog = log.WithFields(logrus.Fields{"N3IWF": "relay"})
 }
 
 func SetLogLevel(level logrus.Level) {

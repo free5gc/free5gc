@@ -10,27 +10,30 @@
 package SubscriberDataManagement_test
 
 import (
+	"context"
+	"fmt"
+	Nudm_SDM_Client "free5gc/lib/Nudm_SubscriberDataManagement"
+	"free5gc/lib/http2_util"
+	"free5gc/lib/openapi/models"
+	"free5gc/lib/path_util"
+	Nudm_SDM_Server "free5gc/src/udm/SubscriberDataManagement"
+	// "free5gc/src/udm/logger"
+	"free5gc/src/udm/udm_context"
+	"free5gc/src/udm/udm_handler"
+	"net/http"
 	"testing"
+
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
 )
-
-var UDM = &udm_service.UDM{}
-
-var udmContext udm_context.UDMContext
-
-func testtestInitUdmConfig() {
-	flag := flag.FlagSet{}
-	cli := cli.NewContext(nil, &flag, nil)
-	UDM.Initialize(cli)
-}
 
 // GetAmData - retrieve a UE's Access and Mobility Subscription Data
 func TestGetAmData(t *testing.T) {
 
-	/*go udm_handler.Handle()
-
-	go func() {
+	go udm_handler.Handle()
+	go func() { // udm server
 		router := gin.Default()
-		SubscriberDataManagement.AddService(router)
+		Nudm_SDM_Server.AddService(router)
 
 		udmLogPath := path_util.Gofree5gcPath("free5gc/udrmslkey.log")
 		udmPemPath := path_util.Gofree5gcPath("free5gc/support/TLS/udm.pem")
@@ -43,9 +46,18 @@ func TestGetAmData(t *testing.T) {
 		}
 	}()
 
-	go func() {
+	udm_context.TestInit()
+	go func() { // fake udr server
 		router := gin.Default()
-		DataRepository.AddService(router)
+
+		router.GET("/nudr-dr/v1/subscription-data/:ueId/provisioned-data/am-data", func(c *gin.Context) { //:servingPlmnId/
+			gpsi := c.Param("gpsi")
+			fmt.Println("==========GetIdTranslationResult - retrieve a UE's SUPI==========")
+			fmt.Println("gpsi: ", gpsi)
+			var testAMdata models.AccessAndMobilitySubscriptionData
+			testAMdata.SupportedFeatures = "supportedFeatures"
+			c.JSON(http.StatusOK, testAMdata)
+		})
 
 		udrLogPath := path_util.Gofree5gcPath("free5gc/udrsslkey.log")
 		udrPemPath := path_util.Gofree5gcPath("free5gc/support/TLS/udr.pem")
@@ -58,66 +70,19 @@ func TestGetAmData(t *testing.T) {
 		}
 	}()
 
-	MongoDBLibrary.SetMongoDB("free5gc", "mongodb://localhost:27017")
-	Client := MongoDBLibrary.Client
+	udm_context.Init()
+	cfg := Nudm_SDM_Client.NewConfiguration()
+	cfg.SetBasePath("https://localhost:29503")
+	clientAPI := Nudm_SDM_Client.NewAPIClient(cfg)
 
-	alwaysEqual := cmp.Comparer(func(_, _ interface{}) bool { return true })
+	supi := "SDM1234"
+	amData, resp, err := clientAPI.AccessAndMobilitySubscriptionDataRetrievalApi.GetAmData(context.Background(), supi, nil)
 
-	// This option handles slices and maps of any type.
-	Opt := cmp.FilterValues(func(x, y interface{}) bool {
-		vx, vy := reflect.ValueOf(x), reflect.ValueOf(y)
-		// fmt.Println(vx.Kind(), "and", vy.Kind())
-		return (vx.IsValid() && vy.IsValid() && vx.Type() == vy.Type()) &&
-			(vx.Kind() == reflect.Map || vx.Kind() == reflect.Slice)
-	}, alwaysEqual)
-
-	// Drop old data
-	collection := Client.Database("free5gc").Collection("subscriptionData.provisionedData.amData")
-	collection.DeleteOne(context.TODO(), bson.M{"ueId": "imsi-0123456789"})
-
-	// Set client and set url
-	configuration := Nudm_SubscriberDataManagement.NewConfiguration()
-	configuration.SetBasePath("https://127.0.0.1:29503") // UDM Client
-	clientAPI := Nudm_SubscriberDataManagement.NewAPIClient(configuration)
-
-	// Set test data
-	ueId := "imsi-0123456789"
-	servingPlmnId := "20893"
-	testData := models.AccessAndMobilitySubscriptionData{
-		UeUsageType: 1,
+	if err != nil {
+		fmt.Println(err.Error())
+	} else {
+		fmt.Println("resp: ", resp)
+		fmt.Println("amData: ", amData)
 	}
-	tmp, _ := json.Marshal(testData)
-	var insertTestData = bson.M{}
-	json.Unmarshal(tmp, &insertTestData)
-	insertTestData["ueId"] = ueId
-	insertTestData["servingPlmnId"] = servingPlmnId
-	collection.InsertOne(context.TODO(), insertTestData)
-
-	{
-		var getAmDataParamOpts Nudm_SubscriberDataManagement.GetAmDataParamOpts
-		getAmDataParamOpts.PlmnId = optional.NewInterface(servingPlmnId)
-		supi := ueId
-
-		// Check test data (Use RESTful GET)
-		accessAndMobilitySubscriptionData, res, err := clientAPI.AccessAndMobilitySubscriptionDataRetrievalApi.GetAmData(context.TODO(), supi, &getAmDataParamOpts)
-		if err != nil {
-			log.Panic(err)
-		}
-
-		if status := res.StatusCode; status != http.StatusOK {
-			t.Errorf("handler returned wrong status code: got %v want %v",
-				status, http.StatusOK)
-		}
-
-		if cmp.Equal(testData, accessAndMobilitySubscriptionData, Opt) != true {
-			t.Errorf("handler returned unexpected body: got %v want %v",
-				accessAndMobilitySubscriptionData, testData)
-		}
-	}
-
-	// Clean test data
-	collection.DeleteOne(context.TODO(), bson.M{"ueId": "imsi-0123456789"})
-
-	// TEST END*/
 
 }

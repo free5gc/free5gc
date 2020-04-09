@@ -20,7 +20,13 @@ import (
 // DeleteAppSession - Deletes an existing Individual Application Session Context
 func DeleteAppSession(c *gin.Context) {
 
-	req := http_wrapper.NewRequest(c.Request, nil)
+	var eventsSubscReqData *models.EventsSubscReqData
+	err := c.ShouldBindJSON(eventsSubscReqData)
+	if err != nil {
+		eventsSubscReqData = nil
+	}
+
+	req := http_wrapper.NewRequest(c.Request, eventsSubscReqData)
 	req.Params["appSessionId"], _ = c.Params.Get("appSessionId")
 	channelMsg := pcf_message.NewHttpChannelMessage(pcf_message.EventDeleteAppSession, req)
 
@@ -48,7 +54,7 @@ func GetAppSession(c *gin.Context) {
 // ModAppSession - Modifies an existing Individual Application Session Context
 func ModAppSession(c *gin.Context) {
 	var appSessionContextUpdateData models.AppSessionContextUpdateData
-	c.BindJSON(&appSessionContextUpdateData)
+	c.ShouldBindJSON(&appSessionContextUpdateData)
 
 	req := http_wrapper.NewRequest(c.Request, appSessionContextUpdateData)
 	req.Params["appSessionId"], _ = c.Params.Get("appSessionId")

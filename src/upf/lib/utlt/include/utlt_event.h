@@ -56,7 +56,7 @@ Status EventSend(EvtQId eqId, uintptr_t eventType, int argc, ...);
  */
 Status EventRecv(EvtQId eqId, Event *event);
 
-TimerBlkID EventTimerCreate(TimerList *timerList, int type, uint32_t duration);
+TimerBlkID EventTimerCreate(TimerList *timerList, int type, uint32_t duration, uintptr_t event);
 
 #ifdef __cplusplus
 }

@@ -13,10 +13,20 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/davecgh/go-spew/spew"
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
 	"go.mongodb.org/mongo-driver/bson"
+	"free5gc/lib/http2_util"
+	"free5gc/lib/openapi"
+	"free5gc/lib/openapi/common"
+	"free5gc/src/nrf/nrf_service"
+	"free5gc/src/udr/logger"
+	"free5gc/src/udr/udr_util"
 	"log"
 	"net/http"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 
@@ -25,7 +35,6 @@ import (
 	"free5gc/lib/Nudr_DataRepository"
 	"free5gc/lib/openapi/models"
 	"free5gc/src/udr/factory"
-	"free5gc/src/udr/udr_handler"
 	"free5gc/src/udr/udr_service"
 
 	"github.com/antihax/optional"
@@ -36,20 +45,36 @@ var Opt cmp.Option
 
 var serverFlag = 0
 var mongodbFlag = 0
-var UDR = &udr_service.UDR{}
+
+func init() {
+	alwaysEqual := cmp.Comparer(func(_, _ interface{}) bool { return true })
+	// This option handles slices and maps of any type.
+	Opt = cmp.FilterValues(func(x, y interface{}) bool {
+		vx, vy := reflect.ValueOf(x), reflect.ValueOf(y)
+		// fmt.Println(vx.Kind(), "and", vy.Kind())
+		return (vx.IsValid() && vy.IsValid() && vx.Type() == vy.Type()) &&
+			(vx.Kind() == reflect.Map || vx.Kind() == reflect.Slice)
+	}, alwaysEqual)
+}
 
 func runTestServer(t *testing.T) {
 	if serverFlag == 0 {
-		flag := flag.FlagSet{}
-		cli := cli.NewContext(nil, &flag, nil)
-		UDR.Initialize(cli)
-		go func() {
-			UDR.Start()
-		}()
 		serverFlag = 1
 
-		// Run channel Handle Function for UDR
-		go udr_handler.Handle()
+		// NRF
+		flag_nrf := flag.FlagSet{}
+		cli_nrf := cli.NewContext(nil, &flag_nrf, nil)
+		nrf := &nrf_service.NRF{}
+		nrf.Initialize(cli_nrf)
+		go nrf.Start()
+		time.Sleep(100 * time.Millisecond)
+
+		// UDR
+		flag_udr := flag.FlagSet{}
+		cli_udr := cli.NewContext(nil, &flag_udr, nil)
+		udr := &udr_service.UDR{}
+		udr.Initialize(cli_udr)
+		go udr.Start()
 		time.Sleep(100 * time.Millisecond)
 	}
 }
@@ -61,18 +86,6 @@ func connectMongoDB(t *testing.T) {
 		SetMongoDB(mongodb.Name, mongodb.Url)
 		Client = MongoDBLibrary.Client
 		mongodbFlag = 1
-
-		alwaysEqual := cmp.Comparer(func(_, _ interface{}) bool { return true })
-
-		// This option handles slices and maps of any type.
-		optTmp := cmp.FilterValues(func(x, y interface{}) bool {
-			vx, vy := reflect.ValueOf(x), reflect.ValueOf(y)
-			// fmt.Println(vx.Kind(), "and", vy.Kind())
-			return (vx.IsValid() && vy.IsValid() && vx.Type() == vy.Type()) &&
-				(vx.Kind() == reflect.Map || vx.Kind() == reflect.Slice)
-		}, alwaysEqual)
-
-		Opt = optTmp
 	}
 }
 
@@ -167,47 +180,536 @@ func TestExposureDataSubsToNotifySubIdPut(t *testing.T) {
 
 // PolicyDataBdtDataBdtReferenceIdDelete -
 func TestPolicyDataBdtDataBdtReferenceIdDelete(t *testing.T) {
-	// c.JSON(http.StatusOK, gin.H{})
+	runTestServer(t)
+
+	connectMongoDB(t)
+
+	// Drop old data
+	bdtReferenceId := "05aca9aa-fd65-4f9e-b097-ffc37edf1574"
+	collection := Client.Database("free5gc").Collection("policyData.bdtData")
+	collection.DeleteOne(context.TODO(), bson.M{"bdtReferenceId": bdtReferenceId})
+
+	// Set client and set url
+	client := setTestClient(t)
+
+	// Set test data
+	testData := models.BdtData{
+		AspId:    "AspId1",
+		BdtRefId: bdtReferenceId,
+		TransPolicy: models.TransferPolicy{
+			TransPolicyId: 1,
+			RecTimeInt: &models.TimeWindow{
+				StartTime: time.Now().Format(time.RFC3339),
+				StopTime:  time.Now().Add(time.Hour * time.Duration(1)).Format(time.RFC3339),
+			},
+			RatingGroup: 1,
+		},
+	}
+	insertTestData := toBsonM(testData)
+	insertTestData["bdtReferenceId"] = bdtReferenceId
+	collection.InsertOne(context.TODO(), insertTestData)
+
+	{
+		// Check test data (Use RESTful GET)
+		bdtData, res, err := client.DefaultApi.PolicyDataBdtDataBdtReferenceIdGet(context.TODO(), bdtReferenceId)
+		if err != nil {
+			log.Panic(err)
+		}
+
+		if status := res.StatusCode; status != http.StatusOK {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				status, http.StatusOK)
+		}
+		if reflect.DeepEqual(testData, bdtData) != true {
+			t.Errorf("handler returned unexpected body: got %v want %v",
+				bdtData, testData)
+		}
+	}
+
+	{
+		// delete test data (Use RESTful DELETE)
+		res, err := client.DefaultApi.PolicyDataBdtDataBdtReferenceIdDelete(context.TODO(), bdtReferenceId)
+		if err != nil {
+			log.Panic(err)
+		}
+
+		if status := res.StatusCode; status != http.StatusNoContent {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				status, http.StatusNoContent)
+		}
+	}
+
+	{
+		// Check test data (Use RESTful GET)
+		bdtData, res, err := client.DefaultApi.PolicyDataBdtDataBdtReferenceIdGet(context.TODO(), bdtReferenceId)
+		if err != nil {
+			logger.AppLog.Infof("404 Not Found : ProblemDetail: %v\n", err.(common.GenericOpenAPIError).Model().(models.ProblemDetails))
+		}
+
+		if status := res.StatusCode; status != http.StatusNotFound {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				status, http.StatusNotFound)
+		}
+
+		var empty models.BdtData
+		if reflect.DeepEqual(empty, bdtData) != true {
+			t.Errorf("handler returned unexpected body: got %v want %v",
+				bdtData, empty)
+		}
+	}
+
+	// Clean test data
+	collection.DeleteOne(context.TODO(), bson.M{"bdtReferenceId": bdtReferenceId})
+
+	// TEST END
 }
 
 // PolicyDataBdtDataBdtReferenceIdGet -
 func TestPolicyDataBdtDataBdtReferenceIdGet(t *testing.T) {
-	// c.JSON(http.StatusOK, gin.H{})
+	runTestServer(t)
+
+	connectMongoDB(t)
+
+	// Drop old data
+	bdtReferenceId := "05aca9aa-fd65-4f9e-b097-ffc37edf1574"
+	collection := Client.Database("free5gc").Collection("policyData.bdtData")
+	collection.DeleteOne(context.TODO(), bson.M{"bdtReferenceId": bdtReferenceId})
+
+	// Set client and set url
+	client := setTestClient(t)
+
+	// Set test data
+	testData := models.BdtData{
+		AspId:    "AspId1",
+		BdtRefId: bdtReferenceId,
+		TransPolicy: models.TransferPolicy{
+			TransPolicyId: 1,
+			RecTimeInt: &models.TimeWindow{
+				StartTime: time.Now().Format(time.RFC3339),
+				StopTime:  time.Now().Add(time.Hour * time.Duration(1)).Format(time.RFC3339),
+			},
+			RatingGroup: 1,
+		},
+	}
+	insertTestData := toBsonM(testData)
+	insertTestData["bdtReferenceId"] = bdtReferenceId
+	collection.InsertOne(context.TODO(), insertTestData)
+
+	{
+		// Check test data (Use RESTful GET)
+		bdtData, res, err := client.DefaultApi.PolicyDataBdtDataBdtReferenceIdGet(context.TODO(), bdtReferenceId)
+		if err != nil {
+			log.Panic(err)
+		}
+
+		if status := res.StatusCode; status != http.StatusOK {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				status, http.StatusOK)
+		}
+		if reflect.DeepEqual(testData, bdtData) != true {
+			t.Errorf("handler returned unexpected body: got %v want %v",
+				bdtData, testData)
+		}
+	}
+
+	// Clean test data
+	collection.DeleteOne(context.TODO(), bson.M{"bdtReferenceId": bdtReferenceId})
+
+	// TEST END
 }
 
 // PolicyDataBdtDataBdtReferenceIdPut -
 func TestPolicyDataBdtDataBdtReferenceIdPut(t *testing.T) {
-	// c.JSON(http.StatusOK, gin.H{})
+	runTestServer(t)
+
+	connectMongoDB(t)
+
+	// Drop old data
+	bdtReferenceId := "05aca9aa-fd65-4f9e-b097-ffc37edf1574"
+	collection := Client.Database("free5gc").Collection("policyData.bdtData")
+	collection.DeleteOne(context.TODO(), bson.M{"bdtReferenceId": bdtReferenceId})
+
+	// Set client and set url
+	client := setTestClient(t)
+
+	// Set test data
+	testData := models.BdtData{
+		AspId:    "AspId1",
+		BdtRefId: bdtReferenceId,
+		TransPolicy: models.TransferPolicy{
+			TransPolicyId: 1,
+			RecTimeInt: &models.TimeWindow{
+				StartTime: time.Now().Format(time.RFC3339),
+				StopTime:  time.Now().Add(time.Hour * time.Duration(1)).Format(time.RFC3339),
+			},
+			RatingGroup: 1,
+		},
+	}
+
+	{
+		// Insert test data (Use RESTful PUT)
+		var policyDataBdtDataBdtReferenceIdPutParamOpts = &Nudr_DataRepository.PolicyDataBdtDataBdtReferenceIdPutParamOpts{
+			BdtData: optional.NewInterface(testData),
+		}
+		res, err := client.DefaultApi.PolicyDataBdtDataBdtReferenceIdPut(context.TODO(), bdtReferenceId, policyDataBdtDataBdtReferenceIdPutParamOpts)
+		if err != nil {
+			logger.AppLog.Panic(err)
+		}
+
+		if status := res.StatusCode; status != http.StatusCreated {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				status, http.StatusCreated)
+		}
+	}
+
+	{
+		// Insert test data (Use RESTful PUT) (PUT again to trigger modify method for policy data notification)
+		var policyDataBdtDataBdtReferenceIdPutParamOpts = &Nudr_DataRepository.PolicyDataBdtDataBdtReferenceIdPutParamOpts{
+			BdtData: optional.NewInterface(testData),
+		}
+		res, err := client.DefaultApi.PolicyDataBdtDataBdtReferenceIdPut(context.TODO(), bdtReferenceId, policyDataBdtDataBdtReferenceIdPutParamOpts)
+		if err != nil {
+			logger.AppLog.Panic(err)
+		}
+
+		if status := res.StatusCode; status != http.StatusCreated {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				status, http.StatusCreated)
+		}
+	}
+
+	{
+		// Check test data (Use RESTful GET)
+		bdtData, res, err := client.DefaultApi.PolicyDataBdtDataBdtReferenceIdGet(context.TODO(), bdtReferenceId)
+		if err != nil {
+			log.Panic(err)
+		}
+
+		if status := res.StatusCode; status != http.StatusOK {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				status, http.StatusOK)
+		}
+		if reflect.DeepEqual(testData, bdtData) != true {
+			t.Errorf("handler returned unexpected body: got %v want %v",
+				bdtData, testData)
+		}
+	}
+
+	// Clean test data
+	collection.DeleteOne(context.TODO(), bson.M{"bdtReferenceId": bdtReferenceId})
+
+	// TEST END
 }
 
 // PolicyDataBdtDataGet -
 func TestPolicyDataBdtDataGet(t *testing.T) {
-	// c.JSON(http.StatusOK, gin.H{})
+	runTestServer(t)
+
+	connectMongoDB(t)
+
+	// Drop old data
+	bdtReferenceId1 := "05aca9aa-fd65-4f9e-b097-ffc37edf1574"
+	bdtReferenceId2 := "18282b9b-4f08-4083-855f-35e39854e58c"
+	collection := Client.Database("free5gc").Collection("policyData.bdtData")
+	collection.DeleteOne(context.TODO(), bson.M{"bdtReferenceId": bdtReferenceId1})
+	collection.DeleteOne(context.TODO(), bson.M{"bdtReferenceId": bdtReferenceId2})
+
+	// Set client and set url
+	client := setTestClient(t)
+
+	// Set test data
+	var testDataArray []models.BdtData
+	{
+		testData := models.BdtData{
+			AspId:    "AspId1",
+			BdtRefId: bdtReferenceId1,
+			TransPolicy: models.TransferPolicy{
+				TransPolicyId: 1,
+				RecTimeInt: &models.TimeWindow{
+					StartTime: time.Now().Format(time.RFC3339),
+					StopTime:  time.Now().Add(time.Hour * time.Duration(1)).Format(time.RFC3339),
+				},
+				RatingGroup: 1,
+			},
+		}
+		testDataArray = append(testDataArray, testData)
+		insertTestData := toBsonM(testData)
+		insertTestData["bdtReferenceId"] = bdtReferenceId1
+		collection.InsertOne(context.TODO(), insertTestData)
+	}
+
+	{
+		testData := models.BdtData{
+			AspId:    "AspId2",
+			BdtRefId: bdtReferenceId2,
+			TransPolicy: models.TransferPolicy{
+				TransPolicyId: 2,
+				RecTimeInt: &models.TimeWindow{
+					StartTime: time.Now().Format(time.RFC3339),
+					StopTime:  time.Now().Add(time.Hour * time.Duration(1)).Format(time.RFC3339),
+				},
+				RatingGroup: 2,
+			},
+		}
+		testDataArray = append(testDataArray, testData)
+		insertTestData := toBsonM(testData)
+		insertTestData["bdtReferenceId"] = bdtReferenceId2
+		collection.InsertOne(context.TODO(), insertTestData)
+	}
+
+	{
+		// Check test data (Use RESTful GET)
+		bdtDataArray, res, err := client.DefaultApi.PolicyDataBdtDataGet(context.TODO())
+		if err != nil {
+			log.Panic(err)
+		}
+
+		if status := res.StatusCode; status != http.StatusOK {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				status, http.StatusOK)
+		}
+		spew.Printf("%+v\n", bdtDataArray)
+		if reflect.DeepEqual(testDataArray, bdtDataArray) != true {
+			t.Errorf("handler returned unexpected body: got %v want %v",
+				bdtDataArray, testDataArray)
+		}
+	}
+
+	// Clean test data
+	collection.DeleteOne(context.TODO(), bson.M{"bdtReferenceId": bdtReferenceId1})
+	collection.DeleteOne(context.TODO(), bson.M{"bdtReferenceId": bdtReferenceId2})
+
+	// TEST END
 }
 
 // PolicyDataPlmnsPlmnIdUePolicySetGet -
 func TestPolicyDataPlmnsPlmnIdUePolicySetGet(t *testing.T) {
-	// c.JSON(http.StatusOK, gin.H{})
+	runTestServer(t)
+
+	connectMongoDB(t)
+
+	// Drop old data
+	collection := Client.Database("free5gc").Collection("policyData.plmns.uePolicySet")
+	collection.DeleteOne(context.TODO(), bson.M{"plmnId": "20893"})
+
+	// Set client and set url
+	client := setTestClient(t)
+
+	// Set test data
+	plmnId := "20893"
+	testData := models.UePolicySet{
+		SubscCats: []string{"1", "2"},
+	}
+	insertTestData := toBsonM(testData)
+	insertTestData["plmnId"] = plmnId
+	collection.InsertOne(context.TODO(), insertTestData)
+
+	{
+		// Check test data (Use RESTful GET)
+		uePolicySet, res, err := client.DefaultApi.PolicyDataPlmnsPlmnIdUePolicySetGet(context.TODO(), plmnId)
+		if err != nil {
+			logger.AppLog.Panic(err)
+		}
+
+		if status := res.StatusCode; status != http.StatusOK {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				status, http.StatusOK)
+		}
+
+		if cmp.Equal(testData, uePolicySet, Opt) != true {
+			t.Errorf("handler returned unexpected body: got %v want %v",
+				uePolicySet, testData)
+		}
+	}
+
+	// Clean test data
+	collection.DeleteOne(context.TODO(), bson.M{"plmnId": "20893"})
+
+	// TEST END
 }
 
 // PolicyDataSponsorConnectivityDataSponsorIdGet -
 func TestPolicyDataSponsorConnectivityDataSponsorIdGet(t *testing.T) {
-	// c.JSON(http.StatusOK, gin.H{})
+	runTestServer(t)
+
+	connectMongoDB(t)
+
+	// Drop old data
+	collection := Client.Database("free5gc").Collection("policyData.sponsorConnectivityData")
+	collection.DeleteOne(context.TODO(), bson.M{"sponsorId": "1"})
+
+	// Set client and set url
+	client := setTestClient(t)
+
+	// Set test data
+	sponsorId := "1"
+	testData := models.SponsorConnectivityData{
+		AspIds: []string{"1", "2"},
+	}
+	insertTestData := toBsonM(testData)
+	insertTestData["sponsorId"] = sponsorId
+	collection.InsertOne(context.TODO(), insertTestData)
+
+	{
+		// Check test data (Use RESTful GET)
+		sponsorConnectivityData, res, err := client.DefaultApi.PolicyDataSponsorConnectivityDataSponsorIdGet(context.TODO(), sponsorId)
+		if err != nil {
+			logger.AppLog.Panic(err)
+		}
+
+		if status := res.StatusCode; status != http.StatusOK {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				status, http.StatusOK)
+		}
+
+		if cmp.Equal(testData, sponsorConnectivityData, Opt) != true {
+			t.Errorf("handler returned unexpected body: got %v want %v",
+				sponsorConnectivityData, testData)
+		}
+	}
+
+	// Clean test data
+	collection.DeleteOne(context.TODO(), bson.M{"sponsorId": "1"})
+
+	// TEST END
 }
 
-// PolicyDataSubsToNotifyPost -
-func TestPolicyDataSubsToNotifyPost(t *testing.T) {
-	// c.JSON(http.StatusOK, gin.H{})
+// PolicyDataSubscription - Post, Put and Delete
+func TestPolicyDataSubsToNotifyPostPutDelete(t *testing.T) {
+	runTestServer(t)
+
+	// Set client and set url
+	client := setTestClient(t)
+
+	var policyDataSubscription = models.PolicyDataSubscription{
+		NotificationUri:       "https://127.0.0.1/PolicyDataSubscription",
+		MonitoredResourceUris: []string{"https://127.0.0.1/MonitoredResourceUris"},
+	}
+
+	var subsUri string
+	var subsId string
+
+	// Create PolicyDataSubscription
+	{
+		policyDataSubscriptionResp, res, err := client.DefaultApi.PolicyDataSubsToNotifyPost(context.TODO(), &Nudr_DataRepository.PolicyDataSubsToNotifyPostParamOpts{
+			PolicyDataSubscription: optional.NewInterface(policyDataSubscription),
+		})
+		if err != nil {
+			t.Fatalf(err.Error())
+		}
+
+		if status := res.StatusCode; status != http.StatusCreated {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				status, http.StatusCreated)
+		}
+
+		subsUri = res.Header.Get("Location")
+		spew.Printf("[subsUri_Header_Location] %s\n", subsUri)
+		subsId = subsUri[strings.LastIndex(subsUri, "/")+1:]
+		spew.Printf("[subsId] %s\n", subsId)
+		spew.Dump(policyDataSubscriptionResp)
+	}
+
+	var policyDataSubscriptionPut = models.PolicyDataSubscription{
+		NotificationUri:       "https://127.0.0.1/PolicyDataSubscription_2",
+		MonitoredResourceUris: []string{"https://127.0.0.1/MonitoredResourceUris"},
+	}
+
+	// Put PolicyDataSubscription
+	{
+		policyDataSubscriptionResp, res, err := client.DefaultApi.PolicyDataSubsToNotifySubsIdPut(context.TODO(), subsId, &Nudr_DataRepository.PolicyDataSubsToNotifySubsIdPutParamOpts{
+			PolicyDataSubscription: optional.NewInterface(policyDataSubscriptionPut),
+		})
+		if err != nil {
+			t.Fatalf(err.Error())
+		}
+
+		if status := res.StatusCode; status != http.StatusOK {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				status, http.StatusCreated)
+		}
+
+		spew.Dump(policyDataSubscriptionResp)
+	}
+
+	// Delete PolicyDataSubscription
+	{
+		res, err := client.DefaultApi.PolicyDataSubsToNotifySubsIdDelete(context.TODO(), subsId)
+		if err != nil {
+			t.Fatalf(err.Error())
+		}
+
+		if status := res.StatusCode; status != http.StatusNoContent {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				status, http.StatusNoContent)
+		}
+	}
 }
 
-// PolicyDataSubsToNotifySubsIdDelete -
-func TestPolicyDataSubsToNotifySubsIdDelete(t *testing.T) {
-	// c.JSON(http.StatusOK, gin.H{})
-}
+func TestPolicyDataChangeNotification(t *testing.T) {
+	runTestServer(t)
 
-// PolicyDataSubsToNotifySubsIdPut -
-func TestPolicyDataSubsToNotifySubsIdPut(t *testing.T) {
-	// c.JSON(http.StatusOK, gin.H{})
+	go func() { // simulate NF service consumer server
+		udrLogPath := udr_util.UdrLogPath
+		udrPemPath := udr_util.UdrPemPath
+		udrKeyPath := udr_util.UdrKeyPath
+
+		router := gin.Default()
+
+		router.POST("/PolicyDataChangeNotification", func(c *gin.Context) {
+			logger.HandlerLog.Infoln("== Comsumer received notifiction from UDR ==")
+			var policyDataChangeNotification models.PolicyDataChangeNotification
+			if err := c.ShouldBindJSON(&policyDataChangeNotification); err != nil {
+				logger.HandlerLog.Panic(err.Error())
+			}
+			// spew.Dump(policyDataChangeNotification)
+			c.JSON(http.StatusNoContent, nil)
+		})
+
+		server, err := http2_util.NewServer(":10000", udrLogPath, router)
+		if err == nil && server != nil {
+			logger.InitLog.Infoln(server.ListenAndServeTLS(udrPemPath, udrKeyPath))
+			assert.True(t, err == nil)
+		}
+	}()
+	time.Sleep(100 * time.Millisecond)
+
+	// Set client and set url
+	client := setTestClient(t)
+
+	var policyDataSubscription = models.PolicyDataSubscription{
+		NotificationUri:       "https://127.0.0.1:10000/PolicyDataChangeNotification",
+		MonitoredResourceUris: []string{"https://127.0.0.1:10000/MonitoredResourceUris"},
+	}
+
+	var subsUri string
+	var subsId string
+
+	// Create PolicyDataSubscription
+	{
+		policyDataSubscriptionResp, res, err := client.DefaultApi.PolicyDataSubsToNotifyPost(context.TODO(), &Nudr_DataRepository.PolicyDataSubsToNotifyPostParamOpts{
+			PolicyDataSubscription: optional.NewInterface(policyDataSubscription),
+		})
+		if err != nil {
+			t.Fatalf(err.Error())
+		}
+
+		if status := res.StatusCode; status != http.StatusCreated {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				status, http.StatusCreated)
+		}
+
+		subsUri = res.Header.Get("Location")
+		spew.Printf("[subsUri_Header_Location] %s\n", subsUri)
+		subsId = subsUri[strings.LastIndex(subsUri, "/")+1:]
+		spew.Printf("[subsId] %s\n", subsId)
+		spew.Dump(policyDataSubscriptionResp)
+	}
+
+	// Run All PATCH test function for policy data
+	TestPolicyDataBdtDataBdtReferenceIdPut(t)
+	TestPolicyDataUesUeIdSmDataPatch(t)
+	TestPolicyDataUesUeIdUePolicySetPatch(t)
 }
 
 // PolicyDataUesUeIdAmDataGet -
@@ -481,11 +983,18 @@ func TestPolicyDataUesUeIdSmDataGet(t *testing.T) {
 
 	// Set test data
 	ueId := "imsi-0123456789"
+	tmp := &models.Snssai{
+		Sst: 1,
+		Sd:  "010203",
+	}
 	testData := models.SmPolicyData{
 		SmPolicySnssaiData: map[string]models.SmPolicySnssaiData{
-			"Snssai": {
-				Snssai: &models.Snssai{
-					Sst: 1,
+			udr_util.SnssaiModelsToHex(*tmp): {
+				Snssai: tmp,
+				SmPolicyDnnData: map[string]models.SmPolicyDnnData{
+					"internet": {
+						Dnn: "internet",
+					},
 				},
 			},
 		},
@@ -496,7 +1005,14 @@ func TestPolicyDataUesUeIdSmDataGet(t *testing.T) {
 
 	{
 		// Check test data (Use RESTful GET)
-		var policyDataUesUeIdSmDataGetParamOpts Nudr_DataRepository.PolicyDataUesUeIdSmDataGetParamOpts
+		tmpSnssai := &models.Snssai{
+			Sst: 1,
+			Sd:  "010203",
+		}
+		var policyDataUesUeIdSmDataGetParamOpts = Nudr_DataRepository.PolicyDataUesUeIdSmDataGetParamOpts{
+			Dnn:    optional.NewString("internet"),
+			Snssai: optional.NewInterface(openapi.MarshToJsonString(tmpSnssai)),
+		}
 		smPolicyData, res, err := client.DefaultApi.PolicyDataUesUeIdSmDataGet(context.TODO(), ueId, &policyDataUesUeIdSmDataGetParamOpts)
 		if err != nil {
 			log.Panic(err)
@@ -506,6 +1022,7 @@ func TestPolicyDataUesUeIdSmDataGet(t *testing.T) {
 			t.Errorf("handler returned wrong status code: got %v want %v",
 				status, http.StatusOK)
 		}
+		spew.Printf("[Recevied smPolicyData] %+v\n", smPolicyData)
 		if cmp.Equal(testData, smPolicyData, Opt) != true {
 			t.Errorf("handler returned unexpected body: got %v want %v",
 				smPolicyData, testData)
@@ -519,20 +1036,52 @@ func TestPolicyDataUesUeIdSmDataGet(t *testing.T) {
 }
 
 // PolicyDataUesUeIdSmDataPatch - Need to be fixed
-func TmpTestPolicyDataUesUeIdSmDataPatch(t *testing.T) {
+func TestPolicyDataUesUeIdSmDataPatch(t *testing.T) {
 	runTestServer(t)
 
 	connectMongoDB(t)
 
-	// Drop old data
-	collection := Client.Database("free5gc").Collection("policyData.ues.smData")
-	collection.DeleteOne(context.TODO(), bson.M{"ueId": "imsi-0123456789"})
-
 	// Set client and set url
 	client := setTestClient(t)
 
-	// Set test data
 	ueId := "imsi-0123456789"
+	{
+		// Drop old data
+		collection := Client.Database("free5gc").Collection("policyData.ues.smData")
+		collection.DeleteOne(context.TODO(), bson.M{"ueId": "imsi-0123456789"})
+
+		// Set test data
+		testData := models.SmPolicyData{
+			SmPolicySnssaiData: map[string]models.SmPolicySnssaiData{
+				"Snssai": {
+					Snssai: &models.Snssai{
+						Sst: 1,
+					},
+				},
+			},
+		}
+		insertTestData := toBsonM(testData)
+		insertTestData["ueId"] = ueId
+		collection.InsertOne(context.TODO(), insertTestData)
+	}
+
+	{
+		// Drop old data
+		collection := Client.Database("free5gc").Collection("policyData.ues.smData.usageMonData")
+		collection.DeleteOne(context.TODO(), bson.M{"ueId": "imsi-0123456789"})
+
+		// Set test data
+		usageMonId := "usageMonId_test"
+		testData := models.UsageMonData{
+			LimitId: "limitId_test",
+			UmLevel: models.UsageMonLevel_SESSION_LEVEL,
+		}
+		insertTestData := toBsonM(testData)
+		insertTestData["ueId"] = ueId
+		insertTestData["usageMonId"] = usageMonId
+		collection.InsertOne(context.TODO(), insertTestData)
+	}
+
 	testData := models.SmPolicyData{
 		SmPolicySnssaiData: map[string]models.SmPolicySnssaiData{
 			"Snssai": {
@@ -541,15 +1090,18 @@ func TmpTestPolicyDataUesUeIdSmDataPatch(t *testing.T) {
 				},
 			},
 		},
+		UmData: map[string]models.UsageMonData{
+			"limitId_test": {
+				LimitId: "limitId_test",
+				UmLevel: models.UsageMonLevel_SESSION_LEVEL,
+			},
+		},
 	}
-	insertTestData := toBsonM(testData)
-	insertTestData["ueId"] = ueId
-	collection.InsertOne(context.TODO(), insertTestData)
 
 	{
 		// Check test data (Use RESTful GET)
 		var policyDataUesUeIdSmDataGetParamOpts Nudr_DataRepository.PolicyDataUesUeIdSmDataGetParamOpts
-		uePolicySet, res, err := client.DefaultApi.PolicyDataUesUeIdSmDataGet(context.TODO(), ueId, &policyDataUesUeIdSmDataGetParamOpts)
+		smPolicyData, res, err := client.DefaultApi.PolicyDataUesUeIdSmDataGet(context.TODO(), ueId, &policyDataUesUeIdSmDataGetParamOpts)
 		if err != nil {
 			log.Panic(err)
 		}
@@ -559,26 +1111,26 @@ func TmpTestPolicyDataUesUeIdSmDataPatch(t *testing.T) {
 				status, http.StatusOK)
 		}
 
-		if reflect.DeepEqual(testData, uePolicySet) != true {
+		spew.Printf("smPolicyData Before Patch %+v\n", smPolicyData)
+		if reflect.DeepEqual(testData, smPolicyData) != true {
 			t.Errorf("handler returned unexpected body: got %v want %v",
-				uePolicySet, testData)
+				smPolicyData, testData)
 		}
 	}
 
-	patchData := models.SmPolicyData{
-		SmPolicySnssaiData: map[string]models.SmPolicySnssaiData{
-			"Snssai": {
-				Snssai: &models.Snssai{
-					Sst: 12,
-				},
-			},
+	patchData := map[string]models.UsageMonData{
+		"limitId_test": {
+			LimitId: "limitId_test",
+			UmLevel: models.UsageMonLevel_SERVICE_LEVEL,
 		},
 	}
 
 	{
 		// Patch data (Use RESTful PATCH)
-		var policyDataUesUeIdSmDataPatchParamOpts Nudr_DataRepository.PolicyDataUesUeIdSmDataPatchParamOpts
-		policyDataUesUeIdSmDataPatchParamOpts.RequestBody = optional.NewInterface(patchData)
+		var policyDataUesUeIdSmDataPatchParamOpts = Nudr_DataRepository.PolicyDataUesUeIdSmDataPatchParamOpts{
+			RequestBody: optional.NewInterface(patchData),
+		}
+
 		res, err := client.DefaultApi.PolicyDataUesUeIdSmDataPatch(context.TODO(), ueId, &policyDataUesUeIdSmDataPatchParamOpts)
 		if err != nil {
 			log.Panic(err)
@@ -590,10 +1142,26 @@ func TmpTestPolicyDataUesUeIdSmDataPatch(t *testing.T) {
 		}
 	}
 
+	patchDataResult := models.SmPolicyData{
+		SmPolicySnssaiData: map[string]models.SmPolicySnssaiData{
+			"Snssai": {
+				Snssai: &models.Snssai{
+					Sst: 1,
+				},
+			},
+		},
+		UmData: map[string]models.UsageMonData{
+			"limitId_test": {
+				LimitId: "limitId_test",
+				UmLevel: models.UsageMonLevel_SERVICE_LEVEL,
+			},
+		},
+	}
+
 	{
 		// Check patch data (Use RESTful GET)
 		var policyDataUesUeIdSmDataGetParamOpts Nudr_DataRepository.PolicyDataUesUeIdSmDataGetParamOpts
-		uePolicySet, res, err := client.DefaultApi.PolicyDataUesUeIdSmDataGet(context.TODO(), ueId, &policyDataUesUeIdSmDataGetParamOpts)
+		smPolicyData, res, err := client.DefaultApi.PolicyDataUesUeIdSmDataGet(context.TODO(), ueId, &policyDataUesUeIdSmDataGetParamOpts)
 		if err != nil {
 			log.Panic(err)
 		}
@@ -603,14 +1171,22 @@ func TmpTestPolicyDataUesUeIdSmDataPatch(t *testing.T) {
 				status, http.StatusOK)
 		}
 
-		if reflect.DeepEqual(patchData, uePolicySet) != true {
+		spew.Printf("smPolicyData After Patch %+v\n", smPolicyData)
+		if cmp.Equal(patchDataResult, smPolicyData, Opt) != true {
 			t.Errorf("handler returned unexpected body: got %v want %v",
-				uePolicySet, patchData)
+				smPolicyData, patchDataResult)
 		}
 	}
 
 	// Clean test data
-	collection.DeleteOne(context.TODO(), bson.M{"ueId": "imsi-0123456789"})
+	{
+		collection := Client.Database("free5gc").Collection("policyData.ues.smData")
+		collection.DeleteOne(context.TODO(), bson.M{"ueId": "imsi-0123456789"})
+	}
+	{
+		collection := Client.Database("free5gc").Collection("policyData.ues.smData.usageMonData")
+		collection.DeleteOne(context.TODO(), bson.M{"ueId": "imsi-0123456789"})
+	}
 
 	// TEST END
 }

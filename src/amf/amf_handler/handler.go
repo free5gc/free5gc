@@ -227,6 +227,15 @@ func Handle() {
 				case amf_message.EventRegistrationStatusUpdate:
 					ueContextId := msg.HTTPRequest.Params["ueContextId"]
 					amf_producer.HandleRegistrationStatusUpdateRequest(msg.ResponseChan, ueContextId, msg.HTTPRequest.Body.(models.UeRegStatusUpdateReqData))
+				case amf_message.EventAmPolicyControlUpdateNotifyUpdate:
+					polAssoId := msg.HTTPRequest.Params["polAssoId"]
+					amf_producer.HandleAmPolicyControlUpdateNotifyUpdate(msg.ResponseChan, polAssoId, msg.HTTPRequest.Body.(models.PolicyUpdate))
+				case amf_message.EventAmPolicyControlUpdateNotifyTerminate:
+					polAssoId := msg.HTTPRequest.Params["polAssoId"]
+					amf_producer.HandleAmPolicyControlUpdateNotifyTerminate(msg.ResponseChan, polAssoId, msg.HTTPRequest.Body.(models.TerminationNotification))
+				case amf_message.EventOAMRegisteredUEContext:
+					supi := msg.HTTPRequest.Params["supi"]
+					amf_producer.HandleOAMRegisteredUEContext(msg.ResponseChan, supi)
 				default:
 					HandlerLog.Warnf("Event[%d] has not implemented", msg.Event)
 				}

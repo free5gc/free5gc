@@ -377,6 +377,9 @@ func PrepareRequest(
 		return nil, err
 	}
 
+	// Close http connection when recieved response
+	localVarRequest.Close = true
+
 	// add header parameters, if any
 	if len(headerParams) > 0 {
 		headers := http.Header{}

@@ -12,9 +12,9 @@ package PolicyAuthorization
 import (
 	"free5gc/lib/http_wrapper"
 	"free5gc/lib/openapi/models"
+	"free5gc/src/pcf/logger"
 	"free5gc/src/pcf/pcf_handler/pcf_message"
-
-	"github.com/cydev/zero"
+	"free5gc/src/pcf/pcf_util"
 
 	"github.com/gin-gonic/gin"
 )
@@ -22,22 +22,31 @@ import (
 // PostAppSessions - Creates a new Individual Application Session Context resource
 func PostAppSessions(c *gin.Context) {
 	var appSessionContext models.AppSessionContext
-	c.BindJSON(&appSessionContext)
+	err := c.ShouldBindJSON(&appSessionContext)
+	if err != nil {
+		rsp := pcf_util.GetProblemDetail("Malformed request syntax", pcf_util.ERROR_INITIAL_PARAMETERS)
+		logger.HandlerLog.Errorln(rsp.Detail)
+		c.JSON(int(rsp.Status), rsp)
+		return
+	}
+	reqData := appSessionContext.AscReqData
+	if reqData == nil || reqData.SuppFeat == "" || reqData.NotifUri == "" {
+		// Check Mandatory IEs
+		rsp := pcf_util.GetProblemDetail("Errorneous/Missing Mandotory IE", pcf_util.ERROR_INITIAL_PARAMETERS)
+		logger.HandlerLog.Errorln(rsp.Detail)
+		c.JSON(int(rsp.Status), rsp)
+		return
+	}
 
 	req := http_wrapper.NewRequest(c.Request, appSessionContext)
-	req.Params["ReqURI"] = c.Request.RequestURI
 	channelMsg := pcf_message.NewHttpChannelMessage(pcf_message.EventPostAppSessions, req)
 
 	pcf_message.SendMessage(channelMsg)
 	recvMsg := <-channelMsg.HttpChannel
-
 	HTTPResponse := recvMsg.HTTPResponse
-	if !zero.IsZero(HTTPResponse.Header["Location"]) {
-		var appSessionId = HTTPResponse.Header["Location"][0]
-		c.Header("Location", appSessionId)
-		c.JSON(HTTPResponse.Status, HTTPResponse.Body)
-	} else {
-		c.JSON(HTTPResponse.Status, HTTPResponse.Body)
-	}
 
+	for key, val := range HTTPResponse.Header {
+		c.Header(key, val[0])
+	}
+	c.JSON(HTTPResponse.Status, HTTPResponse.Body)
 }

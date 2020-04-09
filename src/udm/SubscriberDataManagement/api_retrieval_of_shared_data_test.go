@@ -10,13 +10,25 @@
 package SubscriberDataManagement_test
 
 import (
+	"context"
+	"fmt"
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
+	Nudm_SDM_Client "free5gc/lib/Nudm_SubscriberDataManagement"
+	"free5gc/lib/http2_util"
+	"free5gc/lib/openapi/models"
+	"free5gc/lib/path_util"
+	Nudm_SDM_Server "free5gc/src/udm/SubscriberDataManagement"
+	"free5gc/src/udm/logger"
+	"free5gc/src/udm/udm_context"
+	"free5gc/src/udm/udm_handler"
+	"net/http"
 	"testing"
 )
 
 // GetSharedData - retrieve shared data
 func TestGetSharedData(t *testing.T) {
 
-	/*go udm_handler.Handle()
 	go func() { // udm server
 		router := gin.Default()
 		Nudm_SDM_Server.AddService(router)
@@ -30,6 +42,9 @@ func TestGetSharedData(t *testing.T) {
 			assert.True(t, err == nil)
 		}
 	}()
+
+	udm_context.TestInit()
+	go udm_handler.Handle()
 
 	go func() { // fake udr server
 		router := gin.Default()
@@ -62,13 +77,13 @@ func TestGetSharedData(t *testing.T) {
 	clientAPI := Nudm_SDM_Client.NewAPIClient(cfg)
 
 	sharedDataIds := []string{"sharedId1", "sharedId2"}
-	sharedDatas, resp, err := clientAPI.RetrievalOfSharedDataApi.GetSharedData(context.Background(), sharedDataIds, nil)
+	var getSharedDataParamOpts Nudm_SDM_Client.GetSharedDataParamOpts
+	_, resp, err := clientAPI.RetrievalOfSharedDataApi.GetSharedData(context.Background(), sharedDataIds, &getSharedDataParamOpts)
 
 	if err != nil {
 		fmt.Println(err.Error())
 	} else {
 		fmt.Println("resp: ", resp)
-		fmt.Println("smfSelectionSubscriptionData: ", sharedDatas)
+		// fmt.Println("sharedDatas: ", sharedDatas)
 	}
-	*/
 }

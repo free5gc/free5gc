@@ -1,19 +1,25 @@
 package udr_producer
 
 import (
+	"fmt"
+	"free5gc/src/udr/udr_context"
 	// "context"
 	"encoding/json"
 	"free5gc/lib/openapi/models"
 	"free5gc/src/udr/udr_handler/udr_message"
+	"free5gc/src/udr/udr_util"
 	"net/http"
 	"reflect"
 	"strconv"
 
+	jsonpatch "github.com/evanphx/json-patch"
 	"github.com/mitchellh/mapstructure"
 	"go.mongodb.org/mongo-driver/bson"
 	// "strconv"
 	// "strings"
 )
+
+var CurrentResourceUri string
 
 func HandleCreateAccessAndMobilityData(respChan chan udr_message.HandlerResponseMessage, ueId string, body models.AccessAndMobilityData) {
 	udr_message.SendHttpResponseMessage(respChan, nil, http.StatusOK, map[string]interface{}{})
@@ -46,11 +52,16 @@ func HandleAmfContext3gpp(respChan chan udr_message.HandlerResponseMessage, ueId
 	collName := "subscriptionData.contextData.amf3gppAccess"
 	filter := bson.M{"ueId": ueId}
 
+	origValue := RestfulAPIGetOne(collName, filter)
+
 	patchJSON, _ := json.Marshal(patchItem)
 	success := RestfulAPIJSONPatch(collName, filter, patchJSON)
 
 	if success {
 		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNoContent, map[string]interface{}{})
+
+		newValue := RestfulAPIGetOne(collName, filter)
+		PreHandleOnDataChangeNotify(ueId, CurrentResourceUri, patchItem, origValue, newValue)
 	} else {
 		var problemDetails = models.ProblemDetails{
 			Cause: "MODIFY_NOT_ALLOWED",
@@ -90,11 +101,16 @@ func HandleAmfContextNon3gpp(respChan chan udr_message.HandlerResponseMessage, u
 	collName := "subscriptionData.contextData.amfNon3gppAccess"
 	filter := bson.M{"ueId": ueId}
 
+	origValue := RestfulAPIGetOne(collName, filter)
+
 	patchJSON, _ := json.Marshal(patchItem)
 	success := RestfulAPIJSONPatch(collName, filter, patchJSON)
 
 	if success {
 		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNoContent, map[string]interface{}{})
+
+		newValue := RestfulAPIGetOne(collName, filter)
+		PreHandleOnDataChangeNotify(ueId, CurrentResourceUri, patchItem, origValue, newValue)
 	} else {
 		var problemDetails = models.ProblemDetails{
 			Cause: "MODIFY_NOT_ALLOWED",
@@ -130,32 +146,20 @@ func HandleQueryAmfContextNon3gpp(respChan chan udr_message.HandlerResponseMessa
 	}
 }
 
-func HandleModifyAmfSubscriptionInfo(respChan chan udr_message.HandlerResponseMessage, ueId string, subsId string, patchItem []models.PatchItem) {
-	collName := "subscriptionData.contextData.eeSubscriptions.amfSubscriptions"
-	filter := bson.M{"ueId": ueId, "subsId": subsId}
-
-	patchJSON, _ := json.Marshal(patchItem)
-	success := RestfulAPIJSONPatch(collName, filter, patchJSON)
-
-	if success {
-		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNoContent, map[string]interface{}{})
-	} else {
-		var problemDetails = models.ProblemDetails{
-			Cause: "MODIFY_NOT_ALLOWED",
-		}
-		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusForbidden, problemDetails)
-	}
-}
-
 func HandleModifyAuthentication(respChan chan udr_message.HandlerResponseMessage, ueId string, patchItem []models.PatchItem) {
 	collName := "subscriptionData.authenticationData.authenticationSubscription"
 	filter := bson.M{"ueId": ueId}
 
+	origValue := RestfulAPIGetOne(collName, filter)
+
 	patchJSON, _ := json.Marshal(patchItem)
 	success := RestfulAPIJSONPatch(collName, filter, patchJSON)
 
 	if success {
 		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNoContent, map[string]interface{}{})
+
+		newValue := RestfulAPIGetOne(collName, filter)
+		PreHandleOnDataChangeNotify(ueId, CurrentResourceUri, patchItem, origValue, newValue)
 	} else {
 		var problemDetails = models.ProblemDetails{
 			Cause: "MODIFY_NOT_ALLOWED",
@@ -316,7 +320,7 @@ func HandlePolicyDataBdtDataBdtReferenceIdGet(respChan chan udr_message.HandlerR
 		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusOK, bdtData)
 	} else {
 		var problemDetails models.ProblemDetails
-		problemDetails.Cause = "USER_NOT_FOUND"
+		problemDetails.Cause = "DATA_NOT_FOUND"
 		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNotFound, problemDetails)
 	}
 }
@@ -328,15 +332,20 @@ func HandlePolicyDataBdtDataBdtReferenceIdPut(respChan chan udr_message.HandlerR
 	collName := "policyData.bdtData"
 	filter := bson.M{"bdtReferenceId": bdtReferenceId}
 
-	isExisted := RestfulAPIPutOneNotUpdate(collName, filter, putData)
+	isExisted := RestfulAPIPutOne(collName, filter, putData)
 
-	if !isExisted {
+	if isExisted {
 		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusCreated, putData)
+
+		PreHandlePolicyDataChangeNotification("", bdtReferenceId, body)
 	} else {
-		problemDetails := models.ProblemDetails{
-			Cause: "UPDATE_NOT_ALLOWED",
-		}
-		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusForbidden, problemDetails)
+		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusCreated, putData)
+
+		// // TODO: need to check UPDATE_NOT_ALLOWED case
+		// problemDetails := models.ProblemDetails{
+		// 	Cause: "UPDATE_NOT_ALLOWED",
+		// }
+		// udr_message.SendHttpResponseMessage(respChan, nil, http.StatusForbidden, problemDetails)
 	}
 }
 
@@ -378,35 +387,49 @@ func HandlePolicyDataSponsorConnectivityDataSponsorIdGet(respChan chan udr_messa
 }
 
 func HandlePolicyDataSubsToNotifyPost(respChan chan udr_message.HandlerResponseMessage, body models.PolicyDataSubscription) {
-	postData := toBsonM(body)
+	udrSelf := udr_context.UDR_Self()
 
-	collName := "policyData.subsToNotify"
-	filter := bson.M{}
+	newSubscriptionID := strconv.Itoa(udrSelf.PolicyDataSubscriptionIDGenerator)
+	udrSelf.PolicyDataSubscriptions[newSubscriptionID] = &body
+	udrSelf.PolicyDataSubscriptionIDGenerator++
 
-	RestfulAPIPost(collName, filter, postData)
+	/* Contains the URI of the newly created resource, according
+	   to the structure: {apiRoot}/policy-data/subs-to-notify{subsId} */
+	locationHeader := fmt.Sprintf("%s/policy-data/subs-to-notify/%s", udrSelf.GetIPv4GroupUri(udr_context.NUDR_DR), newSubscriptionID)
+	headers := http.Header{
+		"Location": {locationHeader},
+	}
 
-	udr_message.SendHttpResponseMessage(respChan, nil, http.StatusOK, postData)
+	udr_message.SendHttpResponseMessage(respChan, headers, http.StatusCreated, body)
 }
 
 func HandlePolicyDataSubsToNotifySubsIdDelete(respChan chan udr_message.HandlerResponseMessage, subsId string) {
-	collName := "policyData.subsToNotify"
-	filter := bson.M{"subsId": subsId}
-
-	RestfulAPIDeleteOne(collName, filter)
+	udrSelf := udr_context.UDR_Self()
+	_, ok := udrSelf.PolicyDataSubscriptions[subsId]
+	if !ok {
+		var problemDetails models.ProblemDetails
+		problemDetails.Cause = "SUBSCRIPTION_NOT_FOUND"
+		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNotFound, problemDetails)
+		return
+	}
+	delete(udrSelf.PolicyDataSubscriptions, subsId)
 
 	udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNoContent, map[string]interface{}{})
 }
 
 func HandlePolicyDataSubsToNotifySubsIdPut(respChan chan udr_message.HandlerResponseMessage, subsId string, body models.PolicyDataSubscription) {
-	putData := toBsonM(body)
-	putData["subsId"] = subsId
+	udrSelf := udr_context.UDR_Self()
+	_, ok := udrSelf.PolicyDataSubscriptions[subsId]
+	if !ok {
+		var problemDetails models.ProblemDetails
+		problemDetails.Cause = "SUBSCRIPTION_NOT_FOUND"
+		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNotFound, problemDetails)
+		return
+	}
 
-	collName := "policyData.subsToNotify"
-	filter := bson.M{"subsId": subsId}
+	udrSelf.PolicyDataSubscriptions[subsId] = &body
 
-	RestfulAPIPutOne(collName, filter, putData)
-
-	udr_message.SendHttpResponseMessage(respChan, nil, http.StatusOK, putData)
+	udr_message.SendHttpResponseMessage(respChan, nil, http.StatusOK, body)
 }
 
 func HandlePolicyDataUesUeIdAmDataGet(respChan chan udr_message.HandlerResponseMessage, ueId string) {
@@ -468,51 +491,37 @@ func HandlePolicyDataUesUeIdOperatorSpecificDataPut(respChan chan udr_message.Ha
 
 	RestfulAPIPutOne(collName, filter, putData)
 
-	// for k, v := range operatorSpecificDataContainerMap {
-	// 	specificDataElementName := k
-
-	// 	putData := toBsonM(body)
-	// 	putData["ueId"] = ueId
-	// 	putData["SpecificDataElementName"] = specificDataElementName
-
-	// 	filterTmp := bson.M{"ueId": ueId, "SpecificDataElementName": specificDataElementName}
-	// 	RestfulAPIPutOne(collName, filterTmp, putData)
-	// }
-
 	udr_message.SendHttpResponseMessage(respChan, nil, http.StatusOK, map[string]interface{}{})
 }
 
-func HandlePolicyDataUesUeIdSmDataGet(respChan chan udr_message.HandlerResponseMessage, ueId string) {
+func HandlePolicyDataUesUeIdSmDataGet(respChan chan udr_message.HandlerResponseMessage, ueId string, snssai models.Snssai, dnn string) {
 	collName := "policyData.ues.smData"
 	filter := bson.M{"ueId": ueId}
+
+	if !reflect.DeepEqual(snssai, models.Snssai{}) {
+		filter["smPolicySnssaiData."+udr_util.SnssaiModelsToHex(snssai)] = bson.M{"$exists": true}
+	}
+	if !reflect.DeepEqual(snssai, models.Snssai{}) && dnn != "" {
+		filter["smPolicySnssaiData."+udr_util.SnssaiModelsToHex(snssai)+".smPolicyDnnData."+dnn] = bson.M{"$exists": true}
+	}
 
 	smPolicyData := RestfulAPIGetOne(collName, filter)
 	if smPolicyData != nil {
 		var smPolicyDataResp models.SmPolicyData
-
-		err := mapstructure.Decode(smPolicyData, &smPolicyDataResp)
-		if err != nil {
-			panic(err)
-		}
-
+		_ = json.Unmarshal(udr_util.MapToByte(smPolicyData), &smPolicyDataResp)
 		{
 			collName := "policyData.ues.smData.usageMonData"
 			filter := bson.M{"ueId": ueId}
-			usageMonDataArray := RestfulAPIGetMany(collName, filter)
+			usageMonDataMapArray := RestfulAPIGetMany(collName, filter)
 
-			if usageMonDataArray != nil {
-				var tmp []models.UsageMonData
-				err := mapstructure.Decode(usageMonDataArray, &tmp)
-				if err != nil {
-					panic(err)
+			if !reflect.DeepEqual(usageMonDataMapArray, []map[string]interface{}{}) {
+				var usageMonDataArray []models.UsageMonData
+				_ = json.Unmarshal(udr_util.MapArrayToByte(usageMonDataMapArray), &usageMonDataArray)
+				smPolicyDataResp.UmData = make(map[string]models.UsageMonData)
+				for _, element := range usageMonDataArray {
+					smPolicyDataResp.UmData[element.LimitId] = element
 				}
-				tmp2 := make(map[string]models.UsageMonData)
-				for _, element := range tmp {
-					tmp2[element.LimitId] = element
-				}
-				smPolicyDataResp.UmData = tmp2
 			}
-
 		}
 
 		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusOK, smPolicyDataResp)
@@ -525,15 +534,50 @@ func HandlePolicyDataUesUeIdSmDataGet(respChan chan udr_message.HandlerResponseM
 
 func HandlePolicyDataUesUeIdSmDataPatch(respChan chan udr_message.HandlerResponseMessage, ueId string, body map[string]models.UsageMonData) {
 	collName := "policyData.ues.smData.usageMonData"
-	// filter := bson.M{"ueId": ueId}
+	filter := bson.M{"ueId": ueId}
 
-	for k, v := range body {
+	successAll := true
+	for k, usageMonData := range body {
 		limitId := k
-		filterTmp := bson.M{"ueId": ueId, "LimitId": limitId}
-		RestfulAPIMergePatch(collName, filterTmp, toBsonM(v))
+		filterTmp := bson.M{"ueId": ueId, "limitId": limitId}
+		success := RestfulAPIMergePatch(collName, filterTmp, toBsonM(usageMonData))
+		if !success {
+			successAll = false
+		} else {
+			var usageMonData models.UsageMonData
+			usageMonDataBsonM := RestfulAPIGetOne(collName, filterTmp)
+			_ = json.Unmarshal(udr_util.MapToByte(usageMonDataBsonM), &usageMonData)
+			PreHandlePolicyDataChangeNotification(ueId, limitId, usageMonData)
+		}
 	}
 
-	udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNoContent, map[string]interface{}{})
+	if successAll {
+		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNoContent, map[string]interface{}{})
+
+		smPolicyDataBsonM := RestfulAPIGetOne(collName, filter)
+		var smPolicyData models.SmPolicyData
+		_ = json.Unmarshal(udr_util.MapToByte(smPolicyDataBsonM), &smPolicyData)
+		{
+			collName := "policyData.ues.smData.usageMonData"
+			filter := bson.M{"ueId": ueId}
+			usageMonDataMapArray := RestfulAPIGetMany(collName, filter)
+
+			if !reflect.DeepEqual(usageMonDataMapArray, []map[string]interface{}{}) {
+				var usageMonDataArray []models.UsageMonData
+				_ = json.Unmarshal(udr_util.MapArrayToByte(usageMonDataMapArray), &usageMonDataArray)
+				smPolicyData.UmData = make(map[string]models.UsageMonData)
+				for _, element := range usageMonDataArray {
+					smPolicyData.UmData[element.LimitId] = element
+				}
+			}
+		}
+		PreHandlePolicyDataChangeNotification(ueId, "", smPolicyData)
+	} else {
+		var problemDetails = models.ProblemDetails{
+			Cause: "MODIFY_NOT_ALLOWED",
+		}
+		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusForbidden, problemDetails)
+	}
 }
 
 func HandlePolicyDataUesUeIdSmDataUsageMonIdDelete(respChan chan udr_message.HandlerResponseMessage, ueId string, usageMonId string) {
@@ -566,13 +610,9 @@ func HandlePolicyDataUesUeIdSmDataUsageMonIdPut(respChan chan udr_message.Handle
 	collName := "policyData.ues.smData.usageMonData"
 	filter := bson.M{"ueId": ueId, "usageMonId": usageMonId}
 
-	isExisted := RestfulAPIPutOne(collName, filter, putData)
+	RestfulAPIPutOne(collName, filter, putData)
 
-	if !isExisted {
-		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusCreated, putData)
-	} else {
-		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusOK, map[string]interface{}{})
-	}
+	udr_message.SendHttpResponseMessage(respChan, nil, http.StatusCreated, putData)
 }
 
 func HandlePolicyDataUesUeIdUePolicySetGet(respChan chan udr_message.HandlerResponseMessage, ueId string) {
@@ -597,9 +637,22 @@ func HandlePolicyDataUesUeIdUePolicySetPatch(respChan chan udr_message.HandlerRe
 	collName := "policyData.ues.uePolicySet"
 	filter := bson.M{"ueId": ueId}
 
-	RestfulAPIMergePatch(collName, filter, patchData)
+	success := RestfulAPIMergePatch(collName, filter, patchData)
 
-	udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNoContent, map[string]interface{}{})
+	if success {
+		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNoContent, map[string]interface{}{})
+
+		var uePolicySet models.UePolicySet
+		uePolicySetBsonM := RestfulAPIGetOne(collName, filter)
+		_ = json.Unmarshal(udr_util.MapToByte(uePolicySetBsonM), &uePolicySet)
+		PreHandlePolicyDataChangeNotification(ueId, "", uePolicySet)
+	} else {
+		var problemDetails = models.ProblemDetails{
+			Cause: "MODIFY_NOT_ALLOWED",
+		}
+		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusForbidden, problemDetails)
+	}
+
 }
 
 func HandlePolicyDataUesUeIdUePolicySetPut(respChan chan udr_message.HandlerResponseMessage, ueId string, body models.UePolicySet) {
@@ -619,31 +672,139 @@ func HandlePolicyDataUesUeIdUePolicySetPut(respChan chan udr_message.HandlerResp
 }
 
 func HandleCreateAMFSubscriptions(respChan chan udr_message.HandlerResponseMessage, ueId string, subsId string, body []models.AmfSubscriptionInfo) {
-	var putDataArray []map[string]interface{}
-	var filterArray []bson.M
-	for _, amfSubscriptionInfo := range body {
-		putData := toBsonM(amfSubscriptionInfo)
-		putData["ueId"] = ueId
-		putData["subsId"] = subsId
-		putData["AmfInstanceId"] = amfSubscriptionInfo.AmfInstanceId
-		putDataArray = append(putDataArray, putData)
-		filterArray = append(filterArray, bson.M{"ueId": ueId, "subsId": subsId, "AmfInstanceId": amfSubscriptionInfo.AmfInstanceId})
+	udrSelf := udr_context.UDR_Self()
+	_, ok := udrSelf.UESubsCollection[ueId]
+	if !ok {
+		var problemDetails models.ProblemDetails
+		problemDetails.Cause = "USER_NOT_FOUND"
+		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNotFound, problemDetails)
+		return
 	}
 
-	collName := "subscriptionData.contextData.eeSubscriptions.amfSubscriptions"
+	_, ok = udrSelf.UESubsCollection[ueId].EeSubscriptionCollection[subsId]
 
-	RestfulAPIPutMany(collName, filterArray, putDataArray)
+	if !ok {
+		var problemDetails models.ProblemDetails
+		problemDetails.Cause = "SUBSCRIPTION_NOT_FOUND"
+		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNotFound, problemDetails)
+		return
+	}
+	udrSelf.UESubsCollection[ueId].EeSubscriptionCollection[subsId].AmfSubscriptionInfos = body
 
 	udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNoContent, map[string]interface{}{})
 }
 
 func HandleRemoveAmfSubscriptionsInfo(respChan chan udr_message.HandlerResponseMessage, ueId string, subsId string) {
-	collName := "subscriptionData.contextData.eeSubscriptions.amfSubscriptions"
-	filter := bson.M{"ueId": ueId, "subsId": subsId}
+	udrSelf := udr_context.UDR_Self()
+	_, ok := udrSelf.UESubsCollection[ueId]
+	if !ok {
+		var problemDetails models.ProblemDetails
+		problemDetails.Cause = "USER_NOT_FOUND"
+		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNotFound, problemDetails)
+		return
+	}
 
-	RestfulAPIDeleteMany(collName, filter)
+	_, ok = udrSelf.UESubsCollection[ueId].EeSubscriptionCollection[subsId]
+
+	if !ok {
+		var problemDetails models.ProblemDetails
+		problemDetails.Cause = "SUBSCRIPTION_NOT_FOUND"
+		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNotFound, problemDetails)
+		return
+	}
+
+	if udrSelf.UESubsCollection[ueId].EeSubscriptionCollection[subsId].AmfSubscriptionInfos == nil {
+		var problemDetails models.ProblemDetails
+		problemDetails.Cause = "AMFSUBSCRIPTION_NOT_FOUND"
+		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNotFound, problemDetails)
+		return
+	}
+
+	udrSelf.UESubsCollection[ueId].EeSubscriptionCollection[subsId].AmfSubscriptionInfos = nil
 
 	udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNoContent, map[string]interface{}{})
+}
+
+func HandleModifyAmfSubscriptionInfo(respChan chan udr_message.HandlerResponseMessage, ueId string, subsId string, patchItem []models.PatchItem) {
+	udrSelf := udr_context.UDR_Self()
+	_, ok := udrSelf.UESubsCollection[ueId]
+	if !ok {
+		var problemDetails models.ProblemDetails
+		problemDetails.Cause = "USER_NOT_FOUND"
+		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNotFound, problemDetails)
+		return
+	}
+
+	_, ok = udrSelf.UESubsCollection[ueId].EeSubscriptionCollection[subsId]
+
+	if !ok {
+		var problemDetails models.ProblemDetails
+		problemDetails.Cause = "SUBSCRIPTION_NOT_FOUND"
+		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNotFound, problemDetails)
+		return
+	}
+
+	if udrSelf.UESubsCollection[ueId].EeSubscriptionCollection[subsId].AmfSubscriptionInfos == nil {
+		var problemDetails models.ProblemDetails
+		problemDetails.Cause = "AMFSUBSCRIPTION_NOT_FOUND"
+		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNotFound, problemDetails)
+		return
+	}
+
+	patchJSON, _ := json.Marshal(patchItem)
+	patch, err := jsonpatch.DecodePatch(patchJSON)
+	if err != nil {
+		var problemDetails models.ProblemDetails
+		problemDetails.Cause = "MODIFY_NOT_ALLOWED"
+		problemDetails.Detail = "PatchItem attributes are invalid"
+		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusForbidden, problemDetails)
+		return
+	}
+	original, _ := json.Marshal((udrSelf.UESubsCollection[ueId].EeSubscriptionCollection[subsId]).AmfSubscriptionInfos)
+	modified, err := patch.Apply(original)
+	if err != nil {
+		var problemDetails models.ProblemDetails
+		problemDetails.Cause = "MODIFY_NOT_ALLOWED"
+		problemDetails.Detail = "Occur error when applying PatchItem"
+		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusForbidden, problemDetails)
+		return
+	}
+	var modifiedData []models.AmfSubscriptionInfo
+	_ = json.Unmarshal(modified, &modifiedData)
+
+	udrSelf.UESubsCollection[ueId].EeSubscriptionCollection[subsId].AmfSubscriptionInfos = modifiedData
+
+	udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNoContent, map[string]interface{}{})
+}
+
+func HandleGetAmfSubscriptionInfo(respChan chan udr_message.HandlerResponseMessage, ueId string, subsId string) {
+	udrSelf := udr_context.UDR_Self()
+
+	_, ok := udrSelf.UESubsCollection[ueId]
+	if !ok {
+		var problemDetails models.ProblemDetails
+		problemDetails.Cause = "USER_NOT_FOUND"
+		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNotFound, problemDetails)
+		return
+	}
+
+	_, ok = udrSelf.UESubsCollection[ueId].EeSubscriptionCollection[subsId]
+
+	if !ok {
+		var problemDetails models.ProblemDetails
+		problemDetails.Cause = "SUBSCRIPTION_NOT_FOUND"
+		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNotFound, problemDetails)
+		return
+	}
+
+	if udrSelf.UESubsCollection[ueId].EeSubscriptionCollection[subsId].AmfSubscriptionInfos == nil {
+		var problemDetails models.ProblemDetails
+		problemDetails.Cause = "AMFSUBSCRIPTION_NOT_FOUND"
+		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNotFound, problemDetails)
+		return
+	}
+
+	udr_message.SendHttpResponseMessage(respChan, nil, http.StatusOK, udrSelf.UESubsCollection[ueId].EeSubscriptionCollection[subsId].AmfSubscriptionInfos)
 }
 
 func HandleQueryEEData(respChan chan udr_message.HandlerResponseMessage, ueId string) {
@@ -662,100 +823,202 @@ func HandleQueryEEData(respChan chan udr_message.HandlerResponseMessage, ueId st
 }
 
 func HandleRemoveEeGroupSubscriptions(respChan chan udr_message.HandlerResponseMessage, ueGroupId string, subsId string) {
-	collName := "subscriptionData.groupData.eeSubscriptions"
-	filter := bson.M{"ueGroupId": ueGroupId, "subsId": subsId}
+	udrSelf := udr_context.UDR_Self()
+	_, ok := udrSelf.UEGroupCollection[ueGroupId]
+	if !ok {
+		var problemDetails models.ProblemDetails
+		problemDetails.Cause = "USER_NOT_FOUND"
+		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNotFound, problemDetails)
+		return
+	}
 
-	RestfulAPIDeleteOne(collName, filter)
+	_, ok = udrSelf.UEGroupCollection[ueGroupId].EeSubscriptions[subsId]
+
+	if !ok {
+		var problemDetails models.ProblemDetails
+		problemDetails.Cause = "SUBSCRIPTION_NOT_FOUND"
+		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNotFound, problemDetails)
+		return
+	}
+	delete(udrSelf.UEGroupCollection[ueGroupId].EeSubscriptions, subsId)
 
 	udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNoContent, map[string]interface{}{})
 }
 
 func HandleUpdateEeGroupSubscriptions(respChan chan udr_message.HandlerResponseMessage, ueGroupId string, subsId string, body models.EeSubscription) {
-	putData := toBsonM(body)
-	putData["ueGroupId"] = ueGroupId
-	putData["subsId"] = subsId
+	udrSelf := udr_context.UDR_Self()
+	_, ok := udrSelf.UEGroupCollection[ueGroupId]
+	if !ok {
+		var problemDetails models.ProblemDetails
+		problemDetails.Cause = "USER_NOT_FOUND"
+		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNotFound, problemDetails)
+		return
+	}
 
-	collName := "subscriptionData.groupData.eeSubscriptions"
-	filter := bson.M{"ueGroupId": ueGroupId, "subsId": subsId}
+	_, ok = udrSelf.UEGroupCollection[ueGroupId].EeSubscriptions[subsId]
 
-	RestfulAPIPutOne(collName, filter, putData)
+	if !ok {
+		var problemDetails models.ProblemDetails
+		problemDetails.Cause = "SUBSCRIPTION_NOT_FOUND"
+		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNotFound, problemDetails)
+		return
+	}
+	udrSelf.UEGroupCollection[ueGroupId].EeSubscriptions[subsId] = &body
 
 	udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNoContent, map[string]interface{}{})
 }
 
 func HandleCreateEeGroupSubscriptions(respChan chan udr_message.HandlerResponseMessage, ueGroupId string, body models.EeSubscription) {
-	postData := toBsonM(body)
-	postData["ueGroupId"] = ueGroupId
+	udrSelf := udr_context.UDR_Self()
 
-	collName := "subscriptionData.groupData.eeSubscriptions"
-	filter := bson.M{"ueGroupId": ueGroupId}
+	_, ok := udrSelf.UEGroupCollection[ueGroupId]
+	if !ok {
+		udrSelf.UEGroupCollection[ueGroupId] = new(udr_context.UEGroupSubsData)
+	}
+	if udrSelf.UEGroupCollection[ueGroupId].EeSubscriptions == nil {
+		udrSelf.UEGroupCollection[ueGroupId].EeSubscriptions = make(map[string]*models.EeSubscription)
+	}
 
-	RestfulAPIPost(collName, filter, postData)
+	newSubscriptionID := strconv.Itoa(udrSelf.EeSubscriptionIDGenerator)
+	udrSelf.UEGroupCollection[ueGroupId].EeSubscriptions[newSubscriptionID] = &body
+	udrSelf.EeSubscriptionIDGenerator++
 
-	udr_message.SendHttpResponseMessage(respChan, nil, http.StatusCreated, postData)
+	/* Contains the URI of the newly created resource, according
+	   to the structure: {apiRoot}/nudr-dr/v1/subscription-data/group-data/{ueGroupId}/ee-subscriptions */
+	locationHeader := fmt.Sprintf("%s/nudr-dr/v1/subscription-data/group-data/%s/ee-subscriptions/%s", udrSelf.GetIPv4GroupUri(udr_context.NUDR_DR), ueGroupId, newSubscriptionID)
+	headers := http.Header{
+		"Location": {locationHeader},
+	}
+
+	udr_message.SendHttpResponseMessage(respChan, headers, http.StatusCreated, body)
 }
 
 func HandleQueryEeGroupSubscriptions(respChan chan udr_message.HandlerResponseMessage, ueGroupId string) {
-	collName := "subscriptionData.groupData.eeSubscriptions"
-	filter := bson.M{"ueGroupId": ueGroupId}
+	udrSelf := udr_context.UDR_Self()
 
-	eeSubscriptions := RestfulAPIGetMany(collName, filter)
+	_, ok := udrSelf.UEGroupCollection[ueGroupId]
+	if !ok {
+		var problemDetails models.ProblemDetails
+		problemDetails.Cause = "USER_NOT_FOUND"
+		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNotFound, problemDetails)
+		return
+	}
 
-	udr_message.SendHttpResponseMessage(respChan, nil, http.StatusOK, eeSubscriptions)
+	var eeSubscriptionSlice []models.EeSubscription
+
+	for _, v := range udrSelf.UEGroupCollection[ueGroupId].EeSubscriptions {
+		eeSubscriptionSlice = append(eeSubscriptionSlice, *v)
+	}
+
+	udr_message.SendHttpResponseMessage(respChan, nil, http.StatusOK, eeSubscriptionSlice)
 }
 
 func HandleRemoveeeSubscriptions(respChan chan udr_message.HandlerResponseMessage, ueId string, subsId string) {
-	collName := "subscriptionData.contextData.eeSubscriptions"
-	filter := bson.M{"ueId": ueId, "subsId": subsId}
+	udrSelf := udr_context.UDR_Self()
+	_, ok := udrSelf.UESubsCollection[ueId]
+	if !ok {
+		var problemDetails models.ProblemDetails
+		problemDetails.Cause = "USER_NOT_FOUND"
+		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNotFound, problemDetails)
+		return
+	}
 
-	RestfulAPIDeleteOne(collName, filter)
+	_, ok = udrSelf.UESubsCollection[ueId].EeSubscriptionCollection[subsId]
+
+	if !ok {
+		var problemDetails models.ProblemDetails
+		problemDetails.Cause = "SUBSCRIPTION_NOT_FOUND"
+		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNotFound, problemDetails)
+		return
+	}
+	delete(udrSelf.UESubsCollection[ueId].EeSubscriptionCollection, subsId)
 
 	udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNoContent, map[string]interface{}{})
 }
 
 func HandleUpdateEesubscriptions(respChan chan udr_message.HandlerResponseMessage, ueId string, subsId string, body models.EeSubscription) {
-	putData := toBsonM(body)
-	putData["ueId"] = ueId
-	putData["subsId"] = subsId
+	udrSelf := udr_context.UDR_Self()
+	_, ok := udrSelf.UESubsCollection[ueId]
+	if !ok {
+		var problemDetails models.ProblemDetails
+		problemDetails.Cause = "USER_NOT_FOUND"
+		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNotFound, problemDetails)
+		return
+	}
 
-	collName := "subscriptionData.contextData.eeSubscriptions"
-	filter := bson.M{"ueId": ueId, "subsId": subsId}
+	_, ok = udrSelf.UESubsCollection[ueId].EeSubscriptionCollection[subsId]
 
-	RestfulAPIPutOne(collName, filter, putData)
+	if !ok {
+		var problemDetails models.ProblemDetails
+		problemDetails.Cause = "SUBSCRIPTION_NOT_FOUND"
+		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNotFound, problemDetails)
+		return
+	}
+	udrSelf.UESubsCollection[ueId].EeSubscriptionCollection[subsId].EeSubscriptions = &body
 
 	udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNoContent, map[string]interface{}{})
 }
 
 func HandleCreateEeSubscriptions(respChan chan udr_message.HandlerResponseMessage, ueId string, body models.EeSubscription) {
-	postData := toBsonM(body)
-	postData["ueId"] = ueId
+	udrSelf := udr_context.UDR_Self()
 
-	collName := "subscriptionData.contextData.eeSubscriptions"
-	filter := bson.M{"ueId": ueId}
+	_, ok := udrSelf.UESubsCollection[ueId]
+	if !ok {
+		udrSelf.UESubsCollection[ueId] = new(udr_context.UESubsData)
+	}
+	if udrSelf.UESubsCollection[ueId].EeSubscriptionCollection == nil {
+		udrSelf.UESubsCollection[ueId].EeSubscriptionCollection = make(map[string]*udr_context.EeSubscriptionCollection)
+	}
 
-	RestfulAPIPost(collName, filter, postData)
+	newSubscriptionID := strconv.Itoa(udrSelf.EeSubscriptionIDGenerator)
+	udrSelf.UESubsCollection[ueId].EeSubscriptionCollection[newSubscriptionID] = new(udr_context.EeSubscriptionCollection)
+	udrSelf.UESubsCollection[ueId].EeSubscriptionCollection[newSubscriptionID].EeSubscriptions = &body
+	udrSelf.EeSubscriptionIDGenerator++
 
-	udr_message.SendHttpResponseMessage(respChan, nil, http.StatusCreated, postData)
+	/* Contains the URI of the newly created resource, according
+	   to the structure: {apiRoot}/subscription-data/{ueId}/context-data/ee-subscriptions/{subsId} */
+	locationHeader := fmt.Sprintf("%s/subscription-data/%s/context-data/ee-subscriptions/%s", udrSelf.GetIPv4GroupUri(udr_context.NUDR_DR), ueId, newSubscriptionID)
+	headers := http.Header{
+		"Location": {locationHeader},
+	}
+
+	udr_message.SendHttpResponseMessage(respChan, headers, http.StatusCreated, body)
 }
 
 func HandleQueryeesubscriptions(respChan chan udr_message.HandlerResponseMessage, ueId string) {
-	collName := "subscriptionData.contextData.eeSubscriptions"
-	filter := bson.M{"ueId": ueId}
+	udrSelf := udr_context.UDR_Self()
 
-	eeSubscriptions := RestfulAPIGetMany(collName, filter)
+	_, ok := udrSelf.UESubsCollection[ueId]
+	if !ok {
+		var problemDetails models.ProblemDetails
+		problemDetails.Cause = "USER_NOT_FOUND"
+		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNotFound, problemDetails)
+		return
+	}
 
-	udr_message.SendHttpResponseMessage(respChan, nil, http.StatusOK, eeSubscriptions)
+	var eeSubscriptionSlice []models.EeSubscription
+
+	for _, v := range udrSelf.UESubsCollection[ueId].EeSubscriptionCollection {
+		eeSubscriptionSlice = append(eeSubscriptionSlice, *v.EeSubscriptions)
+	}
+
+	udr_message.SendHttpResponseMessage(respChan, nil, http.StatusOK, eeSubscriptionSlice)
 }
 
 func HandlePatchOperSpecData(respChan chan udr_message.HandlerResponseMessage, ueId string, patchItem []models.PatchItem) {
 	collName := "subscriptionData.operatorSpecificData"
 	filter := bson.M{"ueId": ueId}
 
+	origValue := RestfulAPIGetOne(collName, filter)
+
 	patchJSON, _ := json.Marshal(patchItem)
 	success := RestfulAPIJSONPatch(collName, filter, patchJSON)
 
 	if success {
 		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNoContent, map[string]interface{}{})
+
+		newValue := RestfulAPIGetOne(collName, filter)
+		PreHandleOnDataChangeNotify(ueId, CurrentResourceUri, patchItem, origValue, newValue)
 	} else {
 		var problemDetails = models.ProblemDetails{
 			Cause: "MODIFY_NOT_ALLOWED",
@@ -908,26 +1171,22 @@ func HandleModifyPpData(respChan chan udr_message.HandlerResponseMessage, ueId s
 	collName := "subscriptionData.ppData"
 	filter := bson.M{"ueId": ueId}
 
+	origValue := RestfulAPIGetOne(collName, filter)
+
 	patchJSON, _ := json.Marshal(patchItem)
 	success := RestfulAPIJSONPatch(collName, filter, patchJSON)
 
 	if success {
 		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNoContent, map[string]interface{}{})
+
+		newValue := RestfulAPIGetOne(collName, filter)
+		PreHandleOnDataChangeNotify(ueId, CurrentResourceUri, patchItem, origValue, newValue)
 	} else {
 		var problemDetails = models.ProblemDetails{
 			Cause: "MODIFY_NOT_ALLOWED",
 		}
 		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusForbidden, problemDetails)
 	}
-}
-
-func HandleGetAmfSubscriptionInfo(respChan chan udr_message.HandlerResponseMessage, ueId string, subsId string) {
-	collName := "subscriptionData.contextData.eeSubscriptions.amfSubscriptions"
-	filter := bson.M{"ueId": ueId, "subsId": subsId}
-
-	amfSubscriptionInfos := RestfulAPIGetMany(collName, filter)
-
-	udr_message.SendHttpResponseMessage(respChan, nil, http.StatusOK, amfSubscriptionInfos)
 }
 
 func HandleGetIdentityData(respChan chan udr_message.HandlerResponseMessage, ueId string) {
@@ -961,66 +1220,117 @@ func HandleGetOdbData(respChan chan udr_message.HandlerResponseMessage, ueId str
 }
 
 func HandleGetSharedData(respChan chan udr_message.HandlerResponseMessage, sharedDataIds []string) {
-	sharedDataIdArray := sharedDataIds
 
 	collName := "subscriptionData.sharedData"
 	var sharedDataArray []map[string]interface{}
-	for _, sharedDataId := range sharedDataIdArray {
+	for _, sharedDataId := range sharedDataIds {
 		filter := bson.M{"sharedDataId": sharedDataId}
 		sharedData := RestfulAPIGetOne(collName, filter)
-		sharedDataArray = append(sharedDataArray, sharedData)
+		if sharedData != nil {
+			sharedDataArray = append(sharedDataArray, sharedData)
+		}
 	}
 
 	if sharedDataArray != nil {
 		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusOK, sharedDataArray)
 	} else {
 		var problemDetails models.ProblemDetails
-		problemDetails.Cause = "USER_NOT_FOUND"
+		problemDetails.Cause = "DATA_NOT_FOUND"
 		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNotFound, problemDetails)
 	}
 }
 
 func HandleRemovesdmSubscriptions(respChan chan udr_message.HandlerResponseMessage, ueId string, subsId string) {
-	collName := "subscriptionData.contextData.sdmSubscriptions"
-	filter := bson.M{"ueId": ueId, "subsId": subsId}
+	udrSelf := udr_context.UDR_Self()
+	_, ok := udrSelf.UESubsCollection[ueId]
+	if !ok {
+		var problemDetails models.ProblemDetails
+		problemDetails.Cause = "USER_NOT_FOUND"
+		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNotFound, problemDetails)
+		return
+	}
 
-	RestfulAPIDeleteOne(collName, filter)
+	_, ok = udrSelf.UESubsCollection[ueId].SdmSubscriptions[subsId]
+
+	if !ok {
+		var problemDetails models.ProblemDetails
+		problemDetails.Cause = "SUBSCRIPTION_NOT_FOUND"
+		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNotFound, problemDetails)
+		return
+	}
+	delete(udrSelf.UESubsCollection[ueId].SdmSubscriptions, subsId)
 
 	udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNoContent, map[string]interface{}{})
 }
 
 func HandleUpdatesdmsubscriptions(respChan chan udr_message.HandlerResponseMessage, ueId string, subsId string, body models.SdmSubscription) {
-	putData := toBsonM(body)
-	putData["ueId"] = ueId
-	putData["subsId"] = subsId
+	udrSelf := udr_context.UDR_Self()
+	_, ok := udrSelf.UESubsCollection[ueId]
+	if !ok {
+		var problemDetails models.ProblemDetails
+		problemDetails.Cause = "USER_NOT_FOUND"
+		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNotFound, problemDetails)
+		return
+	}
 
-	collName := "subscriptionData.contextData.sdmSubscriptions"
-	filter := bson.M{"ueId": ueId, "subsId": subsId}
+	_, ok = udrSelf.UESubsCollection[ueId].SdmSubscriptions[subsId]
 
-	RestfulAPIPutOne(collName, filter, putData)
+	if !ok {
+		var problemDetails models.ProblemDetails
+		problemDetails.Cause = "SUBSCRIPTION_NOT_FOUND"
+		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNotFound, problemDetails)
+		return
+	}
+	body.SubscriptionId = subsId
+	udrSelf.UESubsCollection[ueId].SdmSubscriptions[subsId] = &body
 
 	udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNoContent, map[string]interface{}{})
 }
 
 func HandleCreateSdmSubscriptions(respChan chan udr_message.HandlerResponseMessage, ueId string, body models.SdmSubscription) {
-	postData := toBsonM(body)
-	postData["ueId"] = ueId
+	udrSelf := udr_context.UDR_Self()
 
-	collName := "subscriptionData.contextData.sdmSubscriptions"
-	filter := bson.M{"ueId": ueId}
+	_, ok := udrSelf.UESubsCollection[ueId]
+	if !ok {
+		udrSelf.UESubsCollection[ueId] = new(udr_context.UESubsData)
+	}
+	if udrSelf.UESubsCollection[ueId].SdmSubscriptions == nil {
+		udrSelf.UESubsCollection[ueId].SdmSubscriptions = make(map[string]*models.SdmSubscription)
+	}
 
-	RestfulAPIPost(collName, filter, postData)
+	newSubscriptionID := strconv.Itoa(udrSelf.SdmSubscriptionIDGenerator)
+	body.SubscriptionId = newSubscriptionID
+	udrSelf.UESubsCollection[ueId].SdmSubscriptions[newSubscriptionID] = &body
+	udrSelf.SdmSubscriptionIDGenerator++
 
-	udr_message.SendHttpResponseMessage(respChan, nil, http.StatusCreated, postData)
+	/* Contains the URI of the newly created resource, according
+	   to the structure: {apiRoot}/subscription-data/{ueId}/context-data/sdm-subscriptions/{subsId}' */
+	locationHeader := fmt.Sprintf("%s/subscription-data/%s/context-data/sdm-subscriptions/%s", udrSelf.GetIPv4GroupUri(udr_context.NUDR_DR), ueId, newSubscriptionID)
+	headers := http.Header{
+		"Location": {locationHeader},
+	}
+
+	udr_message.SendHttpResponseMessage(respChan, headers, http.StatusCreated, body)
 }
 
 func HandleQuerysdmsubscriptions(respChan chan udr_message.HandlerResponseMessage, ueId string) {
-	collName := "subscriptionData.contextData.sdmSubscriptions"
-	filter := bson.M{"ueId": ueId}
+	udrSelf := udr_context.UDR_Self()
 
-	sdmSubscriptions := RestfulAPIGetMany(collName, filter)
+	_, ok := udrSelf.UESubsCollection[ueId]
+	if !ok {
+		var problemDetails models.ProblemDetails
+		problemDetails.Cause = "USER_NOT_FOUND"
+		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNotFound, problemDetails)
+		return
+	}
 
-	udr_message.SendHttpResponseMessage(respChan, nil, http.StatusOK, sdmSubscriptions)
+	var sdmSubscriptionSlice []models.SdmSubscription
+
+	for _, v := range udrSelf.UESubsCollection[ueId].SdmSubscriptions {
+		sdmSubscriptionSlice = append(sdmSubscriptionSlice, *v)
+	}
+
+	udr_message.SendHttpResponseMessage(respChan, nil, http.StatusOK, sdmSubscriptionSlice)
 }
 
 func HandleQuerySmData(respChan chan udr_message.HandlerResponseMessage, ueId string, servingPlmnId string, singleNssai models.Snssai, dnn string) {
@@ -1098,12 +1408,11 @@ func HandleQuerySmfRegList(respChan chan udr_message.HandlerResponseMessage, ueI
 
 	smfRegList := RestfulAPIGetMany(collName, filter)
 
-	if smfRegList == nil {
+	if smfRegList != nil {
 		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusOK, smfRegList)
 	} else {
-		var problemDetails models.ProblemDetails
-		problemDetails.Cause = "USER_NOT_FOUND"
-		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNotFound, problemDetails)
+		// Return empty array instead
+		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusOK, []map[string]interface{}{})
 	}
 
 }
@@ -1226,21 +1535,32 @@ func HandleQuerySmsData(respChan chan udr_message.HandlerResponseMessage, ueId s
 }
 
 func HandlePostSubscriptionDataSubscriptions(respChan chan udr_message.HandlerResponseMessage, body models.SubscriptionDataSubscriptions) {
-	postData := toBsonM(body)
+	udrSelf := udr_context.UDR_Self()
 
-	collName := "subscriptionData.contextData.sdmSubscriptions"
-	filter := bson.M{"ueId": body.UeId}
+	newSubscriptionID := strconv.Itoa(udrSelf.SubscriptionDataSubscriptionIDGenerator)
+	udrSelf.SubscriptionDataSubscriptions[newSubscriptionID] = &body
+	udrSelf.SubscriptionDataSubscriptionIDGenerator++
 
-	RestfulAPIPost(collName, filter, postData)
+	/* Contains the URI of the newly created resource, according
+	   to the structure: {apiRoot}/subscription-data/subs-to-notify/{subsId} */
+	locationHeader := fmt.Sprintf("%s/subscription-data/subs-to-notify/%s", udrSelf.GetIPv4GroupUri(udr_context.NUDR_DR), newSubscriptionID)
+	headers := http.Header{
+		"Location": {locationHeader},
+	}
 
-	udr_message.SendHttpResponseMessage(respChan, nil, http.StatusCreated, postData)
+	udr_message.SendHttpResponseMessage(respChan, headers, http.StatusCreated, body)
 }
 
 func HandleRemovesubscriptionDataSubscriptions(respChan chan udr_message.HandlerResponseMessage, subsId string) {
-	collName := "subscriptionData.contextData.smsf3gppAccess"
-	filter := bson.M{"subsId": subsId}
-
-	RestfulAPIDeleteOne(collName, filter)
+	udrSelf := udr_context.UDR_Self()
+	_, ok := udrSelf.SubscriptionDataSubscriptions[subsId]
+	if !ok {
+		var problemDetails models.ProblemDetails
+		problemDetails.Cause = "SUBSCRIPTION_NOT_FOUND"
+		udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNotFound, problemDetails)
+		return
+	}
+	delete(udrSelf.SubscriptionDataSubscriptions, subsId)
 
 	udr_message.SendHttpResponseMessage(respChan, nil, http.StatusNoContent, map[string]interface{}{})
 }

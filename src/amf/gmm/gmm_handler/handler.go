@@ -20,6 +20,7 @@ import (
 	"free5gc/src/amf/gmm/gmm_message"
 	"free5gc/src/amf/gmm/gmm_state"
 	"free5gc/src/amf/logger"
+	"net/url"
 	"reflect"
 	"strconv"
 	"time"
@@ -115,8 +116,8 @@ func HandlePDUSessionEstablishmentRequest(ue *amf_context.AmfUe, anType models.A
 	var pduSession models.PduSessionContext
 	pduSession.PduSessionId = pduSessionID
 	pduSession.AccessType = anType
+	amfSelf := amf_context.AMF_Self()
 	if requestType == models.RequestType_INITIAL_REQUEST {
-		amfSelf := amf_context.AMF_Self()
 
 		if sNssai == nil {
 			if ue.SmfSelectionData != nil {
@@ -138,9 +139,9 @@ func HandlePDUSessionEstablishmentRequest(ue *amf_context.AmfUe, anType models.A
 				}
 			}
 			if sNssai == nil {
-				snssai := ue.AllowedNssai[anType]
-				if len(snssai) > 0 {
-					sNssai = &snssai[0]
+				allowedNssai := ue.AllowedNssai[anType]
+				if len(allowedNssai) > 0 {
+					sNssai = allowedNssai[0].AllowedSnssai
 				} else {
 					err := fmt.Errorf("Ue[%s] doesn't have allowedNssai\n", ue.Supi)
 					logger.GmmLog.Errorf(err.Error())
@@ -156,65 +157,9 @@ func HandlePDUSessionEstablishmentRequest(ue *amf_context.AmfUe, anType models.A
 		}
 		pduSession.Dnn = dnn
 
-		// NRF use local configure
-		// TODO: SMF selection in TS 23502 clause 4.3.2.2.3.2
-		//		step 1. AMF invokes the Nnssf_NSSelection_Get with the S-NSSAI from the Allowed NSSAI requested by the UE, PLMN ID of the SUPI, TAI of the UE
-		// 		step 2. NSSF returns the appropriate NRF and may return a NSI ID corresponding to the Network Slice instance.
-		tmp := []models.Snssai{
-			{
-				Sst: 1,
-				Sd:  "010203",
-			},
-		}
-		param := Nnrf_NFDiscovery.SearchNFInstancesParamOpts{
-			ServiceNames: optional.NewInterface([]models.ServiceName{models.ServiceName_NSMF_PDUSESSION}),
-			Dnn:          optional.NewString(dnn),
-			Snssais:      optional.NewInterface(amf_util.MarshToJsonString(tmp)),
-		}
-
-		if ue.PlmnId.Mcc != "" {
-			param.TargetPlmnList = optional.NewInterface(amf_util.MarshToJsonString(ue.PlmnId))
-		}
-		result, err := amf_consumer.SendSearchNFInstances(amfSelf.NrfUri, models.NfType_SMF, models.NfType_AMF, param)
-		if err != nil || result.NfInstances == nil {
-			err = fmt.Errorf("DNN[%s] is not support by network and AMF can not select an SMF by NRF\n", dnn)
-			logger.GmmLog.Errorf(err.Error())
-			gmm_message.SendDLNASTransport(ue.RanUe[anType], nasMessage.PayloadContainerTypeN1SMInfo, payload, &pduSessionID, nasMessage.Cause5GMMDNNNotSupportedOrNotSubscribedInTheSlice, nil, 0)
-			return err
-		}
-		logger.GmmLog.Info("result, err := amf_consumer.SendSearchNFInstances(amfSelf.NrfUri, models.NfType_SMF, models.NfType_AMF, param)")
-		// select the first SMF, TODO: select base on other info
-		var smfID, smfUri string
-		for _, nfProfile := range result.NfInstances {
-			for _, service := range *nfProfile.NfServices {
-				if service.ServiceName == models.ServiceName_NSMF_PDUSESSION && service.NfServiceStatus == models.NfServiceStatus_REGISTERED {
-					smfID = nfProfile.NfInstanceId
-					if nfProfile.Fqdn != "" {
-						smfUri = nfProfile.Fqdn
-					} else if service.Fqdn != "" {
-						smfUri = service.Fqdn
-					} else if service.ApiPrefix != "" {
-						smfUri = service.ApiPrefix
-					} else if service.IpEndPoints != nil {
-						point := (*service.IpEndPoints)[0]
-						if point.Port != 0 {
-							smfUri = fmt.Sprintf("%s://%s:%d", service.Scheme, point.Ipv4Address, point.Port)
-						}
-					}
-				}
-				if smfUri != "" {
-					break
-				}
-			}
-			if smfUri != "" {
-				break
-			}
-		}
-
-		if smfUri == "" {
-			err := fmt.Errorf("AMF can not select an SMF by NRF")
-			logger.GmmLog.Errorf(err.Error())
-			gmm_message.SendDLNASTransport(ue.RanUe[anType], nasMessage.PayloadContainerTypeN1SMInfo, payload, &pduSessionID, nasMessage.Cause5GMMPayloadWasNotForwarded, nil, 0)
+		smfID, smfUri, err := selectSmf(ue, anType, &pduSession, payload)
+		if err != nil {
+			logger.GmmLog.Errorf("[AMF] SMF Selection for Snssai[%+v] Failed[%+v]", sNssai, err)
 			return err
 		}
 
@@ -228,8 +173,9 @@ func HandlePDUSessionEstablishmentRequest(ue *amf_context.AmfUe, anType models.A
 				Payload:           payload,
 			}
 			updateData := models.SmContextUpdateData{
-				Release: true,
-				Cause:   models.Cause_REL_DUE_TO_DUPLICATE_SESSION_ID,
+				Release:            true,
+				Cause:              models.Cause_REL_DUE_TO_DUPLICATE_SESSION_ID,
+				SmContextStatusUri: fmt.Sprintf("%s/namf-callback/v1/smContextStatus/%s/%d", amfSelf.GetIPv4Uri(), ue.Guti, pduSessionID),
 			}
 			response, _, _, err := amf_consumer.SendUpdateSmContextRequest(ue, smContext.SmfUri, smContext.PduSessionContext.SmContextRef, updateData, nil, nil)
 			if err != nil {
@@ -315,6 +261,72 @@ func HandlePDUSessionEstablishmentRequest(ue *amf_context.AmfUe, anType models.A
 		return fmt.Errorf("RequestType INITIAL_EMERGENCY_REQUEST and EXISTING_EMERGENCY_PDU_SESSION haven't been supported")
 	}
 	return nil
+}
+
+func selectSmf(ue *amf_context.AmfUe, anType models.AccessType, pduSession *models.PduSessionContext, payload []byte) (smfID string, smfUri string, err error) {
+
+	amfSelf := amf_context.AMF_Self()
+	nrfUri := amfSelf.NrfUri // default NRF URI is pre-configured by AMF
+
+	nsiInformation := ue.GetNsiInformationFromSnssai(anType, *pduSession.SNssai)
+	if nsiInformation == nil {
+		if ue.NssfUri == "" {
+			for {
+				err := amf_consumer.SearchNssfNSSelectionInstance(ue, amfSelf.NrfUri, models.NfType_NSSF, models.NfType_AMF, nil)
+				if err != nil {
+					logger.GmmLog.Errorf("AMF can not select an NSSF Instance by NRF[Error: %+v]", err)
+					time.Sleep(2 * time.Second)
+				} else {
+					break
+				}
+			}
+		}
+
+		res, problemDetails, err := amf_consumer.NSSelectionGetForPduSession(ue, *pduSession.SNssai)
+		if problemDetails != nil {
+			logger.GmmLog.Errorf("NSSelection Get Failed Problem[%+v]", problemDetails)
+		} else if err != nil {
+			logger.GmmLog.Errorf("NSSelection Get Error[%+v]", err)
+		} else {
+			nsiInformation = res.NsiInformation
+		}
+	}
+
+	pduSession.NsInstance = nsiInformation.NsiId
+	nrfApiUrl, err := url.Parse(nsiInformation.NrfId)
+	if err != nil {
+		logger.GmmLog.Errorf("Parse NRF URI error, use default NRF[%s]", nrfUri)
+	} else {
+		nrfUri = fmt.Sprintf("%s://%s", nrfApiUrl.Scheme, nrfApiUrl.Host)
+	}
+
+	param := Nnrf_NFDiscovery.SearchNFInstancesParamOpts{
+		ServiceNames: optional.NewInterface([]models.ServiceName{models.ServiceName_NSMF_PDUSESSION}),
+		Dnn:          optional.NewString(pduSession.Dnn),
+		Snssais:      optional.NewInterface(amf_util.MarshToJsonString([]models.Snssai{*pduSession.SNssai})),
+	}
+	if ue.PlmnId.Mcc != "" {
+		param.TargetPlmnList = optional.NewInterface(amf_util.MarshToJsonString(ue.PlmnId))
+	}
+
+	logger.GmmLog.Debugf("Search SMF from NRF[%s]", nrfUri)
+
+	result, err := amf_consumer.SendSearchNFInstances(nrfUri, models.NfType_SMF, models.NfType_AMF, &param)
+	if err != nil || result.NfInstances == nil {
+		err = fmt.Errorf("DNN[%s] is not support by network and AMF can not select an SMF by NRF\n", pduSession.Dnn)
+		logger.GmmLog.Errorf(err.Error())
+		gmm_message.SendDLNASTransport(ue.RanUe[anType], nasMessage.PayloadContainerTypeN1SMInfo, payload, &pduSession.PduSessionId, nasMessage.Cause5GMMDNNNotSupportedOrNotSubscribedInTheSlice, nil, 0)
+		return
+	}
+
+	// select the first SMF, TODO: select base on other info
+	for _, nfProfile := range result.NfInstances {
+		smfUri = amf_util.SearchNFServiceUri(nfProfile, models.ServiceName_NSMF_PDUSESSION, models.NfServiceStatus_REGISTERED)
+		if smfUri != "" {
+			break
+		}
+	}
+	return
 }
 
 func HandlePDUSessionModificationForward(ue *amf_context.AmfUe, anType models.AccessType, payload []byte, pduSessionID int32) (err error) {
@@ -475,7 +487,7 @@ func HandlePDUSessionAuthenticationForward(ue *amf_context.AmfUe, anType models.
 	return nil
 }
 
-func HandleRegistrationRequest(ue *amf_context.AmfUe, anType models.AccessType, registrationRequest *nasMessage.RegistrationRequest) error {
+func HandleRegistrationRequest(ue *amf_context.AmfUe, anType models.AccessType, procedureCode int64, registrationRequest *nasMessage.RegistrationRequest) error {
 
 	logger.GmmLog.Info("[AMF] Handle Registration Request")
 
@@ -504,6 +516,12 @@ func HandleRegistrationRequest(ue *amf_context.AmfUe, anType models.AccessType, 
 		logger.GmmLog.Debugf("RegistrationType: Periodic Registration Updating")
 	case nasMessage.RegistrationType5GSEmergencyRegistration:
 		return fmt.Errorf("Not Supportted RegistrationType: Emergency Registration")
+	case nasMessage.RegistrationType5GSReserved:
+		ue.RegistrationType5GS = nasMessage.RegistrationType5GSInitialRegistration
+		logger.GmmLog.Debugf("RegistrationType: Reserved")
+	default:
+		logger.GmmLog.Debugf("RegistrationType: %v, chage state to InitialRegistration", ue.RegistrationType5GS)
+		ue.RegistrationType5GS = nasMessage.RegistrationType5GSInitialRegistration
 	}
 
 	mobileIdentity5GSContents := registrationRequest.MobileIdentity5GS.GetMobileIdentity5GSContents()
@@ -512,12 +530,11 @@ func HandleRegistrationRequest(ue *amf_context.AmfUe, anType models.AccessType, 
 	case nasMessage.MobileIdentity5GSTypeNoIdentity:
 		logger.GmmLog.Debugf("No Identity")
 	case nasMessage.MobileIdentity5GSTypeSuci:
-		ue.Suci = mobileIdentity5GSContents
 		var plmnId string
-		// TODO: handle the situation if suci is encrypted
-		plmnId, ue.Supi = nasConvert.GetPlmnIdAndSupiFromSuci(mobileIdentity5GSContents)
+		ue.Suci, plmnId = nasConvert.SuciToString(mobileIdentity5GSContents)
 		ue.PlmnId = amf_util.PlmnIdStringToModels(plmnId)
-		logger.GmmLog.Debugf("SUCI[SUPI: %s]", ue.Supi)
+		logger.GmmLog.Debugf("SUCI: %s", ue.Suci)
+		ue.IsCleartext = true
 	case nasMessage.MobileIdentity5GSType5gGuti:
 		guami, guti := nasConvert.GutiToString(mobileIdentity5GSContents)
 		ue.Guti = guti
@@ -530,14 +547,17 @@ func HandleRegistrationRequest(ue *amf_context.AmfUe, anType models.AccessType, 
 		} else {
 			ue.ServingAmfChanged = false
 		}
+		ue.IsCleartext = true
 	case nasMessage.MobileIdentity5GSTypeImei:
 		imei := nasConvert.PeiToString(mobileIdentity5GSContents)
 		ue.Pei = imei
 		logger.GmmLog.Debugf("PEI: %s", imei)
+		ue.IsCleartext = false
 	case nasMessage.MobileIdentity5GSTypeImeisv:
 		imeisv := nasConvert.PeiToString(mobileIdentity5GSContents)
 		ue.Pei = imeisv
 		logger.GmmLog.Debugf("PEI: %s", imeisv)
+		ue.IsCleartext = false
 	}
 
 	// NgKsi: TS 24.501 9.11.3.32
@@ -548,6 +568,12 @@ func HandleRegistrationRequest(ue *amf_context.AmfUe, anType models.AccessType, 
 		ue.NgKsi.Tsc = models.ScType_MAPPED
 	}
 	ue.NgKsi.Ksi = int32(registrationRequest.NgksiAndRegistrationType5GS.GetNasKeySetIdentifiler())
+	if ue.NgKsi.Tsc == models.ScType_NATIVE && ue.NgKsi.Ksi != 7 {
+
+	} else {
+		ue.NgKsi.Tsc = models.ScType_NATIVE
+		ue.NgKsi.Ksi = 0
+	}
 
 	// Copy UserLocation from ranUe
 	ue.Location = ranUe.Location
@@ -563,8 +589,14 @@ func HandleRegistrationRequest(ue *amf_context.AmfUe, anType models.AccessType, 
 		if registrationRequest.Capability5GMM != nil {
 			ue.Capability5GMM = *registrationRequest.Capability5GMM
 		} else {
-			gmm_message.SendRegistrationReject(ue.RanUe[anType], nasMessage.Cause5GMMProtocolErrorUnspecified, "")
-			return fmt.Errorf("Capability5GMM is nil")
+			if procedureCode == ngapType.ProcedureCodeInitialUEMessage {
+				logger.GmmLog.Infoln("ue.Capability5GMM is nil in InitialUEMEssage")
+			} else if procedureCode == ngapType.ProcedureCodeUplinkNASTransport {
+				gmm_message.SendRegistrationReject(ue.RanUe[anType], nasMessage.Cause5GMMProtocolErrorUnspecified, "")
+				return fmt.Errorf("Capability5GMM is nil")
+			} else {
+				return fmt.Errorf("wrong procedurecode")
+			}
 		}
 		if registrationRequest.UESecurityCapability != nil {
 			ue.NasUESecurityCapability = *registrationRequest.UESecurityCapability
@@ -676,20 +708,11 @@ func HandleInitialRegistration(ue *amf_context.AmfUe, anType models.AccessType) 
 
 	// Registration with AMF re-allocation (TS 23.502 4.2.2.2.3)
 	if len(ue.SubscribedNssai) == 0 {
-		// TODO(optional): Nudm_SDM_Get(SUPI, slice selection subscription data) to get UE's slice selection subscription info
+		getSubscribedNssai(ue)
 	}
 
-	var requestedNssai []models.Snssai
-	if ue.RegistrationRequest.RequestedNSSAI != nil {
-		requestedNssai = nasConvert.RequestedNssaiToModels(ue.RegistrationRequest.RequestedNSSAI)
-		logger.GmmLog.Debugf("RequestedNssai: %+v", requestedNssai)
-		// TODO(optional): Nnssf_NSSelection_Get(requested nssai, subscribed s-nssai)
-		// TODO(optional): Namf_Communication_RegistrationCompleteNotify(failure cause) to old AMF if amf decides to reroute nas msg to another AMF
-		// TODO(optional): Nnrf_NfDiscovery_Request(NF Type, Amf Set): if initial AMF does not have target AMF address
-		// TODO(if decide to reroute): Namf_Communication_N1MessageNotify to target AMF or Send Reroute Nas Request to RAN
-	} else {
-		// assign amf support snssai to ue
-		ue.AllowedNssai[anType] = append(ue.AllowedNssai[anType], amfSelf.PlmnSupportList[0].SNssaiList...)
+	if err := handleRequestedNssai(ue, anType); err != nil {
+		return err
 	}
 
 	// TODO (step 10 optional): send Namf_Communication_RegistrationCompleteNotify to old AMF if need
@@ -710,7 +733,7 @@ func HandleInitialRegistration(ue *amf_context.AmfUe, anType models.AccessType) 
 		param := Nnrf_NFDiscovery.SearchNFInstancesParamOpts{
 			Supi: optional.NewString(ue.Supi),
 		}
-		resp, err := amf_consumer.SendSearchNFInstances(amfSelf.NrfUri, models.NfType_UDM, models.NfType_AMF, param)
+		resp, err := amf_consumer.SendSearchNFInstances(amfSelf.NrfUri, models.NfType_UDM, models.NfType_AMF, &param)
 		if err != nil {
 			logger.GmmLog.Error("AMF can not select an UDM by NRF")
 			return err
@@ -776,7 +799,7 @@ func HandleInitialRegistration(ue *amf_context.AmfUe, anType models.AccessType) 
 		Supi: optional.NewString(ue.Supi),
 	}
 	for {
-		resp, err := amf_consumer.SendSearchNFInstances(amfSelf.NrfUri, models.NfType_PCF, models.NfType_AMF, param)
+		resp, err := amf_consumer.SendSearchNFInstances(amfSelf.NrfUri, models.NfType_PCF, models.NfType_AMF, &param)
 		if err != nil {
 			logger.GmmLog.Error("AMF can not select an PCF by NRF")
 		} else {
@@ -785,6 +808,7 @@ func HandleInitialRegistration(ue *amf_context.AmfUe, anType models.AccessType) 
 			for _, nfProfile := range resp.NfInstances {
 				pcfUri = amf_util.SearchNFServiceUri(nfProfile, models.ServiceName_NPCF_AM_POLICY_CONTROL, models.NfServiceStatus_REGISTERED)
 				if pcfUri != "" {
+					ue.PcfId = nfProfile.NfInstanceId
 					break
 				}
 			}
@@ -797,7 +821,7 @@ func HandleInitialRegistration(ue *amf_context.AmfUe, anType models.AccessType) 
 		time.Sleep(500 * time.Millisecond) // sleep a while when search NF Instance fail
 	}
 
-	problemDetails, err := amf_consumer.AMPolicyControlCreate(ue)
+	problemDetails, err := amf_consumer.AMPolicyControlCreate(ue, anType)
 	if problemDetails != nil {
 		logger.GmmLog.Errorf("AM Policy Control Create Failed Problem[%+v]", problemDetails)
 	} else if err != nil {
@@ -839,7 +863,22 @@ func HandleInitialRegistration(ue *amf_context.AmfUe, anType models.AccessType) 
 	} else {
 		ue.Non3gppDeregistrationTimerValue = amfSelf.Non3gppDeregistrationTimerValue
 	}
-	gmm_message.SendRegistrationAccept(ue, anType, nil, nil, nil, nil, nil)
+
+	if anType == models.AccessType__3_GPP_ACCESS {
+		gmm_message.SendRegistrationAccept(ue, anType, nil, nil, nil, nil, nil)
+	} else {
+		// TS 23.502 4.12.2.2 10a ~ 13: if non-3gpp, AMF should send initial context setup request to N3IWF first,
+		// and send registration accept after receiving initial context setup response
+		ngap_message.SendInitialContextSetupRequest(ue, anType, nil, nil, nil, nil, nil, nil)
+
+		registrationAccept, err := gmm_message.BuildRegistrationAccept(ue, anType, nil, nil, nil, nil)
+		if err != nil {
+			logger.GmmLog.Error("Build Registration Accept: %+v", err)
+			return nil
+		}
+		ue.RegistrationAcceptForNon3GPPAccess = registrationAccept
+	}
+
 	return ue.Sm[anType].Transfer(gmm_state.INITIAL_CONTEXT_SETUP, nil)
 }
 
@@ -875,20 +914,11 @@ func HandleMobilityAndPeriodicRegistrationUpdating(ue *amf_context.AmfUe, anType
 
 	// Registration with AMF re-allocation (TS 23.502 4.2.2.2.3)
 	if len(ue.SubscribedNssai) == 0 {
-		// TODO(optional): Nudm_SDM_Get(SUPI, slice selection subscription data) to get UE's slice selection subscription info
+		getSubscribedNssai(ue)
 	}
 
-	var requestedNssai []models.Snssai
-	if ue.RegistrationRequest.RequestedNSSAI != nil {
-		requestedNssai = nasConvert.RequestedNssaiToModels(ue.RegistrationRequest.RequestedNSSAI)
-		logger.GmmLog.Debugf("RequestedNssai: %+v", requestedNssai)
-		// TODO(optional): Nnssf_NSSelection_Get(requested nssai, subscribed s-nssai)
-		// TODO(optional): Namf_Communication_RegistrationCompleteNotify(failure cause) to old AMF if amf decides to reroute nas msg to another AMF
-		// TODO(optional): Nnrf_NfDiscovery_Request(NF Type, Amf Set): if initial AMF does not have target AMF address
-		// TODO(if decide to reroute): Namf_Communication_N1MessageNotify to target AMF or Send Reroute Nas Request to RAN
-	} else {
-		ue.AllowedNssai[anType] = nil
-		ue.AllowedNssai[anType] = append(ue.AllowedNssai[anType], amfSelf.PlmnSupportList[0].SNssaiList...)
+	if err := handleRequestedNssai(ue, anType); err != nil {
+		return err
 	}
 
 	// TODO (step 10 optional): send Namf_Communication_RegistrationCompleteNotify to old AMF if need
@@ -909,7 +939,7 @@ func HandleMobilityAndPeriodicRegistrationUpdating(ue *amf_context.AmfUe, anType
 		param := Nnrf_NFDiscovery.SearchNFInstancesParamOpts{
 			Supi: optional.NewString(ue.Supi),
 		}
-		resp, err := amf_consumer.SendSearchNFInstances(amfSelf.NrfUri, models.NfType_UDM, models.NfType_AMF, param)
+		resp, err := amf_consumer.SendSearchNFInstances(amfSelf.NrfUri, models.NfType_UDM, models.NfType_AMF, &param)
 		if err != nil {
 			logger.GmmLog.Error("AMF can not select an UDM by NRF")
 			return err
@@ -970,46 +1000,65 @@ func HandleMobilityAndPeriodicRegistrationUpdating(ue *amf_context.AmfUe, anType
 	ctxList := ngapType.PDUSessionResourceSetupListCxtReq{}
 	suList := ngapType.PDUSessionResourceSetupListSUReq{}
 
-	// TODO: determine if UE is in non-allowed area
 	if ue.RegistrationRequest.UplinkDataStatus != nil {
 		uplinkDataPsi := nasConvert.PSIToBooleanArray(ue.RegistrationRequest.UplinkDataStatus.Buffer)
 		reactivationResult = new([16]bool)
+		allowReEstablishPduSession := true
 
-		for psi := 1; psi <= 15; psi++ {
-			pduSessionId := int32(psi)
-			if _, exists := ue.SmContextList[pduSessionId]; !exists {
-				continue
+		// determines that the UE is in non-allowed area or is not in allowed area
+		if ue.AmPolicyAssociation != nil && ue.AmPolicyAssociation.ServAreaRes != nil {
+			switch ue.AmPolicyAssociation.ServAreaRes.RestrictionType {
+			case models.RestrictionType_ALLOWED_AREAS:
+				allowReEstablishPduSession = amf_context.TacInAreas(ue.Tai.Tac, ue.AmPolicyAssociation.ServAreaRes.Areas)
+			case models.RestrictionType_NOT_ALLOWED_AREAS:
+				allowReEstablishPduSession = !amf_context.TacInAreas(ue.Tai.Tac, ue.AmPolicyAssociation.ServAreaRes.Areas)
 			}
+		}
 
-			smContext := ue.SmContextList[pduSessionId]
-			if uplinkDataPsi[psi] && smContext.PduSessionContext.AccessType == models.AccessType__3_GPP_ACCESS { // uplink data are pending for the corresponding PDU session identity
-				response, errResponse, problemDetail, err := amf_consumer.SendUpdateSmContextActivateUpCnxState(ue, pduSessionId, anType)
-				if response == nil {
-					reactivationResult[pduSessionId] = true
+		if !allowReEstablishPduSession {
+			for pduSessionId, hasUplinkData := range uplinkDataPsi {
+				if hasUplinkData {
 					errPduSessionId = append(errPduSessionId, uint8(pduSessionId))
-					cause := nasMessage.Cause5GMMProtocolErrorUnspecified
-					if errResponse != nil {
-						switch errResponse.JsonData.Error.Cause {
-						case "OUT_OF_LADN_SERVICE_AREA":
-							cause = nasMessage.Cause5GMMLADNNotAvailable
-						case "PRIORITIZED_SERVICES_ONLY":
-							cause = nasMessage.Cause5GMMRestrictedServiceArea
-						case "DNN_CONGESTION", "S-NSSAI_CONGESTION":
-							cause = nasMessage.Cause5GMMInsufficientUserPlaneResourcesForThePDUSession
-						}
-					}
-					errCause = append(errCause, cause)
+					errCause = append(errCause, nasMessage.Cause5GMMRestrictedServiceArea)
+				}
+			}
+		} else {
+			for idx, hasUplinkData := range uplinkDataPsi {
+				pduSessionId := int32(idx)
+				if _, exists := ue.SmContextList[pduSessionId]; !exists {
+					continue
+				}
 
-					if problemDetail != nil {
-						logger.GmmLog.Errorf("Update SmContext Failed Problem[%+v]", problemDetail)
-					} else if err != nil {
-						logger.GmmLog.Errorf("Update SmContext Error[%v]", err.Error())
-					}
-				} else {
-					if initialContextSetup {
-						ngap_message.AppendPDUSessionResourceSetupListCxtReq(&ctxList, pduSessionId, *smContext.PduSessionContext.SNssai, response.BinaryDataN1SmMessage, response.BinaryDataN2SmInformation)
+				smContext := ue.SmContextList[pduSessionId]
+				if hasUplinkData && smContext.PduSessionContext.AccessType == models.AccessType__3_GPP_ACCESS { // uplink data are pending for the corresponding PDU session identity
+					response, errResponse, problemDetail, err := amf_consumer.SendUpdateSmContextActivateUpCnxState(ue, pduSessionId, anType)
+					if response == nil {
+						reactivationResult[pduSessionId] = true
+						errPduSessionId = append(errPduSessionId, uint8(pduSessionId))
+						cause := nasMessage.Cause5GMMProtocolErrorUnspecified
+						if errResponse != nil {
+							switch errResponse.JsonData.Error.Cause {
+							case "OUT_OF_LADN_SERVICE_AREA":
+								cause = nasMessage.Cause5GMMLADNNotAvailable
+							case "PRIORITIZED_SERVICES_ONLY":
+								cause = nasMessage.Cause5GMMRestrictedServiceArea
+							case "DNN_CONGESTION", "S-NSSAI_CONGESTION":
+								cause = nasMessage.Cause5GMMInsufficientUserPlaneResourcesForThePDUSession
+							}
+						}
+						errCause = append(errCause, cause)
+
+						if problemDetail != nil {
+							logger.GmmLog.Errorf("Update SmContext Failed Problem[%+v]", problemDetail)
+						} else if err != nil {
+							logger.GmmLog.Errorf("Update SmContext Error[%v]", err.Error())
+						}
 					} else {
-						ngap_message.AppendPDUSessionResourceSetupListSUReq(&suList, pduSessionId, *smContext.PduSessionContext.SNssai, response.BinaryDataN1SmMessage, response.BinaryDataN2SmInformation)
+						if initialContextSetup {
+							ngap_message.AppendPDUSessionResourceSetupListCxtReq(&ctxList, pduSessionId, *smContext.PduSessionContext.SNssai, response.BinaryDataN1SmMessage, response.BinaryDataN2SmInformation)
+						} else {
+							ngap_message.AppendPDUSessionResourceSetupListSUReq(&suList, pduSessionId, *smContext.PduSessionContext.SNssai, response.BinaryDataN1SmMessage, response.BinaryDataN2SmInformation)
+						}
 					}
 				}
 			}
@@ -1134,6 +1183,19 @@ func HandleMobilityAndPeriodicRegistrationUpdating(ue *amf_context.AmfUe, anType
 		}
 	}
 
+	if ue.LocationChanged && ue.RequestTriggerLocationChange {
+		updateReq := models.PolicyAssociationUpdateRequest{}
+		updateReq.Triggers = append(updateReq.Triggers, models.RequestTrigger_LOC_CH)
+		updateReq.UserLoc = &ue.Location
+		problemDetails, err := amf_consumer.AMPolicyControlUpdate(ue, updateReq)
+		if problemDetails != nil {
+			logger.GmmLog.Errorf("AM Policy Control Update Failed Problem[%+v]", problemDetails)
+		} else if err != nil {
+			logger.GmmLog.Errorf("AM Policy Control Update Error[%v]", err)
+		}
+		ue.LocationChanged = false
+	}
+
 	// TODO (step 18 optional): If the AMF has changed and the old AMF has indicated an existing NGAP UE association towards a N3IWF, the new AMF
 	// creates an NGAP UE association towards the N3IWF to which the UE is connectedsend N2 AMF mobility request to N3IWF
 	if anType == models.AccessType_NON_3_GPP_ACCESS && ue.ServingAmfChanged {
@@ -1147,7 +1209,17 @@ func HandleMobilityAndPeriodicRegistrationUpdating(ue *amf_context.AmfUe, anType
 	// TODO: T3512/Non3GPP de-registration timer reassignment if need (based on operator policy)
 
 	if procedureCode == ngapType.ProcedureCodeInitialUEMessage {
-		gmm_message.SendRegistrationAccept(ue, anType, pduSessionStatus, reactivationResult, errPduSessionId, errCause, &ctxList)
+		if anType == models.AccessType__3_GPP_ACCESS {
+			gmm_message.SendRegistrationAccept(ue, anType, pduSessionStatus, reactivationResult, errPduSessionId, errCause, &ctxList)
+		} else {
+			ngap_message.SendInitialContextSetupRequest(ue, anType, nil, nil, &ctxList, nil, nil, nil)
+			registrationAccept, err := gmm_message.BuildRegistrationAccept(ue, anType, pduSessionStatus, reactivationResult, errPduSessionId, errCause)
+			if err != nil {
+				logger.GmmLog.Error("Build Registration Accept: %+v", err)
+				return nil
+			}
+			ue.RegistrationAcceptForNon3GPPAccess = registrationAccept
+		}
 		return ue.Sm[anType].Transfer(gmm_state.INITIAL_CONTEXT_SETUP, nil)
 	} else if procedureCode == ngapType.ProcedureCodeUplinkNASTransport {
 		nasPdu, err := gmm_message.BuildRegistrationAccept(ue, anType, pduSessionStatus, reactivationResult, errPduSessionId, errCause)
@@ -1157,12 +1229,107 @@ func HandleMobilityAndPeriodicRegistrationUpdating(ue *amf_context.AmfUe, anType
 		if len(suList.List) != 0 {
 			ngap_message.SendPDUSessionResourceSetupRequest(ue.RanUe[anType], nasPdu, suList)
 		} else {
-			ngap_message.SendDownlinkNasTransport(ue.RanUe[anType], nasPdu)
+			ngap_message.SendDownlinkNasTransport(ue.RanUe[anType], nasPdu, nil)
 		}
 		ue.ClearRegistrationRequestData()
 		return ue.Sm[anType].Transfer(gmm_state.REGISTERED, nil)
 	}
 
+	return nil
+}
+
+func getSubscribedNssai(ue *amf_context.AmfUe) {
+
+	amfSelf := amf_context.AMF_Self()
+	if ue.NudmSDMUri == "" {
+		param := Nnrf_NFDiscovery.SearchNFInstancesParamOpts{
+			Supi: optional.NewString(ue.Supi),
+		}
+		for {
+			err := amf_consumer.SearchUdmSdmInstance(ue, amfSelf.NrfUri, models.NfType_UDM, models.NfType_AMF, &param)
+			if err != nil {
+				logger.GmmLog.Errorf("AMF can not select an Nudm_SDM Instance by NRF[Error: %+v]", err)
+				time.Sleep(2 * time.Second)
+			} else {
+				break
+			}
+		}
+	}
+	problemDetails, err := amf_consumer.SDMGetSliceSelectionSubscriptionData(ue)
+	if problemDetails != nil {
+		logger.GmmLog.Errorf("SDM_Get Slice Selection Subscription Data Failed Problem[%+v]", problemDetails)
+	} else if err != nil {
+		logger.GmmLog.Errorf("SDM_Get Slice Selection Subscription Data Error[%+v]", err)
+	}
+}
+
+func handleRequestedNssai(ue *amf_context.AmfUe, anType models.AccessType) error {
+
+	amfSelf := amf_context.AMF_Self()
+
+	var requestedNssai []models.Snssai
+	if ue.RegistrationRequest.RequestedNSSAI != nil {
+		requestedNssai = nasConvert.RequestedNssaiToModels(ue.RegistrationRequest.RequestedNSSAI)
+		logger.GmmLog.Debugf("RequestedNssai: %+v", requestedNssai)
+
+		needSliceSelection := false
+		for _, requestedSnssai := range requestedNssai {
+			if ue.InSubscribedNssai(requestedSnssai) {
+				allowedSnssai := models.AllowedSnssai{
+					AllowedSnssai: &models.Snssai{
+						Sst: requestedSnssai.Sst,
+						Sd:  requestedSnssai.Sd,
+					},
+				}
+				ue.AllowedNssai[anType] = append(ue.AllowedNssai[anType], allowedSnssai)
+			} else {
+				needSliceSelection = true
+				break
+			}
+		}
+
+		if needSliceSelection {
+			if ue.NssfUri == "" {
+				for {
+					err := amf_consumer.SearchNssfNSSelectionInstance(ue, amfSelf.NrfUri, models.NfType_NSSF, models.NfType_AMF, nil)
+					if err != nil {
+						logger.GmmLog.Errorf("AMF can not select an NSSF Instance by NRF[Error: %+v]", err)
+						time.Sleep(2 * time.Second)
+					} else {
+						break
+					}
+				}
+			}
+
+			problemDetails, err := amf_consumer.NSSelectionGetForRegistration(ue, requestedNssai)
+			if problemDetails != nil {
+				logger.GmmLog.Errorf("NSSelection Get Failed Problem[%+v]", problemDetails)
+				gmm_message.SendRegistrationReject(ue.RanUe[anType], nasMessage.Cause5GMMProtocolErrorUnspecified, "")
+				return fmt.Errorf("Handle Requested Nssai of UE failed")
+			} else if err != nil {
+				logger.GmmLog.Errorf("NSSelection Get Error[%+v]", err)
+				gmm_message.SendRegistrationReject(ue.RanUe[anType], nasMessage.Cause5GMMProtocolErrorUnspecified, "")
+				return fmt.Errorf("Handle Requested Nssai of UE failed")
+			}
+		}
+		// TODO: if current AMF can not serve UE, do the following things:
+		//   (optional): Namf_Communication_RegistrationCompleteNotify(failure cause) to old AMF if amf decides to reroute nas msg to another AMF
+		//   (optional): Nnrf_NfDiscovery_Request(NF Type, Amf Set): if initial AMF does not have target AMF address
+		//   (if decide to reroute): Namf_Communication_N1MessageNotify to target AMF or Send Reroute Nas Request to RAN
+	}
+
+	// if registration request has no requested nssai, or non of snssai in requested nssai is permitted by nssf
+	// then use ue subscriped snssai which is marked as default as allowed nssai
+	if len(ue.AllowedNssai[anType]) == 0 {
+		for _, subscribedSnssai := range ue.SubscribedNssai {
+			if subscribedSnssai.DefaultIndication {
+				allowedSnssai := models.AllowedSnssai{
+					AllowedSnssai: subscribedSnssai.SubscribedSnssai,
+				}
+				ue.AllowedNssai[anType] = append(ue.AllowedNssai[anType], allowedSnssai)
+			}
+		}
+	}
 	return nil
 }
 
@@ -1227,12 +1394,10 @@ func HandleIdentityResponse(ue *amf_context.AmfUe, identityResponse *nasMessage.
 	mobileIdentityContents := identityResponse.MobileIdentity.GetMobileIdentityContents()
 	switch nasConvert.GetTypeOfIdentity(mobileIdentityContents[0]) { // get type of identity
 	case nasMessage.MobileIdentity5GSTypeSuci:
-		ue.Suci = mobileIdentityContents
 		var plmnId string
-		// TODO: handle the situation if suci is encrypted
-		plmnId, ue.Supi = nasConvert.GetPlmnIdAndSupiFromSuci(mobileIdentityContents)
+		ue.Suci, plmnId = nasConvert.SuciToString(mobileIdentityContents)
 		ue.PlmnId = amf_util.PlmnIdStringToModels(plmnId)
-		logger.GmmLog.Debugf("get SUCI[SUPI: %s]", ue.Supi)
+		logger.GmmLog.Debugf("get SUCI: %s", ue.Suci)
 	case nasMessage.MobileIdentity5GSType5gGuti:
 		_, guti := nasConvert.GutiToString(mobileIdentityContents)
 		ue.Guti = guti
@@ -1306,10 +1471,8 @@ func startAuthenticationProcedure(ue *amf_context.AmfUe, anType models.AccessTyp
 
 	amfSelf := amf_context.AMF_Self()
 	// TODO: consider ausf group id, Routing ID part of SUCI
-	param := Nnrf_NFDiscovery.SearchNFInstancesParamOpts{
-		Supi: optional.NewString(ue.Supi),
-	}
-	resp, err := amf_consumer.SendSearchNFInstances(amfSelf.NrfUri, models.NfType_AUSF, models.NfType_AMF, param)
+	param := Nnrf_NFDiscovery.SearchNFInstancesParamOpts{}
+	resp, err := amf_consumer.SendSearchNFInstances(amfSelf.NrfUri, models.NfType_AUSF, models.NfType_AMF, &param)
 	if err != nil {
 		logger.GmmLog.Error("AMF can not select an AUSF by NRF")
 		return err
@@ -1537,7 +1700,16 @@ func HandleServiceRequest(ue *amf_context.AmfUe, anType models.AccessType, proce
 			if err != nil {
 				return
 			}
-
+		}
+		// downlink signaling
+		if ue.ConfigurationUpdateMessage != nil {
+			err = sendServiceAccept(initCxt, ue, anType, ctxList, suList, acceptPduSessionPsi, reactivationResult, errPduSessionId, errCause)
+			if err != nil {
+				return
+			}
+			mobilityRestrictionList := ngap_message.BuildIEMobilityRestrictionList(ue)
+			ngap_message.SendDownlinkNasTransport(ue.RanUe[models.AccessType__3_GPP_ACCESS], ue.ConfigurationUpdateMessage, &mobilityRestrictionList)
+			ue.ConfigurationUpdateMessage = nil
 		}
 	case nasMessage.ServiceTypeData:
 		if anType == models.AccessType__3_GPP_ACCESS {
@@ -1650,6 +1822,7 @@ func HandleAuthenticationResponse(ue *amf_context.AmfUe, anType models.AccessTyp
 		case models.AuthResult_SUCCESS:
 			ue.UnauthenticatedSupi = false
 			ue.Kseaf = response.Kseaf
+			ue.Supi = response.Supi
 			ue.DerivateKamf()
 			gmm_message.SendSecurityModeCommand(ue.RanUe[anType], false, "")
 			return ue.Sm[anType].Transfer(gmm_state.SECURITY_MODE, nil)
@@ -1676,6 +1849,7 @@ func HandleAuthenticationResponse(ue *amf_context.AmfUe, anType models.AccessTyp
 		case models.AuthResult_SUCCESS:
 			ue.UnauthenticatedSupi = false
 			ue.Kseaf = response.KSeaf
+			ue.Supi = response.Supi
 			ue.DerivateKamf()
 			// TODO: select enc/int algorithm based on ue security capability & amf's policy,
 			// then generate KnasEnc, KnasInt
@@ -1831,16 +2005,16 @@ func HandleSecurityModeComplete(ue *amf_context.AmfUe, anType models.AccessType,
 			args[gmm_event.AMF_UE] = ue
 			args[gmm_event.PROCEDURE_CODE] = procedureCode
 			args[gmm_event.GMM_MESSAGE] = m.GmmMessage
-			_ = ue.Sm[models.AccessType__3_GPP_ACCESS].Transfer(gmm_state.REGISTERED, nil)
-			return ue.Sm[models.AccessType__3_GPP_ACCESS].SendEvent(gmm_event.EVENT_GMM_MESSAGE, args)
+			_ = ue.Sm[anType].Transfer(gmm_state.REGISTERED, nil)
+			return ue.Sm[anType].SendEvent(gmm_event.EVENT_GMM_MESSAGE, args)
 		case nas.MsgTypeServiceRequest:
 			logger.GmmLog.Traceln("[AMF] Handle MsgTypeServiceRequest")
 			args := make(fsm.Args)
 			args[gmm_event.AMF_UE] = ue
 			args[gmm_event.PROCEDURE_CODE] = procedureCode
 			args[gmm_event.GMM_MESSAGE] = m.GmmMessage
-			_ = ue.Sm[models.AccessType__3_GPP_ACCESS].Transfer(gmm_state.REGISTERED, nil)
-			return ue.Sm[models.AccessType__3_GPP_ACCESS].SendEvent(gmm_event.EVENT_GMM_MESSAGE, args)
+			_ = ue.Sm[anType].Transfer(gmm_state.REGISTERED, nil)
+			return ue.Sm[anType].SendEvent(gmm_event.EVENT_GMM_MESSAGE, args)
 		default:
 			logger.GmmLog.Errorln("nas message container Iei type error")
 		}

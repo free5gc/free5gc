@@ -5,6 +5,7 @@ import (
 	"free5gc/lib/Namf_Communication"
 	"free5gc/lib/openapi/models"
 	"free5gc/src/amf/amf_context"
+	"free5gc/src/amf/logger"
 	"reflect"
 )
 
@@ -37,6 +38,7 @@ func SendAmfStatusChangeNotify(amfStatus string, guamiList []models.Guami) {
 		amfStatusNotification.AmfStatusInfoList = append(amfStatusNotification.AmfStatusInfoList, amfStatusInfo)
 		uri := amfStatusSubscriptions.AmfStatusUri
 
+		logger.ProducerLog.Infof("[AMF] Send Amf Status Change Notify to %s", uri)
 		httpResponse, err := client.AmfStatusChangeCallbackDocumentApiServiceCallbackDocumentApi.AmfStatusChangeNotify(context.Background(), uri, amfStatusNotification)
 		if err != nil {
 			if httpResponse == nil {

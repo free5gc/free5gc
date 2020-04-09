@@ -4,6 +4,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/un.h>
 #include <netinet/ip.h>
 #include <sys/epoll.h>
 
@@ -30,6 +31,7 @@ struct _SockAddr {
         struct sockaddr_in      s4;
         struct sockaddr_in6     s6;
         struct sockaddr_storage ss;
+        struct sockaddr_un      su; // Used for unix socket
     };
     // User define fields
     SockAddr *next; // this is for dual-stack / multi IP situation used
@@ -125,14 +127,22 @@ Sock *UdpSockCreate(int domain);
 #define UdpFree(__sock) SockFree(__sock)
 
 Status UdpSockSetAddr(SockAddr *sockAddr, int domain, const char *addr, int port);
-
 Sock *UdpServerCreate(int domain, const char *addr, int port);
 Sock *UdpClientCreate(int domain, const char *addr, int port);
-
 #define UdpRecvFrom(__sock, __buffer, __size) \
         SockRecvFrom(__sock, __buffer, __size)
 #define UdpSendTo(__sock, __buffer, __size) \
         SockSendTo(__sock, __buffer, __size)
+
+// Unix Socket (AF_UNIX)
+Sock *UnixSockCreate(int type);
+Status UnixFree(Sock *sock);
+Status UnixSockSetAddr(SockAddr *sockAddr, const char *path);
+Sock *UnixServerCreate(int type, const char *path);
+#define UnixRecv(__sock, __buffer, __size) \
+        SockRead(__sock, __buffer, __size)
+#define UnixSend(__sock, __buffer, __size) \
+        SockWrite(__sock, __buffer, __size)
 
 // Epoll
 int EpollCreate();

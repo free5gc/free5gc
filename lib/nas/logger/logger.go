@@ -30,7 +30,6 @@ func init() {
 		FieldMap:                  nil,
 		CallerPrettyfier: func(f *runtime.Frame) (string, string) {
 			orgFilename, _ := os.Getwd()
-			log.Traceln("orgFilename", orgFilename)
 			repopath := orgFilename
 			repopath = strings.Replace(repopath, "/bin", "", 1)
 			filename := strings.Replace(f.File, repopath, "", -1)

@@ -1,0 +1,80 @@
+LIBGTP5GNL {
+global:
+  genl_socket_open;
+  genl_socket_close;
+  genl_nlmsg_build_hdr;
+  genl_socket_talk;
+  genl_lookup_family;
+
+  gtp_dev_create;
+  gtp_dev_create_ran;
+  gtp_dev_config;
+  gtp_dev_destroy;
+
+  gtp5g_add_pdr;
+  gtp5g_add_far;
+
+  gtp5g_mod_pdr;
+  gtp5g_mod_far;
+
+  gtp5g_del_pdr;
+  gtp5g_del_far;
+
+  gtp5g_list_pdr;
+  gtp5g_list_far;
+
+  gtp5g_print_pdr;
+  gtp5g_print_far;
+
+  gtp5g_pdr_find_by_id;
+  gtp5g_far_find_by_id;
+
+  gtp5g_dev_alloc;
+  gtp5g_pdr_alloc;
+  gtp5g_far_alloc;
+
+  gtp5g_dev_free;
+  gtp5g_pdr_free;
+  gtp5g_far_free;
+
+  gtp5g_dev_set_ifns;
+  gtp5g_dev_set_ifidx;
+
+  gtp5g_pdr_set_id;
+  gtp5g_pdr_set_precedence;
+  gtp5g_pdr_set_outer_header_removal;
+  gtp5g_pdr_set_far_id;
+  gtp5g_pdr_set_role_addr_ipv4;
+  gtp5g_pdr_set_unix_sock_path;
+  gtp5g_pdr_set_ue_addr_ipv4;
+  gtp5g_pdr_set_local_f_teid;
+  gtp5g_pdr_set_sdf_filter_description;
+  gtp5g_pdr_set_tos_traffic_class;
+  gtp5g_pdr_set_security_param_idx;
+  gtp5g_pdr_set_flow_label;
+  gtp5g_pdr_set_sdf_filter_id;
+
+  gtp5g_pdr_get_id;
+  gtp5g_pdr_get_precedence;
+  gtp5g_pdr_get_far_id;
+  gtp5g_pdr_get_outer_header_removal;
+  gtp5g_pdr_get_ue_addr_ipv4;
+  gtp5g_pdr_get_local_f_teid_teid;
+  gtp5g_pdr_get_local_f_teid_gtpu_addr_ipv4;
+
+  gtp5g_far_set_id;
+  gtp5g_far_set_apply_action;
+  gtp5g_far_set_outer_header_creation;
+
+  gtp5g_far_get_id;
+  gtp5g_far_get_apply_action;
+  gtp5g_far_get_outer_header_creation_description;
+  gtp5g_far_get_outer_header_creation_teid;
+  gtp5g_far_get_outer_header_creation_peer_addr_ipv4;
+  gtp5g_far_get_outer_header_creation_port;
+
+  gtp5g_far_get_related_pdr_num;
+  gtp5g_far_get_related_pdr_list;
+
+local: *;
+};

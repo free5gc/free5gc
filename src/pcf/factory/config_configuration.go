@@ -15,5 +15,10 @@ type Configuration struct {
 
 	NrfUri string `yaml:"nrfUri,omitempty"`
 
-	ServiceNameList []string `yaml:"serviceNameList,omitempty"`
+	ServiceList []Service `yaml:"serviceList,omitempty"`
+}
+
+type Service struct {
+	ServiceName string `yaml:"serviceName"`
+	SuppFeat    string `yaml:"suppFeat,omitempty"`
 }

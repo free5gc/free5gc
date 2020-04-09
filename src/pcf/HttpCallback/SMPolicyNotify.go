@@ -12,7 +12,7 @@ import (
 // Nudr-Notify-smpolicy
 func NudrNotify(c *gin.Context) {
 	var policyDataChangeNotification models.PolicyDataChangeNotification
-	if err := c.BindJSON(&policyDataChangeNotification); err != nil {
+	if err := c.ShouldBindJSON(&policyDataChangeNotification); err != nil {
 		logger.SMpolicylog.Warnln("Nudr Notify fail error message is : ", err)
 	}
 

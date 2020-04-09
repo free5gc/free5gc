@@ -12,7 +12,7 @@ const config = {
 if (process.env.NODE_ENV === 'test') {
   config.API_URL = `http://localhost:${process.env.PORT}/api`;
 } else {
-  config.API_URL = process.env.API_URL ? process.env.API_URL : "/api";
+  config.API_URL = process.env.REACT_APP_HTTP_API_URL ? process.env.REACT_APP_HTTP_API_URL : "/api";
 }
 
 export default config;

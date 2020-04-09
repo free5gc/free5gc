@@ -27,4 +27,7 @@ const (
 	EventAMFStatusChangeSubscribeModfy
 	EventRegistrationStatusUpdate
 	EventGMMT3522
+	EventAmPolicyControlUpdateNotifyUpdate
+	EventAmPolicyControlUpdateNotifyTerminate
+	EventOAMRegisteredUEContext
 )

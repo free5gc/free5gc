@@ -230,6 +230,16 @@ typedef struct _PfcpUserPlaneIpResourceInformation {
             uint8_t       sourceInterface:4;)
 } __attribute__ ((packed)) PfcpUserPlaneIpResourceInformation;
 
+typedef struct _PfcpSDFFilterDescription {
+    ENDIAN6(uint8_t       spare0:3;,
+            uint8_t       bid:1;,
+            uint8_t       fl:1;,
+            uint8_t       spi:1;,
+            uint8_t       ttc:1;,
+            uint8_t       fd:1;)
+    uint8_t             spare;
+} __attribute__ ((packed)) PfcpSDFFilterDescription;
+
 
 #ifdef __cplusplus
 }

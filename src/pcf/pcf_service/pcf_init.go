@@ -10,6 +10,7 @@ import (
 	"free5gc/src/app"
 	"free5gc/src/pcf/AMPolicy"
 	"free5gc/src/pcf/BDTPolicy"
+	"free5gc/src/pcf/HttpCallback"
 	"free5gc/src/pcf/PolicyAuthorization"
 	"free5gc/src/pcf/SMPolicy"
 	"free5gc/src/pcf/UEPolicy"
@@ -106,6 +107,7 @@ func (pcf *PCF) Start() {
 	AMPolicy.AddService(router)
 	UEPolicy.AddService(router)
 	PolicyAuthorization.AddService(router)
+	Npcf_Callback.AddService(router)
 
 	self := pcf_context.PCF_Self()
 	pcf_util.InitpcfContext(self)
@@ -121,6 +123,23 @@ func (pcf *PCF) Start() {
 		initLog.Errorf("PCF register to NRF Error[%s]", err.Error())
 	}
 
+	// subscribe to all Amfs' status change
+	amfInfos := pcf_consumer.SearchAvailableAMFs(self.NrfUri, models.ServiceName_NAMF_COMM)
+	for _, amfInfo := range amfInfos {
+		guamiList := pcf_util.GetNotSubscribedGuamis(amfInfo.GuamiList)
+		if len(guamiList) == 0 {
+			continue
+		}
+		problemDetails, err := pcf_consumer.AmfStatusChangeSubscribe(amfInfo)
+		if problemDetails != nil {
+			logger.InitLog.Warnf("AMF status subscribe Failed[%+v]", problemDetails)
+		} else if err != nil {
+			logger.InitLog.Warnf("AMF status subscribe Error[%+v]", err)
+		}
+	}
+
+	// TODO: subscribe NRF NFstatus
+
 	go pcf_handler.Handle()
 	param := Nnrf_NFDiscovery.SearchNFInstancesParamOpts{
 		ServiceNames: optional.NewInterface([]models.ServiceName{models.ServiceName_NUDR_DR}),
@@ -129,7 +148,7 @@ func (pcf *PCF) Start() {
 	for _, nfProfile := range resp.NfInstances {
 		udruri := pcf_util.SearchNFServiceUri(nfProfile, models.ServiceName_NUDR_DR, models.NfServiceStatus_REGISTERED)
 		if udruri != "" {
-			self.UdrUri = udruri
+			self.DefaultUdrUri = udruri
 			break
 		}
 	}

@@ -42,12 +42,13 @@ var policyTriggerArray = []models.PolicyControlRequestTrigger{
 // 	return fmt.Sprintf("%02x%s-%s", snssai.Sst, snssai.Sd, dnn)
 // }
 
+// Convert Snssai form models to hexString(sst(2)+sd(6))
 func SnssaiModelsToHex(snssai models.Snssai) string {
 	sst := fmt.Sprintf("%02x", snssai.Sst)
 	return sst + snssai.Sd
 }
 
-// see subscaulse 5.6.3.6-1 in TS29512
+// Use BitMap to generate requested policy control triggers, 1 means yes, 0 means no, see subscaulse 5.6.3.6-1 in TS29512
 func PolicyControlReqTrigToArray(bitMap uint64) (trigger []models.PolicyControlRequestTrigger) {
 	cnt := 0
 	size := len(policyTriggerArray)

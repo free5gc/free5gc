@@ -9,10 +9,10 @@
 extern "C" {
 #endif /* __cplusplus */
 
-void UpfN4HandleCreatePdr(UpfSession *session, CreatePDR *createPdr, UpfPdr **upfPdr);
-void UpfN4HandleCreateFar(CreateFAR *createFar, UpfFar **upfFar);
-void UpfN4HandleUpdatePdr(UpdatePDR *updatePdr, UpfPdr **upfPdr);
-void UpfN4HandleUpdateFar(UpdateFAR *updateFar, UpfFar **upfFar);
+void UpfN4HandleCreatePdr(UpfSession *session, CreatePDR *createPdr);
+void UpfN4HandleCreateFar(CreateFAR *createFar);
+void UpfN4HandleUpdatePdr(UpdatePDR *updatePdr);
+void UpfN4HandleUpdateFar(UpdateFAR *updateFar);
 Status UpfN4HandleRemovePdr(uint16_t pdrId);
 Status UpfN4HandleRemoveFar(uint32_t farId);
 void UpfN4HandleSessionEstablishmentRequest(

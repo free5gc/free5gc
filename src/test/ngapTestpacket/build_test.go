@@ -204,7 +204,7 @@ func TestBuildUEContextModificationResponse(t *testing.T) {
 }
 
 func TestBuildNGReset(t *testing.T) {
-	pdu := ngapTestpacket.BuildNGReset()
+	pdu := ngapTestpacket.BuildNGReset(nil)
 	encodeData, err := ngap.Encoder(pdu)
 	if err != nil {
 		t.Error(err.Error())

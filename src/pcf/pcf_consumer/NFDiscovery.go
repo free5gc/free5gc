@@ -7,6 +7,7 @@ import (
 	"free5gc/lib/Nnrf_NFDiscovery"
 	"free5gc/lib/openapi/models"
 	"free5gc/src/pcf/logger"
+	"free5gc/src/pcf/pcf_context"
 	"free5gc/src/pcf/pcf_util"
 	"net/http"
 )
@@ -79,4 +80,26 @@ func SendNFIntancesAMF(nrfUri string, guami models.Guami, serviceName models.Ser
 		return pcf_util.SearchNFServiceUri(profile, serviceName, models.NfServiceStatus_REGISTERED)
 	}
 	return ""
+}
+
+func SearchAvailableAMFs(nrfUri string, serviceName models.ServiceName) (amfInfos []pcf_context.AMFStatusSubscriptionData) {
+	localVarOptionals := Nnrf_NFDiscovery.SearchNFInstancesParamOpts{}
+
+	result, err := SendSearchNFInstances(nrfUri, models.NfType_AMF, models.NfType_PCF, localVarOptionals)
+	if err != nil {
+		logger.Consumerlog.Error(err.Error())
+		return
+	}
+
+	for _, profile := range result.NfInstances {
+		uri := pcf_util.SearchNFServiceUri(profile, serviceName, models.NfServiceStatus_REGISTERED)
+		if uri != "" {
+			item := pcf_context.AMFStatusSubscriptionData{
+				AmfUri:    uri,
+				GuamiList: *profile.AmfInfo.GuamiList,
+			}
+			amfInfos = append(amfInfos, item)
+		}
+	}
+	return
 }

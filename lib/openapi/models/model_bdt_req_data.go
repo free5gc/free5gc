@@ -9,20 +9,14 @@
 
 package models
 
-// BdtReqData - Contains service requirements for creation a new Individual BDT policy resource.
+// Contains service requirements for creation a new Individual BDT policy resource.
 type BdtReqData struct {
-
 	// Contains an identity of an application service provider.
-	AspId string `json:"aspId"`
-
-	DesTimeInt *TimeWindow `json:"desTimeInt"`
-
-	NwAreaInfo *NetworkAreaInfo `json:"nwAreaInfo,omitempty"`
-
+	AspId      string           `json:"aspId" yaml:"aspId" bson:"aspId" mapstructure:"AspId"`
+	DesTimeInt *TimeWindow      `json:"desTimeInt" yaml:"desTimeInt" bson:"desTimeInt" mapstructure:"DesTimeInt"`
+	NwAreaInfo *NetworkAreaInfo `json:"nwAreaInfo,omitempty" yaml:"nwAreaInfo" bson:"nwAreaInfo" mapstructure:"NwAreaInfo"`
 	// Indicates a number of UEs.
-	NumOfUes int32 `json:"numOfUes"`
-
-	VolPerUe *UsageThreshold `json:"volPerUe"`
-
-	SuppFeat string `json:"suppFeat,omitempty"`
+	NumOfUes int32           `json:"numOfUes" yaml:"numOfUes" bson:"numOfUes" mapstructure:"NumOfUes"`
+	VolPerUe *UsageThreshold `json:"volPerUe" yaml:"volPerUe" bson:"volPerUe" mapstructure:"VolPerUe"`
+	SuppFeat string          `json:"suppFeat,omitempty" yaml:"suppFeat" bson:"suppFeat" mapstructure:"SuppFeat"`
 }

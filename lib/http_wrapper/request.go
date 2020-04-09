@@ -12,6 +12,7 @@ type Request struct {
 	Header http.Header
 	Query  url.Values
 	Body   interface{}
+	URL    *url.URL
 }
 
 func NewRequest(req *http.Request, body interface{}) (ret *Request) {}

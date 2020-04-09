@@ -35,6 +35,11 @@ type AusfUeContext struct {
 	XRES  string
 }
 
+type SuciSupiMap struct {
+	SupiOrSuci string
+	Supi       string
+}
+
 const (
 	EAP_AKA_PRIME_TYPENUM = 50
 )
@@ -53,10 +58,12 @@ const (
 
 var ausfContext AUSFContext
 var ausfUeContextPool map[string]*AusfUeContext
+var suciSupiMap map[string]*SuciSupiMap
 var snRegex *regexp.Regexp
 
 func Init() {
 	ausfUeContextPool = make(map[string]*AusfUeContext)
+	suciSupiMap = make(map[string]*SuciSupiMap)
 	snRegex, _ = regexp.Compile("5G:mnc[0-9]{3}[.]mcc[0-9]{3}[.]3gppnetwork[.]org")
 	InitAusfContext(&ausfContext)
 }
@@ -78,6 +85,21 @@ func CheckIfAusfUeContextExists(ref string) bool {
 func GetAusfUeContext(ref string) (ausfUeContext *AusfUeContext) {
 	ausfUeContext = ausfUeContextPool[ref]
 	return ausfUeContext
+}
+
+func AddSuciSupiPairToMap(supiOrSuci string, supi string) {
+	newPair := new(SuciSupiMap)
+	newPair.SupiOrSuci = supiOrSuci
+	newPair.Supi = supi
+	suciSupiMap[supiOrSuci] = newPair
+}
+
+func CheckIfSuciSupiPairExists(ref string) bool {
+	return (suciSupiMap[ref] != nil)
+}
+
+func GetSupiFromSuciSupiMap(ref string) (supi string) {
+	return suciSupiMap[ref].Supi
 }
 
 func IsServingNetworkAuthorized(lookup string) bool {

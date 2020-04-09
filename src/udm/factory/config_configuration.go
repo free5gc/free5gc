@@ -10,4 +10,8 @@ type Configuration struct {
 	Udrclient *Udrclient `yaml:"udrclient,omitempty"`
 
 	Nrfclient *Nrfclient `yaml:"nrfclient,omitempty"`
+
+	NrfUri string `yaml:"nrfUri,omitempty"`
+
+	Keys *Keys `yaml:"keys,omitempty"`
 }

@@ -13,6 +13,8 @@ import SideBar from '../../components/SideBar';
 import Dashboard from '../Dashboard';
 import Subscribers from '../Subscribers';
 import Tasks from '../Tasks';
+import UEInfo from '../UEInfo';
+import UEInfoDetail from  '../UEInfoDetail'
 
 const Main = ({
                 mobileNavVisibility,
@@ -41,9 +43,11 @@ const Main = ({
         <div className="main-panel">
           <Header/>
 
-          <Route exact path="/" component={Dashboard}/>
+          <Route exact path="/" component={UEInfo}/>
           <Route exact path="/subscriber" component={Subscribers}/>
-          <Route path="/tasks" component={Tasks}/>
+          <Route exact path="/tasks" component={Tasks}/>
+          <Route exact path="/ueinfo" component={UEInfo}/>
+          <Route exact path="/ueinfo/:id" component={UEInfoDetail}/>
 
           <Footer/>
         </div>

@@ -7,4 +7,5 @@ const (
 	PDUSessionSMContextCreate
 	PDUSessionSMContextUpdate
 	PDUSessionSMContextRelease
+	OAMGetUEPDUSessionInfo
 )

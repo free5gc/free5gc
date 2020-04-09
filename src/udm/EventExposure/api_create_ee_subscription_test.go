@@ -10,12 +10,27 @@
 package EventExposure_test
 
 import (
+	"context"
+	"fmt"
+	Nudm_EE_Client "free5gc/lib/Nudm_EventExposure"
+	"free5gc/lib/http2_util"
+	"free5gc/lib/openapi/models"
+	"free5gc/lib/path_util"
+	Nudm_EE_Server "free5gc/src/udm/EventExposure"
+	"free5gc/src/udm/logger"
+	"free5gc/src/udm/udm_context"
+	"free5gc/src/udm/udm_handler"
+	"net/http"
 	"testing"
+
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
 )
 
 // CreateEeSubscription - Subscribe
 func TestCreateEeSubscription(t *testing.T) {
-	/*go udm_handler.Handle()
+	udm_context.TestInit()
+	go udm_handler.Handle()
 	go func() { // udm server
 		router := gin.Default()
 		Nudm_EE_Server.AddService(router)
@@ -33,7 +48,7 @@ func TestCreateEeSubscription(t *testing.T) {
 	go func() { // fake udr server
 		router := gin.Default()
 
-		router.POST("/nudr-dr/v1/:ueIdentity/ee-subscriptions", func(c *gin.Context) {
+		router.POST("/nudr-dr/v1/subscription-data/:ueId/context-data/ee-subscriptions", func(c *gin.Context) {
 			ueIdentity := c.Param("ueIdentity")
 			fmt.Println("==========CreateEeSubscription - Subscribe==========")
 			fmt.Println("ueIdentity: ", ueIdentity)
@@ -69,5 +84,4 @@ func TestCreateEeSubscription(t *testing.T) {
 		fmt.Println("resp: ", resp)
 		fmt.Println("createdEeSubscription: ", createdEeSubscription)
 	}
-	*/
 }

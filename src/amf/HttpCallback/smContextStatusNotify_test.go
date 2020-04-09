@@ -77,7 +77,7 @@ func TestSmContextStatusNotify(t *testing.T) {
 
 	time.Sleep(10 * time.Millisecond)
 	uuid, profile := TestAmf.BuildSmfNfProfile()
-	uri, err := amf_consumer.SendRegisterNFInstance("https://localhost:29510", uuid, profile)
+	uri, _, err := amf_consumer.SendRegisterNFInstance("https://localhost:29510", uuid, profile)
 	if err != nil {
 		t.Error(err.Error())
 	} else {

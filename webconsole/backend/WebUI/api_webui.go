@@ -1,11 +1,14 @@
 package WebUI
 
 import (
+	"crypto/tls"
 	"encoding/json"
+	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"free5gc/lib/MongoDBLibrary"
 	"free5gc/lib/openapi/models"
 	"free5gc/webconsole/backend/logger"
+	"free5gc/webconsole/backend/webui_context"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -14,6 +17,18 @@ import (
 const authSubsDataColl = "subscriptionData.authenticationData.authenticationSubscription"
 const amDataColl = "subscriptionData.provisionedData.amData"
 const smfSelDataColl = "subscriptionData.provisionedData.smfSelectionSubscriptionData"
+const amPolicyDataColl = "policyData.ues.amData"
+const smPolicyDataColl = "policyData.ues.smData"
+
+var httpsClient *http.Client
+
+func init() {
+	httpsClient = &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		},
+	}
+}
 
 func mapToByte(data map[string]interface{}) (ret []byte) {
 	ret, _ = json.Marshal(data)
@@ -31,6 +46,12 @@ func setCorsHeader(c *gin.Context) {
 	c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 	c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
 	c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, PATCH, DELETE")
+}
+
+func sendResponseToClient(c *gin.Context, response *http.Response) {
+	var jsonData interface{}
+	json.NewDecoder(response.Body).Decode(&jsonData)
+	c.JSON(response.StatusCode, jsonData)
 }
 
 func GetSampleJSON(c *gin.Context) {
@@ -114,6 +135,39 @@ func GetSampleJSON(c *gin.Context) {
 		},
 	}
 
+	amPolicyData := models.AmPolicyData{
+		SubscCats: []string{
+			"free5gc",
+		},
+	}
+
+	smPolicyData := models.SmPolicyData{
+		SmPolicySnssaiData: map[string]models.SmPolicySnssaiData{
+			"01010203": {
+				Snssai: &models.Snssai{
+					Sd:  "010203",
+					Sst: 1,
+				},
+				SmPolicyDnnData: map[string]models.SmPolicyDnnData{
+					"internet": {
+						Dnn: "internet",
+					},
+				},
+			},
+			"01112233": {
+				Snssai: &models.Snssai{
+					Sd:  "112233",
+					Sst: 1,
+				},
+				SmPolicyDnnData: map[string]models.SmPolicyDnnData{
+					"internet": {
+						Dnn: "internet",
+					},
+				},
+			},
+		},
+	}
+
 	servingPlmnId := "20893"
 	ueId := "imsi-2089300007487"
 
@@ -123,6 +177,8 @@ func GetSampleJSON(c *gin.Context) {
 		AuthenticationSubscription:        authSubsData,
 		AccessAndMobilitySubscriptionData: amDataData,
 		SmfSelectionSubscriptionData:      smfSelData,
+		AmPolicyData:                      amPolicyData,
+		SmPolicyData:                      smPolicyData,
 	}
 	c.JSON(http.StatusOK, subsData)
 }
@@ -165,6 +221,8 @@ func GetSubscriberByID(c *gin.Context) {
 	authSubsDataInterface := MongoDBLibrary.RestfulAPIGetOne(authSubsDataColl, filterUeIdOnly)
 	amDataDataInterface := MongoDBLibrary.RestfulAPIGetOne(amDataColl, filter)
 	smfSelDataInterface := MongoDBLibrary.RestfulAPIGetOne(smfSelDataColl, filter)
+	amPolicyDataInterface := MongoDBLibrary.RestfulAPIGetOne(amPolicyDataColl, filterUeIdOnly)
+	smPolicyDataInterface := MongoDBLibrary.RestfulAPIGetOne(smPolicyDataColl, filterUeIdOnly)
 
 	var authSubsData models.AuthenticationSubscription
 	json.Unmarshal(mapToByte(authSubsDataInterface), &authSubsData)
@@ -172,6 +230,10 @@ func GetSubscriberByID(c *gin.Context) {
 	json.Unmarshal(mapToByte(amDataDataInterface), &amDataData)
 	var smfSelData models.SmfSelectionSubscriptionData
 	json.Unmarshal(mapToByte(smfSelDataInterface), &smfSelData)
+	var amPolicyData models.AmPolicyData
+	json.Unmarshal(mapToByte(amPolicyDataInterface), &amPolicyData)
+	var smPolicyData models.SmPolicyData
+	json.Unmarshal(mapToByte(smPolicyDataInterface), &smPolicyData)
 
 	subsData = SubsData{
 		PlmnID:                            servingPlmnId,
@@ -179,6 +241,8 @@ func GetSubscriberByID(c *gin.Context) {
 		AuthenticationSubscription:        authSubsData,
 		AccessAndMobilitySubscriptionData: amDataData,
 		SmfSelectionSubscriptionData:      smfSelData,
+		AmPolicyData:                      amPolicyData,
+		SmPolicyData:                      smPolicyData,
 	}
 
 	c.JSON(http.StatusOK, subsData)
@@ -208,10 +272,16 @@ func PostSubscriberByID(c *gin.Context) {
 	smfSelSubsBsonM := toBsonM(subsData.SmfSelectionSubscriptionData)
 	smfSelSubsBsonM["ueId"] = ueId
 	smfSelSubsBsonM["servingPlmnId"] = servingPlmnId
+	amPolicyDataBsonM := toBsonM(subsData.AmPolicyData)
+	amPolicyDataBsonM["ueId"] = ueId
+	smPolicyDataBsonM := toBsonM(subsData.SmPolicyData)
+	smPolicyDataBsonM["ueId"] = ueId
 
 	MongoDBLibrary.RestfulAPIPost(authSubsDataColl, filterUeIdOnly, authSubsBsonM)
 	MongoDBLibrary.RestfulAPIPost(amDataColl, filter, amDataBsonM)
 	MongoDBLibrary.RestfulAPIPost(smfSelDataColl, filter, smfSelSubsBsonM)
+	MongoDBLibrary.RestfulAPIPost(amPolicyDataColl, filterUeIdOnly, amPolicyDataBsonM)
+	MongoDBLibrary.RestfulAPIPost(smPolicyDataColl, filterUeIdOnly, smPolicyDataBsonM)
 
 	c.JSON(http.StatusCreated, gin.H{})
 }
@@ -240,10 +310,16 @@ func PutSubscriberByID(c *gin.Context) {
 	smfSelSubsBsonM := toBsonM(subsData.SmfSelectionSubscriptionData)
 	smfSelSubsBsonM["ueId"] = ueId
 	smfSelSubsBsonM["servingPlmnId"] = servingPlmnId
+	amPolicyDataBsonM := toBsonM(subsData.AmPolicyData)
+	amPolicyDataBsonM["ueId"] = ueId
+	smPolicyDataBsonM := toBsonM(subsData.SmPolicyData)
+	smPolicyDataBsonM["ueId"] = ueId
 
 	MongoDBLibrary.RestfulAPIPutOne(authSubsDataColl, filterUeIdOnly, authSubsBsonM)
 	MongoDBLibrary.RestfulAPIPutOne(amDataColl, filter, amDataBsonM)
 	MongoDBLibrary.RestfulAPIPutOne(smfSelDataColl, filter, smfSelSubsBsonM)
+	MongoDBLibrary.RestfulAPIPutOne(amPolicyDataColl, filterUeIdOnly, amPolicyDataBsonM)
+	MongoDBLibrary.RestfulAPIPutOne(smPolicyDataColl, filterUeIdOnly, smPolicyDataBsonM)
 
 	c.JSON(http.StatusNoContent, gin.H{})
 }
@@ -272,10 +348,16 @@ func PatchSubscriberByID(c *gin.Context) {
 	smfSelSubsBsonM := toBsonM(subsData.SmfSelectionSubscriptionData)
 	smfSelSubsBsonM["ueId"] = ueId
 	smfSelSubsBsonM["servingPlmnId"] = servingPlmnId
+	amPolicyDataBsonM := toBsonM(subsData.AmPolicyData)
+	amPolicyDataBsonM["ueId"] = ueId
+	smPolicyDataBsonM := toBsonM(subsData.SmPolicyData)
+	smPolicyDataBsonM["ueId"] = ueId
 
 	MongoDBLibrary.RestfulAPIMergePatch(authSubsDataColl, filterUeIdOnly, authSubsBsonM)
 	MongoDBLibrary.RestfulAPIMergePatch(amDataColl, filter, amDataBsonM)
 	MongoDBLibrary.RestfulAPIMergePatch(smfSelDataColl, filter, smfSelSubsBsonM)
+	MongoDBLibrary.RestfulAPIMergePatch(amPolicyDataColl, filterUeIdOnly, amPolicyDataBsonM)
+	MongoDBLibrary.RestfulAPIMergePatch(smPolicyDataColl, filterUeIdOnly, smPolicyDataBsonM)
 
 	c.JSON(http.StatusNoContent, gin.H{})
 }
@@ -283,7 +365,6 @@ func PatchSubscriberByID(c *gin.Context) {
 // Delete subscriber by IMSI(ueId) and PlmnID(servingPlmnId)
 func DeleteSubscriberByID(c *gin.Context) {
 	setCorsHeader(c)
-
 	logger.WebUILog.Infoln("Delete One Subscriber Data")
 
 	ueId := c.Param("ueId")
@@ -295,6 +376,74 @@ func DeleteSubscriberByID(c *gin.Context) {
 	MongoDBLibrary.RestfulAPIDeleteOne(authSubsDataColl, filterUeIdOnly)
 	MongoDBLibrary.RestfulAPIDeleteOne(amDataColl, filter)
 	MongoDBLibrary.RestfulAPIDeleteOne(smfSelDataColl, filter)
+	MongoDBLibrary.RestfulAPIDeleteOne(amPolicyDataColl, filterUeIdOnly)
+	MongoDBLibrary.RestfulAPIDeleteOne(smPolicyDataColl, filterUeIdOnly)
 
 	c.JSON(http.StatusNoContent, gin.H{})
+}
+
+func GetRegisteredUEContext(c *gin.Context) {
+	setCorsHeader(c)
+
+	logger.WebUILog.Infoln("Get Registered UE Context")
+
+	webuiSelf := webui_context.WEBUI_Self()
+	webuiSelf.UpdateNfProfiles()
+
+	supi, supiExists := c.Params.Get("supi")
+
+	// TODO: support fetching data from multiple AMFs
+	if amfUris := webuiSelf.GetOamUris(models.NfType_AMF); amfUris != nil {
+		var requestUri string
+
+		if supiExists {
+			requestUri = fmt.Sprintf("%s/namf-oam/v1/registered-ue-context/%s", amfUris[0], supi)
+		} else {
+			requestUri = fmt.Sprintf("%s/namf-oam/v1/registered-ue-context", amfUris[0])
+		}
+
+		resp, err := httpsClient.Get(requestUri)
+		if err != nil {
+			logger.WebUILog.Error(err)
+			c.JSON(http.StatusInternalServerError, gin.H{})
+			return
+		}
+		sendResponseToClient(c, resp)
+	} else {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"cause": "No AMF Found",
+		})
+	}
+}
+
+func GetUEPDUSessionInfo(c *gin.Context) {
+	setCorsHeader(c)
+
+	logger.WebUILog.Infoln("Get UE PDU Session Info")
+
+	webuiSelf := webui_context.WEBUI_Self()
+	webuiSelf.UpdateNfProfiles()
+
+	smContextRef, smContextRefExists := c.Params.Get("smContextRef")
+	if !smContextRefExists {
+		c.JSON(http.StatusBadRequest, gin.H{})
+		return
+	}
+
+	// TODO: support fetching data from multiple SMF
+	if smfUris := webuiSelf.GetOamUris(models.NfType_SMF); smfUris != nil {
+		requestUri := fmt.Sprintf("%s/nsmf-oam/v1/ue-pdu-session-info/%s", smfUris[0], smContextRef)
+		resp, err := httpsClient.Get(requestUri)
+		if err != nil {
+			logger.WebUILog.Error(err)
+			c.JSON(http.StatusInternalServerError, gin.H{})
+			return
+		}
+
+		sendResponseToClient(c, resp)
+	} else {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"cause": "No SMF Found",
+		})
+	}
 }

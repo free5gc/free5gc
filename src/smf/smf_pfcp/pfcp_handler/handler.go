@@ -12,6 +12,7 @@ import (
 	"free5gc/src/smf/smf_context"
 	"free5gc/src/smf/smf_handler/smf_message"
 	"free5gc/src/smf/smf_pfcp/pfcp_message"
+	"free5gc/src/smf/smf_producer"
 	"net/http"
 )
 
@@ -32,23 +33,22 @@ func HandlePfcpPfdManagementResponse(msg *pfcpUdp.Message) {
 }
 
 func HandlePfcpAssociationSetupRequest(msg *pfcpUdp.Message) {
-	//pfcpMsg := msg.PfcpMessage.Body.(pfcp.PFCPAssociationSetupRequest)
+	req := msg.PfcpMessage.Body.(pfcp.PFCPAssociationSetupRequest)
 
-	// TODO: check if request is valid
+	nodeID := req.NodeID
+	if nodeID == nil {
+		logger.PfcpLog.Errorln("pfcp association needs NodeID")
+		return
+	}
+	logger.PfcpLog.Info("Handle PFCP Association Setup Request with NodeID[%s]", nodeID.ResolveNodeIdToIp().String())
 
-	//upfId, err := generateUpfIdFromNodeId(*pfcpMsg.NodeID)
-	//if err != nil {
-	//	logger.PfcpLog.Errorf(err.Error())
-	//	return
-	//}
+	upf := smf_context.RetrieveUPFNodeByNodeID(*nodeID)
+	if upf == nil {
+		logger.PfcpLog.Errorf("can't find UPF[%s]", nodeID.ResolveNodeIdToIp().String())
+		return
+	}
 
-	//upfNode := smf_context.RetrieveUPFNodeByUpfId(upfId)
-	//upfNode.NodeID = pfcpMsg.NodeID
-	//upfNode.RecoveryTimeStamp = pfcpMsg.RecoveryTimeStamp
-	//upfNode.UPFunctionFeatures = pfcpMsg.UPFunctionFeatures
-	//upfNode.UserPlaneIPResourceInformation = pfcpMsg.UserPlaneIPResourceInformation
-	//upfNode.NodeID = *pfcpMsg.NodeID
-	//upfNode.UPIPInfo = *pfcpMsg.UserPlaneIPResourceInformation
+	upf.UPIPInfo = *req.UserPlaneIPResourceInformation
 
 	// Response with PFCP Association Setup Response
 	cause := pfcpType.Cause{
@@ -60,15 +60,21 @@ func HandlePfcpAssociationSetupRequest(msg *pfcpUdp.Message) {
 func HandlePfcpAssociationSetupResponse(msg *pfcpUdp.Message) {
 	req := msg.PfcpMessage.Body.(pfcp.PFCPAssociationSetupResponse)
 
+	nodeID := req.NodeID
 	if req.Cause.CauseValue == pfcpType.CauseRequestAccepted {
-		if req.NodeID == nil {
-			logger.PfcpLog.Errorln("Association Setup Response Node ID not found")
+		if nodeID == nil {
+			logger.PfcpLog.Errorln("pfcp association needs NodeID")
+			return
 		}
 
+		upf := smf_context.RetrieveUPFNodeByNodeID(*req.NodeID)
+		upf.UPFStatus = smf_context.AssociatedSetUpSuccess
+
 		if req.UserPlaneIPResourceInformation != nil {
-			upf := smf_context.AddUPF(req.NodeID)
 			upf.UPIPInfo = *req.UserPlaneIPResourceInformation
-			logger.PfcpLog.Infof("UPF[%s]", upf.UPIPInfo.NetworkInstance)
+			logger.PfcpLog.Infof("UPF(%s)[%s] setup association", upf.NodeID.ResolveNodeIdToIp().String(), upf.UPIPInfo.NetworkInstance)
+		} else {
+			logger.PfcpLog.Errorln("pfcp association setup response has no UserPlane IP Resource Information")
 		}
 	}
 }
@@ -86,7 +92,7 @@ func HandlePfcpAssociationReleaseRequest(msg *pfcpUdp.Message) {
 	pfcpMsg := msg.PfcpMessage.Body.(pfcp.PFCPAssociationReleaseRequest)
 
 	var cause pfcpType.Cause
-	upfNode := smf_context.RetrieveUPFNodeByNodeId(*pfcpMsg.NodeID)
+	upfNode := smf_context.RetrieveUPFNodeByNodeID(*pfcpMsg.NodeID)
 	if upfNode != nil {
 		smf_context.RemoveUPFNodeByNodeId(*pfcpMsg.NodeID)
 		cause.CauseValue = pfcpType.CauseRequestAccepted
@@ -135,16 +141,32 @@ func HandlePfcpSessionEstablishmentResponse(msg *pfcpUdp.Message) {
 		smContext.RemoteSEID = UPFSEID.Seid
 	}
 
-	if rsp.Cause.CauseValue == pfcpType.CauseRequestAccepted {
+	if rsp.Cause.CauseValue == pfcpType.CauseRequestAccepted && smContext.Tunnel.UpfRoot.UPF.NodeID.ResolveNodeIdToIp().Equal(rsp.NodeID.ResolveNodeIdToIp()) {
 		smNasBuf, _ := smf_context.BuildGSMPDUSessionEstablishmentAccept(smContext)
+		n2Pdu, _ := smf_context.BuildPDUSessionResourceSetupRequestTransfer(smContext)
 		n1n2Request := models.N1N2MessageTransferRequest{}
 		n1n2Request.JsonData = &models.N1N2MessageTransferReqData{
+			PduSessionId: smContext.PDUSessionID,
 			N1MessageContainer: &models.N1MessageContainer{
 				N1MessageClass:   "SM",
 				N1MessageContent: &models.RefToBinaryData{ContentId: "GSM_NAS"},
 			},
+			N2InfoContainer: &models.N2InfoContainer{
+				N2InformationClass: models.N2InformationClass_SM,
+				SmInfo: &models.N2SmInformation{
+					PduSessionId: smContext.PDUSessionID,
+					N2InfoContent: &models.N2InfoContent{
+						NgapIeType: models.NgapIeType_PDU_RES_SETUP_REQ,
+						NgapData: &models.RefToBinaryData{
+							ContentId: "N2SmInformation",
+						},
+					},
+					SNssai: smContext.Snssai,
+				},
+			},
 		}
 		n1n2Request.BinaryDataN1Message = smNasBuf
+		n1n2Request.BinaryDataN2Information = n2Pdu
 
 		rspData, _, err := smContext.CommunicationClient.N1N2MessageCollectionDocumentApi.N1N2MessageTransfer(context.Background(), smContext.Supi, n1n2Request)
 		if err != nil {
@@ -153,26 +175,36 @@ func HandlePfcpSessionEstablishmentResponse(msg *pfcpUdp.Message) {
 		if rspData.Cause == models.N1N2MessageTransferCause_N1_MSG_NOT_TRANSFERRED {
 			logger.PfcpLog.Warnf("%v", rspData.Cause)
 		}
+
 	}
 }
 
-func HandlePfcpSessionModificationResponse(msg *pfcpUdp.Message, HttpResponseQueue *smf_message.ResponseQueue) {
+func HandlePfcpSessionModificationResponse(msg *pfcpUdp.Message) {
 	pfcpRsp := msg.PfcpMessage.Body.(pfcp.PFCPSessionModificationResponse)
 
 	SEID := msg.PfcpMessage.Header.SEID
 	seqNum := msg.PfcpMessage.Header.SequenceNumber
 
+	HttpResponseQueue := smf_message.RspQueue
 	if HttpResponseQueue.CheckItemExist(seqNum) {
 		if pfcpRsp.Cause.CauseValue == pfcpType.CauseRequestAccepted {
 			resQueueItem := HttpResponseQueue.GetItem(seqNum)
 
-			resQueueItem.RspChan <- smf_message.HandlerResponseMessage{HTTPResponse: &http_wrapper.Response{
-				Header: nil,
-				Status: http.StatusOK,
-				Body:   resQueueItem.ResponseBody,
-			}}
+			resQueueItem.RspChan <- smf_message.HandlerResponseMessage{HTTPResponse: &resQueueItem.Response}
+
+			smContext := smf_context.GetSMContextBySEID(SEID)
+
+			if smf_context.SMF_Self().ULCLSupport && smContext.BPManager != nil {
+				logger.PfcpLog.Infoln("smContext.BPManager")
+				if smContext.BPManager.BPStatus == smf_context.UnInitialized {
+					logger.PfcpLog.Infoln("AddPDUSessionAnchorAndULCL")
+					smf_producer.AddPDUSessionAnchorAndULCL(smContext)
+					smContext.BPManager.BPStatus = smf_context.HasSendPFCPMsg
+				}
+			}
 
 			HttpResponseQueue.DeleteItem(seqNum)
+
 			//if smContext.SMState == smf_context.PDUSessionInactive {
 			//	smNasBuf, _ := smf_context.BuildGSMPDUSessionEstablishmentAccept(smContext)
 			//		n1n2Request := models.N1N2MessageTransferRequest{}
@@ -206,7 +238,59 @@ func HandlePfcpSessionModificationResponse(msg *pfcpUdp.Message, HttpResponseQue
 }
 
 func HandlePfcpSessionDeletionResponse(msg *pfcpUdp.Message) {
-	logger.PfcpLog.Warnf("PFCP Session Deletion Response handling is not implemented")
+	logger.PfcpLog.Infof("Handle PFCP Session Deletion Response")
+	pfcpRsp := msg.PfcpMessage.Body.(pfcp.PFCPSessionDeletionResponse)
+	SEID := msg.PfcpMessage.Header.SEID
+	seqNum := msg.PfcpMessage.Header.SequenceNumber
+	HttpResponseQueue := smf_message.RspQueue
+
+	smContext := smf_context.GetSMContextBySEID(SEID)
+
+	if HttpResponseQueue.CheckItemExist(seqNum) {
+		resQueueItem := HttpResponseQueue.GetItem(seqNum)
+		if pfcpRsp.Cause.CauseValue == pfcpType.CauseRequestAccepted {
+
+			if smContext == nil {
+				logger.PfcpLog.Warnf("PFCP Session Deletion Response Found SM Context NULL, Request Rejected")
+				// TODO fix: SEID should be the value sent by UPF but now the SEID value is from sm context
+			} else {
+
+				resQueueItem.RspChan <- smf_message.HandlerResponseMessage{HTTPResponse: &resQueueItem.Response}
+				HttpResponseQueue.DeleteItem(seqNum)
+				logger.PfcpLog.Infof("PFCP Session Deletion Success[%d]\n", SEID)
+				return
+
+			}
+		}
+		problemDetail := models.ProblemDetails{
+			Status: http.StatusInternalServerError,
+			Cause:  "SYSTEM_FAILULE",
+		}
+		response := http_wrapper.Response{
+			Status: int(problemDetail.Status),
+		}
+		if resQueueItem.Response.Status == http.StatusOK {
+			// Update SmContext Request(N1 PDU Session Release Request)
+			// Send PDU Session Release Reject
+			errResponse := models.UpdateSmContextErrorResponse{
+				JsonData: &models.SmContextUpdateError{
+					Error: &problemDetail,
+				},
+			}
+			buf, _ := smf_context.BuildGSMPDUSessionReleaseReject(smContext)
+			errResponse.BinaryDataN1SmMessage = buf
+			errResponse.JsonData.N1SmMsg = &models.RefToBinaryData{ContentId: "PDUSessionReleaseReject"}
+			response.Body = errResponse
+		} else {
+			// Release SmContext Request
+			response.Body = problemDetail
+		}
+		resQueueItem.RspChan <- smf_message.HandlerResponseMessage{HTTPResponse: &response}
+		logger.PfcpLog.Infof("PFCP Session Deletion Failed[%d]\n", SEID)
+	} else {
+		logger.PfcpLog.Infof("[PFCP Deletion RSP] Can't find corresponding seq num[%d]\n", seqNum)
+	}
+
 }
 
 func HandlePfcpSessionReportRequest(msg *pfcpUdp.Message) {
@@ -234,7 +318,8 @@ func HandlePfcpSessionReportRequest(msg *pfcpUdp.Message) {
 			logger.PfcpLog.Warnf("PFCP Session Report Request DownlinkDataServiceInformation handling is not implemented")
 		}
 
-		if smContext.Tunnel.DLPDR.PDRID == pdrID {
+		DLPDR := smContext.Tunnel.UpfRoot.DownLinkTunnel.MatchedPDR
+		if DLPDR.PDRID == pdrID {
 			// TS 23.502 4.2.3.3 2b. Send Data Notification Ack, SMF->UPF
 			cause.CauseValue = pfcpType.CauseRequestAccepted
 			// TODO fix: SEID should be the value sent by UPF but now the SEID value is from sm context

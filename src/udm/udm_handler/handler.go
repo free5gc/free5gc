@@ -45,7 +45,8 @@ func Handle() {
 				case udm_message.EventGetAmData:
 					supi := msg.HTTPRequest.Params["supi"]
 					plmnID := msg.HTTPRequest.Query.Get("plmn-id")
-					udm_producer.HandleGetAmData(msg.ResponseChan, supi, plmnID)
+					supportedFeatures := msg.HTTPRequest.Query.Get("supported-features")
+					udm_producer.HandleGetAmData(msg.ResponseChan, supi, plmnID, supportedFeatures)
 				case udm_message.EventGetIdTranslationResult:
 					gpsi := msg.HTTPRequest.Params["gpsi"]
 					supportedFeatures := msg.HTTPRequest.Query.Get("supported-features")
@@ -54,33 +55,41 @@ func Handle() {
 				case udm_message.EventGetNssai:
 					supi := msg.HTTPRequest.Params["supi"]
 					plmnID := msg.HTTPRequest.Query.Get("plmn-id")
-					udm_producer.HandleGetNssai(msg.ResponseChan, supi, plmnID)
+					supportedFeatures := msg.HTTPRequest.Query.Get("supported-features")
+					udm_producer.HandleGetNssai(msg.ResponseChan, supi, plmnID, supportedFeatures)
 
 				case udm_message.EventGetSharedData:
 					sharedDataIds := msg.HTTPRequest.Query["sharedDataIds"]
-					udm_producer.HandleGetSharedData(msg.ResponseChan, sharedDataIds)
+					supportedFeatures := msg.HTTPRequest.Query.Get("supported-features")
+					udm_producer.HandleGetSharedData(msg.ResponseChan, sharedDataIds, supportedFeatures)
 
 				case udm_message.EventGetSmData:
 					supi := msg.HTTPRequest.Params["supi"]
 					plmnID := msg.HTTPRequest.Query.Get("plmn-id")
-					udm_producer.HandleGetSmData(msg.ResponseChan, supi, plmnID)
+					Dnn := msg.HTTPRequest.Query.Get("dnn")
+					Snssai := msg.HTTPRequest.Query.Get("single-nssai")
+					supportedFeatures := msg.HTTPRequest.Query.Get("supported-features")
+					udm_producer.HandleGetSmData(msg.ResponseChan, supi, plmnID, Dnn, Snssai, supportedFeatures)
 				case udm_message.EventGetSmfSelectData:
 					supi := msg.HTTPRequest.Params["supi"]
 					plmnID := msg.HTTPRequest.Query.Get("plmn-id")
-					udm_producer.HandleGetSmfSelectData(msg.ResponseChan, supi, plmnID)
+					supportedFeatures := msg.HTTPRequest.Query.Get("supported-features")
+					udm_producer.HandleGetSmfSelectData(msg.ResponseChan, supi, plmnID, supportedFeatures)
 
 				case udm_message.EventGetSupi:
 					supi := msg.HTTPRequest.Params["supi"]
 					plmnID := msg.HTTPRequest.Query.Get("plmn-id")
-					// dataSetNames := msg.HTTPRequest.Query["dataset-names"]
-					udm_producer.HandleGetSupi(msg.ResponseChan, supi, plmnID)
+					dataSetNames := msg.HTTPRequest.Query["dataset-names"]
+					supportedFeatures := msg.HTTPRequest.Query.Get("supported-features")
+					udm_producer.HandleGetSupi(msg.ResponseChan, supi, plmnID, dataSetNames, supportedFeatures)
 				case udm_message.EventGetTraceData:
 					supi := msg.HTTPRequest.Params["supi"]
 					plmnID := msg.HTTPRequest.Query.Get("plmn-id")
 					udm_producer.HandleGetTraceData(msg.ResponseChan, supi, plmnID)
 				case udm_message.EventGetUeContextInSmfData:
 					supi := msg.HTTPRequest.Params["supi"]
-					udm_producer.HandleGetUeContextInSmfData(msg.ResponseChan, supi)
+					supportedFeatures := msg.HTTPRequest.Query.Get("supported-features")
+					udm_producer.HandleGetUeContextInSmfData(msg.ResponseChan, supi, supportedFeatures)
 				case udm_message.EventSubscribe:
 					supi := msg.HTTPRequest.Params["supi"]
 					subscriptionID := msg.HTTPRequest.Params["subscriptionId"]
@@ -97,11 +106,11 @@ func Handle() {
 				case udm_message.EventModify:
 					supi := msg.HTTPRequest.Params["supi"]
 					subscriptionID := msg.HTTPRequest.Params["subscriptionId"]
-					udm_producer.HandleModify(msg.ResponseChan, supi, subscriptionID, msg.HTTPRequest.Body.(models.SdmSubscription))
+					udm_producer.HandleModify(msg.ResponseChan, supi, subscriptionID, msg.HTTPRequest.Body.(models.SdmSubsModification))
 				case udm_message.EventModifyForSharedData:
 					supi := msg.HTTPRequest.Params["supi"]
 					subscriptionID := msg.HTTPRequest.Params["subscriptionId"]
-					udm_producer.HandleModifyForSharedData(msg.ResponseChan, supi, subscriptionID)
+					udm_producer.HandleModifyForSharedData(msg.ResponseChan, supi, subscriptionID, msg.HTTPRequest.Body.(models.SdmSubsModification))
 				case udm_message.EventCreateEeSubscription:
 					ueIdentity := msg.HTTPRequest.Params["ueIdentity"]
 					subscriptionID := msg.HTTPRequest.Params["subscriptionId"]
@@ -145,6 +154,9 @@ func Handle() {
 				case udm_message.EventUpdate:
 					gpsi := msg.HTTPRequest.Params["gpsi"]
 					udm_producer.HandleUpdate(msg.ResponseChan, gpsi, msg.HTTPRequest.Body.(models.PpData))
+				case udm_message.EventDataChangeNotificationToNF:
+					supi := msg.HTTPRequest.Params["supi"]
+					udm_producer.HandleDataChangeNotificationToNF(msg.ResponseChan, supi, msg.HTTPRequest.Body.(models.DataChangeNotify))
 				default:
 					HandlerLog.Warnf("Event[%d] has not implemented", msg.Event)
 				}

@@ -10,13 +10,25 @@
 package EventExposure_test
 
 import (
+	"context"
+	"fmt"
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
+	Nudm_EE_Client "free5gc/lib/Nudm_EventExposure"
+	"free5gc/lib/http2_util"
+	"free5gc/lib/openapi/models"
+	"free5gc/lib/path_util"
+	Nudm_EE_Server "free5gc/src/udm/EventExposure"
+	"free5gc/src/udm/logger"
+	"free5gc/src/udm/udm_context"
+	"free5gc/src/udm/udm_handler"
+	"net/http"
 	"testing"
 )
 
 // DeleteEeSubscription - Unsubscribe
 func TestDeleteEeSubscription(t *testing.T) {
 
-	/*go udm_handler.Handle()
 	go func() { // udm server
 		router := gin.Default()
 		Nudm_EE_Server.AddService(router)
@@ -31,16 +43,21 @@ func TestDeleteEeSubscription(t *testing.T) {
 		}
 	}()
 
+	udm_context.TestInit()
+	go udm_handler.Handle()
+
 	go func() { // fake udr server
 		router := gin.Default()
 
-		router.DELETE("/nudr-dr/v1/:ueIdentity/ee-subscriptions/:subscriptionId", func(c *gin.Context) {
+		router.DELETE("/nudr-dr/v1/subscription-data/:ueId/context-data/ee-subscriptions", func(c *gin.Context) {
 			ueIdentity := c.Param("ueIdentity")
 			subscriptionId := c.Param("subscriptionId")
 			fmt.Println("==========DeleteEeSubscription - Unsubscribe==========")
 			fmt.Println("ueIdentity: ", ueIdentity)
 			fmt.Println("subscriptionId: ", subscriptionId)
-			c.JSON(http.StatusCreated, gin.H{})
+			var TestEeSubs models.EeSubscription
+			TestEeSubs.CallbackReference = "tets"
+			c.JSON(http.StatusNoContent, gin.H{})
 		})
 
 		udrLogPath := path_util.Gofree5gcPath("free5gc/udrsslkey.log")
@@ -60,12 +77,11 @@ func TestDeleteEeSubscription(t *testing.T) {
 	clientAPI := Nudm_EE_Client.NewAPIClient(cfg)
 
 	subscriptionId := "Test001"
-	ueIdentity := "SDM1234"
+	ueIdentity := "EE1234"
 	resp, err := clientAPI.DeleteEESubscriptionApi.DeleteEeSubscription(context.Background(), ueIdentity, subscriptionId)
 	if err != nil {
 		fmt.Println(err.Error())
 	} else {
 		fmt.Println("resp: ", resp)
 	}
-	*/
 }

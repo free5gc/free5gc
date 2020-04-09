@@ -5,7 +5,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"free5gc/lib/MongoDBLibrary"
-	"free5gc/lib/openapi/models"
 )
 
 var Client *mongo.Client = nil
@@ -42,7 +41,7 @@ func RestfulAPIDeleteMany(collName string, filter bson.M) {
 	MongoDBLibrary.RestfulAPIDeleteMany(collName, filter)
 }
 
-func RestfulAPIMergePatch(collName string, filter bson.M, patchData map[string]interface{}) models.ProblemDetails {
+func RestfulAPIMergePatch(collName string, filter bson.M, patchData map[string]interface{}) bool {
 	return MongoDBLibrary.RestfulAPIMergePatch(collName, filter, patchData)
 }
 

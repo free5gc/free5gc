@@ -3,15 +3,13 @@ package smf_service
 import (
 	"bufio"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
-	"github.com/urfave/cli"
 	"free5gc/lib/http2_util"
 	"free5gc/lib/openapi/models"
 	"free5gc/lib/path_util"
 	"free5gc/lib/pfcp/pfcpUdp"
 	"free5gc/src/app"
 	"free5gc/src/smf/EventExposure"
+	"free5gc/src/smf/OAM"
 	"free5gc/src/smf/PDUSession"
 	"free5gc/src/smf/factory"
 	"free5gc/src/smf/logger"
@@ -25,6 +23,10 @@ import (
 	"os/exec"
 	"sync"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
+	"github.com/urfave/cli"
 )
 
 type SMF struct{}
@@ -32,7 +34,8 @@ type SMF struct{}
 type (
 	// Config information.
 	Config struct {
-		smfcfg string
+		smfcfg    string
+		uerouting string
 	}
 )
 
@@ -45,6 +48,10 @@ var smfCLi = []cli.Flag{
 	},
 	cli.StringFlag{
 		Name:  "smfcfg",
+		Usage: "config file",
+	},
+	cli.StringFlag{
+		Name:  "uerouting",
 		Usage: "config file",
 	},
 }
@@ -62,7 +69,8 @@ func (*SMF) GetCliCmd() (flags []cli.Flag) {
 func (*SMF) Initialize(c *cli.Context) {
 
 	config = Config{
-		smfcfg: c.String("smfcfg"),
+		smfcfg:    c.String("smfcfg"),
+		uerouting: c.String("uerouting"),
 	}
 
 	if config.smfcfg != "" {
@@ -70,6 +78,13 @@ func (*SMF) Initialize(c *cli.Context) {
 	} else {
 		DefaultSmfConfigPath := path_util.Gofree5gcPath("free5gc/config/smfcfg.conf")
 		factory.InitConfigFactory(DefaultSmfConfigPath)
+	}
+
+	if config.uerouting != "" {
+		factory.InitRoutingConfigFactory(config.uerouting)
+	} else {
+		DefaultUERoutingPath := path_util.Gofree5gcPath("free5gc/config/uerouting.yaml")
+		factory.InitRoutingConfigFactory(DefaultUERoutingPath)
 	}
 
 	initLog.Traceln("SMF debug level(string):", app.ContextSelf().Logger.SMF.DebugLevel)
@@ -99,6 +114,9 @@ func (smf *SMF) FilterCli(c *cli.Context) (args []string) {
 
 func (smf *SMF) Start() {
 	smf_context.InitSmfContext(&factory.SmfConfig)
+	//allocate id for each upf
+	smf_context.AllocateUPFID()
+	smf_context.InitSMFUERouting(&factory.UERoutingConfig)
 
 	initLog.Infoln("Server started")
 	router := gin.Default()
@@ -113,6 +131,7 @@ func (smf *SMF) Start() {
 		}
 	}
 
+	Nsmf_OAM.AddService(router)
 	for _, serviceName := range factory.SmfConfig.Configuration.ServiceNameList {
 		switch models.ServiceName(serviceName) {
 		case models.ServiceName_NSMF_PDUSESSION:
@@ -123,14 +142,13 @@ func (smf *SMF) Start() {
 	}
 	pfcp_udp.Run()
 
-	for _, upf := range factory.SmfConfig.Configuration.UPF {
-		if upf.Port == 0 {
-			upf.Port = pfcpUdp.PFCP_PORT
-		}
-		addr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", upf.Addr, upf.Port))
-		if err != nil {
-			logger.InitLog.Warnln("UPF addr error")
-		}
+	for _, upf := range smf_context.SMF_Self().UserPlaneInformation.UPFs {
+		addr := new(net.UDPAddr)
+		addr.IP = net.IP(upf.NodeID.NodeIdValue)
+
+		addr.Port = pfcpUdp.PFCP_PORT
+
+		logger.AppLog.Infof("Send PFCP Association Request to UPF[%s]\n", addr.String())
 		pfcp_message.SendPfcpAssociationSetupRequest(addr)
 	}
 

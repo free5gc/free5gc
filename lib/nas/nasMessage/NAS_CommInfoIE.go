@@ -209,3 +209,61 @@ const (
 	AllowedTypeAllowedArea    uint8 = 0x00
 	AllowedTypeNonAllowedArea uint8 = 0x01
 )
+
+// TS 24.501 9.11.3.46
+const (
+	RejectedSnssaiCauseNotAvailableInCurrentPlmn             uint8 = 0x00
+	RejectedSnssaiCauseNotAvailableInCurrentRegistrationArea uint8 = 0x01
+)
+
+// TS 24.501 9.11.4.10
+const (
+	PDUSessionTypeIPv4         uint8 = 0x01
+	PDUSessionTypeIPv6         uint8 = 0x02
+	PDUSessionTypeIPv4IPv6     uint8 = 0x03
+	PDUSessionTypeUnstructured uint8 = 0x04
+	PDUSessionTypeEthernet     uint8 = 0x05
+)
+
+// TS 24.501 9.11.3.4
+const (
+	SupiFormatImsi uint8 = 0x00
+	SupiFormatNai  uint8 = 0x01
+)
+
+// TS 24.501 9.11.3.4
+const (
+	ProtectionSchemeNullScheme    int = 0
+	ProtectionSchemeECIESProfileA int = 1
+	ProtectionSchemeECIESProfileB int = 2
+)
+
+// TS 24.501 Table 9.11.4.14.1
+const (
+	SessionAMBRUnitNotUsed uint8 = 0x00
+	SessionAMBRUnit1Kbps   uint8 = 0x01
+	SessionAMBRUnit4Kbps   uint8 = 0x02
+	SessionAMBRUnit16Kbps  uint8 = 0x03
+	SessionAMBRUnit64Kbps  uint8 = 0x04
+	SessionAMBRUnit256Kbps uint8 = 0x05
+	SessionAMBRUnit1Mbps   uint8 = 0x06
+	SessionAMBRUnit4Mbps   uint8 = 0x07
+	SessionAMBRUnit16Mbps  uint8 = 0x08
+	SessionAMBRUnit64Mbps  uint8 = 0x09
+	SessionAMBRUnit256Mbps uint8 = 0x0A
+	SessionAMBRUnit1Gbps   uint8 = 0x0B
+	SessionAMBRUnit4Gbps   uint8 = 0x0C
+	SessionAMBRUnit16Gbps  uint8 = 0x0D
+	SessionAMBRUnit64Gbps  uint8 = 0x0E
+	SessionAMBRUnit256Gbps uint8 = 0x0F
+	SessionAMBRUnit1Tbps   uint8 = 0x10
+	SessionAMBRUnit4Tbps   uint8 = 0x11
+	SessionAMBRUnit16Tbps  uint8 = 0x12
+	SessionAMBRUnit64Tbps  uint8 = 0x13
+	SessionAMBRUnit256Tbps uint8 = 0x14
+	SessionAMBRUnit1Pbps   uint8 = 0x15
+	SessionAMBRUnit4Pbps   uint8 = 0x16
+	SessionAMBRUnit16Pbps  uint8 = 0x17
+	SessionAMBRUnit64Pbps  uint8 = 0x18
+	SessionAMBRUnit256Pbps uint8 = 0x19
+)

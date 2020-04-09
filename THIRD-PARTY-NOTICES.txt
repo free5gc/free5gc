@@ -75,7 +75,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 ---------------------------------------------------------------------
-License notice for github.com/ishidawataru/sctp
+License notice for git.cs.nctu.edu.tw/calee/sctp
 ---------------------------------------------------------------------
  Apache License
                            Version 2.0, January 2004
@@ -265,7 +265,7 @@ License notice for github.com/ishidawataru/sctp
       same "printed page" as the copyright notice for easier
       identification within third-party archives.
 
-   Copyright {yyyy} {name of copyright owner}
+   Copyright 2020 calee@free5GC
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -2756,7 +2756,7 @@ License notice for gopkg.in/yaml.v2
    limitations under the License.
 
 ---------------------------------------------------------------------
-License notice for git.osmocom.org/libgtpnl.git
+License notice for github.com/PrinzOwO/libgtp5gnl
 ---------------------------------------------------------------------
                   GNU LESSER GENERAL PUBLIC LICENSE
                        Version 2.1, February 1999
@@ -3261,11 +3261,11 @@ necessary.  Here is a sample; alter the names:
 
 That's all there is to it!
 =======================================================================================
-This software uses the libgtpnl Library.
+This software uses the libgtp5gnl Library.
 
 Copyright (C) 1991, 1999 Free Software Foundation,
 
-The libgtpnl Library is licensed under the GNU Lesser General Public Library, version 2.1. You can find a copy of this license at https://www.gnu.org/licenses/lgpl-2.1.en.html
+The libgtp5gnl Library is licensed under the GNU Lesser General Public Library, version 2.1. You can find a copy of this license at https://www.gnu.org/licenses/lgpl-2.1.en.html
 
 ---------------------------------------------------------------------
 License notice for github.com/gin-contrib/cors

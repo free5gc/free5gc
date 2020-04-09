@@ -14,6 +14,7 @@ import (
 	"free5gc/src/app"
 	"free5gc/src/pcf/logger"
 	"free5gc/src/pcf/pcf_service"
+	"free5gc/src/pcf/version"
 	"os"
 
 	"github.com/sirupsen/logrus"
@@ -32,6 +33,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "pcf"
 	fmt.Print(app.Name, "\n")
+	appLog.Infoln("PCF version: ", version.GetVersion())
 	app.Usage = "-free5gccfg common configuration file -pcfcfg pcf configuration file"
 	app.Action = action
 	app.Flags = PCF.GetCliCmd()

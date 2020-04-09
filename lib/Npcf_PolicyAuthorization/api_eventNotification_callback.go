@@ -11,7 +11,7 @@ package Npcf_PolicyAuthorization
 
 import (
 	"context"
-	common "free5gc/lib/openapi/common"
+	"free5gc/lib/openapi/common"
 	"free5gc/lib/openapi/models"
 	"io/ioutil"
 	"net/http"
@@ -31,7 +31,7 @@ func (a *PolicyAuthorizationEventNotificationApiService) PolicyAuthorizationEven
 	)
 
 	// create path and map variables
-	localVarPath := afNotifyUri
+	localVarPath := afNotifyUri + "/notify"
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
@@ -103,7 +103,14 @@ func (a *PolicyAuthorizationEventNotificationApiService) PolicyAuthorizationEven
 		apiError.ErrorModel = v
 		return localVarHTTPResponse, apiError
 	case 404:
-		return localVarHTTPResponse, nil
+		var v models.ProblemDetails
+		err = common.Decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+		if err != nil {
+			apiError.ErrorStatus = err.Error()
+			return localVarHTTPResponse, apiError
+		}
+		apiError.ErrorModel = v
+		return localVarHTTPResponse, apiError
 	case 411:
 		var v models.ProblemDetails
 		err = common.Decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))

@@ -10,13 +10,14 @@
 package EventExposure
 
 import (
-	"github.com/gin-gonic/gin"
 	"free5gc/lib/http_wrapper"
 	"free5gc/lib/openapi/models"
 	"free5gc/src/udm/logger"
 	"free5gc/src/udm/udm_handler"
 	"free5gc/src/udm/udm_handler/udm_message"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 // UpdateEeSubscription - Patch
@@ -41,7 +42,7 @@ func UpdateEeSubscription(c *gin.Context) {
 	req.Params["ueIdentity"] = c.Params.ByName("ueIdentity")
 	req.Params["subscriptionID"] = c.Params.ByName("subscriptionId")
 
-	handlerMsg := udm_message.NewHandlerMessage(udm_message.EventCreateEeSubscription, req)
+	handlerMsg := udm_message.NewHandlerMessage(udm_message.EventUpdateEeSubscription, req)
 	udm_handler.SendMessage(handlerMsg)
 
 	rsp := <-handlerMsg.ResponseChan

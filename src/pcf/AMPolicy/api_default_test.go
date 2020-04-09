@@ -2,10 +2,13 @@ package AMPolicy_test
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson"
 	"free5gc/lib/CommonConsumerTestData/PCF/TestAMPolicy"
+	"free5gc/lib/MongoDBLibrary"
 	"free5gc/lib/Npcf_AMPolicy"
 	"free5gc/lib/http2_util"
 	"free5gc/lib/openapi/common"
@@ -28,12 +31,16 @@ import (
 	"github.com/urfave/cli"
 )
 
+const amPolicyDataColl = "policyData.ues.amData"
+
 var NFs = []app.NetworkFunction{
 	&nrf_service.NRF{},
 	&amf_service.AMF{},
 	&udr_service.UDR{},
 	&pcf_service.PCF{},
 }
+
+var filterUeIdOnly bson.M
 
 func init() {
 	app.AppInitializeWillInitialize("")
@@ -44,8 +51,29 @@ func init() {
 		go service.Start()
 		time.Sleep(300 * time.Millisecond)
 	}
+	insertDefaultAmPolicyToDb("imsi-2089300007487")
+
+}
+func toBsonM(data interface{}) bson.M {
+	tmp, _ := json.Marshal(data)
+	var putData = bson.M{}
+	_ = json.Unmarshal(tmp, &putData)
+	return putData
+}
+func insertDefaultAmPolicyToDb(ueId string) {
+	amPolicyData := models.AmPolicyData{
+		SubscCats: []string{
+			"free5gc",
+		},
+	}
+	filterUeIdOnly = bson.M{"ueId": ueId}
+	amPolicyDataBsonM := toBsonM(amPolicyData)
+	amPolicyDataBsonM["ueId"] = ueId
+	MongoDBLibrary.RestfulAPIPutOne(amPolicyDataColl, filterUeIdOnly, amPolicyDataBsonM)
 }
 func TestCreateAMPolicy(t *testing.T) {
+
+	defer MongoDBLibrary.RestfulAPIDeleteMany(amPolicyDataColl, filterUeIdOnly)
 
 	configuration := Npcf_AMPolicy.NewConfiguration()
 	configuration.SetBasePath("https://127.0.0.1:29507")
@@ -95,6 +123,8 @@ func TestCreateAMPolicy(t *testing.T) {
 
 func TestGetAMPolicy(t *testing.T) {
 
+	defer MongoDBLibrary.RestfulAPIDeleteMany(amPolicyDataColl, filterUeIdOnly)
+
 	configuration := Npcf_AMPolicy.NewConfiguration()
 	configuration.SetBasePath("https://127.0.0.1:29507")
 	client := Npcf_AMPolicy.NewAPIClient(configuration)
@@ -133,6 +163,8 @@ func TestGetAMPolicy(t *testing.T) {
 }
 
 func TestDelAMPolicy(t *testing.T) {
+
+	defer MongoDBLibrary.RestfulAPIDeleteMany(amPolicyDataColl, filterUeIdOnly)
 
 	configuration := Npcf_AMPolicy.NewConfiguration()
 	configuration.SetBasePath("https://127.0.0.1:29507")
@@ -179,6 +211,8 @@ func TestDelAMPolicy(t *testing.T) {
 
 func TestUpdateAMPolicy(t *testing.T) {
 
+	defer MongoDBLibrary.RestfulAPIDeleteMany(amPolicyDataColl, filterUeIdOnly)
+
 	configuration := Npcf_AMPolicy.NewConfiguration()
 	configuration.SetBasePath("https://127.0.0.1:29507")
 	client := Npcf_AMPolicy.NewAPIClient(configuration)
@@ -217,6 +251,7 @@ func TestUpdateAMPolicy(t *testing.T) {
 
 func TestAMPolicyNotification(t *testing.T) {
 
+	defer MongoDBLibrary.RestfulAPIDeleteMany(amPolicyDataColl, filterUeIdOnly)
 	configuration := Npcf_AMPolicy.NewConfiguration()
 	configuration.SetBasePath("https://127.0.0.1:29507")
 	client := Npcf_AMPolicy.NewAPIClient(configuration)

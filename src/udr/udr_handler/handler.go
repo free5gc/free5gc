@@ -5,9 +5,11 @@ import (
 	"github.com/sirupsen/logrus"
 	"free5gc/lib/openapi/models"
 	"free5gc/src/udr/logger"
+	"free5gc/src/udr/udr_context"
 	"free5gc/src/udr/udr_handler/udr_message"
 	"free5gc/src/udr/udr_producer"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -23,6 +25,7 @@ func Handle() {
 		select {
 		case msg, ok := <-udr_message.UdrChannel:
 			if ok {
+				udr_producer.CurrentResourceUri = udr_context.UDR_Self().GetIPv4Uri() + msg.HTTPRequest.URL.EscapedPath()
 				switch msg.Event {
 				case udr_message.EventCreateAccessAndMobilityData:
 					// TODO
@@ -206,7 +209,17 @@ func Handle() {
 				case udr_message.EventPolicyDataUesUeIdSmDataGet:
 					// TODO
 					ueId := msg.HTTPRequest.Params["ueId"]
-					udr_producer.HandlePolicyDataUesUeIdSmDataGet(msg.ResponseChan, ueId)
+
+					sNssai := models.Snssai{}
+					sNssaiQuery := msg.HTTPRequest.Query.Get("snssai")
+					err := json.Unmarshal([]byte(sNssaiQuery), &sNssai)
+					if err != nil {
+						HandlerLog.Warnln(err)
+					}
+
+					dnn := msg.HTTPRequest.Query.Get("dnn")
+
+					udr_producer.HandlePolicyDataUesUeIdSmDataGet(msg.ResponseChan, ueId, sNssai, dnn)
 				case udr_message.EventPolicyDataUesUeIdSmDataPatch:
 					// TODO
 					ueId := msg.HTTPRequest.Params["ueId"]
@@ -339,7 +352,13 @@ func Handle() {
 					udr_producer.HandleGetOdbData(msg.ResponseChan, ueId)
 				case udr_message.EventGetSharedData:
 					// TODO
-					sharedDataIds := msg.HTTPRequest.Query["sharedDataIds"] // Header: need to notice
+					var sharedDataIds []string
+					if len(msg.HTTPRequest.Query["shared-data-ids"]) != 0 {
+						sharedDataIds = msg.HTTPRequest.Query["shared-data-ids"]
+						if strings.Contains(sharedDataIds[0], ",") {
+							sharedDataIds = strings.Split(sharedDataIds[0], ",")
+						}
+					}
 					udr_producer.HandleGetSharedData(msg.ResponseChan, sharedDataIds)
 				case udr_message.EventRemovesdmSubscriptions:
 					// TODO
@@ -365,21 +384,14 @@ func Handle() {
 					servingPlmnId := msg.HTTPRequest.Params["servingPlmnId"]
 
 					singleNssai := models.Snssai{}
-					dnn := ""
-					if len(msg.HTTPRequest.Query) != 0 {
-						// Query for single-nssai
-						if len(msg.HTTPRequest.Query["single-nssai"]) != 0 {
-							singleNssaiQuery := msg.HTTPRequest.Query["single-nssai"][0]
-							err := json.Unmarshal([]byte(singleNssaiQuery), &singleNssai)
-							if err != nil {
-								HandlerLog.Warnln(err)
-							}
-						}
-						// Query for dnn
-						if len(msg.HTTPRequest.Query["dnn"]) != 0 {
-							dnn = msg.HTTPRequest.Query["dnn"][0]
-						}
+					singleNssaiQuery := msg.HTTPRequest.Query.Get("single-nssai")
+					err := json.Unmarshal([]byte(singleNssaiQuery), &singleNssai)
+					if err != nil {
+						HandlerLog.Warnln(err)
 					}
+
+					dnn := msg.HTTPRequest.Query.Get("dnn")
+
 					udr_producer.HandleQuerySmData(msg.ResponseChan, ueId, servingPlmnId, singleNssai, dnn)
 				case udr_message.EventCreateSmfContextNon3gpp:
 					// TODO

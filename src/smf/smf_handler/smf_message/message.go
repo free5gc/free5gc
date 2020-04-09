@@ -2,7 +2,6 @@ package smf_message
 
 import (
 	"free5gc/lib/http_wrapper"
-	"free5gc/lib/openapi/models"
 	"free5gc/lib/pfcp/pfcpUdp"
 )
 
@@ -19,8 +18,8 @@ type HandlerResponseMessage struct {
 }
 
 type ResponseQueueItem struct {
-	RspChan      chan HandlerResponseMessage
-	ResponseBody models.UpdateSmContextResponse
+	RspChan  chan HandlerResponseMessage
+	Response http_wrapper.Response
 }
 
 func NewPfcpMessage(pfcpRequest *pfcpUdp.Message) (msg HandlerMessage) {

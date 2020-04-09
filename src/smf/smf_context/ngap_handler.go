@@ -28,10 +28,12 @@ func HandlePDUSessionResourceSetupResponseTransfer(b []byte, ctx *SMContext) (er
 
 	teid := binary.BigEndian.Uint32(gtpTunnel.GTPTEID.Value)
 
-	ctx.Tunnel.DLPDR.FAR.ForwardingParameters.OuterHeaderCreation = new(pfcpType.OuterHeaderCreation)
-	ctx.Tunnel.DLPDR.FAR.ForwardingParameters.OuterHeaderCreation.OuterHeaderCreationDescription = pfcpType.OuterHeaderCreationGtpUUdpIpv4
-	ctx.Tunnel.DLPDR.FAR.ForwardingParameters.OuterHeaderCreation.Teid = uint32(teid)
-	ctx.Tunnel.DLPDR.FAR.ForwardingParameters.OuterHeaderCreation.Ipv4Address = gtpTunnel.TransportLayerAddress.Value.Bytes
+	DLPDR := ctx.Tunnel.UpfRoot.DownLinkTunnel.MatchedPDR
+
+	DLPDR.FAR.ForwardingParameters.OuterHeaderCreation = new(pfcpType.OuterHeaderCreation)
+	DLPDR.FAR.ForwardingParameters.OuterHeaderCreation.OuterHeaderCreationDescription = pfcpType.OuterHeaderCreationGtpUUdpIpv4
+	DLPDR.FAR.ForwardingParameters.OuterHeaderCreation.Teid = uint32(teid)
+	DLPDR.FAR.ForwardingParameters.OuterHeaderCreation.Ipv4Address = gtpTunnel.TransportLayerAddress.Value.Bytes
 
 	return nil
 }
@@ -58,11 +60,13 @@ func HandlePathSwitchRequestTransfer(b []byte, ctx *SMContext) (err error) {
 		return fmt.Errorf("Parse TEID error %s", err.Error())
 	}
 
-	ctx.Tunnel.DLPDR.FAR.ForwardingParameters.OuterHeaderCreation = new(pfcpType.OuterHeaderCreation)
-	ctx.Tunnel.DLPDR.FAR.ForwardingParameters.OuterHeaderCreation.OuterHeaderCreationDescription = pfcpType.OuterHeaderCreationGtpUUdpIpv4
-	ctx.Tunnel.DLPDR.FAR.ForwardingParameters.OuterHeaderCreation.Teid = uint32(teid)
-	ctx.Tunnel.DLPDR.FAR.ForwardingParameters.OuterHeaderCreation.Ipv4Address = gtpTunnel.TransportLayerAddress.Value.Bytes
-	ctx.Tunnel.DLPDR.FAR.State = RULE_UPDATE
+	DLPDR := ctx.Tunnel.UpfRoot.DownLinkTunnel.MatchedPDR
+
+	DLPDR.FAR.ForwardingParameters.OuterHeaderCreation = new(pfcpType.OuterHeaderCreation)
+	DLPDR.FAR.ForwardingParameters.OuterHeaderCreation.OuterHeaderCreationDescription = pfcpType.OuterHeaderCreationGtpUUdpIpv4
+	DLPDR.FAR.ForwardingParameters.OuterHeaderCreation.Teid = uint32(teid)
+	DLPDR.FAR.ForwardingParameters.OuterHeaderCreation.Ipv4Address = gtpTunnel.TransportLayerAddress.Value.Bytes
+	DLPDR.FAR.State = RULE_UPDATE
 
 	return nil
 }
@@ -110,11 +114,13 @@ func HandleHandoverRequestAcknowledgeTransfer(b []byte, ctx *SMContext) (err err
 		return fmt.Errorf("Parse TEID error %s", err.Error())
 	}
 
-	ctx.Tunnel.DLPDR.FAR.ForwardingParameters.OuterHeaderCreation = new(pfcpType.OuterHeaderCreation)
-	ctx.Tunnel.DLPDR.FAR.ForwardingParameters.OuterHeaderCreation.OuterHeaderCreationDescription = pfcpType.OuterHeaderCreationGtpUUdpIpv4
-	ctx.Tunnel.DLPDR.FAR.ForwardingParameters.OuterHeaderCreation.Teid = uint32(teid)
-	ctx.Tunnel.DLPDR.FAR.ForwardingParameters.OuterHeaderCreation.Ipv4Address = GTPTunnel.TransportLayerAddress.Value.Bytes
-	ctx.Tunnel.DLPDR.FAR.State = RULE_UPDATE
+	DLPDR := ctx.Tunnel.UpfRoot.DownLinkTunnel.MatchedPDR
+
+	DLPDR.FAR.ForwardingParameters.OuterHeaderCreation = new(pfcpType.OuterHeaderCreation)
+	DLPDR.FAR.ForwardingParameters.OuterHeaderCreation.OuterHeaderCreationDescription = pfcpType.OuterHeaderCreationGtpUUdpIpv4
+	DLPDR.FAR.ForwardingParameters.OuterHeaderCreation.Teid = uint32(teid)
+	DLPDR.FAR.ForwardingParameters.OuterHeaderCreation.Ipv4Address = GTPTunnel.TransportLayerAddress.Value.Bytes
+	DLPDR.FAR.State = RULE_UPDATE
 
 	return nil
 }

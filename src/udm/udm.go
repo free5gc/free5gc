@@ -9,6 +9,7 @@ import (
 	// m "free5gc/lib/openapi/models"
 	"free5gc/src/udm/logger"
 	"free5gc/src/udm/udm_service"
+	"free5gc/src/udm/version"
 	"os"
 )
 
@@ -24,6 +25,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "udm"
 	fmt.Print(app.Name, "\n")
+	appLog.Infoln("UDM version: ", version.GetVersion())
 	app.Usage = "-free5gccfg common configuration file -udmcfg udm configuration file"
 	app.Action = action
 	app.Flags = UDM.GetCliCmd()

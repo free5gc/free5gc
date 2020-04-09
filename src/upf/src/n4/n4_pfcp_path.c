@@ -26,20 +26,24 @@ static int _pfcpReceiveCB(Sock *sock, void *data) {
         return -1;
     }
 
+    UTLT_Assert(from._family == AF_INET, return -1,
+                "Support IPv4 only now");
+
     pfcpHeader = (PfcpHeader *)bufBlk->buf;
 
     if (pfcpHeader->version > PFCP_VERSION) {
         unsigned char vFail[8];
         PfcpHeader *pfcpOut = (PfcpHeader *)vFail;
-        
+
         UTLT_Info("Unsupported PFCP version: %d", pfcpHeader->version);
         pfcpOut->flags = (PFCP_VERSION << 5);
         pfcpOut->type = PFCP_VERSION_NOT_SUPPORTED_RESPONSE;
         pfcpOut->length = htons(4);
         pfcpOut->sqn_only = pfcpHeader->sqn_only;
-        SockSendTo(sock, vFail, 8); // TODO: must check localAddress / remoteAddress / fd is correct?
+        // TODO: must check localAddress / remoteAddress / fd is correct?
+        SockSendTo(sock, vFail, 8);
         BufblkFree(bufBlk);
-        return 0;
+        return STATUS_ERROR;
     }
 
     upf = PfcpFindNodeSockAddr(&Self()->upfN4List, &from);
@@ -51,9 +55,24 @@ static int _pfcpReceiveCB(Sock *sock, void *data) {
             fSeid.v4 = 1;
             //fSeid.seid = 0; // TOOD: check SEID value
             fSeid.addr4 = from.s4.sin_addr;
+
+            // TODO: check noIpv4, noIpv6, preferIpv4, originally from context.no_ipv4
             upf = PfcpAddNodeWithSeid(&Self()->upfN4List, &fSeid,
-                    Self()->pfcpPort, 0, 1, 0); // TODO: check noIpv4, noIpv6, preferIpv4, originally from context.no_ipv4
-            UTLT_Assert(upf, return STATUS_ERROR, "");
+                    Self()->pfcpPort, 0, 1, 0);
+            if (!upf) {
+                // if upf == NULL (allocate error)
+                // Count size of upfN4List
+                int numOfUpf = 0;
+                PfcpNode *n4Node = ListFirst(&Self()->upfN4List);
+                while (n4Node) {
+                    ++numOfUpf;
+                    n4Node = (PfcpNode *)ListNext(n4Node);
+                }
+                UTLT_Error("PFCP Node allocate error, "
+                            "there may be too many SMF: %d", numOfUpf);
+                BufblkFree(bufBlk);
+                return STATUS_ERROR;
+            }
 
             upf->sock = Self()->pfcpSock;
         }
@@ -63,13 +82,13 @@ static int _pfcpReceiveCB(Sock *sock, void *data) {
             fSeid.addr6 = from.s6.sin6_addr;
             upf = PfcpAddNodeWithSeid(&Self()->upfN4List, &fSeid,
                     Self()->pfcpPort, 1, 0, 0);
-            UTLT_Assert(upf, return STATUS_ERROR, "");
+            UTLT_Assert(upf, BufblkFree(bufBlk); return STATUS_ERROR, "");
 
             upf->sock = Self()->pfcpSock6;
         }
     }
 
-    UTLT_Assert(upf, return -1, "PFCP node not found");
+    UTLT_Assert(upf, BufblkFree(bufBlk); return STATUS_ERROR, "PFCP node not found");
 
     //event.type = UPF_EVENT_N4_MESSAGE;
     //event.arg0 = (uintptr_t)bufBlk;
@@ -78,7 +97,7 @@ static int _pfcpReceiveCB(Sock *sock, void *data) {
     if (status != STATUS_OK) {
         UTLT_Error("UPF EventSend error");
         BufblkFree(bufBlk);
-        return 0;
+        return STATUS_ERROR;
     }
 
     return 0;
@@ -88,9 +107,11 @@ Status PfcpServerInit() {
     Status status;
 
     status = PfcpServerList(&Self()->pfcpIPList, _pfcpReceiveCB, Self()->epfd);
-    UTLT_Assert(status == STATUS_OK, return STATUS_ERROR, "Create PFCP Server for IPv4 error");
+    UTLT_Assert(status == STATUS_OK, return STATUS_ERROR,
+                "Create PFCP Server for IPv4 error");
     status = PfcpServerList(&Self()->pfcpIPv6List, _pfcpReceiveCB, Self()->epfd);
-    UTLT_Assert(status == STATUS_OK, return STATUS_ERROR, "Create PFCP Server for IPv6 error");
+    UTLT_Assert(status == STATUS_OK, return STATUS_ERROR,
+                "Create PFCP Server for IPv6 error");
 
     Self()->pfcpSock = PfcpLocalSockFirst(&Self()->pfcpIPList);
     Self()->pfcpSock6 = PfcpLocalSockFirst(&Self()->pfcpIPv6List);

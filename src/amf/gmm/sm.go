@@ -40,7 +40,7 @@ func register_event_3gpp(sm *fsm.FSM, event fsm.Event, args fsm.Args) error {
 		case nas.MsgTypeULNASTransport:
 			return gmm_handler.HandleULNASTransport(amfUe, models.AccessType__3_GPP_ACCESS, gmmMessage.ULNASTransport)
 		case nas.MsgTypeRegistrationRequest:
-			if err := gmm_handler.HandleRegistrationRequest(amfUe, models.AccessType__3_GPP_ACCESS, gmmMessage.RegistrationRequest); err != nil {
+			if err := gmm_handler.HandleRegistrationRequest(amfUe, models.AccessType__3_GPP_ACCESS, procedureCode, gmmMessage.RegistrationRequest); err != nil {
 				return err
 			}
 		case nas.MsgTypeIdentityResponse:
@@ -70,6 +70,7 @@ func register_event_3gpp(sm *fsm.FSM, event fsm.Event, args fsm.Args) error {
 		return fmt.Errorf("Unknown Event[%s]\n", event)
 	}
 
+	GmmLog.Trace("amfUe.RegistrationType5GS\n", amfUe.RegistrationType5GS)
 	switch amfUe.RegistrationType5GS {
 	case nasMessage.RegistrationType5GSInitialRegistration:
 		return gmm_handler.HandleInitialRegistration(amfUe, models.AccessType__3_GPP_ACCESS)
@@ -78,6 +79,7 @@ func register_event_3gpp(sm *fsm.FSM, event fsm.Event, args fsm.Args) error {
 	case nasMessage.RegistrationType5GSPeriodicRegistrationUpdating:
 		return gmm_handler.HandleMobilityAndPeriodicRegistrationUpdating(amfUe, models.AccessType__3_GPP_ACCESS, procedureCode)
 	}
+	GmmLog.Trace("register_event_3gpp end\n")
 	return nil
 }
 
@@ -161,7 +163,7 @@ func register_event_non_3gpp(sm *fsm.FSM, event fsm.Event, args fsm.Args) error 
 		case nas.MsgTypeULNASTransport:
 			return gmm_handler.HandleULNASTransport(amfUe, models.AccessType_NON_3_GPP_ACCESS, gmmMessage.ULNASTransport)
 		case nas.MsgTypeRegistrationRequest:
-			if err := gmm_handler.HandleRegistrationRequest(amfUe, models.AccessType_NON_3_GPP_ACCESS, gmmMessage.RegistrationRequest); err != nil {
+			if err := gmm_handler.HandleRegistrationRequest(amfUe, models.AccessType_NON_3_GPP_ACCESS, procedureCode, gmmMessage.RegistrationRequest); err != nil {
 				return nil
 			}
 		case nas.MsgTypeIdentityResponse:

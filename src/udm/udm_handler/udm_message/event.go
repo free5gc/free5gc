@@ -42,4 +42,5 @@ const (
 	EventUpdateSMSFReg3GPP
 	EventRegistrationSmsfNon3gppAccess
 	EventUpdate
+	EventDataChangeNotificationToNF
 )

@@ -6,9 +6,11 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+
 	"github.com/bronze1man/radius"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
+
 	// Nudm_UEAU "free5gc/lib/Nudm_UEAuthentication"
 	"free5gc/lib/UeauCommon"
 	"free5gc/lib/openapi/models"
@@ -24,14 +26,24 @@ import (
 func HandleEapAuthComfirmRequest(respChan chan ausf_message.HandlerResponseMessage, id string, body models.EapSession) {
 	var response models.EapSession
 
-	if !ausf_context.CheckIfAusfUeContextExists(id) {
-		logger.EapAuthComfirmLog.Infoln("SUPI does not exist, confirmation failed")
+	if !ausf_context.CheckIfSuciSupiPairExists(id) {
+		logger.Auth5gAkaComfirmLog.Infoln("supiSuciPair does not exist, confirmation failed")
 		var problemDetails models.ProblemDetails
 		problemDetails.Cause = "USER_NOT_FOUND"
 		ausf_message.SendHttpResponseMessage(respChan, nil, http.StatusBadRequest, problemDetails)
 		return
 	}
-	ausfCurrentContext := ausf_context.GetAusfUeContext(id)
+
+	currentSupi := ausf_context.GetSupiFromSuciSupiMap(id)
+	if !ausf_context.CheckIfAusfUeContextExists(currentSupi) {
+		logger.Auth5gAkaComfirmLog.Infoln("SUPI does not exist, confirmation failed")
+		var problemDetails models.ProblemDetails
+		problemDetails.Cause = "USER_NOT_FOUND"
+		ausf_message.SendHttpResponseMessage(respChan, nil, http.StatusBadRequest, problemDetails)
+		return
+	}
+
+	ausfCurrentContext := ausf_context.GetAusfUeContext(currentSupi)
 	servingNetworkName := ausfCurrentContext.ServingNetworkName
 	eapPayload, _ := base64.StdEncoding.DecodeString(body.EapPayload)
 	// fmt.Printf("eapPayload = %x\n", eapPayload)
@@ -54,7 +66,7 @@ func HandleEapAuthComfirmRequest(respChan chan ausf_message.HandlerResponseMessa
 	switch ausfCurrentContext.AuthStatus {
 	case models.AuthResult_ONGOING:
 		response.KSeaf = ausfCurrentContext.Kseaf
-		response.Supi = id
+		response.Supi = currentSupi
 		Kautn := ausfCurrentContext.K_aut
 		XRES := ausfCurrentContext.XRES
 		RES, decodeOK := decodeResMac(eapContent.TypeData, eapContent.Contents, Kautn)
@@ -103,19 +115,28 @@ func HandleAuth5gAkaComfirmRequest(respChan chan ausf_message.HandlerResponseMes
 	success := false
 	response.AuthResult = models.AuthResult_FAILURE
 
-	if !ausf_context.CheckIfAusfUeContextExists(id) {
-		logger.Auth5gAkaComfirmLog.Infoln("SUPI does not exist, confirmation failed")
+	if !ausf_context.CheckIfSuciSupiPairExists(id) {
+		logger.Auth5gAkaComfirmLog.Infof("supiSuciPair does not exist, confirmation failed (queried by %s)\n", id)
 		var problemDetails models.ProblemDetails
 		problemDetails.Cause = "USER_NOT_FOUND"
 		ausf_message.SendHttpResponseMessage(respChan, nil, http.StatusBadRequest, problemDetails)
 		return
 	}
 
-	ausfCurrentContext := ausf_context.GetAusfUeContext(id)
+	currentSupi := ausf_context.GetSupiFromSuciSupiMap(id)
+	if !ausf_context.CheckIfAusfUeContextExists(currentSupi) {
+		logger.Auth5gAkaComfirmLog.Infof("SUPI does not exist, confirmation failed (queried by %s)\n", currentSupi)
+		var problemDetails models.ProblemDetails
+		problemDetails.Cause = "USER_NOT_FOUND"
+		ausf_message.SendHttpResponseMessage(respChan, nil, http.StatusBadRequest, problemDetails)
+		return
+	}
+
+	ausfCurrentContext := ausf_context.GetAusfUeContext(currentSupi)
 	servingNetworkName := ausfCurrentContext.ServingNetworkName
 
 	// Compare the received RES* with the stored XRES*
-	// fmt.Printf("res*: %x\nXres*: %x\n", body.ResStar, ausfCurrentContext.XresStar)
+	logger.Auth5gAkaComfirmLog.Infof("res*: %x\nXres*: %x\n", body.ResStar, ausfCurrentContext.XresStar)
 	if strings.Compare(body.ResStar, ausfCurrentContext.XresStar) == 0 {
 		ausfCurrentContext.AuthStatus = models.AuthResult_SUCCESS
 		response.AuthResult = models.AuthResult_SUCCESS
@@ -137,7 +158,7 @@ func HandleAuth5gAkaComfirmRequest(respChan chan ausf_message.HandlerResponseMes
 		return
 	}
 
-	response.Supi = id
+	response.Supi = currentSupi
 	ausf_message.SendHttpResponseMessage(respChan, nil, http.StatusOK, response)
 }
 
@@ -187,7 +208,10 @@ func HandleUeAuthPostRequest(respChan chan ausf_message.HandlerResponseMessage, 
 	ausfUeContext.AuthStatus = models.AuthResult_ONGOING
 	ausfUeContext.UdmUeauUrl = udmUrl
 
-	locationURI := self.Url + "/nausf-auth/v1/ue-authentications/" + ueid
+	logger.UeAuthPostLog.Infof("Add SuciSupiPair (%s, %s) to map.\n", supiOrSuci, ueid)
+	ausf_context.AddSuciSupiPairToMap(supiOrSuci, ueid)
+
+	locationURI := self.Url + "/nausf-auth/v1/ue-authentications/" + supiOrSuci
 	putLink := locationURI
 	if authInfoResult.AuthType == models.AuthType__5_G_AKA {
 		logger.UeAuthPostLog.Infoln("Use 5G AKA auth method")
@@ -198,8 +222,9 @@ func HandleUeAuthPostRequest(respChan chan ausf_message.HandlerResponseMessage, 
 		hxresStarBytes, _ := hex.DecodeString(concat)
 		hxresStarAll := sha256.Sum256(hxresStarBytes)
 		hxresStar := hex.EncodeToString(hxresStarAll[16:]) // last 128 bits
-		// fmt.Printf("5G AV Rand: %s,  XresStar: %s, Autn: %s\n", authInfoResult.AuthenticationVector.Rand, authInfoResult.AuthenticationVector.XresStar, authInfoResult.AuthenticationVector.Autn)
-		// fmt.Printf("hxresStar = %x\n", hxresStar) // 231b3f2e0a8a5082c19fdd6735888c4a
+		// logger.Auth5gAkaComfirmLog.Infof("5G AV Rand: %s, Autn: %s\n", authInfoResult.AuthenticationVector.Rand, authInfoResult.AuthenticationVector.Autn)
+		logger.Auth5gAkaComfirmLog.Infof("XresStar = %x\n", authInfoResult.AuthenticationVector.XresStar)
+		// logger.Auth5gAkaComfirmLog.Infof("hxresStar = %x\n", hxresStar) // 231b3f2e0a8a5082c19fdd6735888c4a
 
 		// Derive Kseaf from Kausf
 		// Test data

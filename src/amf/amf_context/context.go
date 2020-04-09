@@ -206,6 +206,15 @@ func (context *AMFContext) AmfUeFindByGuti(targetGuti string) *AmfUe {
 	return nil
 }
 
+func (context *AMFContext) AmfUeFindByPolicyAssociationId(polAssoId string) *AmfUe {
+	for _, ue := range context.UePool {
+		if ue.PolicyAssociationId == polAssoId {
+			return ue
+		}
+	}
+	return nil
+}
+
 func (context *AMFContext) AmfRanFindByRanId(ranNodeId models.GlobalRanNodeId) *AmfRan {
 
 	for _, amfRan := range context.AmfRanPool { // amfRan = context.AmfRanPool[i]

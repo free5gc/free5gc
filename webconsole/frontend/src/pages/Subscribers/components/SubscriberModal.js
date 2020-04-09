@@ -10,7 +10,11 @@ class SubscriberModal extends Component {
     onSubmit: PropTypes.func.isRequired,
   };
 
-  state = {};
+  state = {
+    formData: undefined,
+    // for force re-rendering json form
+    rerenderCounter: 0,
+  };
 
   schema = {
     // title: "A registration form",
@@ -32,8 +36,8 @@ class SubscriberModal extends Component {
       },
       ueId: {
         type: "string",
-        title: "UE ID (IMSI)",
-        default: "imsi-208930000000003",
+        title: "SUPI (IMSI)",
+        default: "208930000000003",
       },
       authenticationMethod: {
         type: "string",
@@ -69,16 +73,44 @@ class SubscriberModal extends Component {
     },
   };
 
-  onSubmitClick(result) {
-    console.log("onSubmitClick", result);
+  async onChange(data) {
+    const lastData = this.state.formData;
+    const newData = data.formData;
 
+    if (lastData && lastData.plmnID === undefined)
+      lastData.plmnID = "";
+    
+    if (lastData && lastData.plmnID !== newData.plmnID &&
+        newData.ueId.length === lastData.plmnID.length + "0000000003".length) {
+      const plmn = newData.plmnID ? newData.plmnID : "";
+      newData.ueId = plmn + newData.ueId.substr(lastData.plmnID.length);
+
+      // Workaround for bug: https://github.com/rjsf-team/react-jsonschema-form/issues/758
+      await this.setState({rerenderCounter: this.state.rerenderCounter + 1});
+      await this.setState({
+        rerenderCounter: this.state.rerenderCounter + 1,
+        formData: newData,
+      });
+
+      // Keep plmnID input focused at the end
+      const plmnInput = document.getElementById("root_plmnID");
+      plmnInput.selectionStart = plmnInput.selectionEnd = plmnInput.value.length;
+      plmnInput.focus();
+    } else {
+      this.setState({
+        formData: newData,
+      });
+    }
+  }
+
+  onSubmitClick(result) {
     const formData = result.formData;
     const OP = formData["OPOPcSelect"] === "OP" ? formData["OPOPc"] : "";
     const OPc = formData["OPOPcSelect"] === "OPc" ? formData["OPOPc"] : "";
 
     let subscriberData = {
       "plmnID": formData["plmnID"], // Change required
-      "ueId": formData["ueId"], // Change required
+      "ueId": "imsi-" + formData["ueId"], // Change required
       "AuthenticationSubscription": {
         "authenticationManagementField": "8000",
         "authenticationMethod": formData["authenticationMethod"], // "5G_AKA", "EAP_AKA_PRIME"
@@ -149,6 +181,37 @@ class SubscriberModal extends Component {
             ]
           }
         },
+      },
+      "AmPolicyData": {
+        "subscCats": [
+          "free5gc"
+        ]
+      },
+      "SmPolicyData": {
+        "smPolicySnssaiData": {
+          "01010203": {
+            "snssai": {
+              "sst": 1,
+              "sd": "010203"
+            },
+            "smPolicyDnnData": {
+              "internet": {
+                "dnn": "internet"
+              }
+            }
+          },
+          "01112233": {
+            "snssai": {
+              "sst": 1,
+              "sd": "112233"
+            },
+            "smPolicyDnnData": {
+              "internet": {
+                "dnn": "internet"
+              }
+            }
+          }
+        }
       }
     };
 
@@ -169,9 +232,13 @@ class SubscriberModal extends Component {
         </Modal.Header>
 
         <Modal.Body>
+          {this.state.rerenderCounter % 2 === 0 &&
           <Form schema={this.schema}
                 uiSchema={this.uiSchema}
+                formData={this.state.formData}
+                onChange={this.onChange.bind(this)}
                 onSubmit={this.onSubmitClick.bind(this)}/>
+          }
         </Modal.Body>
       </Modal>
     );

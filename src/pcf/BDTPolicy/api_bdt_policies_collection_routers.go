@@ -20,19 +20,18 @@ import (
 //CreateBDTPolicy - Create a new Individual BDT policy
 func CreateBDTPolicy(c *gin.Context) {
 	var bdtReqData models.BdtReqData
-	c.BindJSON(&bdtReqData)
+	c.ShouldBindJSON(&bdtReqData)
 
 	req := http_wrapper.NewRequest(c.Request, bdtReqData)
-	req.Params["bdtPolicyId"] = c.Params.ByName("bdtPolicyId")
 	channelMsg := pcf_message.NewHttpChannelMessage(pcf_message.EventBDTPolicyCreate, req)
 
 	pcf_message.SendMessage(channelMsg)
 	recvMsg := <-channelMsg.HttpChannel
 	HTTPResponse := recvMsg.HTTPResponse
 
-	if HTTPResponse.Header == nil {
-		c.JSON(HTTPResponse.Status, HTTPResponse.Body)
-	} else {
-		c.Redirect(HTTPResponse.Status, HTTPResponse.Header["Location"][0])
+	for key, val := range HTTPResponse.Header {
+		c.Header(key, val[0])
 	}
+
+	c.JSON(HTTPResponse.Status, HTTPResponse.Body)
 }

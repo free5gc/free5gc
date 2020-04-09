@@ -13,7 +13,7 @@ class Nav extends Component {
     return (
       <ul className="nav">
         <li className={location.pathname === '/' ? 'active' : null}>
-          <Link to="/">
+          <Link to="/ueinfo">
             <i className="pe-7s-network"/>
             <p>Dashboard</p>
           </Link>
@@ -32,6 +32,7 @@ class Nav extends Component {
             <p>Analytics</p>
           </Link>
         </li>
+
       </ul>
     );
   }

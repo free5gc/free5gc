@@ -13,9 +13,10 @@
 #include "utlt_timer.h"
 #include "utlt_network.h"
 #include "gtp_path.h"
+#include "gtp_buffer.h"
 #include "upf_context.h"
 #include "upf_config.h"
-#include "up/up_gtp_path.h"
+#include "up/up_path.h"
 #include "n4/n4_pfcp_path.h"
 #include "pfcp_xact.h"
 
@@ -63,10 +64,14 @@ Status UpfInit(char *configPath) {
     status = PfcpServerInit();
     if (status != STATUS_OK) return status;
 
-    status = PfcpXactInit(&Self()->timerServiceList, UPF_EVENT_N4_T3_RESPONSE, UPF_EVENT_N4_T3_HOLDING); // init pfcp xact context
+    status = PfcpXactInit(&Self()->timerServiceList, UPF_EVENT_N4_T3_RESPONSE,
+                          UPF_EVENT_N4_T3_HOLDING); // init pfcp xact context
     if (status != STATUS_OK) return status;
 
-    status = GtpRouteInit();
+    status = UpRouteInit();
+    if (status != STATUS_OK) return status;
+
+    status = BufferServerInit();
     if (status != STATUS_OK) return status;
 
     UTLT_Info("UPF initialized");
@@ -79,8 +84,14 @@ Status UpfTerminate() {
 
     UTLT_Info("Terminating UPF...");
 
-    UTLT_Assert(GtpRouteTerminate() == STATUS_OK, status |= STATUS_ERROR,
+    UTLT_Assert(BufferServerTerminate() == STATUS_OK, status |= STATUS_ERROR,
+                "Buffer Sock resource free failed");
+
+    UTLT_Assert(UpRouteTerminate() == STATUS_OK, status |= STATUS_ERROR,
                 "GTP routes removal failed");
+
+    UTLT_Assert(PfcpXactTerminate() == STATUS_OK, status |= STATUS_ERROR,
+                "PFCP Transaction terminate failed");
 
     UTLT_Assert(PfcpServerTerminate() == STATUS_OK, status |= STATUS_ERROR,
                 "PFCP server terminate failed");
@@ -149,6 +160,8 @@ Status UtltLibTerminate() {
     UTLT_Assert(ThreadFinal() == STATUS_OK, status |= STATUS_ERROR,
                 "Thread terminate failed");
 
+    BufblkPoolCheck("UPF Terminate");
+
     UTLT_Assert(BufblkPoolFinal() == STATUS_OK, status |= STATUS_ERROR,
                 "Bufblk pool terminate failed");
 
@@ -182,6 +195,10 @@ void PacketReceiverThread(ThreadID id, void *data) {
     int nfds;
     Sock *sockPtr;
     struct epoll_event events[MAX_NUM_OF_EVENT];
+    utime_t prev, now; // For timer checking purpose
+
+    prev = TimeNow();
+
     while (!ThreadStop()) {
         nfds = EpollWait(Self()->epfd, events, 1);
         UTLT_Assert(nfds >= 0, , "Epoll Wait error : %s", strerror(errno));
@@ -192,6 +209,16 @@ void PacketReceiverThread(ThreadID id, void *data) {
             // TODO : Log may show which socket
             UTLT_Assert(status == STATUS_OK, , "Error handling UP socket");
         }
+
+        // Check if timer expired
+        now = TimeNow();
+        if (now - prev > 10) {
+            TimerExpireCheck(
+                    &Self()->timerServiceList, Self()->eventQ);
+
+            prev = now;
+        }
+
     }
 
     sem_post(((Thread *)id)->semaphore);

@@ -12,13 +12,12 @@
 
 #include "n4_pfcp_build.h"
 
-Status UpfN4BuildSessionEstablishmentResponse(
-        Bufblk **bufBlk, uint8_t type, UpfSession *session,
-        PFCPSessionEstablishmentRequest *establishRequest) {
+Status UpfN4BuildSessionEstablishmentResponse(Bufblk **bufBlk, uint8_t type,
+                                              UpfSession *session, uint8_t cause,
+                                              PFCPSessionEstablishmentRequest *establishRequest) {
     Status status;
     PfcpMessage pfcpMessage;
     PFCPSessionEstablishmentResponse *response = NULL;
-    uint8_t cause;
     PfcpFSeid fSeid;
     PfcpNodeId nodeId;
     int len;
@@ -36,28 +35,34 @@ Status UpfN4BuildSessionEstablishmentResponse(
 
     /* cause */
     response->cause.presence = 1;
-    cause = PFCP_CAUSE_REQUEST_ACCEPTED;
     response->cause.len = 1;
     response->cause.value = &cause;
 
-    /* F-SEID */
-    response->uPFSEID.presence = 1;
-    response->uPFSEID.value = &fSeid;
-    fSeid.seid = htobe64(session->upfSeid);
-    status = PfcpSockaddrToFSeid(Self()->pfcpAddr, Self()->pfcpAddr, &fSeid, &len);
-    response->uPFSEID.len = len;
+    /* Condition or Option */
+    if (cause == PFCP_CAUSE_REQUEST_ACCEPTED) {
+        /* F-SEID */
+        response->uPFSEID.presence = 1;
+        response->uPFSEID.value = &fSeid;
+        fSeid.seid = htobe64(session->upfSeid);
+        status = PfcpSockaddrToFSeid(Self()->pfcpAddr,
+                                     Self()->pfcpAddr, &fSeid, &len);
+        response->uPFSEID.len = len;
 
-    /* FQ-CSID */
+        /* FQ-CSID */
+    }
+
     pfcpMessage.header.type = type;
     status = PfcpBuildMessage(bufBlk, &pfcpMessage);
-    UTLT_Assert(status == STATUS_OK, return STATUS_ERROR, "build msg faild");
+    UTLT_Assert(status == STATUS_OK, return STATUS_ERROR,
+                "build msg faild");
 
+    UTLT_Debug("PFCP session establishment response built!");
     return STATUS_OK;
 }
 
-Status UpfN4BuildSessionModificationResponse(
-        Bufblk **bufBlkPtr, uint8_t type, UpfSession *session,
-        PFCPSessionModificationRequest *modifyRequest) {
+Status UpfN4BuildSessionModificationResponse(Bufblk **bufBlkPtr, uint8_t type,
+                                             UpfSession *session,
+                                             PFCPSessionModificationRequest *modifyRequest) {
     Status status;
     PfcpMessage pfcpMessage;
     PFCPSessionModificationResponse *response = NULL;
@@ -80,12 +85,13 @@ Status UpfN4BuildSessionModificationResponse(
     status = PfcpBuildMessage(bufBlkPtr, &pfcpMessage);
     UTLT_Assert(status == STATUS_OK, return STATUS_ERROR, "PFCP build error");
 
+    UTLT_Debug("PFCP session modification response built!");
     return STATUS_OK;
 }
 
-Status UpfN4BuildSessionDeletionResponse(
-        Bufblk **bufBlkPtr, uint8_t type, UpfSession *session,
-        PFCPSessionDeletionRequest *deletionRequest) {
+Status UpfN4BuildSessionDeletionResponse(Bufblk **bufBlkPtr, uint8_t type,
+                                         UpfSession *session,
+                                         PFCPSessionDeletionRequest *deletionRequest) {
     Status status;
     PfcpMessage pfcpMessage;
     PFCPSessionDeletionResponse *response = NULL;
@@ -106,11 +112,14 @@ Status UpfN4BuildSessionDeletionResponse(
     status = PfcpBuildMessage(bufBlkPtr, &pfcpMessage);
     UTLT_Assert(status == STATUS_OK, return STATUS_ERROR, "PFCP build error");
 
+    UTLT_Debug("PFCP session deletion response built!");
     return STATUS_OK;
 }
 
-Status UpfN4BuildSessionReportRequestDownlinkDataReport (
-        Bufblk **bufBlkPtr, uint8_t type, UpfSession *session, uint16_t pdrId) {
+Status UpfN4BuildSessionReportRequestDownlinkDataReport(Bufblk **bufBlkPtr,
+                                                        uint8_t type,
+                                                        UpfSession *session,
+                                                        uint16_t pdrId) {
     Status status;
     PfcpMessage pfcpMessage;
     PFCPSessionReportRequest *request = NULL;
@@ -120,7 +129,8 @@ Status UpfN4BuildSessionReportRequestDownlinkDataReport (
     request = &pfcpMessage.pFCPSessionReportRequest;
     memset(&pfcpMessage, 0, sizeof(PfcpMessage));
     memset(&reportType, 0, sizeof(PfcpReportType));
-    memset(&downlinkDataServiceInformationValue, 0, sizeof(PfcpDownlinkDataServiceInformation));
+    memset(&downlinkDataServiceInformationValue, 0,
+           sizeof(PfcpDownlinkDataServiceInformation));
 
     reportType.dldr = 1;
 
@@ -133,39 +143,44 @@ Status UpfN4BuildSessionReportRequestDownlinkDataReport (
     downlinkDataReport->presence = 1;
 
     downlinkDataReport->pDRID.presence = 1;
-    pdrId = htons(pdrId);
+    // This value is store in network type
+    pdrId = pdrId;
     downlinkDataReport->pDRID.value = &pdrId;
     downlinkDataReport->pDRID.len = sizeof(pdrId);
-    downlinkDataReport->downlinkDataServiceInformation.presence = 0; // not support yet, TODO
+    // not support yet, TODO
+    downlinkDataReport->downlinkDataServiceInformation.presence = 0;
 
     /* fill in downlinkDataServiceInformation in downlinkDataReport */
     /*
-    DownlinkDataServiceInformation *downlinkDataServiceInformation = &downlinkDataReport->downlinkDataServiceInformation;
-    // fill in value of downlinkDataServiceInformation
-    downlinkDataServiceInformationValue.ppi = 0;
-    downlinkDataServiceInformationValue.qfii = 0;
-    downlinkDataServiceInformationValue.pagingPolicyIndicationValue = 0;
-    downlinkDataServiceInformationValue.qfi = 0;
-    // fill value back to ServiceInformation
-    downlinkDataServiceInformation->presence = 1;
-    downlinkDataServiceInformation->value = &downlinkDataServiceInformationValue;
-    downlinkDataServiceInformation->len = PfcpDownlinkDataServiceInformationLen(downlinkDataServiceInformationValue);
+      DownlinkDataServiceInformation *downlinkDataServiceInformation =
+      &downlinkDataReport->downlinkDataServiceInformation;
+      // fill in value of downlinkDataServiceInformation
+      downlinkDataServiceInformationValue.ppi = 0;
+      downlinkDataServiceInformationValue.qfii = 0;
+      downlinkDataServiceInformationValue.pagingPolicyIndicationValue = 0;
+      downlinkDataServiceInformationValue.qfi = 0;
+      // fill value back to ServiceInformation
+      downlinkDataServiceInformation->presence = 1;
+      downlinkDataServiceInformation->value =
+      &downlinkDataServiceInformationValue;
+      downlinkDataServiceInformation->len =
+      PfcpDownlinkDataServiceInformationLen(downlinkDataServiceInformationValue);
     */
 
     pfcpMessage.header.type = type;
     status = PfcpBuildMessage(bufBlkPtr, &pfcpMessage);
     UTLT_Assert(status == STATUS_OK, return STATUS_ERROR, "PFCP build error");
 
+    UTLT_Debug("PFCP session report request downlink data report built!");
     return STATUS_OK;
 }
 
-Status UpfN4BuildAssociationSetupResponse(
-        Bufblk **bufBlkPtr, uint8_t type) {
+Status UpfN4BuildAssociationSetupResponse(Bufblk **bufBlkPtr, uint8_t type) {
     Status status;
     PfcpMessage pfcpMessage;
     PFCPAssociationSetupResponse *response = NULL;
     uint8_t cause;
-    uint16_t upFunctionFeatureExisted;
+    uint16_t upFunctionFeature;
 
     response = &pfcpMessage.pFCPAssociationSetupResponse;
     memset(&pfcpMessage, 0, sizeof(PfcpMessage));
@@ -192,17 +207,20 @@ Status UpfN4BuildAssociationSetupResponse(
     response->recoveryTimeStamp.value = &Self()->recoveryTime;
     response->recoveryTimeStamp.len = 4;
 
-    upFunctionFeatureExisted = 0;
-    if (upFunctionFeatureExisted) {
+    // TODO: support UP Function Feature report
+    /* UP Function Feature (Condition) */
+    upFunctionFeature = 0;
+    if (upFunctionFeature) {
         response->uPFunctionFeatures.presence = 1;
-        response->uPFunctionFeatures.value = &upFunctionFeatureExisted;
+        response->uPFunctionFeatures.value = &upFunctionFeature;
         response->uPFunctionFeatures.len = 2;
     } else {
         response->uPFunctionFeatures.presence = 0;
     }
 
     PfcpUserPlaneIpResourceInformation upIpResourceInformation;
-    memset(&upIpResourceInformation, 0, sizeof(PfcpUserPlaneIpResourceInformation));
+    memset(&upIpResourceInformation, 0,
+           sizeof(PfcpUserPlaneIpResourceInformation));
 
     // teid
     upIpResourceInformation.teidri = 1;
@@ -217,36 +235,40 @@ Status UpfN4BuildAssociationSetupResponse(
     memcpy(upIpResourceInformation.networkInstance + 1, apn->apn, apnLen + 1);
 
     // TODO: better algo. to select establish IP
-    Gtpv1TunDevNode *gtpDev4 = (Gtpv1TunDevNode *)ListFirst(&Self()->gtpv1DevList);
-    Gtpv1TunDevNode *gtpDev6 = (Gtpv1TunDevNode *)ListFirst(&Self()->gtpv1v6DevList);
+    Gtpv1TunDevNode *gtpDev4 =
+        (Gtpv1TunDevNode *)ListFirst(&Self()->gtpv1DevList);
+    Gtpv1TunDevNode *gtpDev6 =
+        (Gtpv1TunDevNode *)ListFirst(&Self()->gtpv1v6DevList);
     upIpResourceInformation.v4 =
-        (gtpDev4 && gtpDev4->sock1) ? 1 : 0;
+        (gtpDev4 && gtpDev4->sock) ? 1 : 0;
     upIpResourceInformation.v6 =
-        (gtpDev6 && gtpDev6->sock1) ? 1 : 0;
+        (gtpDev6 && gtpDev6->sock) ? 1 : 0;
     if (upIpResourceInformation.v4) {
-       upIpResourceInformation.addr4 = gtpDev4->sock1->localAddr.s4.sin_addr;
+        upIpResourceInformation.addr4 = gtpDev4->sock->localAddr.s4.sin_addr;
     }
     if (upIpResourceInformation.v6) {
         // TODO: ipv6
-        //upIpResourceInformation.addr6 = gtpDev6->sock1->localAddr.s6.sin6_addr;
+        //upIpResourceInformation.addr6 = gtpDev6->sock->localAddr.s6.sin6_addr;
     }
 
     response->userPlaneIPResourceInformation.presence = 1;
     response->userPlaneIPResourceInformation.value = &upIpResourceInformation;
     // TODO: this is only IPv4, no network instence, no source interface
-    response->userPlaneIPResourceInformation.len = 2+4+1+apnLen; // TODO: sizeof(Internet) == 8, hardcord
-    //response->userPlaneIPResourceInformation.len = sizeof(PfcpUserPlaneIpResourceInformation);
+    response->userPlaneIPResourceInformation.len = 2+4+1+apnLen;
+    // HACK: sizeof(Internet) == 8, hardcord
+    //response->userPlaneIPResourceInformation.len =
+    //sizeof(PfcpUserPlaneIpResourceInformation);
 
     pfcpMessage.header.type = type;
     status = PfcpBuildMessage(bufBlkPtr, &pfcpMessage);
     UTLT_Assert(*bufBlkPtr, , "buff NULL");
     UTLT_Assert(status == STATUS_OK, return STATUS_ERROR, "PFCP build error");
 
+    UTLT_Debug("PFCP association session setup response built!");
     return STATUS_OK;
 }
 
-Status UpfN4BuildAssociationReleaseResponse(
-        Bufblk **bufBlkPtr, uint8_t type) {
+Status UpfN4BuildAssociationReleaseResponse(Bufblk **bufBlkPtr, uint8_t type) {
     Status status;
     PfcpMessage pfcpMessage;
     PFCPAssociationReleaseResponse *response = NULL;
@@ -275,11 +297,11 @@ Status UpfN4BuildAssociationReleaseResponse(
     status = PfcpBuildMessage(bufBlkPtr, &pfcpMessage);
     UTLT_Assert(status == STATUS_OK, return STATUS_ERROR, "PFCP build error");
 
+    UTLT_Debug("PFCP association release response built!");
     return STATUS_OK;
 }
 
-Status UpfN4BuildHeartbeatResponse (
-        Bufblk **bufBlkPtr, uint8_t type) {
+Status UpfN4BuildHeartbeatResponse(Bufblk **bufBlkPtr, uint8_t type) {
     Status status;
     PfcpMessage pfcpMessage;
     HeartbeatResponse *response;
@@ -296,5 +318,6 @@ Status UpfN4BuildHeartbeatResponse (
     status = PfcpBuildMessage(bufBlkPtr, &pfcpMessage);
     UTLT_Assert(status == STATUS_OK, return STATUS_ERROR, "PFCP build error");
 
+    UTLT_Debug("PFCP heartbeat response built!");
     return STATUS_OK;
 }

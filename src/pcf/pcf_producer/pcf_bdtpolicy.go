@@ -2,208 +2,192 @@ package pcf_producer
 
 import (
 	"context"
+	"fmt"
+	"github.com/google/uuid"
+	"github.com/mohae/deepcopy"
+	"free5gc/lib/Nnrf_NFDiscovery"
 	"free5gc/lib/Nudr_DataRepository"
 	"free5gc/lib/openapi/models"
 	"free5gc/src/pcf/logger"
+	"free5gc/src/pcf/pcf_consumer"
 	"free5gc/src/pcf/pcf_context"
 	"free5gc/src/pcf/pcf_handler/pcf_message"
 	"free5gc/src/pcf/pcf_util"
 	"net/http"
-	"time"
 
 	"github.com/antihax/optional"
 )
 
-var BdtPolicyStore = make(map[string]*models.BdtPolicy) // key is aspid
+func GetBDTPolicyContext(httpChannel chan pcf_message.HttpResponseMessage, bdtPolicyId string) {
 
-func GetBDTPolicyContext(httpChannel chan pcf_message.HttpResponseMessage, BdtPolicyId string) {
+	logger.Bdtpolicylog.Traceln("Handle BDT Policy GET")
+	// check BdtPolicyId from pcfUeContext
+	bdtPolicy, exist := pcf_context.PCF_Self().BdtPolicyPool[bdtPolicyId]
+	if !exist {
+		// not found
+		rsp := pcf_util.GetProblemDetail("Can't find BDTPolicyId related resource", pcf_util.CONTEXT_NOT_FOUND)
+		logger.Bdtpolicylog.Warnf(rsp.Detail)
+		pcf_message.SendHttpResponseMessage(httpChannel, nil, int(rsp.Status), rsp)
+		return
+	}
+	pcf_message.SendHttpResponseMessage(httpChannel, nil, http.StatusOK, bdtPolicy)
 
-	var problem models.ProblemDetails
-	// check BdtRefId from pcfUecontext
-	for key := range BdtPolicyStore {
-		if BdtPolicyStore[key] == nil {
-			continue
-		}
-		if BdtPolicyId == BdtPolicyStore[key].BdtPolData.BdtRefId {
-			pcf_message.SendHttpResponseMessage(httpChannel, nil, 200, BdtPolicyStore[key])
+}
+
+// UpdateBDTPolicy - Update an Individual BDT policy (choose policy data)
+func UpdateBDTPolicyContext(httpChannel chan pcf_message.HttpResponseMessage, bdtPolicyId string, request models.BdtPolicyDataPatch) {
+
+	logger.Bdtpolicylog.Traceln("Handle BDT Policy Update")
+	// check BdtPolicyId from pcfUeContext
+	pcfSelf := pcf_context.PCF_Self()
+	bdtPolicy, exist := pcfSelf.BdtPolicyPool[bdtPolicyId]
+	if !exist {
+		// not found
+		rsp := pcf_util.GetProblemDetail("Can't find BDTPolicyId related resource", pcf_util.CONTEXT_NOT_FOUND)
+		logger.Bdtpolicylog.Warnf(rsp.Detail)
+		pcf_message.SendHttpResponseMessage(httpChannel, nil, int(rsp.Status), rsp)
+		return
+	}
+	for _, policy := range bdtPolicy.BdtPolData.TransfPolicies {
+		if policy.TransPolicyId == request.SelTransPolicyId {
+			polData := bdtPolicy.BdtPolData
+			polReq := bdtPolicy.BdtReqData
+			polData.SelTransPolicyId = request.SelTransPolicyId
+			bdtData := models.BdtData{
+				AspId:       polReq.AspId,
+				TransPolicy: policy,
+				BdtRefId:    polData.BdtRefId,
+			}
+			if polReq.NwAreaInfo != nil {
+				bdtData.NwAreaInfo = *polReq.NwAreaInfo
+			}
+			param := Nudr_DataRepository.PolicyDataBdtDataBdtReferenceIdPutParamOpts{
+				BdtData: optional.NewInterface(bdtData),
+			}
+			client := pcf_util.GetNudrClient(getDefaultUdrUri(pcfSelf))
+			_, err := client.DefaultApi.PolicyDataBdtDataBdtReferenceIdPut(context.Background(), bdtData.BdtRefId, &param)
+			if err != nil {
+				logger.Bdtpolicylog.Warnf("UDR Put BdtDate error[%s]", err.Error())
+			}
+			logger.Bdtpolicylog.Tracef("BDTPolicyId[%s] has Updated with SelTransPolicyId[%d]", bdtPolicyId, request.SelTransPolicyId)
+			pcf_message.SendHttpResponseMessage(httpChannel, nil, http.StatusOK, bdtPolicy)
 			return
 		}
 	}
-	// can not found
-	problem.Status = 404
-	problem.Cause = "CONTEXT_NOT_FOUND"
-	pcf_message.SendHttpResponseMessage(httpChannel, nil, 404, problem)
-
-}
-
-// UpdateBDTPolicy - Update an Individual BDT policy
-func UpdateBDTPolicyContext(httpChannel chan pcf_message.HttpResponseMessage, ReqURI string, body models.BdtPolicyDataPatch) {
-	var problem models.ProblemDetails
-	URI := ReqURI
-	bdtPolicyDataPatch := body
-	// check BdtRefId from pcfUeContext
-	for key := range BdtPolicyStore {
-		if BdtPolicyStore[key] == nil {
-			continue
-		}
-		if URI == BdtPolicyStore[key].BdtPolData.BdtRefId {
-			if bdtPolicyDataPatch.SelTransPolicyId == BdtPolicyStore[key].BdtPolData.SelTransPolicyId {
-				BdtPolicyStore[key].BdtPolData.SelTransPolicyId = bdtPolicyDataPatch.SelTransPolicyId
-				pcf_message.SendHttpResponseMessage(httpChannel, nil, 204, BdtPolicyStore[key])
-				return
-			}
-			for i := 0; i < len(BdtPolicyStore[key].BdtPolData.TransfPolicies); i++ {
-				if bdtPolicyDataPatch.SelTransPolicyId == BdtPolicyStore[key].BdtPolData.TransfPolicies[i].TransPolicyId {
-					transPolicy := BdtPolicyStore[key].BdtPolData.TransfPolicies[i]
-					BdtPolicyStore[key].BdtPolData.SelTransPolicyId = bdtPolicyDataPatch.SelTransPolicyId
-					// update bdtdata to udr
-					client := pcf_util.GetNudrClient("https://localhost:29504")
-					var bdtData models.BdtData
-					bdtData.AspId = key
-					bdtData.BdtRefId = BdtPolicyStore[key].BdtPolData.BdtRefId
-					bdtData.TransPolicy = transPolicy
-					var PolicyDataBdtData optional.Interface
-					PolicyDataBdtData.Default(bdtData)
-					data := Nudr_DataRepository.PolicyDataBdtDataBdtReferenceIdPutParamOpts{
-						BdtData: PolicyDataBdtData,
-					}
-					_, err := client.DefaultApi.PolicyDataBdtDataBdtReferenceIdPut(context.Background(), BdtPolicyStore[key].BdtPolData.BdtRefId, &data)
-					if err != nil {
-						logger.Bdtpolicylog.Warnln("UDR Create bdtdate error")
-					}
-
-					pcf_message.SendHttpResponseMessage(httpChannel, nil, 200, BdtPolicyStore[key])
-					return
-				}
-			}
-		}
-	}
-	// not found
-	problem.Status = 404
-	problem.Cause = "CONTEXT_NOT_FOUND"
-	pcf_message.SendHttpResponseMessage(httpChannel, nil, 404, problem)
+	rsp := pcf_util.GetProblemDetail(fmt.Sprintf("Can't find TransPolicyId[%d] in TransfPolicies with BDTPolicyId[%s]", request.SelTransPolicyId, bdtPolicyId), pcf_util.CONTEXT_NOT_FOUND)
+	logger.Bdtpolicylog.Warnf(rsp.Detail)
+	pcf_message.SendHttpResponseMessage(httpChannel, nil, int(rsp.Status), rsp)
 }
 
 //CreateBDTPolicy - Create a new Individual BDT policy
-func CreateBDTPolicyContext(httpChannel chan pcf_message.HttpResponseMessage, body models.BdtReqData) {
-	var bdtReqData models.BdtReqData = body
-	logger.Bdtpolicylog.Traceln("bdtReqData to store: ", bdtReqData)
+func CreateBDTPolicyContext(httpChannel chan pcf_message.HttpResponseMessage, request models.BdtReqData) {
+	var rsp models.BdtPolicy
+
+	logger.Bdtpolicylog.Traceln("Handle BDT Policy Create")
+
+	pcfSelf := pcf_context.PCF_Self()
+	udrUri := getDefaultUdrUri(pcfSelf)
+	if udrUri == "" {
+		// Can't find any UDR support this Ue
+		rsp := models.ProblemDetails{
+			Status: http.StatusServiceUnavailable,
+			Detail: "Can't find any UDR which supported to this PCF",
+		}
+		logger.Bdtpolicylog.Warnf(rsp.Detail)
+		pcf_message.SendHttpResponseMessage(httpChannel, nil, int(rsp.Status), rsp)
+		return
+	}
+	pcfSelf.DefaultUdrUri = udrUri
+
+	// Query BDT DATA array from UDR
+	client := pcf_util.GetNudrClient(udrUri)
+	bdtDatas, response, err := client.DefaultApi.PolicyDataBdtDataGet(context.Background())
+	if err != nil || response == nil || response.StatusCode != http.StatusOK {
+		rsp := models.ProblemDetails{
+			Status: http.StatusServiceUnavailable,
+			Detail: "Query to UDR failed",
+		}
+		logger.Bdtpolicylog.Warnf("Query to UDR failed")
+		pcf_message.SendHttpResponseMessage(httpChannel, nil, int(rsp.Status), rsp)
+		return
+	}
+	// TODO: decide BDT Policy from other bdt policy data
+	rsp.BdtReqData = deepcopy.Copy(&request).(*models.BdtReqData)
+	var bdtData *models.BdtData
 	var bdtPolicyData models.BdtPolicyData
-	var problem models.ProblemDetails
-	var bdtPolicy models.BdtPolicy
-	client := pcf_util.GetNudrClient("https://localhost:29504")
-	NeedPolicy := true
-	// check request essential IE
-	if (bdtReqData.AspId != "") && (bdtReqData.NumOfUes != 0) {
-		bdtPolicyData.BdtRefId = pcf_context.DefaultBdtRefId + bdtReqData.AspId
-
-		//query pcfUeContext bdtpolicy and check pcfUeContext avoid rePolicy
-		key := bdtReqData.AspId
-		if BdtPolicyStore[key] != nil {
-			for i := 0; i < len(BdtPolicyStore[key].BdtPolData.TransfPolicies); i++ {
-				if BdtPolicyStore[key].BdtPolData.SelTransPolicyId == BdtPolicyStore[key].BdtPolData.TransfPolicies[i].TransPolicyId {
-					//check query pcfUeContext bdtpolicy stoptime
-					if BdtPolicyStore[key].BdtPolData.TransfPolicies[i].RecTimeInt.StopTime.After(time.Now()) {
-						NeedPolicy = true
-					} else {
-						NeedPolicy = false
-					}
-				}
-			}
-			if !NeedPolicy {
-				var uri = pcf_util.PCF_BASIC_PATH + pcf_context.BdtPolicyUri + BdtPolicyStore[key].BdtPolData.BdtRefId
-				respHeader := make(http.Header)
-				respHeader.Set("Location", uri)
-				pcf_message.SendHttpResponseMessage(httpChannel, respHeader, 303, nil)
-				return
-			}
+	for _, data := range bdtDatas {
+		// If ASP has exist, use its background data policy
+		if request.AspId == data.AspId {
+			bdtData = &data
+			break
 		}
-		// pcf buffer has no data about this request and query udr bdtpolicy data avoid re policy
-		bdtdata, _, err := client.DefaultApi.PolicyDataBdtDataGet(context.Background())
-		if err == nil && bdtdata != nil {
-			// query found bdtpolicy data
-			bdtPolicyData.SelTransPolicyId = 1
-			bdtPolicyData.SuppFeat = bdtReqData.SuppFeat
-			for i := 0; i < len(bdtdata); i++ {
-				if bdtReqData.AspId == bdtdata[i].AspId {
-					// found
-					bdtPolicyData.SelTransPolicyId = 1
-					bdtPolicyData.SuppFeat = bdtReqData.SuppFeat
-					bdtPolicyData.BdtRefId = bdtdata[i].BdtRefId
-					bdtPolicyData.TransfPolicies[0] = bdtdata[i].TransPolicy
-					break
-				}
-			}
-			// check query data stoptime
-			if bdtPolicyData.TransfPolicies[0].RecTimeInt.StopTime.After(time.Now()) {
-				NeedPolicy = false
-			}
-
-			if !NeedPolicy {
-				// query data no problem and save bdtpolicy data for pcfUeContext
-				bdtPolicy.BdtPolData = &bdtPolicyData
-				bdtPolicy.BdtReqData = &bdtReqData
-				BdtPolicyStore[key] = &bdtPolicy
-				pcf_message.SendHttpResponseMessage(httpChannel, nil, 201, bdtPolicyData)
-
-				return
-			}
-		}
-		// not found or timeout,make policy
-		if NeedPolicy {
-			if bdtReqData.DesTimeInt == nil {
-				*bdtReqData.DesTimeInt = pcf_util.GetDefaultTime()
-			}
-			if bdtReqData.VolPerUe == nil {
-				*bdtReqData.VolPerUe = pcf_util.GetDefaultDataRate()
-			}
-			StartTime, _ := pcf_util.TimeParse(*bdtReqData.DesTimeInt.StartTime)
-			StopTime, _ := pcf_util.TimeParse(*bdtReqData.DesTimeInt.StopTime)
-			bdtPolicyData.SelTransPolicyId = 1
-			bdtPolicyData.SuppFeat = bdtReqData.SuppFeat
-
-			bdtPolicyData.TransfPolicies = []models.TransferPolicy{
-				{
-					//MaxBitRateUl: pcf_util.Convert(bdtReqData.VolPerUe.UplinkVolume), //option
-					//MaxBitRateDl: pcf_util.Convert(bdtReqData.VolPerUe.DownlinkVolume), //option
-					RatingGroup: 1,
-					RecTimeInt: &models.TimeWindow{
-						StartTime: &StartTime,
-						StopTime:  &StopTime,
-					},
-					TransPolicyId: 1,
-				},
-			}
-		}
-
-		//save bdtpolicy data for pcfUeContext
-		bdtPolicy.BdtPolData = &bdtPolicyData
-		bdtPolicy.BdtReqData = &bdtReqData
-		BdtPolicyStore[key] = &bdtPolicy
-		pcf_message.SendHttpResponseMessage(httpChannel, nil, 201, bdtPolicyData)
-
-		// Udr Create bdtpolicy
-		client := pcf_util.GetNudrClient("https://localhost:29504")
-		var bdtData models.BdtData
-		bdtData.AspId = bdtReqData.AspId
-		bdtData.BdtRefId = BdtPolicyStore[key].BdtPolData.BdtRefId
-		bdtData.TransPolicy = BdtPolicyStore[key].BdtPolData.TransfPolicies[0]
-		var PolicyDataBdtData optional.Interface
-		PolicyDataBdtData.Default(bdtData)
-		data := Nudr_DataRepository.PolicyDataBdtDataBdtReferenceIdPutParamOpts{
-			BdtData: PolicyDataBdtData,
-		}
-		_, err = client.DefaultApi.PolicyDataBdtDataBdtReferenceIdPut(context.Background(), BdtPolicyStore[key].BdtPolData.BdtRefId, &data)
-		if err != nil {
-			logger.Bdtpolicylog.Warnln("UDR Create bdtdate error")
-		}
-
-		return
-
+	}
+	// Only support one bdt policy, TODO: more policy for decision
+	if bdtData != nil {
+		// found
+		// modify policy according to new request
+		bdtData.TransPolicy.RecTimeInt = request.DesTimeInt
 	} else {
-		problem.Status = 404
-		problem.Cause = "CONTEXT_NOT_FOUND"
-		pcf_message.SendHttpResponseMessage(httpChannel, nil, 404, problem)
-		return
+		// use default bdt policy, TODO: decide bdt transfer data policy
+		bdtData = &models.BdtData{
+			AspId:       request.AspId,
+			BdtRefId:    uuid.New().String(),
+			TransPolicy: getDefaultTransferPolicy(1, *request.DesTimeInt),
+		}
+	}
+	if request.NwAreaInfo != nil {
+		bdtData.NwAreaInfo = *request.NwAreaInfo
+	}
+	bdtPolicyData.SelTransPolicyId = bdtData.TransPolicy.TransPolicyId
+	// no support feature in subclause 5.8 of TS29554
+	bdtPolicyData.BdtRefId = bdtData.BdtRefId
+	bdtPolicyData.TransfPolicies = append(bdtPolicyData.TransfPolicies, bdtData.TransPolicy)
+	rsp.BdtPolData = &bdtPolicyData
+	bdtPolicyId := pcfSelf.AllocBdtPolicyId()
+	pcfSelf.BdtPolicyPool[bdtPolicyId] = rsp
+
+	locationHeader := pcf_util.GetResourceUri(models.ServiceName_NPCF_BDTPOLICYCONTROL, bdtPolicyId)
+	headers := http.Header{
+		"Location": {locationHeader},
+	}
+	logger.Bdtpolicylog.Tracef("BDT Policy Id[%s] Create", bdtPolicyId)
+	pcf_message.SendHttpResponseMessage(httpChannel, headers, http.StatusCreated, rsp)
+
+	// Update UDR BDT Data(PUT)
+	param := Nudr_DataRepository.PolicyDataBdtDataBdtReferenceIdPutParamOpts{
+		BdtData: optional.NewInterface(*bdtData),
+	}
+	_, err = client.DefaultApi.PolicyDataBdtDataBdtReferenceIdPut(context.Background(), bdtPolicyData.BdtRefId, &param)
+	if err != nil {
+		logger.Bdtpolicylog.Warnf("UDR  Put BdtDate error[%s]", err.Error())
+	}
+}
+
+func getDefaultUdrUri(context *pcf_context.PCFContext) string {
+	if context.DefaultUdrUri != "" {
+		return context.DefaultUdrUri
+	}
+	param := Nnrf_NFDiscovery.SearchNFInstancesParamOpts{
+		ServiceNames: optional.NewInterface([]models.ServiceName{models.ServiceName_NUDR_DR}),
+	}
+	resp, err := pcf_consumer.SendSearchNFInstances(context.NrfUri, models.NfType_UDR, models.NfType_PCF, param)
+	if err != nil {
+		return ""
+	}
+	for _, nfProfile := range resp.NfInstances {
+		udruri := pcf_util.SearchNFServiceUri(nfProfile, models.ServiceName_NUDR_DR, models.NfServiceStatus_REGISTERED)
+		if udruri != "" {
+			return udruri
+		}
+	}
+	return ""
+}
+
+// get default background data transfer policy
+func getDefaultTransferPolicy(transferPolicyId int32, timeWindow models.TimeWindow) models.TransferPolicy {
+	return models.TransferPolicy{
+		TransPolicyId: transferPolicyId,
+		RecTimeInt:    &timeWindow,
+		RatingGroup:   1,
 	}
 }

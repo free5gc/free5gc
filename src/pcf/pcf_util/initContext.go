@@ -1,6 +1,7 @@
 package pcf_util
 
 import (
+	"encoding/hex"
 	"free5gc/lib/openapi/models"
 	"free5gc/src/pcf/factory"
 	"free5gc/src/pcf/logger"
@@ -9,6 +10,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// Init PCF Context from config flie
 func InitpcfContext(context *pcf_context.PCFContext) {
 	config := factory.PcfConfig
 	logger.UtilLog.Infof("pcfconfig Info: Version[%s] Description[%s]", config.Info.Version, config.Info.Description)
@@ -35,11 +37,12 @@ func InitpcfContext(context *pcf_context.PCFContext) {
 			context.UriScheme = models.UriScheme_HTTP
 		}
 	}
-	serviceNameList := configuration.ServiceNameList
-	context.InitNFService(serviceNameList, config.Info.Version)
+	serviceList := configuration.ServiceList
+	context.InitNFService(serviceList, config.Info.Version)
 	context.TimeFormat = configuration.TimeFormat
 	context.DefaultBdtRefId = configuration.DefaultBdtRefId
 	for _, service := range context.NfService {
 		context.PcfServiceUris[service.ServiceName] = service.ApiPrefix + "/" + string(service.ServiceName) + "/" + (*service.Versions)[0].ApiVersionInUri
+		context.PcfSuppFeats[service.ServiceName], _ = hex.DecodeString(service.SupportedFeatures)
 	}
 }

@@ -3,9 +3,6 @@ package UEContextManagement_test
 import (
 	"context"
 	"fmt"
-	"github.com/antihax/optional"
-	"github.com/gin-gonic/gin"
-	"github.com/stretchr/testify/assert"
 	Nudm_UECM_Client "free5gc/lib/Nudm_UEContextManagement"
 	"free5gc/lib/http2_util"
 	"free5gc/lib/openapi/models"
@@ -14,9 +11,12 @@ import (
 	"free5gc/src/udm/logger"
 	"free5gc/src/udm/udm_context"
 	"free5gc/src/udm/udm_handler"
-	"free5gc/src/udm/udm_util"
 	"net/http"
 	"testing"
+
+	"github.com/antihax/optional"
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGetAmfNon3gppAccess(t *testing.T) {
@@ -34,7 +34,8 @@ func TestGetAmfNon3gppAccess(t *testing.T) {
 			assert.True(t, err == nil)
 		}
 	}()
-	udm_util.testInitUdmConfig()
+
+	udm_context.TestInit()
 	go udm_handler.Handle()
 
 	go func() { // fake udr server

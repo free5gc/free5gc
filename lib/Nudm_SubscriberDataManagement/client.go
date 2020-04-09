@@ -41,6 +41,7 @@ type APIClient struct {
 	TraceConfigurationDataRetrievalApi              *TraceConfigurationDataRetrievalApiService
 	UEContextInSMFDataRetrievalApi                  *UEContextInSMFDataRetrievalApiService
 	UEContextInSMSFDataRetrievalApi                 *UEContextInSMSFDataRetrievalApiService
+	DataChangeNotificationCallbackDocumentApi       *DataChangeNotificationCallbackDocumentApiService
 }
 
 type service struct {
@@ -81,6 +82,7 @@ func NewAPIClient(cfg *Configuration) *APIClient {
 	c.TraceConfigurationDataRetrievalApi = (*TraceConfigurationDataRetrievalApiService)(&c.common)
 	c.UEContextInSMFDataRetrievalApi = (*UEContextInSMFDataRetrievalApiService)(&c.common)
 	c.UEContextInSMSFDataRetrievalApi = (*UEContextInSMSFDataRetrievalApiService)(&c.common)
+	c.DataChangeNotificationCallbackDocumentApi = (*DataChangeNotificationCallbackDocumentApiService)(&c.common)
 
 	return c
 }

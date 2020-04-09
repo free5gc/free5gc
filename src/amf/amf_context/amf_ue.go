@@ -35,14 +35,17 @@ type AmfUe struct {
 	/* Gmm State */
 	Sm map[models.AccessType]*fsm.FSM
 	/* Registration procedure related context */
-	RegistrationType5GS             uint8
-	IdentityTypeUsedForRegistration uint8
-	RegistrationRequest             *nasMessage.RegistrationRequest
-	ServingAmfChanged               bool
-	DeregistrationTargetAccessType  uint8 // only used when deregistration procedure is initialized by the network
+	RegistrationType5GS                uint8
+	IdentityTypeUsedForRegistration    uint8
+	RegistrationRequest                *nasMessage.RegistrationRequest
+	ServingAmfChanged                  bool
+	DeregistrationTargetAccessType     uint8 // only used when deregistration procedure is initialized by the network
+	RegistrationAcceptForNon3GPPAccess []byte
+	/* Used for AMF relocation */
+	TargetAmfUri string
 	/* Ue Identity*/
 	PlmnId              models.PlmnId
-	Suci                []byte
+	Suci                string
 	Supi                string
 	UnauthenticatedSupi bool
 	Gpsi                string
@@ -51,12 +54,14 @@ type AmfUe struct {
 	Guti                string
 	GroupID             string
 	EBI                 int32
+	IsCleartext         bool
 	/* Ue Identity*/
 	EventSubscriptionsInfo map[string]*AmfUeEventSubscription
 	/* User Location*/
 	RatType                  models.RatType
 	Location                 models.UserLocation
 	Tai                      models.Tai
+	LocationChanged          bool
 	LastVisitedRegisteredTai models.Tai
 	TimeZone                 string
 	/* context about udm */
@@ -83,9 +88,13 @@ type AmfUe struct {
 	Kseaf                             string
 	Kamf                              string
 	/* context about PCF */
-	PcfUri              string
-	PolicyAssociationId string
-	AmPolicyAssociation *models.PolicyAssociation
+	PcfId                        string
+	PcfUri                       string
+	PolicyAssociationId          string
+	AmPolicyUri                  string
+	AmPolicyAssociation          *models.PolicyAssociation
+	RequestTriggerLocationChange bool // true if AmPolicyAssociation.Trigger contains RequestTrigger_LOC_CH
+	ConfigurationUpdateMessage   []byte
 	/* UeContextForHandover*/
 	HandoverNotifyUri string
 	/* N1N2Message */
@@ -128,11 +137,12 @@ type AmfUe struct {
 	/* Registration Area */
 	RegistrationArea map[models.AccessType][]models.Tai
 	LadnInfo         []LADN
-	/* Network Slicing related context */
-	AllowedNssai                      map[models.AccessType][]models.Snssai
-	RejectedNssai                     map[models.AccessType][]models.Snssai
-	RejectCause                       []uint8
-	ConfiguredNssai                   map[models.AccessType][]models.Snssai
+	/* Network Slicing related context and Nssf */
+	NssfId                            string
+	NssfUri                           string
+	NetworkSliceInfo                  *models.AuthorizedNetworkSliceInfo
+	AllowedNssai                      map[models.AccessType][]models.AllowedSnssai
+	ConfiguredNssai                   []models.ConfiguredSnssai
 	NetworkSlicingSubscriptionChanged bool
 	/* T3513(Paging) */
 	T3513            *time.Timer // for paging
@@ -236,9 +246,7 @@ func (ue *AmfUe) init() {
 	ue.StoredSmContext = make(map[int32]*StoredSmContext)
 	ue.RanUe = make(map[models.AccessType]*RanUe)
 	ue.RegistrationArea = make(map[models.AccessType][]models.Tai)
-	ue.AllowedNssai = make(map[models.AccessType][]models.Snssai)
-	ue.RejectedNssai = make(map[models.AccessType][]models.Snssai)
-	ue.ConfiguredNssai = make(map[models.AccessType][]models.Snssai)
+	ue.AllowedNssai = make(map[models.AccessType][]models.AllowedSnssai)
 	ue.N1N2MessageIDGenerator = 1
 	ue.N1N2MessageSubscribeInfo = make(map[string]*models.UeN1N2InfoSubscriptionCreateData)
 	ue.OnGoing = make(map[models.AccessType]*OnGoing)
@@ -251,6 +259,7 @@ func (ue *AmfUe) init() {
 	ue.SecurityCapabilities.NRIntegrityProtectionAlgorithms = [2]byte{0x00, 0x00}
 	ue.SecurityCapabilities.EUTRAEncryptionAlgorithms = [2]byte{0x00, 0x00}
 	ue.SecurityCapabilities.EUTRAIntegrityProtectionAlgorithms = [2]byte{0x00, 0x00}
+	ue.IsCleartext = true
 }
 
 func (ue *AmfUe) CmConnect(anType models.AccessType) bool {
@@ -332,6 +341,18 @@ func (ue *AmfUe) InSubscribedNssai(targetSNssai models.Snssai) bool {
 	return false
 }
 
+func (ue *AmfUe) GetNsiInformationFromSnssai(anType models.AccessType, snssai models.Snssai) *models.NsiInformation {
+	for _, allowedSnssai := range ue.AllowedNssai[anType] {
+		if reflect.DeepEqual(*allowedSnssai.AllowedSnssai, snssai) {
+			// TODO: select NsiInformation based on operator policy
+			if len(allowedSnssai.NsiInformationList) != 0 {
+				return &allowedSnssai.NsiInformationList[0]
+			}
+		}
+	}
+	return nil
+}
+
 func (ue *AmfUe) TaiListInRegistrationArea(taiList []models.Tai) bool {
 	for _, tai := range taiList {
 		if !InTaiList(tai, ue.RegistrationArea[ue.GetAnType()]) {
@@ -359,7 +380,7 @@ func (ue *AmfUe) SecurityContextIsValid() bool {
 // Kamf Derivation function defined in TS 33.501 Annex A.7
 func (ue *AmfUe) DerivateKamf() {
 
-	P0, _ := hex.DecodeString(ue.Supi)
+	P0 := []byte(ue.Supi)
 	L0 := UeauCommon.KDFLen(P0)
 	P1 := ue.ABBA
 	L1 := UeauCommon.KDFLen(P1)
@@ -493,4 +514,10 @@ func (ue *AmfUe) ClearRegistrationRequestData() {
 	ue.RegistrationType5GS = 0
 	ue.IdentityTypeUsedForRegistration = 0
 	ue.ServingAmfChanged = false
+	ue.RegistrationAcceptForNon3GPPAccess = nil
+}
+
+func (ue *AmfUe) RemoveAmPolicyAssociation() {
+	ue.AmPolicyAssociation = nil
+	ue.PolicyAssociationId = ""
 }

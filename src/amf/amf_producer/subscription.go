@@ -31,7 +31,7 @@ func HandleAMFStatusChangeSubscribeRequest(httpChannel chan amf_message.HandlerR
 		headers := http.Header{
 			"Location": {locationHeader},
 		}
-		amfSelf.AMFStatusSubscriptions[newSubscriptionID].AmfStatusUri = locationHeader
+		amfSelf.AMFStatusSubscriptions[newSubscriptionID].AmfStatusUri = body.AmfStatusUri
 		amfSelf.AMFStatusSubscriptions[newSubscriptionID].GuamiList = response.GuamiList
 		amfSelf.AMFStatusSubscriptionIDGenerator++
 		amf_message.SendHttpResponseMessage(httpChannel, headers, http.StatusCreated, response)

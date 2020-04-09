@@ -24,7 +24,7 @@ func SendUEAuthenticationAuthenticateRequest(ue *amf_context.AmfUe, resynchroniz
 	servedGuami := amfSelf.ServedGuamiList[0]
 
 	var authInfo models.AuthenticationInfo
-	authInfo.SupiOrSuci = ue.Supi
+	authInfo.SupiOrSuci = ue.Suci
 	mnc, _ := strconv.Atoi(servedGuami.PlmnId.Mnc)
 	authInfo.ServingNetworkName = fmt.Sprintf("5G:mnc%03d.mcc%s.3gppnetwork.org", mnc, servedGuami.PlmnId.Mcc)
 	if resynchronizationInfo != nil {
@@ -62,7 +62,7 @@ func SendAuth5gAkaConfirmRequest(ue *amf_context.AmfUe, resStar string) (respons
 		}),
 	}
 
-	confirmResult, httpResponse, err := client.DefaultApi.UeAuthenticationsAuthCtxId5gAkaConfirmationPut(context.Background(), ue.Supi, confirmData)
+	confirmResult, httpResponse, err := client.DefaultApi.UeAuthenticationsAuthCtxId5gAkaConfirmationPut(context.Background(), ue.Suci, confirmData)
 	if err == nil {
 		response = &confirmResult
 	} else if httpResponse != nil {
@@ -97,7 +97,7 @@ func SendEapAuthConfirmRequest(ue *amf_context.AmfUe, eapMsg nasType.EAPMessage)
 		}),
 	}
 
-	eapSession, httpResponse, err := client.DefaultApi.EapAuthMethod(context.Background(), ue.Supi, eapSessionReq)
+	eapSession, httpResponse, err := client.DefaultApi.EapAuthMethod(context.Background(), ue.Suci, eapSessionReq)
 	if err == nil {
 		response = &eapSession
 	} else if httpResponse != nil {

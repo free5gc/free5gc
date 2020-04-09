@@ -9,33 +9,23 @@ extern "C" {
 
 #include "utlt_lib.h"
 
-#define GTPV1_HEADER_LEN 8
-#define GTPV1_OPT_HEADER_LEN 4
-
 // TODO : Handle ntohl and ntohs for non-uint8_t type
 typedef struct _Gtpv1Header {
-    struct {
-        ENDIAN6(
-            uint8_t version:3;,
-            uint8_t PT:1;,
-            uint8_t spare:1;,
-            uint8_t extHdrFlag:1;,
-            uint8_t seqFlag:1;,
-            uint8_t pn:1;
-        )
-    };
-    
-    uint8_t type;
+    uint8_t  flags;
+    uint8_t  type;
     uint16_t _length;
     uint32_t _teid;
 } __attribute__ ((packed)) Gtpv1Header;
 
-typedef struct _Gtp1OptHeader {
+typedef struct _Gtpv1OptHeader {
     uint16_t _seqNum;
-    uint8_t nPdnNum;
-    uint8_t nextExtHrdType;
+    uint8_t  nPdnNum;
+    uint8_t  nextExtHrdType;
 
-} __attribute__ ((packed)) Gtp1OptHeader;
+} __attribute__ ((packed)) Gtpv1OptHeader;
+
+#define GTPV1_HEADER_LEN       8
+#define GTPV1_OPT_HEADER_LEN   4
 
 #define GTPV1_ECHO_REQUEST     1
 #define GTPV1_ECHO_RESPONSE    2

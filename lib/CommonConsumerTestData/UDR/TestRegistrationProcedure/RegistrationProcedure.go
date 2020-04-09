@@ -10,6 +10,9 @@ const (
 
 var TestAmDataTable = make(map[string]models.AccessAndMobilitySubscriptionData)
 var TestSmfSelDataTable = make(map[string]models.SmfSelectionSubscriptionData)
+var TestSmSelDataTable = make(map[string]models.SessionManagementSubscriptionData)
+var TestAmPolicyDataTable = make(map[string]models.AmPolicyData)
+var TestSmPolicyDataTable = make(map[string]models.SmPolicyData)
 
 func init() {
 	TestAmDataTable[FREE5GC_CASE] = models.AccessAndMobilitySubscriptionData{
@@ -58,6 +61,68 @@ func init() {
 					{
 						Dnn: "internet",
 					},
+				},
+			},
+		},
+	}
+
+	TestAmPolicyDataTable[FREE5GC_CASE] = models.AmPolicyData{
+		SubscCats: []string{
+			"free5gc",
+		},
+	}
+
+	TestSmPolicyDataTable[FREE5GC_CASE] = models.SmPolicyData{
+		SmPolicySnssaiData: map[string]models.SmPolicySnssaiData{
+			"01010203": {
+				Snssai: &models.Snssai{
+					Sd:  "010203",
+					Sst: 1,
+				},
+				SmPolicyDnnData: map[string]models.SmPolicyDnnData{
+					"internet": {
+						Dnn: "internet",
+					},
+				},
+			},
+			"01112233": {
+				Snssai: &models.Snssai{
+					Sd:  "112233",
+					Sst: 1,
+				},
+				SmPolicyDnnData: map[string]models.SmPolicyDnnData{
+					"internet": {
+						Dnn: "internet",
+					},
+				},
+			},
+		},
+	}
+
+	TestSmSelDataTable[FREE5GC_CASE] = models.SessionManagementSubscriptionData{
+		SingleNssai: &models.Snssai{
+			Sst: 1,
+			Sd:  "010203",
+		},
+		DnnConfigurations: map[string]models.DnnConfiguration{
+			"internet": models.DnnConfiguration{
+				SscModes: &models.SscModes{
+					DefaultSscMode:  models.SscMode__1,
+					AllowedSscModes: []models.SscMode{models.SscMode__1, models.SscMode__2, models.SscMode__3},
+				},
+				PduSessionTypes: &models.PduSessionTypes{DefaultSessionType: models.PduSessionType_IPV4,
+					AllowedSessionTypes: []models.PduSessionType{models.PduSessionType_IPV4},
+				},
+				SessionAmbr: &models.Ambr{
+					Uplink:   "1000 Kbps",
+					Downlink: "1000 Kbps",
+				},
+				Var5gQosProfile: &models.SubscribedDefaultQos{
+					Var5qi: 9,
+					Arp: &models.Arp{
+						PriorityLevel: 8,
+					},
+					PriorityLevel: 8,
 				},
 			},
 		},

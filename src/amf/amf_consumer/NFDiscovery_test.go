@@ -42,7 +42,7 @@ func TestSendSearchNFInstances(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	uri, err1 := amf_consumer.SendRegisterNFInstance(TestAmf.TestAmf.NrfUri, TestAmf.TestAmf.NfId, nfprofile)
+	uri, _, err1 := amf_consumer.SendRegisterNFInstance(TestAmf.TestAmf.NrfUri, TestAmf.TestAmf.NfId, nfprofile)
 	if err1 != nil {
 		t.Error(err1.Error())
 	} else {
@@ -52,7 +52,7 @@ func TestSendSearchNFInstances(t *testing.T) {
 	param := Nnrf_NFDiscovery.SearchNFInstancesParamOpts{
 		ServiceNames: optional.NewInterface([]models.ServiceName{models.ServiceName_NAMF_COMM}),
 	}
-	result, err2 := amf_consumer.SendSearchNFInstances(TestAmf.TestAmf.NrfUri, models.NfType_AMF, models.NfType_AMF, param)
+	result, err2 := amf_consumer.SendSearchNFInstances(TestAmf.TestAmf.NrfUri, models.NfType_AMF, models.NfType_AMF, &param)
 	if err2 != nil {
 		t.Error(err1.Error())
 	} else if !reflect.DeepEqual(nfprofile, result.NfInstances[0]) {

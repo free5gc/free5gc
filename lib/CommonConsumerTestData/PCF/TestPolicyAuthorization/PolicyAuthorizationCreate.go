@@ -4,52 +4,119 @@ import (
 	"free5gc/lib/openapi/models"
 )
 
-func GetPostAppSessions201Data() models.AppSessionContext {
-	PostAppSessions201Data := models.AppSessionContext{
+func GetPostAppSessionsData_Normal() models.AppSessionContext {
+	PostAppSessionsData := models.AppSessionContext{
 		AscReqData: &models.AppSessionContextReqData{
 			AfRoutReq: &models.AfRoutingRequirement{},
+			Dnn:       "internet",
+			SliceInfo: &models.Snssai{
+				Sst: 1,
+				Sd:  "010203",
+			},
 			MedComponents: map[string]models.MediaComponent{
-				"mediacomponent1": {
-					FStatus: models.FlowStatus_ENABLED,
+				"1": {
+					MedCompN: 1,
+					MarBwDl:  "400 Mbps",
+					MarBwUl:  "400 Mbps",
+					MirBwDl:  "20 Mbps",
+					MirBwUl:  "20 Mbps",
+					MedType:  models.MediaType_AUDIO,
+					FStatus:  models.FlowStatus_ENABLED,
+					MedSubComps: map[string]models.MediaSubComponent{
+						"1": {
+							FNum:    1,
+							FDescs:  []string{"permit out ip from 127.0.0.1 to 45.45.0.2"},
+							FStatus: models.FlowStatus_ENABLED,
+						},
+					},
 				},
 			},
 			EvSubsc: &models.EventsSubscReqData{
 				Events: []models.AfEventSubscription{
 					{
-						Event:       "ACCESS_TYPE_CHANGE",
-						NotifMethod: "EVENT_DETECTION",
+						Event:       models.AfEvent_ACCESS_TYPE_CHANGE,
+						NotifMethod: models.AfNotifMethod_EVENT_DETECTION,
+					},
+					{
+						Event: models.AfEvent_QOS_NOTIF,
+					},
+					{
+						Event: models.AfEvent_PLMN_CHG,
+					},
+					{
+						Event: models.AfEvent_FAILED_RESOURCES_ALLOCATION,
+					},
+					{
+						Event: models.AfEvent_SUCCESSFUL_RESOURCES_ALLOCATION,
+					},
+					{
+						Event: models.AfEvent_USAGE_REPORT,
 					},
 				},
+				NotifUri: "https://127.0.0.1:12345",
+				UsgThres: &models.UsageThreshold{
+					Duration:    100,
+					TotalVolume: 30000,
+				},
 			},
-			NotifUri: "NotifUri",
-			SuppFeat: "0",
-			Supi:     "string1",
-		},
-		AscRespData: &models.AppSessionContextRespData{},
-		EvsNotif: &models.EventsNotification{
-			EvSubsUri: "EvSubsUri",
-			EvNotifs: []models.AfEventNotification{
-				{Event: "USAGE_REPORT"},
-			},
+			NotifUri: "https://127.0.0.1:12345",
+			SuppFeat: "5", //b'0111'
+			Supi:     "imsi-2089300007487",
+			UeIpv4:   "45.45.0.2",
 		},
 	}
-	return PostAppSessions201Data
+	return PostAppSessionsData
 }
 
-func GetPostAppSessions403Data() models.AppSessionContext {
-	PostAppSessions403Data := models.AppSessionContext{
-		AscReqData:  &models.AppSessionContextReqData{},
-		AscRespData: &models.AppSessionContextRespData{},
-		EvsNotif:    &models.EventsNotification{},
+func GetPostAppSessionsData_Flow3() models.AppSessionContext {
+	PostAppSessionsData := GetPostAppSessionsData_Normal()
+	medComp := PostAppSessionsData.AscReqData.MedComponents["1"]
+	medComp.MedSubComps["2"] = models.MediaSubComponent{
+		FNum:    2,
+		FDescs:  []string{"permit in ip from 127.0.0.2 to 45.45.0.2"},
+		MarBwDl: "200 Mbps",
+		FStatus: models.FlowStatus_ENABLED,
 	}
-	return PostAppSessions403Data
+	medComp.MedSubComps["3"] = models.MediaSubComponent{
+		FNum:    3,
+		FDescs:  []string{"permit inout ip from 127.0.0.3 to 45.45.0.2"},
+		MarBwDl: "500 Mbps",
+		FStatus: models.FlowStatus_ENABLED,
+	}
+	PostAppSessionsData.AscReqData.MedComponents["1"] = medComp
+	return PostAppSessionsData
+}
+
+func GetPostAppSessionsData_403Forbidden() models.AppSessionContext {
+	PostAppSessionsData := GetPostAppSessionsData_Normal()
+	medComp := PostAppSessionsData.AscReqData.MedComponents["1"]
+	medComp.MedSubComps["1"] = models.MediaSubComponent{
+		FNum:    1,
+		FDescs:  []string{"permit in ip from 127.0.0.4 to 45.45.0.2"},
+		FStatus: models.FlowStatus_ENABLED,
+	}
+	medComp.MirBwUl = "500 Mbps"
+	PostAppSessionsData.AscReqData.MedComponents["1"] = medComp
+	return PostAppSessionsData
+}
+
+func GetPostAppSessionsData_400() models.AppSessionContext {
+	PostAppSessionsData := GetPostAppSessionsData_Normal()
+	PostAppSessionsData.AscReqData.MedComponents = nil
+	return PostAppSessionsData
+}
+
+func GetPostAppSessionsData_NoEvent() models.AppSessionContext {
+	PostAppSessionsData := GetPostAppSessionsData_Normal()
+	PostAppSessionsData.AscReqData.EvSubsc = nil
+	return PostAppSessionsData
 }
 
 func GetDeleteAppSession204Data() models.AppSessionContext {
 	DeleteAppSession204Data := models.AppSessionContext{
 		AscReqData: &models.AppSessionContextReqData{
 			Supi:     "123",
-			NotifUri: "NotifUri",
+			NotifUri: "https://127.0.0.1:12345",
 			SuppFeat: "0",
 		},
 		AscRespData: &models.AppSessionContextRespData{},
@@ -61,15 +128,16 @@ func GetDeleteAppSession204Data() models.AppSessionContext {
 func GetUpdateEventsSubsc201Data() models.EventsSubscReqData {
 	UpdateEventsSubsc201Data := models.EventsSubscReqData{
 		Events: []models.AfEventSubscription{
-			{Event: "ACCESS_TYPE_CHANGE",
-				NotifMethod: "EVENT_DETECTION"},
+			{
+				Event:       models.AfEvent_ACCESS_TYPE_CHANGE,
+				NotifMethod: models.AfNotifMethod_EVENT_DETECTION,
+			},
+			{
+				Event:       models.AfEvent_PLMN_CHG,
+				NotifMethod: models.AfNotifMethod_EVENT_DETECTION,
+			},
 		},
-		NotifUri: "Put_NotifUri",
-		UsgThres: &models.UsageThreshold{
-			Duration:       0,
-			TotalVolume:    0,
-			DownlinkVolume: 0,
-			UplinkVolume:   0},
+		NotifUri: "https://127.0.0.1:12345",
 	}
 	return UpdateEventsSubsc201Data
 }
@@ -77,35 +145,42 @@ func GetUpdateEventsSubsc201Data() models.EventsSubscReqData {
 func GetUpdateEventsSubsc200Data() models.EventsSubscReqData {
 	UpdateEventsSubsc200Data := models.EventsSubscReqData{
 		Events: []models.AfEventSubscription{
-			{Event: "FAILED_RESOURCES_ALLOCATION",
-				NotifMethod: "ONE_TIME"},
+			{
+				Event:       models.AfEvent_PLMN_CHG,
+				NotifMethod: models.AfNotifMethod_EVENT_DETECTION,
+			},
 		},
-		NotifUri: "Put_NotifUri",
-		UsgThres: &models.UsageThreshold{
-			Duration:       0,
-			TotalVolume:    0,
-			DownlinkVolume: 0,
-			UplinkVolume:   0},
+		NotifUri: "https://127.0.0.1:12345",
 	}
 	return UpdateEventsSubsc200Data
 }
 
-func GetUpdateEventsSubsc403Data() models.EventsSubscReqData {
-	UpdateEventsSubsc403Data := models.EventsSubscReqData{
+func GetUpdateEventsSubsc204Data() models.EventsSubscReqData {
+	UpdateEventsSubsc204Data := models.EventsSubscReqData{
+		Events: []models.AfEventSubscription{
+			{
+				Event:       models.AfEvent_SUCCESSFUL_RESOURCES_ALLOCATION,
+				NotifMethod: models.AfNotifMethod_EVENT_DETECTION,
+			},
+		},
+		NotifUri: "https://127.0.0.1:12345",
+	}
+	return UpdateEventsSubsc204Data
+}
+
+func GetUpdateEventsSubsc400Data() models.EventsSubscReqData {
+	UpdateEventsSubsc400Data := models.EventsSubscReqData{
 		UsgThres: &models.UsageThreshold{
 			Duration:       0,
 			TotalVolume:    0,
 			DownlinkVolume: 0,
 			UplinkVolume:   0},
 	}
-	return UpdateEventsSubsc403Data
+	return UpdateEventsSubsc400Data
 }
 
 func GetModAppSession200Data() models.AppSessionContextUpdateData {
 	ModAppSession200Data := models.AppSessionContextUpdateData{
-		AfAppId:  "AfAppId",
-		AspId:    "AspId",
-		BdtRefId: "BdtRefId",
 		AfRoutReq: &models.AfRoutingRequirementRm{
 			AppReloc: true,
 			RouteToLocs: []models.RouteToLocation{
@@ -119,49 +194,39 @@ func GetModAppSession200Data() models.AppSessionContextUpdateData {
 					RouteProfId: "RouteProfId",
 				},
 			},
-			SpVal: &models.SpatialValidityRm{
-				PresenceInfoList: map[string]models.PresenceInfo{
-					"additionalProp1": {
-						PraId: "11",
-					},
-				},
-			},
-			TempVals: []models.TemporalValidity{
-				{},
-			},
 			UpPathChgSub: &models.UpPathChgEvent{},
 		},
 		EvSubsc: &models.EventsSubscReqDataRm{
 			NotifUri: "EvSubsc_NotifUri",
 			Events: []models.AfEventSubscription{
 				{
-					Event:       "ACCESS_TYPE_CHANGE",
-					NotifMethod: "EVENT_DETECTION",
+					Event:       models.AfEvent_ACCESS_TYPE_CHANGE,
+					NotifMethod: models.AfNotifMethod_EVENT_DETECTION,
 				},
 			},
 			UsgThres: &models.UsageThresholdRm{
-				Duration:       1,
-				TotalVolume:    1,
-				DownlinkVolume: 1,
-				UplinkVolume:   1},
-		},
-		MedComponents: map[string]models.MediaComponentRm{
-			"additionalProp1": {
-				AfAppId: "med_afAppId",
-				AfRoutReq: &models.AfRoutingRequirementRm{
-					SpVal: &models.SpatialValidityRm{
-						PresenceInfoList: map[string]models.PresenceInfo{
-							"additionalProp1": {
-								PraId: "11",
-							},
-						},
-					},
-				},
-				MedCompN: 1,
+				Duration:    10,
+				TotalVolume: 10,
 			},
 		},
-		MpsId:  "MpsId",
-		SponId: "SponId",
+		MedComponents: map[string]models.MediaComponentRm{
+			"1": {
+				MedCompN: 1,
+				MarBwDl:  "40 Mbps",
+				MarBwUl:  "40 Mbps",
+				MirBwDl:  "20 Mbps",
+				MirBwUl:  "20 Mbps",
+				MedType:  models.MediaType_AUDIO,
+				FStatus:  models.FlowStatus_ENABLED,
+				MedSubComps: map[string]models.MediaSubComponentRm{
+					"1": {
+						FNum:    1,
+						FDescs:  []string{"permit out ip from 127.0.0.9 to 45.45.0.2"},
+						FStatus: models.FlowStatus_ENABLED,
+					},
+				},
+			},
+		},
 	}
 	return ModAppSession200Data
 }

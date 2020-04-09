@@ -124,6 +124,31 @@ func SendPfcpSessionEstablishmentRequest(raddr *net.UDPAddr, ctx *smf_context.SM
 	pfcp_udp.SendPfcp(message, raddr)
 }
 
+func SendPfcpSessionEstablishmentRequestForULCL(raddr *net.UDPAddr, ctx *smf_context.SMContext, pdrList []*smf_context.PDR, farList []*smf_context.FAR, barList []*smf_context.BAR) {
+	pfcpMsg, err := BuildPfcpSessionEstablishmentRequestForULCL(ctx, pdrList, farList, barList)
+	if err != nil {
+		logger.PfcpLog.Errorf("Build PFCP Session Establishment Request failed: %v", err)
+		return
+	}
+
+	message := pfcp.Message{
+		Header: pfcp.Header{
+			Version:         pfcp.PfcpVersion,
+			MP:              1,
+			S:               pfcp.SEID_PRESENT,
+			MessageType:     pfcp.PFCP_SESSION_ESTABLISHMENT_REQUEST,
+			SEID:            0,
+			SequenceNumber:  getSeqNumber(),
+			MessagePriority: 0,
+		},
+		Body: pfcpMsg,
+	}
+
+	logger.PduSessLog.Traceln("[SMF] Send SendPfcpSessionEstablishmentRequestForULCL")
+	logger.PduSessLog.Traceln("Send to addr ", raddr.String())
+	pfcp_udp.SendPfcp(message, raddr)
+}
+
 // Deprecated: PFCP Session Establishment Procedure should be initiated by the CP function
 func SendPfcpSessionEstablishmentResponse(addr *net.UDPAddr) {
 	pfcpMsg, err := BuildPfcpSessionEstablishmentResponse()
@@ -148,9 +173,9 @@ func SendPfcpSessionEstablishmentResponse(addr *net.UDPAddr) {
 	pfcp_udp.SendPfcp(message, addr)
 }
 
-func SendPfcpSessionModificationRequest(raddr *net.UDPAddr, ctx *smf_context.SMContext, pdr_list []*smf_context.PDR, far_list []*smf_context.FAR, bar_list []*smf_context.BAR) (seqNum uint32) {
+func SendPfcpSessionModificationRequest(raddr *net.UDPAddr, ctx *smf_context.SMContext, pdrList []*smf_context.PDR, farList []*smf_context.FAR, barList []*smf_context.BAR) (seqNum uint32) {
 
-	pfcpMsg, err := BuildPfcpSessionModificationRequest(ctx, pdr_list, far_list, bar_list)
+	pfcpMsg, err := BuildPfcpSessionModificationRequest(ctx, pdrList, farList, barList)
 
 	if err != nil {
 		logger.PfcpLog.Errorf("Build PFCP Session Modification Request failed: %v", err)
@@ -199,12 +224,13 @@ func SendPfcpSessionModificationResponse(addr *net.UDPAddr) {
 	pfcp_udp.SendPfcp(message, addr)
 }
 
-func SendPfcpSessionDeletionRequest(addr *net.UDPAddr, ctx *smf_context.SMContext) {
+func SendPfcpSessionDeletionRequest(addr *net.UDPAddr, ctx *smf_context.SMContext) (seqNum uint32) {
 	pfcpMsg, err := BuildPfcpSessionDeletionRequest()
 	if err != nil {
 		logger.PfcpLog.Errorf("Build PFCP Session Deletion Request failed: %v", err)
 		return
 	}
+	seqNum = getSeqNumber()
 	message := pfcp.Message{
 		Header: pfcp.Header{
 			Version:         pfcp.PfcpVersion,
@@ -212,13 +238,15 @@ func SendPfcpSessionDeletionRequest(addr *net.UDPAddr, ctx *smf_context.SMContex
 			S:               pfcp.SEID_PRESENT,
 			MessageType:     pfcp.PFCP_SESSION_DELETION_REQUEST,
 			SEID:            ctx.RemoteSEID,
-			SequenceNumber:  getSeqNumber(),
+			SequenceNumber:  seqNum,
 			MessagePriority: 12,
 		},
 		Body: pfcpMsg,
 	}
 
 	pfcp_udp.SendPfcp(message, addr)
+
+	return seqNum
 }
 
 // Deprecated: PFCP Session Deletion Procedure should be initiated by the CP function

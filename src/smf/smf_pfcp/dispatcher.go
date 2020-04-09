@@ -4,11 +4,10 @@ import (
 	"free5gc/lib/pfcp"
 	"free5gc/lib/pfcp/pfcpUdp"
 	"free5gc/src/smf/logger"
-	"free5gc/src/smf/smf_handler/smf_message"
 	"free5gc/src/smf/smf_pfcp/pfcp_handler"
 )
 
-func Dispatch(msg *pfcpUdp.Message, ResponseQueue *smf_message.ResponseQueue) {
+func Dispatch(msg *pfcpUdp.Message) {
 	switch msg.PfcpMessage.Header.MessageType {
 	case pfcp.PFCP_HEARTBEAT_REQUEST:
 		pfcp_handler.HandlePfcpHeartbeatRequest(msg)
@@ -43,7 +42,7 @@ func Dispatch(msg *pfcpUdp.Message, ResponseQueue *smf_message.ResponseQueue) {
 	case pfcp.PFCP_SESSION_ESTABLISHMENT_RESPONSE:
 		pfcp_handler.HandlePfcpSessionEstablishmentResponse(msg)
 	case pfcp.PFCP_SESSION_MODIFICATION_RESPONSE:
-		pfcp_handler.HandlePfcpSessionModificationResponse(msg, ResponseQueue)
+		pfcp_handler.HandlePfcpSessionModificationResponse(msg)
 	case pfcp.PFCP_SESSION_DELETION_RESPONSE:
 		pfcp_handler.HandlePfcpSessionDeletionResponse(msg)
 	case pfcp.PFCP_SESSION_REPORT_REQUEST:

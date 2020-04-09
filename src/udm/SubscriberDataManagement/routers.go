@@ -66,9 +66,15 @@ func twoLayerPathHandlerFunc(c *gin.Context) {
 		return
 	}
 
+	// for "/shared-data-subscriptions/:subscriptionId"
+	if supi == "shared-data-subscriptions" && strings.ToUpper("Patch") == c.Request.Method {
+		ModifyForSharedData(c)
+		return
+	}
+
 	// for "/:gpsi/id-translation-result"
 	if op == "id-translation-result" && strings.ToUpper("Get") == c.Request.Method {
-		c.Params = append(c.Params, gin.Param{"gpsi", c.Param("supi")})
+		c.Params = append(c.Params, gin.Param{Key: "gpsi", Value: c.Param("supi")})
 		GetIdTranslationResult(c)
 		return
 	}
@@ -89,8 +95,8 @@ func threeLayerPathHandlerFunc(c *gin.Context) {
 	// for "/:supi/sdm-subscriptions/:subscriptionId"
 	if op == "sdm-subscriptions" && strings.ToUpper("Delete") == c.Request.Method {
 		var tmpParams gin.Params
-		tmpParams = append(tmpParams, gin.Param{"supi", c.Param("supi")})
-		tmpParams = append(tmpParams, gin.Param{"subscriptionId", c.Param("thirdLayer")})
+		tmpParams = append(tmpParams, gin.Param{Key: "supi", Value: c.Param("supi")})
+		tmpParams = append(tmpParams, gin.Param{Key: "subscriptionId", Value: c.Param("thirdLayer")})
 		c.Params = tmpParams
 		Unsubscribe(c)
 		return
@@ -99,6 +105,16 @@ func threeLayerPathHandlerFunc(c *gin.Context) {
 	// for "/:supi/am-data/sor-ack"
 	if op == "am-data" && strings.ToUpper("Put") == c.Request.Method {
 		Info(c)
+		return
+	}
+
+	// for "/:supi/sdm-subscriptions/:subscriptionId"
+	if op == "sdm-subscriptions" && strings.ToUpper("Patch") == c.Request.Method {
+		var tmpParams gin.Params
+		tmpParams = append(tmpParams, gin.Param{Key: "supi", Value: c.Param("supi")})
+		tmpParams = append(tmpParams, gin.Param{Key: "subscriptionId", Value: c.Param("thirdLayer")})
+		c.Params = tmpParams
+		Modify(c)
 		return
 	}
 

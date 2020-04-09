@@ -25,6 +25,7 @@ typedef struct _Bufblk {
 
 Status BufblkPoolInit();
 Status BufblkPoolFinal();
+void BufblkPoolCheck(const char *showInfo);
 
 Bufblk *BufblkAlloc(uint32_t num, uint32_t size);
 Status BufblkResize(Bufblk *bufblk, uint32_t num, uint32_t size);

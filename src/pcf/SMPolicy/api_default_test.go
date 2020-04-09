@@ -23,11 +23,7 @@ import (
 	"free5gc/src/pcf/pcf_context"
 	"free5gc/src/pcf/pcf_producer"
 	"free5gc/src/pcf/pcf_service"
-	"free5gc/src/udr/DataRepository"
-	"free5gc/src/udr/factory"
-	"free5gc/src/udr/udr_consumer"
 	"free5gc/src/udr/udr_service"
-	"free5gc/src/udr/udr_util"
 	"net/http"
 	"reflect"
 	"strings"
@@ -38,6 +34,9 @@ import (
 	"github.com/urfave/cli"
 )
 
+const amPolicyDataColl = "policyData.ues.amData"
+const smPolicyDataColl = "policyData.ues.smData"
+
 var NFs = []app.NetworkFunction{
 	&nrf_service.NRF{},
 	&amf_service.AMF{},
@@ -45,92 +44,71 @@ var NFs = []app.NetworkFunction{
 	&pcf_service.PCF{},
 }
 
-func fakeudrInit() {
-	config := factory.UdrConfig
-	sbi := config.Configuration.Sbi
-	mongodb := config.Configuration.Mongodb
-	nrfUri := config.Configuration.NrfUri
+var filterUeIdOnly bson.M
 
-	// Connect to MongoDB
-	DataRepository.SetMongoDB(mongodb.Name, mongodb.Url)
-
-	udrLogPath := udr_util.UdrLogPath
-	udrPemPath := udr_util.UdrPemPath
-	udrKeyPath := udr_util.UdrKeyPath
-	if sbi.Tls != nil {
-		udrLogPath = path_util.Gofree5gcPath(sbi.Tls.Log)
-		udrPemPath = path_util.Gofree5gcPath(sbi.Tls.Pem)
-		udrKeyPath = path_util.Gofree5gcPath(sbi.Tls.Key)
+func toBsonM(data interface{}) bson.M {
+	tmp, _ := json.Marshal(data)
+	var putData = bson.M{}
+	_ = json.Unmarshal(tmp, &putData)
+	return putData
+}
+func insertDefaultPoliciesToDb(ueId string) {
+	amPolicyData := models.AmPolicyData{
+		SubscCats: []string{
+			"free5gc",
+		},
 	}
 
-	profile := udr_consumer.BuildNFInstance()
-	newNrfUri, err := udr_consumer.SendRegisterNFInstance(nrfUri, profile.NfInstanceId, profile)
-	if err == nil {
-		config.Configuration.NrfUri = newNrfUri
-	} else {
-		fmt.Errorf("Send Register NFInstance Error[%s]", err.Error())
+	smPolicyData := models.SmPolicyData{
+		SmPolicySnssaiData: map[string]models.SmPolicySnssaiData{
+			"01010203": {
+				Snssai: &models.Snssai{
+					Sd:  "010203",
+					Sst: 1,
+				},
+				SmPolicyDnnData: map[string]models.SmPolicyDnnData{
+					"internet": {
+						Dnn:        "internet",
+						GbrUl:      "500 Mbps",
+						GbrDl:      "500 Mbps",
+						AdcSupport: false,
+						Ipv4Index:  6,
+						Ipv6Index:  6,
+						Offline:    true,
+						Online:     false,
+						// ChfInfo
+						// RefUmDataLimitIds
+						// MpsPriority
+						// ImsSignallingPrio
+						// MpsPriorityLevel
+						// AllowedServices
+						// SubscCats
+						// SubscSpendingLimit
+
+					},
+				},
+			},
+			"01112233": {
+				Snssai: &models.Snssai{
+					Sd:  "112233",
+					Sst: 1,
+				},
+				SmPolicyDnnData: map[string]models.SmPolicyDnnData{
+					"internet": {
+						Dnn: "internet",
+					},
+				},
+			},
+		},
 	}
-	go func() { // fake udr server
-		router := gin.Default()
 
-		router.GET("/nudr-dr/v1/policy-data/ues/:ueId/sm-data", func(c *gin.Context) {
-			ueId := c.Param("ueId")
-			fmt.Println("==========GET SM Policy Data==========")
-			fmt.Println("ueId: ", ueId)
-			queryParameters := c.Request.URL.Query()
-			snssai := &models.Snssai{}
-			dnn := ""
-			if queryParameters["dnn"] != nil {
-				dnn = queryParameters["dnn"][0]
-				fmt.Println("dnn : ", dnn)
-			}
-			if queryParameters["snssai"] != nil {
-				tmp := queryParameters["snssai"][0]
-				err := json.Unmarshal([]byte(tmp), snssai)
-				if err != nil {
-					fmt.Errorf(err.Error())
-				} else {
-					fmt.Printf("snssai : %+v\n", snssai)
-				}
-			}
-			key := fmt.Sprintf("%02x%s", snssai.Sst, snssai.Sd)
-			if len(key) != 8 {
-				c.JSON(http.StatusBadRequest, gin.H{})
-				return
-			}
-			rsp := models.SmPolicyData{
-				SmPolicySnssaiData: make(map[string]models.SmPolicySnssaiData),
-			}
-
-			rsp.SmPolicySnssaiData[key] = models.SmPolicySnssaiData{
-				Snssai:          snssai,
-				SmPolicyDnnData: make(map[string]models.SmPolicyDnnData),
-			}
-			rsp.SmPolicySnssaiData[key].SmPolicyDnnData[dnn] = models.SmPolicyDnnData{
-				Dnn: dnn,
-				// AllowedServices
-				// SubscCats
-				GbrUl:      "500Mbps",
-				GbrDl:      "500Mbps",
-				AdcSupport: false,
-				// SubscSpendingLimit
-				Ipv4Index: 6,
-				Ipv6Index: 6,
-				Offline:   false,
-				Online:    false,
-				// ChfInfo
-				// RefUmDataLimitIds
-				// MpsPriority
-				// ImsSignallingPrio
-				// MpsPriorityLevel
-			}
-			c.JSON(http.StatusOK, rsp)
-		})
-		server, err := http2_util.NewServer(":29504", udrLogPath, router)
-		if err == nil && server != nil {
-			logger.InitLog.Infoln(server.ListenAndServeTLS(udrPemPath, udrKeyPath))
-		}
-	}()
+	filterUeIdOnly = bson.M{"ueId": ueId}
+	amPolicyDataBsonM := toBsonM(amPolicyData)
+	amPolicyDataBsonM["ueId"] = ueId
+	MongoDBLibrary.RestfulAPIPutOne(amPolicyDataColl, filterUeIdOnly, amPolicyDataBsonM)
+	smPolicyDataBsonM := toBsonM(smPolicyData)
+	smPolicyDataBsonM["ueId"] = ueId
+	MongoDBLibrary.RestfulAPIPost(smPolicyDataColl, filterUeIdOnly, smPolicyDataBsonM)
 }
 
 func init() {
@@ -138,21 +116,21 @@ func init() {
 	flag := flag.FlagSet{}
 	cli := cli.NewContext(nil, &flag, nil)
 	for i, service := range NFs {
-		if i == 2 {
-			service.Initialize(cli)
-			fakeudrInit()
-		} else {
-			service.Initialize(cli)
-			go service.Start()
-		}
+		service.Initialize(cli)
+		go service.Start()
 		time.Sleep(300 * time.Millisecond)
 		if i == 0 {
 			MongoDBLibrary.RestfulAPIDeleteMany("NfProfile", bson.M{})
 			time.Sleep(300 * time.Millisecond)
 		}
 	}
+	insertDefaultPoliciesToDb("imsi-2089300007487")
+
 }
 func TestCreateSMPolicy(t *testing.T) {
+	defer MongoDBLibrary.RestfulAPIDeleteMany(amPolicyDataColl, filterUeIdOnly)
+	defer MongoDBLibrary.RestfulAPIDeleteMany(smPolicyDataColl, filterUeIdOnly)
+
 	configuration := Npcf_AMPolicy.NewConfiguration()
 	configuration.SetBasePath("https://127.0.0.1:29507")
 	amclient := Npcf_AMPolicy.NewAPIClient(configuration)
@@ -194,12 +172,9 @@ func TestCreateSMPolicy(t *testing.T) {
 		assert.True(t, httpRsp != nil)
 		if httpRsp != nil {
 			assert.Equal(t, http.StatusBadRequest, httpRsp.StatusCode)
-			if httpRsp != nil {
-				assert.Equal(t, http.StatusBadRequest, httpRsp.StatusCode)
-				problem := err.(common.GenericOpenAPIError).Model().(models.ProblemDetails)
-				assert.Equal(t, "ERROR_INITIAL_PARAMETERS", problem.Cause)
-				// assert.Equal(t, "Supi Format Error", problem.Detail)
-			}
+			problem := err.(common.GenericOpenAPIError).Model().(models.ProblemDetails)
+			assert.Equal(t, "ERROR_INITIAL_PARAMETERS", problem.Cause)
+			// assert.Equal(t, "Supi Format Error", problem.Detail)
 		}
 	}
 	{
@@ -210,12 +185,9 @@ func TestCreateSMPolicy(t *testing.T) {
 		assert.True(t, httpRsp != nil)
 		if httpRsp != nil {
 			assert.Equal(t, http.StatusBadRequest, httpRsp.StatusCode)
-			if httpRsp != nil {
-				assert.Equal(t, http.StatusBadRequest, httpRsp.StatusCode)
-				problem := err.(common.GenericOpenAPIError).Model().(models.ProblemDetails)
-				assert.Equal(t, "ERROR_INITIAL_PARAMETERS", problem.Cause)
-				// assert.Equal(t, "Supi Format Error", problem.Detail)
-			}
+			problem := err.(common.GenericOpenAPIError).Model().(models.ProblemDetails)
+			assert.Equal(t, "ERROR_INITIAL_PARAMETERS", problem.Cause)
+			// assert.Equal(t, "Supi Format Error", problem.Detail)
 		}
 	}
 }
@@ -330,7 +302,7 @@ func TestDelSMPolicy(t *testing.T) {
 	}
 }
 
-func TestUpdateAMPolicy(t *testing.T) {
+func TestUpdateSMPolicy(t *testing.T) {
 
 	configuration := Npcf_AMPolicy.NewConfiguration()
 	configuration.SetBasePath("https://127.0.0.1:29507")

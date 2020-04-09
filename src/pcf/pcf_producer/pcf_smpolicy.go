@@ -10,6 +10,8 @@ import (
 	"free5gc/src/pcf/pcf_handler/pcf_message"
 	"free5gc/src/pcf/pcf_util"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/antihax/optional"
 )
@@ -127,13 +129,13 @@ func CreateSmPolicy(httpChannel chan pcf_message.HttpResponseMessage, request mo
 		decision.Online = request.Online
 		decision.Offline = request.Offline
 	}
-	decision.SuppFeat = request.SuppFeat
+	decision.SuppFeat = pcf_util.GetNegotiateSuppFeat(request.SuppFeat, pcfSelf.PcfSuppFeats[models.ServiceName_NPCF_SMPOLICYCONTROL])
 	decision.QosFlowUsage = request.QosFlowUsage
 	// TODO: Trigger about UMC, ADC, NetLoc,...
 	decision.PolicyCtrlReqTriggers = pcf_util.PolicyControlReqTrigToArray(0x40780f)
 	smPolicyData.PolicyDecision = &decision
 	// TODO: PCC rule, PraInfo ...
-	locationHeader := fmt.Sprintf("%s/sm-policies/%s", pcfSelf.PcfServiceUris[models.ServiceName_NPCF_SMPOLICYCONTROL], smPolicyId)
+	locationHeader := pcf_util.GetResourceUri(models.ServiceName_NPCF_SMPOLICYCONTROL, smPolicyId)
 	headers := http.Header{
 		"Location": {locationHeader},
 	}
@@ -152,29 +154,27 @@ func DeleteSmPolicyContext(httpChannel chan pcf_message.HttpResponseMessage, smP
 		pcf_message.SendHttpResponseMessage(httpChannel, nil, int(rsp.Status), rsp)
 		return
 	}
+
+	pcfSelf := pcf_context.PCF_Self()
+	smPolicy := ue.SmPolicyData[smPolicyId]
+
 	// Unsubscrice UDR
 	delete(ue.SmPolicyData, smPolicyId)
 	logger.SMpolicylog.Tracef("SMPolicy SmPolicyId[%s] DELETE", smPolicyId)
 	pcf_message.SendHttpResponseMessage(httpChannel, nil, http.StatusNoContent, nil)
-	//notify policyAuthorization
-	// Npcf_PolicyAuthorization_Notify(fmt.Sprint(pcfUeContext[key].SmPolicyControlStore.Context.PduSessionId), "terminate")
-	// for i := 0; i < len(smPolicyDataStore); i++ {
-	// 	if snssai == smPolicyDataStore[i].SmPolicySnssaiData["Snssai"].Snssai {
-	// 		usageMonData.LimitId = fmt.Sprint(smPolicyDataStore[i].UmDataLimits["LimitId"].LimitId)
-	// 	}
-	// }
-	// policyDataUesUeIdSmDataPatchParamOpts.RequestBody = optional.NewInterface(usageMonData)
-	// //patchquery
-	// client := pcf_util.GetNudrClient("tmp")
-	// _, err := client.DefaultApi.PolicyDataUesUeIdSmDataPatch(context.Background(), ueid, &policyDataUesUeIdSmDataPatchParamOpts)
-	// if err != nil {
-	// 	logger.SMpolicylog.Warnln("Npcf Delete Query fail error message is : ", err)
-	// }
-	// //unsubscribe
-	// _, err = client.DefaultApi.PolicyDataSubsToNotifySubsIdDelete(context.Background(), "Subsid")
-	// if err == nil {
-	// 	return
-	// }
+
+	// Release related App Session
+	terminationInfo := models.TerminationInfo{
+		TermCause: models.TerminationCause_PDU_SESSION_TERMINATION,
+	}
+	for appSessionId := range smPolicy.AppSessions {
+		if appSession, exist := pcfSelf.AppSessionPool[appSessionId]; exist {
+			SendAppSessionTermination(appSession, terminationInfo)
+			delete(pcfSelf.AppSessionPool, appSessionId)
+			logger.SMpolicylog.Tracef("SMPolicy[%s] DELETE Related AppSession[%s]", smPolicyId, appSessionId)
+
+		}
+	}
 
 }
 
@@ -213,32 +213,10 @@ func UpdateSmPolicyContext(httpChannel chan pcf_message.HttpResponseMessage, smP
 	smPolicy := ue.SmPolicyData[smPolicyId]
 	smPolicyDecision := smPolicy.PolicyDecision
 	smPolicyContext := smPolicy.PolicyContext
-	// policyDataUesUeIdSmDataGetParamOpts.Snssai = optional.NewInterface(pcfUeContext[key].SmPolicyControlStore.Context.SliceInfo)
-	// ueid := fmt.Sprint(pcfUeContext[key].Supi)
-	// //Query
-	// client := pcf_util.GetNudrClient("tmp")
-	// smPolicyData, _, err := client.DefaultApi.PolicyDataUesUeIdSmDataGet(context.Background(), ueid, &policyDataUesUeIdSmDataGetParamOpts)
-	// if err == nil {
-	// 	smPolicyDataStore = append(smPolicyDataStore, smPolicyData)
-	// } else {
-	// 	//PolicyAuthorization Terminate Notify
-	// 	Npcf_PolicyAuthorization_Notify(fmt.Sprint(pcfUeContext[key].SmPolicyControlStore.Context.PduSessionId), "terminate")
-	// 	logger.SMpolicylog.Warnln("Nudr Query fail error message is : ", err)
-	// }
-	// //PolicyAuthorization Update Notify
-	// Npcf_PolicyAuthorization_Notify(fmt.Sprint(pcfUeContext[key].SmPolicyControlStore.Context.PduSessionId), "update")
-	// suppfeat := fmt.Sprint(pcfUeContext[key].SmPolicyControlStore.Context.SuppFeat)
-
-	// smPolicyDecision.ChargingInfo = &models.ChargingInformation{
-	// 	PrimaryChfAddress:   "string",
-	// 	SecondaryChfAddress: "string",
-	// }
-	// if smPolicyUpdateContextData.TraceReq != nil {
-	// 	pcfUeContext[key].SmPolicyControlStore.Context.TraceReq = smPolicyUpdateContextData.TraceReq
-	// }
-	// smPolicyDecision.SuppFeat = suppfeat
 	errCause := ""
 
+	// For App Session Notification
+	afEventsNotification := models.EventsNotification{}
 	for _, trigger := range request.RepPolicyCtrlReqTriggers {
 		switch trigger {
 		case models.PolicyControlRequestTrigger_PLMN_CH: // PLMN Change
@@ -247,6 +225,15 @@ func UpdateSmPolicyContext(httpChannel chan pcf_message.HttpResponseMessage, smP
 				break
 			}
 			smPolicyContext.ServingNetwork = request.ServingNetwork
+			afEventsNotification.PlmnId = &models.PlmnId{
+				Mcc: request.ServingNetwork.Mcc,
+				Mnc: request.ServingNetwork.Mnc,
+			}
+			afNotif := models.AfEventNotification{
+				Event: models.AfEvent_PLMN_CHG,
+			}
+			afEventsNotification.EvNotifs = append(afEventsNotification.EvNotifs, afNotif)
+
 			logger.SMpolicylog.Tracef("SM Policy Update(%s) Successfully", trigger)
 		case models.PolicyControlRequestTrigger_RES_MO_RE: // UE intiate resource modification to SMF (subsclause 4.2.4.17 in TS29512)
 			req := request.UeInitResReq
@@ -269,12 +256,14 @@ func UpdateSmPolicyContext(httpChannel chan pcf_message.HttpResponseMessage, smP
 					smPolicy.PackFiltIdGenarator++
 				}
 				pccRule := pcf_util.CreatePccRule(id, req.Precedence, infos, false)
+				// Add Traffic control Data
+				tcData := pcf_util.CreateTcData(id, "")
 				// TODO: ARP use real Data
-				qosData := pcf_util.CreateQosData(id, int32(req.ReqQos.Var5qi), 8)
+				qosData := pcf_util.CreateQosData(id, int32(req.ReqQos.Var5qi), 15)
 				// TODO: Set MBR
 				var err error
 				// Set GBR
-				qosData.GbrDl, qosData.GbrUl, err = smPolicy.DecreaseRemainGBR(req.ReqQos, smPolicy.RemainGbrDL, smPolicy.RemainGbrUL)
+				qosData.GbrDl, qosData.GbrUl, err = smPolicy.DecreaseRemainGBR(req.ReqQos)
 				if err != nil {
 					rsp := pcf_util.GetProblemDetail(err.Error(), pcf_util.ERROR_TRAFFIC_MAPPING_INFO_REJECTED)
 					logger.SMpolicylog.Warnf(rsp.Detail)
@@ -287,14 +276,7 @@ func UpdateSmPolicyContext(httpChannel chan pcf_message.HttpResponseMessage, smP
 				if qosData.GbrUl != "" {
 					logger.SMpolicylog.Tracef("SM Policy Dnn[%s] Data Aggregate decrease %s and then UL GBR remain[%.2f Kbps]", smPolicyContext.Dnn, qosData.GbrUl, *smPolicy.RemainGbrUL)
 				}
-				if smPolicyDecision.PccRules == nil {
-					smPolicyDecision.PccRules = make(map[string]models.PccRule)
-				}
-				if smPolicyDecision.QosDecs == nil {
-					smPolicyDecision.QosDecs = make(map[string]models.QosData)
-				}
-				smPolicyDecision.PccRules[pccRule.PccRuleId] = pccRule
-				smPolicyDecision.QosDecs[qosData.QosId] = qosData
+				pcf_util.SetPccRuleRelatedData(smPolicyDecision, pccRule, &tcData, &qosData, nil, nil)
 				// link Packet filters to PccRule
 				for _, info := range infos {
 					smPolicy.PackFiltMapToPccRuleId[info.PackFiltId] = pccRule.PccRuleId
@@ -324,7 +306,7 @@ func UpdateSmPolicyContext(httpChannel chan pcf_message.HttpResponseMessage, smP
 						qosId := rule.RefQosData[0]
 						if qosData, exist := smPolicyDecision.QosDecs[qosId]; exist {
 							origUl, origDl := smPolicy.IncreaseRemainGBR(qosId)
-							gbrDl, gbrUl, err := smPolicy.DecreaseRemainGBR(req.ReqQos, smPolicy.RemainGbrDL, smPolicy.RemainGbrUL)
+							gbrDl, gbrUl, err := smPolicy.DecreaseRemainGBR(req.ReqQos)
 							if err != nil {
 								smPolicy.RemainGbrDL = origDl
 								smPolicy.RemainGbrUL = origUl
@@ -401,9 +383,15 @@ func UpdateSmPolicyContext(httpChannel chan pcf_message.HttpResponseMessage, smP
 				// Block Session Service except for Exempt Serice which is described in TS22011, TS 23221
 			}
 			smPolicyContext.AccessType = request.AccessType
+			afEventsNotification.AccessType = request.AccessType
 			if request.RatType != "" {
 				smPolicyContext.RatType = request.RatType
+				afEventsNotification.RatType = request.RatType
 			}
+			afNotif := models.AfEventNotification{
+				Event: models.AfEvent_ACCESS_TYPE_CHANGE,
+			}
+			afEventsNotification.EvNotifs = append(afEventsNotification.EvNotifs, afNotif)
 			logger.SMpolicylog.Tracef("SM Policy Update(%s) Successfully", trigger)
 		case models.PolicyControlRequestTrigger_UE_IP_CH: // SMF notice PCF "ipv4Address" & ipv6AddressPrefix (always)
 			// TODO: Decide new Session Rule / Pcc rule
@@ -424,7 +412,10 @@ func UpdateSmPolicyContext(httpChannel chan pcf_message.HttpResponseMessage, smP
 		case models.PolicyControlRequestTrigger_AN_CH_COR: // Access Network Charging Correlation Info (subsclause 4.2.6.5.1, 4.2.4.13 in TS29512)
 			// request.AccNetChIds
 		case models.PolicyControlRequestTrigger_US_RE: // UMC (subsclause 4.2.4.10, 5.8 in TS29512)
-			// request.AccuUsageReports
+			afNotif := models.AfEventNotification{
+				Event: models.AfEvent_USAGE_REPORT,
+			}
+			afEventsNotification.EvNotifs = append(afEventsNotification.EvNotifs, afNotif)
 		case models.PolicyControlRequestTrigger_APP_STA: // ADC (subsclause 4.2.4.6, 5.8 in TS29512)
 			// request.AppDetectionInfos
 		case models.PolicyControlRequestTrigger_APP_STO: // ADC (subsclause 4.2.4.6, 5.8 in TS29512)
@@ -474,7 +465,12 @@ func UpdateSmPolicyContext(httpChannel chan pcf_message.HttpResponseMessage, smP
 			*smPolicyDecision.SessRules[sessRuleId].AuthSessAmbr = *request.SubsSessAmbr
 			logger.SMpolicylog.Tracef("SM Policy Update(%s) Successfully", trigger)
 		case models.PolicyControlRequestTrigger_QOS_NOTIF: // SMF notify PCF when receiving from RAN that QoS can/can't be guaranteed (subsclause 4.2.4.20 in TS29512) (always)
-		// request.QncReports
+			// request.QncReports
+			afNotif := models.AfEventNotification{
+				Event: models.AfEvent_QOS_NOTIF,
+			}
+			afEventsNotification.EvNotifs = append(afEventsNotification.EvNotifs, afNotif)
+			afEventsNotification.QncReports = request.QncReports
 		case models.PolicyControlRequestTrigger_NO_CREDIT: // Out of Credit
 		case models.PolicyControlRequestTrigger_PRA_CH: // Presence Reporting (subsclause 4.2.6.5.6, 4.2.4.16, 5.8 in TS29512)
 			// request.RepPraInfos
@@ -501,9 +497,11 @@ func UpdateSmPolicyContext(httpChannel chan pcf_message.HttpResponseMessage, smP
 			// 	smPolicyDecision.RevalidationTime = &formatTime
 			// }
 		case models.PolicyControlRequestTrigger_RES_RELEASE: // Outcome of request Pcc rule removal (subsclause 4.2.6.5.2, 5.8 in TS29512)
-			// TODO
 		case models.PolicyControlRequestTrigger_SUCC_RES_ALLO: // Successful resource allocation (subsclause 4.2.6.5.5, 4.2.4.14 in TS29512)
-			// TODO
+			afNotif := models.AfEventNotification{
+				Event: models.AfEvent_SUCCESSFUL_RESOURCES_ALLOCATION,
+			}
+			afEventsNotification.EvNotifs = append(afEventsNotification.EvNotifs, afNotif)
 		case models.PolicyControlRequestTrigger_RAT_TY_CH: // Change of RatType
 			if request.RatType == "" {
 				errCause = "RatType is empty in Trigger RAT_TY_CH"
@@ -527,6 +525,31 @@ func UpdateSmPolicyContext(httpChannel chan pcf_message.HttpResponseMessage, smP
 			logger.SMpolicylog.Tracef("SM Policy Update(%s) Successfully", trigger)
 		}
 	}
+
+	var successRules, failRules []models.RuleReport
+	for _, rule := range request.RuleReports {
+		if rule.RuleStatus == models.RuleStatus_ACTIVE {
+			successRules = append(successRules, rule)
+		} else {
+			failRules = append(failRules, rule)
+			// release fail pccRules in SmPolicy
+			for _, pccRuleId := range rule.PccRuleIds {
+				if err := smPolicy.RemovePccRule(pccRuleId); err != nil {
+					logger.SMpolicylog.Warnf("SM Policy Notification about failed installing PccRule[%s]", err.Error())
+				}
+			}
+		}
+	}
+	if len(failRules) > 0 {
+		afNotif := models.AfEventNotification{
+			Event: models.AfEvent_FAILED_RESOURCES_ALLOCATION,
+		}
+		afEventsNotification.EvNotifs = append(afEventsNotification.EvNotifs, afNotif)
+	}
+	if afEventsNotification.EvNotifs != nil {
+		sendSmPolicyRelatedAppSessionNotification(smPolicy, afEventsNotification, request.AccuUsageReports, successRules, failRules)
+	}
+
 	if errCause != "" {
 		rsp := pcf_util.GetProblemDetail(errCause, pcf_util.ERROR_TRIGGER_EVENT)
 		logger.SMpolicylog.Warnf(errCause)
@@ -536,54 +559,164 @@ func UpdateSmPolicyContext(httpChannel chan pcf_message.HttpResponseMessage, smP
 	logger.SMpolicylog.Tracef("SMPolicy SmPolicyId[%s] Update", smPolicyId)
 	pcf_message.SendHttpResponseMessage(httpChannel, nil, http.StatusOK, *smPolicyDecision)
 
-	// 	problemDetails.Status = 403
-	// 	problemDetails.Cause = "ERROR_CONFLICTING_REQUEST"
-	// 	pcf_message.SendHttpResponseMessage(httpChannel, nil, 403, problemDetails)
-	// 	return
 }
 
-// SmPoliciesSmPolicyUpdateNotify -
-// func CreateSmPolicyNotifyContext(id string, send_type string, policydecision *models.SmPolicyDecision) {
-// 	resourceURI := pcf_util.PCF_BASIC_PATH + pcf_context.SmpolicyUri + id
-// 	var smPolicyNotification models.SmPolicyNotification
-// 	var terminationNotification models.TerminationNotification
-// 	var url string
-// 	pcfUeContext := pcf_context.PCF_Self().UePool
-// 	configuration := Npcf_SMPolicyControl.NewConfiguration()
-// 	client := Npcf_SMPolicyControl.NewAPIClient(configuration)
-// 	for key := range pcfUeContext {
-// 		if pcfUeContext[key].SmPolicyControlStore == nil {
-// 			continue
-// 		}
-// 		idTemp := fmt.Sprint(pcfUeContext[key].SmPolicyControlStore.Context.PduSessionId)
-// 		if id == idTemp {
+func sendSmPolicyRelatedAppSessionNotification(smPolicy *pcf_context.UeSmPolicyData, notification models.EventsNotification, usageReports []models.AccuUsageReport, successRules, failRules []models.RuleReport) {
 
-// 			url = pcfUeContext[key].SmPolicyControlStore.Context.NotificationUri
-// 			if send_type == "update" {
-// 				smPolicyNotification.ResourceUri = resourceURI + "/update"
-// 				smPolicyNotification.SmPolicyDecision = policydecision
-// 				_, err := client.NotifyApi.SMNotificationUri(context.Background(), url, smPolicyNotification)
+	for appSessionId := range smPolicy.AppSessions {
+		if appSession, exist := pcf_context.PCF_Self().AppSessionPool[appSessionId]; exist {
+			if len(appSession.Events) == 0 {
+				continue
+			}
+			sessionNotif := models.EventsNotification{}
+			for _, notif := range notification.EvNotifs {
+				if _, found := appSession.Events[notif.Event]; found {
+					switch notif.Event {
+					case models.AfEvent_ACCESS_TYPE_CHANGE:
+						sessionNotif.AccessType = notification.AccessType
+						sessionNotif.RatType = notification.RatType
+					case models.AfEvent_FAILED_RESOURCES_ALLOCATION:
+						failItem := models.ResourcesAllocationInfo{
+							McResourcStatus: models.MediaComponentResourcesStatus_INACTIVE,
+						}
+						flows := make(map[int32]models.Flows)
+						for _, report := range failRules {
+							for _, pccRuleId := range report.PccRuleIds {
+								if key, exist := appSession.PccRuleIdMapToCompId[pccRuleId]; exist {
+									items := strings.Split(key, "-")
+									if items[0] != "appId" {
+										compN, _ := strconv.Atoi(items[0])
+										compN32 := int32(compN)
+										if len(items) == 1 {
+											// Comp
+											flow := models.Flows{
+												MedCompN: compN32,
+											}
+											failItem.Flows = append(failItem.Flows, flow)
+										} else if len(items) == 2 {
+											// have subComp
+											fNum, _ := strconv.Atoi(items[1])
+											fNum32 := int32(fNum)
 
-// 				if err != nil {
-// 					logger.SMpolicylog.Warnln("SMPolicy UpdateNotify POST error: ", err)
-// 				}
-// 				return
+											flow, exist := flows[compN32]
+											if !exist {
+												flow = models.Flows{
+													MedCompN: compN32,
+													FNums:    []int32{fNum32},
+												}
+											} else {
+												flow.FNums = append(flow.FNums, fNum32)
+											}
+											flows[compN32] = flow
+										}
+									}
+									// Release related resource
+									delete(appSession.PccRuleIdMapToCompId, pccRuleId)
+									delete(appSession.RelatedPccRuleIds, key)
+								}
+							}
+						}
+						for _, flow := range flows {
+							failItem.Flows = append(failItem.Flows, flow)
+						}
+						if failItem.Flows != nil {
+							sessionNotif.FailedResourcAllocReports = append(sessionNotif.FailedResourcAllocReports, failItem)
+						} else {
+							continue
+						}
+					case models.AfEvent_PLMN_CHG:
+						sessionNotif.PlmnId = notification.PlmnId
+					case models.AfEvent_QOS_NOTIF:
+						for _, report := range sessionNotif.QncReports {
+							for _, pccRuleId := range report.RefPccRuleIds {
+								if _, exist := appSession.PccRuleIdMapToCompId[pccRuleId]; exist {
+									sessionNotif.QncReports = append(sessionNotif.QncReports, report)
+									break
+								}
+							}
+						}
+						if sessionNotif.QncReports == nil {
+							continue
+						}
+					case models.AfEvent_SUCCESSFUL_RESOURCES_ALLOCATION:
+						// Subscription to resources allocation outcome
+						if successRules == nil {
+							continue
+						}
+						flows := make(map[int32]models.Flows)
+						for _, report := range successRules {
+							for _, pccRuleId := range report.PccRuleIds {
+								if key, exist := appSession.PccRuleIdMapToCompId[pccRuleId]; exist {
+									items := strings.Split(key, "-")
+									if items[0] != "appId" {
+										compN, _ := strconv.Atoi(items[0])
+										compN32 := int32(compN)
+										if len(items) == 1 {
+											// Comp
+											flow := models.Flows{
+												MedCompN: compN32,
+											}
+											notif.Flows = append(notif.Flows, flow)
+										} else if len(items) == 2 {
+											// have subComp
+											fNum, _ := strconv.Atoi(items[1])
+											fNum32 := int32(fNum)
+											flow, exist := flows[compN32]
+											if !exist {
+												flow = models.Flows{
+													MedCompN: compN32,
+													FNums:    []int32{fNum32},
+												}
+											} else {
+												flow.FNums = append(flow.FNums, fNum32)
+											}
+											flows[compN32] = flow
+										}
+									}
 
-// 			} else if send_type == "terminate" {
-// 				terminationNotification.ResourceUri = resourceURI + "/delete"
-// 				terminationNotification.Cause = "UNSPECIFIED"
-// 				_, err := client.NotifyApi.SMTerminationUri(context.Background(), url, terminationNotification)
+								}
+							}
+						}
+						for _, flow := range flows {
+							notif.Flows = append(notif.Flows, flow)
+						}
+						if notif.Flows == nil {
+							continue
+						}
+					case models.AfEvent_USAGE_REPORT:
+						for _, report := range usageReports {
+							for _, pccRuleId := range appSession.RelatedPccRuleIds {
+								if pccRule, exist := appSession.SmPolicyData.PolicyDecision.PccRules[pccRuleId]; exist {
+									if pccRule.RefUmData != nil && pccRule.RefUmData[0] == report.RefUmIds {
+										sessionNotif.UsgRep = &models.AccumulatedUsage{
+											Duration:       report.TimeUsage,
+											TotalVolume:    report.VolUsage,
+											UplinkVolume:   report.VolUsageUplink,
+											DownlinkVolume: report.VolUsageDownlink,
+										}
+										break
+									}
+								}
+							}
+							if sessionNotif.UsgRep != nil {
+								sessionNotif.EvNotifs = append(sessionNotif.EvNotifs, notif)
+								break
+							}
+						}
+						fallthrough
+					default:
+						continue
+					}
+					sessionNotif.EvNotifs = append(sessionNotif.EvNotifs, notif)
+				}
+			}
+			if sessionNotif.EvNotifs != nil {
+				SendAppSessionEventNotification(appSession, sessionNotif)
+			}
 
-// 				if err != nil {
-// 					logger.SMpolicylog.Warnln("SMPolicy UpdateNotify POST error: ", err)
-// 				}
-// 				return
-// 			} else {
-// 				return
-// 			}
-// 		}
-// 	}
-// }
+		}
+	}
+}
 
 func SendSMPolicyUpdateNotification(ue *pcf_context.UeContext, smPolId string, request models.SmPolicyNotification) {
 	logger.SMpolicylog.Tracef("Send SM Policy Update Notification")

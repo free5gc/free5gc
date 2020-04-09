@@ -32,9 +32,10 @@ type PDR struct {
 // Packet Detection. 7.5.2.2-2
 type PDI struct {
 	SourceInterface pfcpType.SourceInterface
-	LocalFTeid      pfcpType.FTEID
+	LocalFTeid      *pfcpType.FTEID
 	NetworkInstance util_3gpp.Dnn
 	UEIPAddress     *pfcpType.UEIPAddress
+	SDFFilter       *pfcpType.SDFFilter
 }
 
 // Forwarding Action Rule. 7.5.2.3-1

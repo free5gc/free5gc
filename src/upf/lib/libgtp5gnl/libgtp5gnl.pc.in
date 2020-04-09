@@ -1,0 +1,16 @@
+  
+# libgtp5gnl pkg-config file
+
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: libgtp5gnl
+Description: Netlink library for 5G GTP Linux kernel implementation
+Ref URL: http://git.osmocom.org/libgtpnl/
+Version: @VERSION@
+Requires:
+Conflicts:
+Libs: -L${libdir} -lgtp5gnl
+Cflags: -I${includedir}

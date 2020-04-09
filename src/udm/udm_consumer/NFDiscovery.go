@@ -3,11 +3,12 @@ package udm_consumer
 import (
 	"context"
 	"fmt"
+
 	// "github.com/antihax/optional"
 	"free5gc/lib/Nnrf_NFDiscovery"
 	"free5gc/lib/openapi/models"
-	"free5gc/src/udm/factory"
 	"free5gc/src/udm/logger"
+	"free5gc/src/udm/udm_context"
 	"free5gc/src/udm/udm_util"
 	"net/http"
 )
@@ -18,14 +19,14 @@ const (
 	NFDiscoveryToUDRParamGpsi
 )
 
-func SendNFIntances(targetNfType, requestNfType models.NfType, param Nnrf_NFDiscovery.SearchNFInstancesParamOpts) (result models.SearchResult, err error) {
+func SendNFIntances(nrfUri string, targetNfType, requestNfType models.NfType, param Nnrf_NFDiscovery.SearchNFInstancesParamOpts) (result models.SearchResult, err error) {
 
-	config := factory.UdmConfig
-	nrfclient := config.Configuration.Nrfclient
-	addr := fmt.Sprintf("%s://%s:%d", nrfclient.Scheme, nrfclient.Ipv4Adrr, nrfclient.Port)
+	// config := factory.UdmConfig
+	// nrfclient := config.Configuration.Nrfclient
+	// addr := fmt.Sprintf("%s://%s:%d", nrfclient.Scheme, nrfclient.Ipv4Addr, nrfclient.Port)
 
 	configuration := Nnrf_NFDiscovery.NewConfiguration()
-	configuration.SetBasePath(addr)
+	configuration.SetBasePath(nrfUri) //addr
 	clientNRF := Nnrf_NFDiscovery.NewAPIClient(configuration)
 
 	result, res, err1 := clientNRF.NFInstancesStoreApi.SearchNFInstances(context.TODO(), targetNfType, requestNfType, &param)
@@ -40,6 +41,8 @@ func SendNFIntances(targetNfType, requestNfType models.NfType, param Nnrf_NFDisc
 }
 
 func SendNFIntancesUDR(id string, types int) string {
+
+	self := udm_context.UDM_Self()
 	targetNfType := models.NfType_UDR
 	requestNfType := models.NfType_UDM
 	localVarOptionals := Nnrf_NFDiscovery.SearchNFInstancesParamOpts{
@@ -53,8 +56,8 @@ func SendNFIntancesUDR(id string, types int) string {
 	// case NFDiscoveryToUDRParamGpsi:
 	// 	localVarOptionals.Gpsi = optional.NewString(id)
 	// }
-
-	result, err := SendNFIntances(targetNfType, requestNfType, localVarOptionals)
+	fmt.Println(self.NrfUri)
+	result, err := SendNFIntances(self.NrfUri, targetNfType, requestNfType, localVarOptionals)
 	if err != nil {
 		logger.Handlelog.Error(err.Error())
 		return ""

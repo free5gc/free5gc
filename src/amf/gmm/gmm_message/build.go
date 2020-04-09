@@ -336,8 +336,13 @@ func BuildSecurityModeCommand(ue *amf_context.AmfUe, eapSuccess bool, eapMessage
 
 	securityModeCommand.Additional5GSecurityInformation = nasType.NewAdditional5GSecurityInformation(nasMessage.SecurityModeCommandAdditional5GSecurityInformationType)
 	securityModeCommand.Additional5GSecurityInformation.SetLen(1)
-	securityModeCommand.Additional5GSecurityInformation.SetRINMR(1)
-	if ue.Kamf != "" {
+	if ue.IsCleartext {
+		securityModeCommand.Additional5GSecurityInformation.SetRINMR(0)
+	} else {
+		securityModeCommand.Additional5GSecurityInformation.SetRINMR(1)
+	}
+
+	if ue.RegistrationType5GS == nasMessage.RegistrationType5GSPeriodicRegistrationUpdating || ue.RegistrationType5GS == nasMessage.RegistrationType5GSMobilityRegistrationUpdating {
 		securityModeCommand.Additional5GSecurityInformation.SetHDP(1)
 	} else {
 		securityModeCommand.Additional5GSecurityInformation.SetHDP(0)
@@ -480,24 +485,26 @@ func BuildRegistrationAccept(
 	if len(ue.AllowedNssai[anType]) > 0 {
 		registrationAccept.AllowedNSSAI = nasType.NewAllowedNSSAI(nasMessage.RegistrationAcceptAllowedNSSAIType)
 		var buf []uint8
-		for _, snssai := range ue.AllowedNssai[anType] {
-			buf = append(buf, nasConvert.SnssaiToNas(snssai)...)
+		for _, allowedSnssai := range ue.AllowedNssai[anType] {
+			buf = append(buf, nasConvert.SnssaiToNas(*allowedSnssai.AllowedSnssai)...)
 		}
 		registrationAccept.AllowedNSSAI.SetLen(uint8(len(buf)))
 		registrationAccept.AllowedNSSAI.SetSNSSAIValue(buf)
 	}
 
-	if len(ue.RejectedNssai[anType]) > 0 {
-		rejectedNssaiNas := nasConvert.RejectedNssaiToNas(ue.RejectedNssai[anType], ue.RejectCause)
-		registrationAccept.RejectedNSSAI = &rejectedNssaiNas
-		registrationAccept.RejectedNSSAI.SetIei(nasMessage.RegistrationAcceptRejectedNSSAIType)
+	if ue.NetworkSliceInfo != nil {
+		if len(ue.NetworkSliceInfo.RejectedNssaiInPlmn) != 0 || len(ue.NetworkSliceInfo.RejectedNssaiInTa) != 0 {
+			rejectedNssaiNas := nasConvert.RejectedNssaiToNas(ue.NetworkSliceInfo.RejectedNssaiInPlmn, ue.NetworkSliceInfo.RejectedNssaiInTa)
+			registrationAccept.RejectedNSSAI = &rejectedNssaiNas
+			registrationAccept.RejectedNSSAI.SetIei(nasMessage.RegistrationAcceptRejectedNSSAIType)
+		}
 	}
 
-	if len(ue.ConfiguredNssai[anType]) > 0 {
+	if includeConfiguredNssaiCheck(ue) {
 		registrationAccept.ConfiguredNSSAI = nasType.NewConfiguredNSSAI(nasMessage.RegistrationAcceptConfiguredNSSAIType)
 		var buf []uint8
-		for _, snssai := range ue.ConfiguredNssai[anType] {
-			buf = append(buf, nasConvert.SnssaiToNas(snssai)...)
+		for _, snssai := range ue.ConfiguredNssai {
+			buf = append(buf, nasConvert.SnssaiToNas(*snssai.ConfiguredSnssai)...)
 		}
 		registrationAccept.ConfiguredNSSAI.SetLen(uint8(len(buf)))
 		registrationAccept.ConfiguredNSSAI.SetSNSSAIValue(buf)
@@ -581,6 +588,24 @@ func BuildRegistrationAccept(
 	return nas_security.Encode(ue, m)
 }
 
+func includeConfiguredNssaiCheck(ue *amf_context.AmfUe) bool {
+	if len(ue.ConfiguredNssai) == 0 {
+		return false
+	}
+
+	registrationRequest := ue.RegistrationRequest
+	if registrationRequest.RequestedNSSAI == nil {
+		return true
+	}
+	if ue.NetworkSliceInfo != nil && len(ue.NetworkSliceInfo.RejectedNssaiInPlmn) != 0 {
+		return true
+	}
+	if registrationRequest.NetworkSlicingIndication != nil && registrationRequest.NetworkSlicingIndication.GetDCNI() == 1 {
+		return true
+	}
+	return false
+}
+
 func BuildStatus5GMM(cause uint8) ([]byte, error) {
 
 	m := nas.NewMessage()
@@ -636,30 +661,38 @@ func BuildConfigurationUpdateCommand(ue *amf_context.AmfUe, anType models.Access
 	if len(ue.AllowedNssai[anType]) > 0 {
 		configurationUpdateCommand.AllowedNSSAI = nasType.NewAllowedNSSAI(nasMessage.ConfigurationUpdateCommandAllowedNSSAIType)
 		var buf []uint8
-		for _, snssai := range ue.AllowedNssai[anType] {
-			buf = append(buf, nasConvert.SnssaiToNas(snssai)...)
+		for _, allowedSnssai := range ue.AllowedNssai[anType] {
+			buf = append(buf, nasConvert.SnssaiToNas(*allowedSnssai.AllowedSnssai)...)
 		}
 		configurationUpdateCommand.AllowedNSSAI.SetLen(uint8(len(buf)))
 		configurationUpdateCommand.AllowedNSSAI.SetSNSSAIValue(buf)
 	}
 
-	if len(ue.ConfiguredNssai[anType]) > 0 {
+	if len(ue.ConfiguredNssai) > 0 {
 		configurationUpdateCommand.ConfiguredNSSAI = nasType.NewConfiguredNSSAI(nasMessage.ConfigurationUpdateCommandConfiguredNSSAIType)
 		var buf []uint8
-		for _, snssai := range ue.ConfiguredNssai[anType] {
-			buf = append(buf, nasConvert.SnssaiToNas(snssai)...)
+		for _, snssai := range ue.ConfiguredNssai {
+			buf = append(buf, nasConvert.SnssaiToNas(*snssai.ConfiguredSnssai)...)
 		}
 		configurationUpdateCommand.ConfiguredNSSAI.SetLen(uint8(len(buf)))
 		configurationUpdateCommand.ConfiguredNSSAI.SetSNSSAIValue(buf)
 	}
 
-	if len(ue.RejectedNssai[anType]) > 0 {
-		rejectedNssaiNas := nasConvert.RejectedNssaiToNas(ue.RejectedNssai[anType], ue.RejectCause)
-		configurationUpdateCommand.RejectedNSSAI = &rejectedNssaiNas
-		configurationUpdateCommand.RejectedNSSAI.SetIei(nasMessage.ConfigurationUpdateCommandRejectedNSSAIType)
+	if ue.NetworkSliceInfo != nil {
+		if len(ue.NetworkSliceInfo.RejectedNssaiInPlmn) != 0 || len(ue.NetworkSliceInfo.RejectedNssaiInTa) != 0 {
+			rejectedNssaiNas := nasConvert.RejectedNssaiToNas(ue.NetworkSliceInfo.RejectedNssaiInPlmn, ue.NetworkSliceInfo.RejectedNssaiInTa)
+			configurationUpdateCommand.RejectedNSSAI = &rejectedNssaiNas
+			configurationUpdateCommand.RejectedNSSAI.SetIei(nasMessage.ConfigurationUpdateCommandRejectedNSSAIType)
+		}
 	}
 
-	// TODO: service area list, UniversalTimeAndLocalTimeZone
+	// TODO: UniversalTimeAndLocalTimeZone
+	if anType == models.AccessType__3_GPP_ACCESS && ue.AmPolicyAssociation != nil && ue.AmPolicyAssociation.ServAreaRes != nil {
+		configurationUpdateCommand.ServiceAreaList = nasType.NewServiceAreaList(nasMessage.ConfigurationUpdateCommandServiceAreaListType)
+		partialServiceAreaList := nasConvert.PartialServiceAreaListToNas(ue.PlmnId, *ue.AmPolicyAssociation.ServAreaRes)
+		configurationUpdateCommand.ServiceAreaList.SetLen(uint8(len(partialServiceAreaList)))
+		configurationUpdateCommand.ServiceAreaList.SetPartialServiceAreaList(partialServiceAreaList)
+	}
 
 	amfSelf := amf_context.AMF_Self()
 	if amfSelf.NetworkName.Full != "" {
