@@ -36,7 +36,7 @@ then
     exit 1
 fi
 
-cp config/smfcfg.single.conf config/smfcfg.test.conf
+cp config/test/smfcfg.single.test.conf config/test/smfcfg.test.conf
 
 GOPATH=$HOME/go
 if [ $OS == "Ubuntu" ]; then
