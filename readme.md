@@ -7,9 +7,9 @@
     - gcc 7.3.0
     - Go 1.12.9 linux/amd64
     - QEMU emulator 2.11.1
-```bash
-**Note:** Please use Ubuntu 18.04 or later versions and go 1.12.9 linux/amd64
-```
+
+**Note: Please use Ubuntu 18.04 or later versions and go 1.12.9 linux/amd64** 
+
 
 You can use `go version` to check your current Go version.
 ```bash
@@ -65,12 +65,14 @@ There are no gNB and UE for standalone 5GC available in the market yet.
 3. Clone free5GC project in `$GOPATH/src`
     ```bash
     cd $GOPATH/src
-    git clone https://bitbucket.org/free5GC/free5gc-stage-2.git free5gc
+    git clone https://bitbucket.org/free5GC/free5gc.git
     ```
+
+    **In step 3, the folder name should remain free5gc. Please do not modify it or the compilation would fail.**
 4. Run the script to install dependent packages
     ```bash
     cd $GOPATH/src/free5gc
-    chmod +x ./install_env.sh```
+    chmod +x ./install_env.sh
     ./install_env.sh
     
     Please ignore error messages during the package dependencies installation process.
@@ -85,12 +87,10 @@ There are no gNB and UE for standalone 5GC available in the market yet.
     ```bash
     cd $GOPATH/src/free5gc
     go build -o bin/amf -x src/amf/amf.go
-7. Run network function services, e.g. AMF:
+    ```
+    **To build all network functions in one command**
     ```bash
-    cd $GOPATH/src/free5gc
-    ./bin/amf
-
-    In step 3, the folder name should remain free5gc. Please do not modify it or the compilation would fail.
+    ./build.sh
     ```
 
 
@@ -115,32 +115,44 @@ There are no gNB and UE for standalone 5GC available in the market yet.
     sudo make install
     ```
 3. Enter the UPF directory
-    ```cd $GOPATH/src/free5gc/src/upf```
+    ```bash
+    cd $GOPATH/src/free5gc/src/upf
+    ```
 4. Build from sources
     ```bash
     mkdir build
     cd build
     cmake ..
-    make -j `nproc`
+    make -j`nproc`
     ```
-5. Run UPF library test
+5. Run UPF library test (In directory: $GOPATH/src/free5gc/src/upf/build)
     ```bash
-    (In directory: $GOPATH/src/free5gc/src/upf/build
-    
     sudo ./bin/testgtpv1
     ```
-6. Config is located at `$GOPATH/src/free5gc/src/upf/build/config/upfcfg.yaml`
+6. Config is located at 
+   ```bash
+   $GOPATH/src/free5gc/src/upf/build/config/upfcfg.yaml
+   ```
 
 
 
 ## Run
 
 ### A. Run Core Network
+Option 1. Run network function service, e.g. AMF:
+```bash
+cd $GOPATH/src/free5gc
+./bin/amf
+```
+
+
+
+Option 2. Run whole core network
 ```
 ./run.sh
 ```
 
-### B. Run N3IWF (manually)
+### B. Run N3IWF (Individually)
 To run N3IWF, make sure the machine is equipped with three network interfaces, one is for connecting AMF, another is for connecting UPF, the other is for IKE daemon.
 
 For each interface, configure it with a suitable IP address.
@@ -159,8 +171,8 @@ sudo ip link set dev ipsec0 up
 
 Run N3IWF (need root privilege):
 ```bash
-cd bin/
-sudo ./n3iwf
+cd $GOPATH/src/free5gc/
+sudo ./bin/n3iwf
 ```
 
 ### C. Run Procedure Tests
@@ -191,12 +203,22 @@ e. TestPDUSessionReleaseRequest
 ./test.sh TestPDUSessionReleaseRequest
 ```
 
-g. TestNon3GPP
+f. TestPaging
+```!
+./test.sh TestPaging
+```
+
+g. TestN2Handover
+```!
+./test.sh TestN2Handover
+```
+
+h. TestNon3GPP
 ```bash
 ./test.sh TestNon3GPP
 ```
 
-h. TestULCL
+i. TestULCL
 ```bash
 ./test_ulcl.sh -om 3 TestRegistration
 ```
@@ -223,16 +245,17 @@ The below commands may be helpful for development purposes.
 1. Remove POSIX message queues
     - ```ls /dev/mqueue/```
     - ```rm /dev/mqueue/*```
-2. Remove gtp tunnels (using tools in libgtpnl)
-    - ```cd ./src/upf/lib/libgtpnl-1.2.1/tools```
-    - ```./gtp-tunnel list```
-3. Remove gtp devices (using tools in libgtpnl)
-    - ```cd ./src/upf/lib/libgtpnl-1.2.1/tools```
-    - ```sudo ./gtp-link del {Dev-Name}```
+2. Remove gtp5g tunnels (using tools in libgtp5gnl)
+    - ```cd ./src/upf/lib/libgtp5gnl/tools```
+    - ```./gtp5g-tunnel list pdr```
+    - ```./gtp5g-tunnel list far```
+3. Remove gtp5g devices (using tools in libgtp5gnl)
+    - ```cd ./src/upf/lib/libgtp5gnl/tools```
+    - ```sudo ./gtp5g-link del {Dev-Name}```
 
 ## Appendix C: Change Kernel Version
 1. Check the previous kernel version: `uname -r`
-2. search specific kernel version and install, take `5.0.0-23-generic` for example
+2. Search specific kernel version and install, take `5.0.0-23-generic` for example
 ```bash
 sudo apt search 'linux-image-5.0.0-23-generic'
 sudo apt install 'linux-image-5.0.0-23-generic'
