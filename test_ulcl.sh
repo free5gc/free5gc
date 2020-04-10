@@ -59,6 +59,8 @@ elif [ $OS == "Fedora" ]; then
 fi
 PATH=$PATH:$GOPATH/bin:$GOROOT/bin
 
+cp config/test/smfcfg.ulcl.test.conf config/test/smfcfg.test.conf
+
 UPFNS="UPFns"
 
 export GIN_MODE=release
@@ -96,8 +98,15 @@ for i in $(seq -f "%02g" 1 $UPF_NUM); do
     fi
 
     sed -i -e "s/10.200.200.10./10.200.200.1${i}/g" ./src/upf/build/config/upfcfg.ulcl.yaml
+    if [ ${i} -eq 02 ]; then
+        sed -i -e "s/internet/intranet/g" ./src/upf/build/config/upfcfg.ulcl.yaml
+    else
+        sed -i -e "s/intranet/internet/g" ./src/upf/build/config/upfcfg.ulcl.yaml
+    fi
     cd src/upf/build && sudo ip netns exec "${UPFNS}${i}" ./bin/free5gc-upfd -f config/upfcfg.ulcl.yaml &
     sleep 1
+
+    sudo ip netns exec "${UPFNS}${i}" ip link set dev upfgtp0 mtu 1500
 done
 
 cd src/test
@@ -117,10 +126,11 @@ sudo ip addr del 60.60.0.1/32 dev lo
 sudo ip link del veth0
 sudo ip link del free5gc-br
 
-for i in $(seq 1 $UPF_NUM); do
+for i in $(seq -f "%02g" 1 $UPF_NUM); do
     if [ ${DUMP_NS} ]; then
-        sudo ip netns exec "${UPFNS}${i}" kill -SIGINT ${TCPDUMP_PID_${i}}
+        sudo ip netns exec "${UPFNS}${i}" kill -SIGINT ${TCPDUMP_PID_[$i]}
     fi
 
     sudo ip netns del "${UPFNS}${i}"
+    sudo ip link del "br-veth${i}"
 done

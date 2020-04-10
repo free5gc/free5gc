@@ -1,171 +1,171 @@
 [submodule "src/amf"]
 	path = src/amf
-	url = git@bitbucket.org:free5gc-team/amf.git
+	url = ../amf.git
 [submodule "src/smf"]
 	path = src/smf
-	url = git@bitbucket.org:free5gc-team/smf.git
+	url = ../smf.git
 [submodule "src/upf"]
 	path = src/upf
-	url = git@bitbucket.org:free5gc-team/upf.git
+	url = ../upf.git
 [submodule "src/ausf"]
 	path = src/ausf
-	url = git@bitbucket.org:free5gc-team/ausf.git
+	url = ../ausf.git
 [submodule "src/n3iwf"]
 	path = src/n3iwf
-	url = git@bitbucket.org:free5gc-team/n3iwf.git
+	url = ../n3iwf.git
 [submodule "src/nrf"]
 	path = src/nrf
-	url = git@bitbucket.org:free5gc-team/nrf.git
+	url = ../nrf.git
 [submodule "src/nssf"]
 	path = src/nssf
-	url = git@bitbucket.org:free5gc-team/nssf.git
+	url = ../nssf.git
 [submodule "src/pcf"]
 	path = src/pcf
-	url = git@bitbucket.org:free5gc-team/pcf.git
+	url = ../pcf.git
 [submodule "src/udm"]
 	path = src/udm
-	url = git@bitbucket.org:free5gc-team/udm.git
+	url = ../udm.git
 [submodule "src/udr"]
 	path = src/udr
-	url = git@bitbucket.org:free5gc-team/udr.git
+	url = ../udr.git
 [submodule "asn1c-s1ap"]
 	path = asn1c-s1ap
-	url = git@bitbucket.org:free5gc-team/asn1c-s1ap.git
+	url = ../asn1c-s1ap.git
 [submodule "webconsole"]
 	path = webconsole
-	url = git@bitbucket.org:free5gc-team/webconsole.git
+	url = ../webconsole.git
 [submodule "lib/CommonConsumerTestData"]
 	path = lib/CommonConsumerTestData
-	url = git@bitbucket.org:free5gc-team/CommonConsumerTestData.git
+	url = ../CommonConsumerTestData.git
 [submodule "lib/MongoDBLibrary"]
 	path = lib/MongoDBLibrary
-	url = git@bitbucket.org:free5gc-team/MongoDBLibrary.git
+	url = ../MongoDBLibrary.git
 [submodule "lib/Namf_Communication"]
 	path = lib/Namf_Communication
-	url = git@bitbucket.org:free5gc-team/Namf_Communication.git
+	url = ../Namf_Communication.git
 [submodule "lib/Namf_EventExposure"]
 	path = lib/Namf_EventExposure
-	url = git@bitbucket.org:free5gc-team/Namf_EventExposure.git
+	url = ../Namf_EventExposure.git
 [submodule "lib/Namf_Location"]
 	path = lib/Namf_Location
-	url = git@bitbucket.org:free5gc-team/Namf_Location.git
+	url = ../Namf_Location.git
 [submodule "lib/Namf_MT"]
 	path = lib/Namf_MT
-	url = git@bitbucket.org:free5gc-team/Namf_MT.git
+	url = ../Namf_MT.git
 [submodule "lib/Nausf_SoRProtection"]
 	path = lib/Nausf_SoRProtection
-	url = git@bitbucket.org:free5gc-team/Nausf_SoRProtection.git
+	url = ../Nausf_SoRProtection.git
 [submodule "lib/Nausf_UEAuthentication"]
 	path = lib/Nausf_UEAuthentication
-	url = git@bitbucket.org:free5gc-team/Nausf_UEAuthentication.git
+	url = ../Nausf_UEAuthentication.git
 [submodule "lib/Nausf_UPUProtection"]
 	path = lib/Nausf_UPUProtection
-	url = git@bitbucket.org:free5gc-team/Nausf_UPUProtection.git
+	url = ../Nausf_UPUProtection.git
 [submodule "lib/Nnrf_AccessToken"]
 	path = lib/Nnrf_AccessToken
-	url = git@bitbucket.org:free5gc-team/Nnrf_AccessToken.git
+	url = ../Nnrf_AccessToken.git
 [submodule "lib/Nnrf_NFDiscovery"]
 	path = lib/Nnrf_NFDiscovery
-	url = git@bitbucket.org:free5gc-team/Nnrf_NFDiscovery.git
+	url = ../Nnrf_NFDiscovery.git
 [submodule "lib/Nnrf_NFManagement"]
 	path = lib/Nnrf_NFManagement
-	url = git@bitbucket.org:free5gc-team/Nnrf_NFManagement.git
+	url = ../Nnrf_NFManagement.git
 [submodule "lib/Nnssf_NSSAIAvailability"]
 	path = lib/Nnssf_NSSAIAvailability
-	url = git@bitbucket.org:free5gc-team/Nnssf_NSSAIAvailability.git
+	url = ../Nnssf_NSSAIAvailability.git
 [submodule "lib/Nnssf_NSSelection"]
 	path = lib/Nnssf_NSSelection
-	url = git@bitbucket.org:free5gc-team/Nnssf_NSSelection.git
+	url = ../Nnssf_NSSelection.git
 [submodule "lib/Npcf_AMPolicy"]
 	path = lib/Npcf_AMPolicy
-	url = git@bitbucket.org:free5gc-team/Npcf_AMPolicy.git
+	url = ../Npcf_AMPolicy.git
 [submodule "lib/Npcf_BDTPolicyControl"]
 	path = lib/Npcf_BDTPolicyControl
-	url = git@bitbucket.org:free5gc-team/Npcf_BDTPolicyControl.git
+	url = ../Npcf_BDTPolicyControl.git
 [submodule "lib/Npcf_PolicyAuthorization"]
 	path = lib/Npcf_PolicyAuthorization
-	url = git@bitbucket.org:free5gc-team/Npcf_PolicyAuthorization.git
+	url = ../Npcf_PolicyAuthorization.git
 [submodule "lib/Npcf_SMPolicyControl"]
 	path = lib/Npcf_SMPolicyControl
-	url = git@bitbucket.org:free5gc-team/Npcf_SMPolicyControl.git
+	url = ../Npcf_SMPolicyControl.git
 [submodule "lib/Npcf_UEPolicy"]
 	path = lib/Npcf_UEPolicy
-	url = git@bitbucket.org:free5gc-team/Npcf_UEPolicy.git
+	url = ../Npcf_UEPolicy.git
 [submodule "lib/Nsmf_PDUSession"]
 	path = lib/Nsmf_PDUSession
-	url = git@bitbucket.org:free5gc-team/Nsmf_PDUSession.git
+	url = ../Nsmf_PDUSession.git
 [submodule "lib/Nudm_EventExposure"]
 	path = lib/Nudm_EventExposure
-	url = git@bitbucket.org:free5gc-team/Nudm_EventExposure.git
+	url = ../Nudm_EventExposure.git
 [submodule "lib/Nudm_ParameterProvision"]
 	path = lib/Nudm_ParameterProvision
-	url = git@bitbucket.org:free5gc-team/Nudm_ParameterProvision.git
+	url = ../Nudm_ParameterProvision.git
 [submodule "lib/Nudm_SubscriberDataManagement"]
 	path = lib/Nudm_SubscriberDataManagement
-	url = git@bitbucket.org:free5gc-team/Nudm_SubscriberDataManagement.git
+	url = ../Nudm_SubscriberDataManagement.git
 [submodule "lib/Nudm_UEAuthentication"]
 	path = lib/Nudm_UEAuthentication
-	url = git@bitbucket.org:free5gc-team/Nudm_UEAuthentication.git
+	url = ../Nudm_UEAuthentication.git
 [submodule "lib/Nudm_UEContextManagement"]
 	path = lib/Nudm_UEContextManagement
-	url = git@bitbucket.org:free5gc-team/Nudm_UEContextManagement.git
+	url = ../Nudm_UEContextManagement.git
 [submodule "lib/Nudr_DataRepository"]
 	path = lib/Nudr_DataRepository
-	url = git@bitbucket.org:free5gc-team/Nudr_DataRepository.git
+	url = ../Nudr_DataRepository.git
 [submodule "lib/TimeDecode"]
 	path = lib/TimeDecode
-	url = git@bitbucket.org:free5gc-team/TimeDecode.git
+	url = ../TimeDecode.git
 [submodule "lib/UeauCommon"]
 	path = lib/UeauCommon
-	url = git@bitbucket.org:free5gc-team/UeauCommon.git
+	url = ../UeauCommon.git
 [submodule "lib/aes"]
 	path = lib/aes
-	url = git@bitbucket.org:free5gc-team/aes.git
+	url = ../aes.git
 [submodule "lib/aper"]
 	path = lib/aper
-	url = git@bitbucket.org:free5gc-team/aper.git
+	url = ../aper.git
 [submodule "lib/core_aes"]
 	path = lib/core_aes
-	url = git@bitbucket.org:free5gc-team/core_aes.git
+	url = ../core_aes.git
 [submodule "lib/flowdesc"]
 	path = lib/flowdesc
-	url = git@bitbucket.org:free5gc-team/flowdesc.git
+	url = ../flowdesc.git
 [submodule "lib/fsm"]
 	path = lib/fsm
-	url = git@bitbucket.org:free5gc-team/fsm.git
+	url = ../fsm.git
 [submodule "lib/http2_util"]
 	path = lib/http2_util
-	url = git@bitbucket.org:free5gc-team/http2_util.git
+	url = ../http2_util.git
 [submodule "lib/http_wrapper"]
 	path = lib/http_wrapper
-	url = git@bitbucket.org:free5gc-team/http_wrapper.git
+	url = ../http_wrapper.git
 [submodule "lib/logger_util"]
 	path = lib/logger_util
-	url = git@bitbucket.org:free5gc-team/logger_util.git
+	url = ../logger_util.git
 [submodule "lib/milenage"]
 	path = lib/milenage
-	url = git@bitbucket.org:free5gc-team/milenage.git
+	url = ../milenage.git
 [submodule "lib/nas"]
 	path = lib/nas
-	url = git@bitbucket.org:free5gc-team/nas.git
+	url = ../nas.git
 [submodule "lib/ngap"]
 	path = lib/ngap
-	url = git@bitbucket.org:free5gc-team/ngap.git
+	url = ../ngap.git
 [submodule "lib/openapi"]
 	path = lib/openapi
-	url = git@bitbucket.org:free5gc-team/openapi.git
+	url = ../openapi.git
 [submodule "lib/path_util"]
 	path = lib/path_util
-	url = git@bitbucket.org:free5gc-team/path_util.git
+	url = ../path_util.git
 [submodule "lib/pfcp"]
 	path = lib/pfcp
-	url = git@bitbucket.org:free5gc-team/pfcp.git
+	url = ../pfcp.git
 [submodule "lib/timer"]
 	path = lib/timer
-	url = git@bitbucket.org:free5gc-team/timer.git
+	url = ../timer.git
 [submodule "lib/tlv"]
 	path = lib/tlv
-	url = git@bitbucket.org:free5gc-team/tlv.git
+	url = ../tlv.git
 [submodule "lib/util_3gpp"]
 	path = lib/util_3gpp
-	url = git@bitbucket.org:free5gc-team/util_3gpp.git
+	url = ../util_3gpp.git
