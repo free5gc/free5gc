@@ -6,6 +6,9 @@ cd src/upf/build
 sudo ./bin/free5gc-upfd &
 PID_LIST+=($!)
 
+sleep 1
+sudo ip link set dev upfgtp0 mtu 1500
+
 cd ../../..
 
 NF_LIST="nrf amf smf udr pcf udm nssf ausf"
@@ -16,6 +19,9 @@ for NF in ${NF_LIST}; do
     ./bin/${NF} &
     PID_LIST+=($!)
 done
+
+sudo ./bin/n3iwf &
+PID_LIST+=($!)
 
 function terminate()
 {

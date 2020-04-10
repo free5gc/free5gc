@@ -129,7 +129,6 @@ sudo ip link del free5gc-br
 for i in $(seq -f "%02g" 1 $UPF_NUM); do
     if [ ${DUMP_NS} ]; then
         sudo ip netns exec "${UPFNS}${i}" kill -SIGINT ${TCPDUMP_PID_[$i]}
-	sudo killall -SIGINT tcpdump
     fi
 
     sudo ip netns del "${UPFNS}${i}"
