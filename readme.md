@@ -73,7 +73,7 @@ There are no gNB and UE for standalone 5GC available in the market yet.
 2. Clone free5GC project in `$GOPATH/src`
     ```bash
     cd $GOPATH/src
-    git clone https://bitbucket.org/free5GC/free5gc.git
+    git clone https://github.com/free5gc/free5gc.git
     ```
 
     **In step 3, the folder name should remain free5gc. Please do not modify it or the compilation would fail.**
