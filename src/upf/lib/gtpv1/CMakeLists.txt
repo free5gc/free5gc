@@ -30,3 +30,19 @@ add_custom_target(libgtp5gnl ALL
 )
 
 link_directories("${CMAKE_SOURCE_DIR}/lib" "${LIBGTP5GNL_DST}/lib" ${LOGGER_DST})
+
+# Test
+add_executable("${PROJECT_NAME}_test" test.c)
+set_target_properties("${PROJECT_NAME}_test" PROPERTIES
+    OUTPUT_NAME "${BUILD_BIN_DIR}/testgtpv1"
+)
+
+target_link_libraries("${PROJECT_NAME}_test" free5GC_lib gtp5gnl logger mnl)
+target_include_directories("${PROJECT_NAME}_test" PRIVATE
+    include
+    ${LOGGER_DST}
+    "${LIBGTP5GNL_DST}/include"
+    "${CMAKE_SOURCE_DIR}/lib/utlt/include"
+)
+target_compile_options("${PROJECT_NAME}_test" PRIVATE -Wall -Werror)
+add_dependencies("${PROJECT_NAME}_test" utlt_logger libgtp5gnl)
