@@ -45,6 +45,11 @@ There are no gNB and UE for standalone 5GC available in the market yet.
     sudo apt -y install git gcc cmake autoconf libtool pkg-config libmnl-dev libyaml-dev
     go get -u github.com/sirupsen/logrus
     ```
+3. Network Setting
+    ```bash
+    sudo sysctl -w net.ipv4.ip_forward=1
+    sudo iptables -t nat -A POSTROUTING -o ${DN_INTERFACE} -j MASQUERADE
+    ```
 
 ### B. Install Control Plane Entities
     
