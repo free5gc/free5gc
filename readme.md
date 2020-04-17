@@ -130,10 +130,6 @@ There are no gNB and UE for standalone 5GC available in the market yet.
     cmake ..
     make -j`nproc`
     ```
-3. Run UPF library test (In directory: $GOPATH/src/free5gc/src/upf/build)
-    ```bash
-    sudo ./bin/testgtpv1
-    ```
     
 **Note: Config is located at** `$GOPATH/src/free5gc/src/upf/build/config/upfcfg.yaml
    `
