@@ -45,6 +45,11 @@ There are no gNB and UE for standalone 5GC available in the market yet.
     sudo apt -y install git gcc cmake autoconf libtool pkg-config libmnl-dev libyaml-dev
     go get -u github.com/sirupsen/logrus
     ```
+3. Network Setting
+    ```bash
+    sudo sysctl -w net.ipv4.ip_forward=1
+    sudo iptables -t nat -A POSTROUTING -o ${DN_INTERFACE} -j MASQUERADE
+    ```
 
 ### B. Install Control Plane Entities
     
@@ -124,10 +129,6 @@ There are no gNB and UE for standalone 5GC available in the market yet.
     cd build
     cmake ..
     make -j`nproc`
-    ```
-3. Run UPF library test (In directory: $GOPATH/src/free5gc/src/upf/build)
-    ```bash
-    sudo ./bin/testgtpv1
     ```
     
 **Note: Config is located at** `$GOPATH/src/free5gc/src/upf/build/config/upfcfg.yaml
