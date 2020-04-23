@@ -3,9 +3,9 @@ package test
 import (
 	"encoding/binary"
 	"encoding/hex"
-	"gofree5gc/lib/UeauCommon"
-	"gofree5gc/lib/milenage"
-	"gofree5gc/lib/openapi/models"
+	"free5gc/lib/UeauCommon"
+	"free5gc/lib/milenage"
+	"free5gc/lib/openapi/models"
 )
 
 type RanUeContext struct {
