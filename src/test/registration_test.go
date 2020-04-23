@@ -219,7 +219,7 @@ func TestRegistration(t *testing.T) {
 	_, err = conn.Write(sendMsg)
 	assert.Nil(t, err)
 
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(500 * time.Millisecond)
 	// send GetPduSessionEstablishmentRequest Msg
 
 	sNssai := models.Snssai{
@@ -229,9 +229,9 @@ func TestRegistration(t *testing.T) {
 	pdu = nasTestpacket.GetUlNasTransport_PduSessionEstablishmentRequest(10, nasMessage.ULNASTransportRequestTypeInitialRequest, "internet", &sNssai)
 	pdu, err = test.EncodeNasPduWithSecurity(ue, pdu)
 	assert.Nil(t, err)
-	sendMsg, err = test.GetUplinkNASTransport(ue.AmfUeNgapId, ue.RanUeNgapId, pdu)
+	PduSessionEstablishmentRequestMSG, err := test.GetUplinkNASTransport(ue.AmfUeNgapId, ue.RanUeNgapId, pdu)
 	assert.Nil(t, err)
-	_, err = conn.Write(sendMsg)
+	_, err = conn.Write(PduSessionEstablishmentRequestMSG)
 	assert.Nil(t, err)
 
 	// recieve 12. NGAP-PDU Session Resource Setup Request(DL nas transport((NAS msg-PDU session setup Accept)))
@@ -249,6 +249,29 @@ func TestRegistration(t *testing.T) {
 	// wait 1s
 	time.Sleep(1 * time.Second)
 
+	//send PduSessionEstablishmentRequest Msg again to make error
+
+	_, err = conn.Write(PduSessionEstablishmentRequestMSG)
+	assert.Nil(t, err)
+
+	sendMsg, err = test.GetPDUSessionResourceReleaseResponse(ue.AmfUeNgapId, ue.RanUeNgapId)
+	assert.Nil(t, err)
+	_, err = conn.Write(sendMsg)
+	assert.Nil(t, err)
+
+	time.Sleep(time.Second * 2)
+	// recieve 12. NGAP-PDU Session Resource Setup Request(DL nas transport((NAS msg-PDU session setup Accept)))
+	// n, err = conn.Read(recvMsg)
+	// assert.Nil(t, err)
+	// _, err = ngap.Decoder(recvMsg[:n])
+	// assert.Nil(t, err)
+
+	// // send 14. NGAP-PDU Session Resource Setup Response
+	// sendMsg, err = test.GetPDUSessionResourceSetupResponse(ue.AmfUeNgapId, ue.RanUeNgapId, ranIpAddr)
+	// assert.Nil(t, err)
+	// _, err = conn.Write(sendMsg)
+	// assert.Nil(t, err)
+	//time.Sleep(1000 * time.Second)
 	// Send the dummy packet
 	// ping IP(tunnel IP) from 60.60.0.2(127.0.0.1) to 60.60.0.20(127.0.0.8)
 	gtpHdr, err := hex.DecodeString("32ff00340000000100000000")
