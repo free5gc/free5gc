@@ -851,8 +851,8 @@ func TestPDUSessionReleaseRequest(t *testing.T) {
 	// wait 10 ms
 	time.Sleep(1000 * time.Millisecond)
 
-	//send N1 PDU Session Release Ack PDU session release command
-	pdu = nasTestpacket.GetUlNasTransport_PduSessionReleaseCommand(10, nasMessage.ULNASTransportRequestTypeInitialRequest, "internet", &sNssai)
+	//send N1 PDU Session Release Ack PDU session release complete
+	pdu = nasTestpacket.GetUlNasTransport_PduSessionReleaseComplete(10, nasMessage.ULNASTransportRequestTypeInitialRequest, "internet", &sNssai)
 	pdu, err = test.EncodeNasPduWithSecurity(ue, pdu)
 	assert.Nil(t, err)
 	sendMsg, err = test.GetUplinkNASTransport(ue.AmfUeNgapId, ue.RanUeNgapId, pdu)
@@ -861,8 +861,7 @@ func TestPDUSessionReleaseRequest(t *testing.T) {
 	assert.Nil(t, err)
 
 	// wait result
-	_, err = conn.Read(recvMsg)
-	assert.Nil(t, err)
+	time.Sleep(1 * time.Second)
 
 	// delete test data
 	test.DelAuthSubscriptionToMongoDB(ue.Supi)
