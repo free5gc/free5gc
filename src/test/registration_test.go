@@ -2,18 +2,18 @@ package test_test
 
 import (
 	"encoding/hex"
-	"gofree5gc/lib/CommonConsumerTestData/UDM/TestGenAuthData"
-	"gofree5gc/lib/CommonConsumerTestData/UDR/TestRegistrationProcedure"
-	"gofree5gc/lib/nas/nasMessage"
-	"gofree5gc/lib/nas/nasTestpacket"
-	"gofree5gc/lib/nas/nasType"
-	"gofree5gc/lib/ngap"
-	"gofree5gc/lib/openapi/models"
+	"free5gc/lib/CommonConsumerTestData/UDM/TestGenAuthData"
+	"free5gc/lib/CommonConsumerTestData/UDR/TestRegistrationProcedure"
+	"free5gc/lib/nas/nasMessage"
+	"free5gc/lib/nas/nasTestpacket"
+	"free5gc/lib/nas/nasType"
+	"free5gc/lib/ngap"
+	"free5gc/lib/openapi/models"
 
 	"github.com/mohae/deepcopy"
 
-	// "gofree5gc/src/ausf/ausf_context"
-	"gofree5gc/src/test"
+	// "free5gc/src/ausf/ausf_context"
+	"free5gc/src/test"
 	"net"
 	"testing"
 	"time"
