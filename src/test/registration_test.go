@@ -1822,7 +1822,7 @@ func TestDuplicateRegistration(t *testing.T) {
 	assert.Nil(t, err)
 
 	// wait 1s
-	time.Sleep(2 * time.Second)
+	time.Sleep(1 * time.Second)
 
 	// Send the dummy packet
 	// ping IP(tunnel IP) from 60.60.0.2(127.0.0.1) to 60.60.0.20(127.0.0.8)
