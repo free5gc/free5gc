@@ -33,6 +33,15 @@ There are no gNB and UE for standalone 5GC available in the market yet.
 ## Installation
 ### A. Pre-requisite
 
+0. Required kernel version `5.0.0-23-generic`. This request is from the module
+   [gtp5g](https://github.com/PrinzOwO/gtp5g) that we has used. Any more details
+   please check [here](https://github.com/PrinzOwO/gtp5g)
+   ```bash
+   # Check kernel version
+   $ uname -r
+   5.0.0-23-generic
+   ```
+
 1. Required packages for control plane
     ```bash
     sudo apt -y update
