@@ -13,7 +13,7 @@ import (
 	"free5gc/src/nrf/nrf_service"
 	"free5gc/src/nssf/nssf_service"
 	"free5gc/src/pcf/pcf_service"
-	"free5gc/src/smf/smf_service"
+	smf_service "free5gc/src/smf/service"
 	"free5gc/src/test"
 	"free5gc/src/udm/udm_service"
 	"free5gc/src/udr/udr_service"
