@@ -124,9 +124,6 @@
 [submodule "lib/aper"]
 	path = lib/aper
 	url = ../aper.git
-[submodule "lib/core_aes"]
-	path = lib/core_aes
-	url = ../core_aes.git
 [submodule "lib/flowdesc"]
 	path = lib/flowdesc
 	url = ../flowdesc.git
