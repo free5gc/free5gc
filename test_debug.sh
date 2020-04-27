@@ -29,7 +29,7 @@ PATH=$PATH:$GOPATH/bin:$GOROOT/bin
 GO111MODULE=off
 
 UPFNS="UPFns"
-EXEC_UPFNS="sudo ip netns exec ${UPFNS}"
+EXEC_UPFNS="sudo -E ip netns exec ${UPFNS}"
 
 export GIN_MODE=release
 

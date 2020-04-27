@@ -47,7 +47,7 @@ fi
 PATH=$PATH:$GOPATH/bin:$GOROOT/bin
 
 UPFNS="UPFns"
-EXEC_UPFNS="sudo ip netns exec ${UPFNS}"
+EXEC_UPFNS="sudo -E ip netns exec ${UPFNS}"
 
 export GIN_MODE=release
 
