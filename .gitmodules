@@ -166,3 +166,6 @@
 [submodule "lib/util_3gpp"]
 	path = lib/util_3gpp
 	url = ../util_3gpp.git
+[submodule "lib/logger_conf"]
+	path = lib/logger_conf
+	url = git@bitbucket.org:free5gc-team/logger_conf.git
