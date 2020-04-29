@@ -3,20 +3,20 @@ package test_test
 import (
 	"flag"
 	"fmt"
-	"gofree5gc/lib/MongoDBLibrary"
-	"gofree5gc/lib/ngap"
-	"gofree5gc/lib/ngap/ngapSctp"
-	"gofree5gc/lib/path_util"
-	"gofree5gc/src/amf/amf_service"
-	"gofree5gc/src/app"
-	"gofree5gc/src/ausf/ausf_service"
-	"gofree5gc/src/nrf/nrf_service"
-	"gofree5gc/src/nssf/nssf_service"
-	"gofree5gc/src/pcf/pcf_service"
-	"gofree5gc/src/smf/smf_service"
-	"gofree5gc/src/test"
-	"gofree5gc/src/udm/udm_service"
-	"gofree5gc/src/udr/udr_service"
+	"free5gc/lib/MongoDBLibrary"
+	"free5gc/lib/ngap"
+	"free5gc/lib/ngap/ngapSctp"
+	"free5gc/lib/path_util"
+	"free5gc/src/amf/amf_service"
+	"free5gc/src/app"
+	"free5gc/src/ausf/ausf_service"
+	"free5gc/src/nrf/nrf_service"
+	"free5gc/src/nssf/nssf_service"
+	"free5gc/src/pcf/pcf_service"
+	smf_service "free5gc/src/smf/service"
+	"free5gc/src/test"
+	"free5gc/src/udm/udm_service"
+	"free5gc/src/udr/udr_service"
 	"log"
 	"net"
 	"os"
@@ -55,7 +55,7 @@ func init() {
 		flagSet := flag.NewFlagSet("free5gc", 0)
 		flagSet.String("smfcfg", "", "SMF Config Path")
 		cli := cli.NewContext(nil, flagSet, nil)
-		err := cli.Set("smfcfg", path_util.Gofree5gcPath("gofree5gc/config/test/smfcfg.test.conf"))
+		err := cli.Set("smfcfg", path_util.Gofree5gcPath("free5gc/config/test/smfcfg.test.conf"))
 		if err != nil {
 			log.Fatal("SMF test config error")
 			return

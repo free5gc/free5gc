@@ -1,13 +1,13 @@
 package test
 
 import (
-	"gofree5gc/lib/nas"
-	"gofree5gc/lib/nas/nasMessage"
+	"free5gc/lib/nas"
+	"free5gc/lib/nas/nasMessage"
 
-	// Nausf_UEAU_Client "gofree5gc/lib/Nausf_UEAuthentication"
-	"gofree5gc/lib/ngap"
-	"gofree5gc/src/test/ngapTestpacket"
-	// "gofree5gc/lib/openapi/models"
+	// Nausf_UEAU_Client "free5gc/lib/Nausf_UEAuthentication"
+	"free5gc/lib/ngap"
+	"free5gc/src/test/ngapTestpacket"
+	// "free5gc/lib/openapi/models"
 )
 
 func GetNGSetupRequest(gnbId []byte, bitlength uint64, name string) ([]byte, error) {

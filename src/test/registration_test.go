@@ -2,18 +2,18 @@ package test_test
 
 import (
 	"encoding/hex"
-	"gofree5gc/lib/CommonConsumerTestData/UDM/TestGenAuthData"
-	"gofree5gc/lib/CommonConsumerTestData/UDR/TestRegistrationProcedure"
-	"gofree5gc/lib/nas/nasMessage"
-	"gofree5gc/lib/nas/nasTestpacket"
-	"gofree5gc/lib/nas/nasType"
-	"gofree5gc/lib/ngap"
-	"gofree5gc/lib/openapi/models"
+	"free5gc/lib/CommonConsumerTestData/UDM/TestGenAuthData"
+	"free5gc/lib/CommonConsumerTestData/UDR/TestRegistrationProcedure"
+	"free5gc/lib/nas/nasMessage"
+	"free5gc/lib/nas/nasTestpacket"
+	"free5gc/lib/nas/nasType"
+	"free5gc/lib/ngap"
+	"free5gc/lib/openapi/models"
 
 	"github.com/mohae/deepcopy"
 
-	// "gofree5gc/src/ausf/ausf_context"
-	"gofree5gc/src/test"
+	// "free5gc/src/ausf/ausf_context"
+	"free5gc/src/test"
 	"net"
 	"testing"
 	"time"
@@ -851,8 +851,8 @@ func TestPDUSessionReleaseRequest(t *testing.T) {
 	// wait 10 ms
 	time.Sleep(1000 * time.Millisecond)
 
-	//send N1 PDU Session Release Ack PDU session release command
-	pdu = nasTestpacket.GetUlNasTransport_PduSessionReleaseCommand(10, nasMessage.ULNASTransportRequestTypeInitialRequest, "internet", &sNssai)
+	//send N1 PDU Session Release Ack PDU session release complete
+	pdu = nasTestpacket.GetUlNasTransport_PduSessionReleaseComplete(10, nasMessage.ULNASTransportRequestTypeInitialRequest, "internet", &sNssai)
 	pdu, err = test.EncodeNasPduWithSecurity(ue, pdu)
 	assert.Nil(t, err)
 	sendMsg, err = test.GetUplinkNASTransport(ue.AmfUeNgapId, ue.RanUeNgapId, pdu)
@@ -861,8 +861,7 @@ func TestPDUSessionReleaseRequest(t *testing.T) {
 	assert.Nil(t, err)
 
 	// wait result
-	_, err = conn.Read(recvMsg)
-	assert.Nil(t, err)
+	time.Sleep(1 * time.Second)
 
 	// delete test data
 	test.DelAuthSubscriptionToMongoDB(ue.Supi)

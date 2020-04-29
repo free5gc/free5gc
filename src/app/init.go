@@ -4,17 +4,17 @@ import (
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
-	commonConsumerTestLogger "gofree5gc/lib/CommonConsumerTestData/logger"
-	namfCommLogger "gofree5gc/lib/Namf_Communication/logger"
-	namfEventExposureLogger "gofree5gc/lib/Namf_EventExposure/logger"
-	nsmfPDUSessionLogger "gofree5gc/lib/Nsmf_PDUSession/logger"
-	nudrDataRepositoryLogger "gofree5gc/lib/Nudr_DataRepository/logger"
-	aperLogger "gofree5gc/lib/aper/logger"
-	fsmLogger "gofree5gc/lib/fsm/logger"
-	nasLogger "gofree5gc/lib/nas/logger"
-	ngapLogger "gofree5gc/lib/ngap/logger"
-	openApiLogger "gofree5gc/lib/openapi/logger"
-	"gofree5gc/lib/path_util"
+	commonConsumerTestLogger "free5gc/lib/CommonConsumerTestData/logger"
+	namfCommLogger "free5gc/lib/Namf_Communication/logger"
+	namfEventExposureLogger "free5gc/lib/Namf_EventExposure/logger"
+	nsmfPDUSessionLogger "free5gc/lib/Nsmf_PDUSession/logger"
+	nudrDataRepositoryLogger "free5gc/lib/Nudr_DataRepository/logger"
+	aperLogger "free5gc/lib/aper/logger"
+	fsmLogger "free5gc/lib/fsm/logger"
+	nasLogger "free5gc/lib/nas/logger"
+	ngapLogger "free5gc/lib/ngap/logger"
+	openApiLogger "free5gc/lib/openapi/logger"
+	"free5gc/lib/path_util"
 )
 
 type NetworkFunction interface {
@@ -28,7 +28,7 @@ type NetworkFunction interface {
 func AppInitializeWillInitialize(cfgPath string) {
 
 	if cfgPath == "" {
-		ContextSelf().Path = path_util.Gofree5gcPath("gofree5gc/config/free5GC.conf")
+		ContextSelf().Path = path_util.Gofree5gcPath("free5gc/config/free5GC.conf")
 	} else {
 		ContextSelf().Path = path_util.Gofree5gcPath(cfgPath)
 	}

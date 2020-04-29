@@ -2,9 +2,9 @@ package ngapTestpacket
 
 import (
 	"encoding/hex"
-	"gofree5gc/lib/aper"
-	"gofree5gc/lib/ngap/ngapConvert"
-	"gofree5gc/lib/ngap/ngapType"
+	"free5gc/lib/aper"
+	"free5gc/lib/ngap/ngapConvert"
+	"free5gc/lib/ngap/ngapType"
 )
 
 // TODO: check test data

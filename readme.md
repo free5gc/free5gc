@@ -1,4 +1,4 @@
-# free5GC v3.0.0 Installation Guide
+# free5GC
 
 ## Minimum Requirement
 - Software
@@ -33,22 +33,16 @@ There are no gNB and UE for standalone 5GC available in the market yet.
 ## Installation
 ### A. Pre-requisite
 
-1. Required packages for control plane
-    ```bash
-    sudo apt -y update
-    sudo apt -y install mongodb wget git
-    sudo systemctl start mongodb
-    ```
-2. Required packages for user plane
-    ```bash
-    sudo apt -y update
-    sudo apt -y install git gcc cmake autoconf libtool pkg-config libmnl-dev libyaml-dev
-    go get -u github.com/sirupsen/logrus
-    ```
+0. Required kernel version `5.0.0-23-generic`. This request is from the module
+   [gtp5g](https://github.com/PrinzOwO/gtp5g) that we has used. Any more details
+   please check [here](https://github.com/PrinzOwO/gtp5g)
+   ```bash
+   # Check kernel version
+   $ uname -r
+   5.0.0-23-generic
+   ```
 
-### B. Install Control Plane Entities
-    
-1. Go installation
+1. Require go language
     * If another version of Go is installed
         - Please remove the previous Go version
             - ```sudo rm -rf /usr/local/go```
@@ -70,14 +64,38 @@ There are no gNB and UE for standalone 5GC available in the market yet.
             source ~/.bashrc
             ```
 
-2. Clone free5GC project in `$GOPATH/src`
+2. Required packages for control plane
     ```bash
-    cd $GOPATH/src
-    git clone https://bitbucket.org/free5GC/free5gc.git
+    sudo apt -y update
+    sudo apt -y install mongodb wget git
+    sudo systemctl start mongodb
     ```
 
-    **In step 3, the folder name should remain free5gc. Please do not modify it or the compilation would fail.**
-3. Run the script to install dependent packages
+3. Required packages for user plane
+    ```bash
+    sudo apt -y update
+    sudo apt -y install git gcc cmake autoconf libtool pkg-config libmnl-dev libyaml-dev
+    go get -u github.com/sirupsen/logrus
+    ```
+
+4. Network Setting
+    ```bash
+    sudo sysctl -w net.ipv4.ip_forward=1
+    sudo iptables -t nat -A POSTROUTING -o ${DN_INTERFACE} -j MASQUERADE
+    ```
+
+### B. Install Control Plane Entities
+    
+1. Clone free5GC project in `$GOPATH/src`
+    ```bash
+    cd $GOPATH/src
+    git clone https://github.com/free5gc/free5gc.git
+    cd free5gc
+    git submodule update --init
+    ```
+
+    **In step 2, the folder name should remain free5gc. Please do not modify it or the compilation would fail.**
+2. Run the script to install dependent packages
     ```bash
     cd $GOPATH/src/free5gc
     chmod +x ./install_env.sh
@@ -86,12 +104,7 @@ There are no gNB and UE for standalone 5GC available in the market yet.
     Please ignore error messages during the package dependencies installation process.
     ```
 
-4. Extract the `free5gc_libs.tar.gz` to setup the environment for compiling
-    ```bash
-    cd $GOPATH/src/free5gc
-    tar -C $GOPATH -zxvf free5gc_libs.tar.gz
-    ```
-5. Compile network function services in `$GOPATH/src/free5gc` individually, e.g. AMF (redo this step for each NF), or
+3. Compile network function services in `$GOPATH/src/free5gc` individually, e.g. AMF (redo this step for each NF), or
     ```bash
     cd $GOPATH/src/free5gc
     go build -o bin/amf -x src/amf/amf.go
@@ -124,10 +137,6 @@ There are no gNB and UE for standalone 5GC available in the market yet.
     cd build
     cmake ..
     make -j`nproc`
-    ```
-3. Run UPF library test (In directory: $GOPATH/src/free5gc/src/upf/build)
-    ```bash
-    sudo ./bin/testgtpv1
     ```
     
 **Note: Config is located at** `$GOPATH/src/free5gc/src/upf/build/config/upfcfg.yaml
@@ -181,7 +190,7 @@ ueRoutingInfo:
 * DestinationIP and DestinationPort will be the packet  destination.
 * UPF field will be the packet datapath when it match the destination above.
 
-
+***For more detail of SMF config, please refer to [here](https://github.com/free5gc/free5gc/wiki/SMF-Config).***
 
 
 ## Run
@@ -380,6 +389,21 @@ You can get your SIM card from [**sysmocom**](http://shop.sysmocom.de/products/s
     `cp config/amfcfg.conf.bak config/amfcfg.conf`
 
 # Release Note
+## v3.0.1
++ project:
+    + Change the way we manage project. Using git submodule to manage hole
+      project to let each NF and library has its own version control
+    + Open source our library
++ Add document of SMF ULCL limitation
++ hotfix:
+    + fix NRF return nil error (issue#12)
+    + fix OPc crash error (issue#21)
+    + update webconsole pakcage version to prevent security issue
+    + SMF fix pdu session release procedure
+    + fix pdu session release procedure test
++ SMF:
+    + SMF support NF deregistration
+
 ## v3.0.0
 + AMF
     + Support SMF selection at PDU session establishment
