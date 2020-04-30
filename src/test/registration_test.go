@@ -12,7 +12,7 @@ import (
 
 	"github.com/mohae/deepcopy"
 
-	// "free5gc/src/ausf/ausf_context"
+	// ausf_context "free5gc/src/ausf/context"
 	"free5gc/src/test"
 	"net"
 	"testing"
