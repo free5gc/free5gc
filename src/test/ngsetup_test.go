@@ -11,7 +11,7 @@ import (
 	"free5gc/src/app"
 	"free5gc/src/ausf/ausf_service"
 	"free5gc/src/nrf/nrf_service"
-	"free5gc/src/nssf/nssf_service"
+	nssf_service "free5gc/src/nssf/service"
 	pcf_service "free5gc/src/pcf/service"
 	smf_service "free5gc/src/smf/service"
 	"free5gc/src/test"
