@@ -9,7 +9,7 @@ import (
 	"free5gc/lib/path_util"
 	"free5gc/src/amf/amf_service"
 	"free5gc/src/app"
-	"free5gc/src/ausf/ausf_service"
+	ausf_service "free5gc/src/ausf/service"
 	"free5gc/src/nrf/nrf_service"
 	nssf_service "free5gc/src/nssf/service"
 	pcf_service "free5gc/src/pcf/service"
