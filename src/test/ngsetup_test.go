@@ -7,7 +7,7 @@ import (
 	"free5gc/lib/ngap"
 	"free5gc/lib/ngap/ngapSctp"
 	"free5gc/lib/path_util"
-	"free5gc/src/amf/amf_service"
+	amf_service "free5gc/src/amf/service"
 	"free5gc/src/app"
 	ausf_service "free5gc/src/ausf/service"
 	"free5gc/src/nrf/nrf_service"
