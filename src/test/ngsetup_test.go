@@ -15,7 +15,7 @@ import (
 	pcf_service "free5gc/src/pcf/service"
 	smf_service "free5gc/src/smf/service"
 	"free5gc/src/test"
-	"free5gc/src/udm/udm_service"
+	udm_service "free5gc/src/udm/service"
 	"free5gc/src/udr/udr_service"
 	"log"
 	"net"

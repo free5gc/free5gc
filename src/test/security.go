@@ -4,8 +4,8 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"fmt"
-	"github.com/aead/cmac"
 	"free5gc/lib/nas"
+	"github.com/aead/cmac"
 	"reflect"
 )
 
