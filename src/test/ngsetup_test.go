@@ -10,7 +10,7 @@ import (
 	amf_service "free5gc/src/amf/service"
 	"free5gc/src/app"
 	ausf_service "free5gc/src/ausf/service"
-	"free5gc/src/nrf/nrf_service"
+	nrf_service "free5gc/src/nrf/service"
 	nssf_service "free5gc/src/nssf/service"
 	pcf_service "free5gc/src/pcf/service"
 	smf_service "free5gc/src/smf/service"
