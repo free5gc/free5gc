@@ -16,7 +16,7 @@ import (
 	smf_service "free5gc/src/smf/service"
 	"free5gc/src/test"
 	udm_service "free5gc/src/udm/service"
-	"free5gc/src/udr/udr_service"
+	udr_service "free5gc/src/udr/service"
 	"log"
 	"net"
 	"os"
