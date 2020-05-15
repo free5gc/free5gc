@@ -169,3 +169,6 @@
 [submodule "lib/logger_conf"]
 	path = lib/logger_conf
 	url = ../logger_conf.git
+[submodule "lib/Nnef_PFDManagement"]
+	path = lib/Nnef_PFDManagement
+	url = ../Nnef_PFDManagement.git
