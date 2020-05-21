@@ -43,6 +43,7 @@ require (
 	golang.org/x/sys v0.0.0-20200223170610-d5e6a3e2c0ae
 	golang.org/x/tools v0.0.0-20200221224223-e1da425f72fd // indirect
 	google.golang.org/appengine v1.6.1 // indirect
+	google.golang.org/genproto v0.0.0-20200210034751-acff78025515
 	gopkg.in/go-playground/validator.v8 v8.18.2
 	gopkg.in/yaml.v2 v2.2.8
 	gopkg.in/yaml.v3 v3.0.0-20190502103701-55513cacd4ae
