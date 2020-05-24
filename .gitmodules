@@ -97,3 +97,6 @@
 [submodule "lib/logger_conf"]
 	path = lib/logger_conf
 	url = ../logger_conf.git
+[submodule "free5gc-compose"]
+	path = compose
+	url = ../free5gc-compose.git
