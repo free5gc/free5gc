@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"free5gc/src/app"
 	"free5gc/src/nrf/logger"
-	"free5gc/src/nrf/nrf_service"
+	nrf_service "free5gc/src/nrf/service"
 	"free5gc/src/nrf/version"
 	"os"
 
