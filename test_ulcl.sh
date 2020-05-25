@@ -103,7 +103,7 @@ for i in $(seq -f "%02g" 1 $UPF_NUM); do
     else
         sed -i -e "s/intranet/internet/g" ./src/upf/build/config/upfcfg.ulcl.yaml
     fi
-    cd src/upf/build && sudo ip netns exec "${UPFNS}${i}" ./bin/free5gc-upfd -f config/upfcfg.ulcl.yaml &
+    cd src/upf/build && sudo -E ip netns exec "${UPFNS}${i}" ./bin/free5gc-upfd -f config/upfcfg.ulcl.yaml &
     sleep 1
 
     sudo ip netns exec "${UPFNS}${i}" ip link set dev upfgtp0 mtu 1500
@@ -134,3 +134,6 @@ for i in $(seq -f "%02g" 1 $UPF_NUM); do
     sudo ip netns del "${UPFNS}${i}"
     sudo ip link del "br-veth${i}"
 done
+
+cp config/test/smfcfg.single.test.conf config/test/smfcfg.ulcl.test.conf
+

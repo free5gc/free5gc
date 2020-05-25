@@ -61,84 +61,12 @@
 [submodule "lib/MongoDBLibrary"]
 	path = lib/MongoDBLibrary
 	url = https://github.com/free5gc/MongoDBLibrary.git
-[submodule "lib/Namf_Communication"]
-	path = lib/Namf_Communication
-	url = https://github.com/free5gc/Namf_Communication.git
-[submodule "lib/Namf_EventExposure"]
-	path = lib/Namf_EventExposure
-	url = https://github.com/free5gc/Namf_EventExposure.git
-[submodule "lib/Namf_Location"]
-	path = lib/Namf_Location
-	url = https://github.com/free5gc/Namf_Location.git
-[submodule "lib/Namf_MT"]
-	path = lib/Namf_MT
-	url = https://github.com/free5gc/Namf_MT.git
 [submodule "lib/nas"]
 	path = lib/nas
 	url = https://github.com/free5gc/nas.git
-[submodule "lib/Nausf_SoRProtection"]
-	path = lib/Nausf_SoRProtection
-	url = https://github.com/free5gc/Nausf_SoRProtection.git
-[submodule "lib/Nausf_UEAuthentication"]
-	path = lib/Nausf_UEAuthentication
-	url = https://github.com/free5gc/Nausf_UEAuthentication.git
-[submodule "lib/Nausf_UPUProtection"]
-	path = lib/Nausf_UPUProtection
-	url = https://github.com/free5gc/Nausf_UPUProtection.git
 [submodule "lib/ngap"]
 	path = lib/ngap
 	url = https://github.com/free5gc/ngap.git
-[submodule "lib/Nnrf_AccessToken"]
-	path = lib/Nnrf_AccessToken
-	url = https://github.com/free5gc/Nnrf_AccessToken.git
-[submodule "lib/Nnrf_NFDiscovery"]
-	path = lib/Nnrf_NFDiscovery
-	url = https://github.com/free5gc/Nnrf_NFDiscovery.git
-[submodule "lib/Nnrf_NFManagement"]
-	path = lib/Nnrf_NFManagement
-	url = https://github.com/free5gc/Nnrf_NFManagement.git
-[submodule "lib/Nnssf_NSSAIAvailability"]
-	path = lib/Nnssf_NSSAIAvailability
-	url = https://github.com/free5gc/Nnssf_NSSAIAvailability.git
-[submodule "lib/Nnssf_NSSelection"]
-	path = lib/Nnssf_NSSelection
-	url = https://github.com/free5gc/Nnssf_NSSelection.git
-[submodule "lib/Npcf_AMPolicy"]
-	path = lib/Npcf_AMPolicy
-	url = https://github.com/free5gc/Npcf_AMPolicy.git
-[submodule "lib/Npcf_BDTPolicyControl"]
-	path = lib/Npcf_BDTPolicyControl
-	url = https://github.com/free5gc/Npcf_BDTPolicyControl.git
-[submodule "lib/Npcf_PolicyAuthorization"]
-	path = lib/Npcf_PolicyAuthorization
-	url = https://github.com/free5gc/Npcf_PolicyAuthorization.git
-[submodule "lib/Npcf_SMPolicyControl"]
-	path = lib/Npcf_SMPolicyControl
-	url = https://github.com/free5gc/Npcf_SMPolicyControl.git
-[submodule "lib/Npcf_UEPolicy"]
-	path = lib/Npcf_UEPolicy
-	url = https://github.com/free5gc/Npcf_UEPolicy.git
-[submodule "lib/Nsmf_PDUSession"]
-	path = lib/Nsmf_PDUSession
-	url = https://github.com/free5gc/Nsmf_PDUSession.git
-[submodule "lib/Nudm_EventExposure"]
-	path = lib/Nudm_EventExposure
-	url = https://github.com/free5gc/Nudm_EventExposure.git
-[submodule "lib/Nudm_ParameterProvision"]
-	path = lib/Nudm_ParameterProvision
-	url = https://github.com/free5gc/Nudm_ParameterProvision.git
-[submodule "lib/Nudm_SubscriberDataManagement"]
-	path = lib/Nudm_SubscriberDataManagement
-	url = https://github.com/free5gc/Nudm_SubscriberDataManagement.git
-[submodule "lib/Nudm_UEAuthentication"]
-	path = lib/Nudm_UEAuthentication
-	url = https://github.com/free5gc/Nudm_UEAuthentication.git
-[submodule "lib/Nudm_UEContextManagement"]
-	path = lib/Nudm_UEContextManagement
-	url = https://github.com/free5gc/Nudm_UEContextManagement.git
-[submodule "lib/Nudr_DataRepository"]
-	path = lib/Nudr_DataRepository
-	url = https://github.com/free5gc/Nudr_DataRepository.git
 [submodule "lib/openapi"]
 	path = lib/openapi
 	url = https://github.com/free5gc/openapi.git
@@ -163,3 +91,9 @@
 [submodule "lib/util_3gpp"]
 	path = lib/util_3gpp
 	url = https://github.com/free5gc/util_3gpp.git
+[submodule "lib/logger_conf"]
+	path = lib/logger_conf
+	url = https://github.com/free5gc/logger_conf
+[submodule "compose"]
+	path = compose
+	url = https://github.com/free5gc/free5gc-compose

@@ -14,6 +14,7 @@ go get -u golang.org/x/net
 go get -u golang.org/x/oauth2
 go get -u golang.org/x/sys
 go get -u golang.org/x/tools
+go get -u google.golang.org/genproto
 go get -u gopkg.in/yaml.v3
 
 # Install go packages which are required to switch version
