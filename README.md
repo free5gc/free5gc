@@ -91,10 +91,21 @@ You can use `go version` to check your current Go version.
     cd $GOPATH/src
     git clone https://github.com/free5gc/free5gc.git
     cd free5gc
-    git submodule update --init
+    git checkout v3.0.2
+    git submodule sync
+    git submodule update --init --jobs `nproc`
     ```
 
-    **In step 2, the folder name should remain free5gc. Please do not modify it or the compilation would fail.**
+    (Optional) If you want to use the nightly version, runs:
+    ```bash
+    cd $GOPATH/src/free5gc
+    git checkout master
+    git submodule sync
+    git submodule update --init --jobs `nproc`
+    git submodule foreach git checkout master
+    git submodule foreach git pull --jobs `nproc`
+    ```
+
 2. Run the script to install dependent packages
     ```bash
     cd $GOPATH/src/free5gc
@@ -103,6 +114,7 @@ You can use `go version` to check your current Go version.
     
     Please ignore error messages during the package dependencies installation process.
     ```
+    **In step 2, the folder name should remain free5gc. Please do not modify it or the compilation would fail.**
 
 3. Compile network function services in `$GOPATH/src/free5gc` individually, e.g. AMF (redo this step for each NF), or
     ```bash
@@ -243,6 +255,7 @@ i. TestULCL
     + (openapi) Add Convert to convert interface
     + (all) support h2c mode for SBI, use h2c as default mode
     + (openapi) add serialize deserialize function
+    + (infra) Add compose repository
 + bugfix:
     + (smf) fix duplicated pdu session handling in SMF
     + (nrf) fix subscribe time decode issue
