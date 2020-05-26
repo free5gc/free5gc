@@ -1,5 +1,8 @@
 # free5GC
 
+## Hardware Tested
+There are no gNB and UE for standalone 5GC available in the market yet.
+
 ## Minimum Requirement
 - Software
     - OS: Ubuntu 18.04 or later versions
@@ -25,9 +28,6 @@ You can use `go version` to check your current Go version.
     - Hard drive: 160G
     - NIC card: 10Gbps ethernet card
 ```
-
-## Hardware Tested 
-There are no gNB and UE for standalone 5GC available in the market yet.
 
 
 ## Installation
@@ -91,10 +91,21 @@ There are no gNB and UE for standalone 5GC available in the market yet.
     cd $GOPATH/src
     git clone https://github.com/free5gc/free5gc.git
     cd free5gc
-    git submodule update --init
+    git checkout v3.0.2
+    git submodule sync
+    git submodule update --init --jobs `nproc`
     ```
 
-    **In step 2, the folder name should remain free5gc. Please do not modify it or the compilation would fail.**
+    (Optional) If you want to use the nightly version, runs:
+    ```bash
+    cd $GOPATH/src/free5gc
+    git checkout master
+    git submodule sync
+    git submodule update --init --jobs `nproc`
+    git submodule foreach git checkout master
+    git submodule foreach git pull --jobs `nproc`
+    ```
+
 2. Run the script to install dependent packages
     ```bash
     cd $GOPATH/src/free5gc
@@ -103,6 +114,7 @@ There are no gNB and UE for standalone 5GC available in the market yet.
     
     Please ignore error messages during the package dependencies installation process.
     ```
+    **In step 2, the folder name should remain free5gc. Please do not modify it or the compilation would fail.**
 
 3. Compile network function services in `$GOPATH/src/free5gc` individually, e.g. AMF (redo this step for each NF), or
     ```bash
@@ -141,57 +153,6 @@ There are no gNB and UE for standalone 5GC available in the market yet.
     
 **Note: Config is located at** `$GOPATH/src/free5gc/src/upf/build/config/upfcfg.yaml
    `
-
-## Configuration
-
-### A. Configure SMF with S-NSSAI
-1. Configure NF Registration SMF S-NSSAI in `smfcfg.conf`
-```yaml
-snssai_info:
-- sNssai:
-    sst: 1
-    sd: 010203
-  dnnSmfInfoList:
-    - dnn: internet
-- sNssai:
-    sst: 1
-    sd: 112233
-  dnnSmfInfoList:
-    - dnn: internet
-```
-
-
-### B. Configure Uplink Classifier (ULCL) information in SMF
-
-1. Enable ULCL feature in `smfcfg.conf`
-```yaml
-    ulcl:true
-```
-
-2. Configure UE routing path in `uerouting.yaml`
-```yaml
-ueRoutingInfo:
-  - SUPI: imsi-2089300007487
-    AN: 10.200.200.101
-    PathList:
-      - DestinationIP: 60.60.0.101
-        DestinationPort: 8888
-        UPF: !!seq
-          - BranchingUPF
-          - AnchorUPF1
-
-      - DestinationIP: 60.60.0.103
-        DestinationPort: 9999
-        UPF: !!seq
-          - BranchingUPF
-          - AnchorUPF2
-```
-
-* DestinationIP and DestinationPort will be the packet  destination.
-* UPF field will be the packet datapath when it match the destination above.
-
-***For more detail of SMF config, please refer to [here](https://github.com/free5gc/free5gc/wiki/SMF-Config).***
-
 
 ## Run
 
@@ -280,116 +241,34 @@ i. TestULCL
 ./test_ulcl.sh -om 3 TestRegistration
 ```
 
-## Appendix A: OAM 
-1. Run the OAM server
-```
-cd webconsole
-go run server.go
-```
-2. Access the OAM by
-```
-URL: http://localhost:5000
-Username: admin
-Password: free5gc
-```
-3. Now you can see the information of currently registered UEs (e.g. Supi, connected state, etc.) in the core network at the tab "DASHBOARD" of free5GC webconsole
+*For more details, you can reference to our [wiki](https://github.com/free5gc/free5gc/wiki)*
 
-**Note: You can add the subscribers here too**
+## Release Note
+### v3.0.2
++ refactor:
+    + (all) refactor coding style for NFs written in golang, including folder name, package name, and file name
+    + (upf) refactor the method of UPF initialization
+    + (all) merge NF config models to one file each
+    + (openapi) move openapi clients to repo "openapi"
++ feature:
+    + (all) logger support output to file
+    + (openapi) Add Convert to convert interface
+    + (all) support h2c mode for SBI, use h2c as default mode
+    + (openapi) add serialize deserialize function
+    + (infra) Add compose repository
++ bugfix:
+    + (smf) fix duplicated pdu session handling in SMF
+    + (nrf) fix subscribe time decode issue
+    + (udm) op and opc decision rule
+    + (smf) sm context release occur panic
+    + (smf) fix A-UPF use NodeID not UPIP in DL
+    + (amf) add ie nil check when handling handover request acknowledge
+    + (amf) add missing ie sourceToTargetTransparentContaier to ngap message handoverRequest
+    + (smf) fix ulcl workaround in release v3.0.0
+    + (milenage) fix f1 function bug
+    + (amf) fix generate Kamf P0 parameter
 
-## Appendix B: Orchestrator
-Please refer to [here](https://github.com/free5gmano)
-
-## Appendix C: IPTV
-Please refer to [here](https://github.com/free5gc/IPTV)
-
-## Appendix D: System Environment Cleaning
-The below commands may be helpful for development purposes.
-
-1. Remove POSIX message queues
-    - ```ls /dev/mqueue/```
-    - ```rm /dev/mqueue/*```
-2. Remove gtp5g tunnels (using tools in libgtp5gnl)
-    - ```cd ./src/upf/lib/libgtp5gnl/tools```
-    - ```./gtp5g-tunnel list pdr```
-    - ```./gtp5g-tunnel list far```
-3. Remove gtp5g devices (using tools in libgtp5gnl)
-    - ```cd ./src/upf/lib/libgtp5gnl/tools```
-    - ```sudo ./gtp5g-link del {Dev-Name}```
-
-## Appendix E: Change Kernel Version
-1. Check the previous kernel version: `uname -r`
-2. Search specific kernel version and install, take `5.0.0-23-generic` for example
-```bash
-sudo apt search 'linux-image-5.0.0-23-generic'
-sudo apt install 'linux-image-5.0.0-23-generic'
-sudo apt install 'linux-headers-5.0.0-23-generic'
-```
-3. Update initramfs and grub
-```bash
-sudo update-initramfs -u -k all
-sudo update-grub
-```
-4. Reboot, enter grub and choose kernel version `5.0.0-23-generic`
-```bash
-sudo reboot
-```
-#### Optional: Remove Kernel Image
-```
-sudo apt remove 'linux-image-5.0.0-23-generic'
-sudo apt remove 'linux-headers-5.0.0-23-generic'
-```
-
-## Appendix F: Program the SIM Card
-Install packages:
-```bash
-sudo apt-get install pcscd pcsc-tools libccid python-dev swig python-setuptools python-pip libpcsclite-dev
-sudo pip install pycrypto
-```
-
-Download PySIM
-```bash
-git clone git://git.osmocom.org/pysim.git
-```
-
-Change to pyscard folder and install
-```bash
-cd <pyscard-path>
-sudo /usr/bin/python setup.py build_ext install
-```
-
-Verify your reader is ready
-
-```bash
-sudo pcsc_scan
-```
-
-Check whether your reader can read the SIM card
-```bash
-cd <pysim-path>
-./pySim-read.py –p 0
-```
-
-Program your SIM card information
-```bash
-./pySim-prog.py -p 0 -x 208 -y 93 -t sysmoUSIM-SJS1 -i 208930000000003 --op=8e27b6af0e692e750f32667a3b14605d -k 8baf473f2f8fd09487cccbd7097c6862 -s 8988211000000088313 -a 23605945
-```
-
-You can get your SIM card from [**sysmocom**](http://shop.sysmocom.de/products/sysmousim-sjs1-4ff). You also need a card reader to write your SIM card. You can get a card reader from [**here**](https://24h.pchome.com.tw/prod/DCAD59-A9009N6WF) or use other similar devices.
-
-## Trouble Shooting
-
-1. `ERROR: [SCTP] Failed to connect given AMF    N3IWF=NGAP`
-
-    This error occured when N3IWF was started before AMF finishing initialization. This error usually appears when you run the TestNon3GPP in the first time.
-
-    Rerun the test should be fine. If it still not be solved, larger the sleeping time in line 110 of `test.sh`.
-
-2. TestNon3GPP will modify the `config/amfcfg.conf`. So, if you had killed the TestNon3GPP test before it finished, you might need to copy `config/amfcfg.conf.bak` back to `config/amfcfg.conf` to let other tests pass.
-
-    `cp config/amfcfg.conf.bak config/amfcfg.conf`
-
-# Release Note
-## v3.0.1
+### v3.0.1
 + project:
     + Change the way we manage project. Using git submodule to manage hole
       project to let each NF and library has its own version control
@@ -404,7 +283,7 @@ You can get your SIM card from [**sysmocom**](http://shop.sysmocom.de/products/s
 + SMF:
     + SMF support NF deregistration
 
-## v3.0.0
+### v3.0.0
 + AMF
     + Support SMF selection at PDU session establishment
     + Fix SUCI handling procedure
@@ -432,7 +311,7 @@ You can get your SIM card from [**sysmocom**](http://shop.sysmocom.de/products/s
         + Callback notification to NF ( in SDM service)
         + UDM initiated deregistration notification to NF ( in UECM service)
 
-## v2.0.2
+### v2.0.2
 + Add debug mode on NFs
 + Auto add Linux routing when UPF runs
 + Add AMF consumer for AM policy
@@ -444,7 +323,7 @@ You can get your SIM card from [**sysmocom**](http://shop.sysmocom.de/products/s
 + Bugfix for incorrect DNN
 + Bugfix for NFs registering to NRF
 
-## v2.0.1
+### v2.0.1
 + Global
     + Update license and readme
     + Add Paging feature
