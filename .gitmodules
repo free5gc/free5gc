@@ -40,78 +40,6 @@
 [submodule "lib/MongoDBLibrary"]
 	path = lib/MongoDBLibrary
 	url = ../MongoDBLibrary.git
-[submodule "lib/Namf_Communication"]
-	path = lib/Namf_Communication
-	url = ../Namf_Communication.git
-[submodule "lib/Namf_EventExposure"]
-	path = lib/Namf_EventExposure
-	url = ../Namf_EventExposure.git
-[submodule "lib/Namf_Location"]
-	path = lib/Namf_Location
-	url = ../Namf_Location.git
-[submodule "lib/Namf_MT"]
-	path = lib/Namf_MT
-	url = ../Namf_MT.git
-[submodule "lib/Nausf_SoRProtection"]
-	path = lib/Nausf_SoRProtection
-	url = ../Nausf_SoRProtection.git
-[submodule "lib/Nausf_UEAuthentication"]
-	path = lib/Nausf_UEAuthentication
-	url = ../Nausf_UEAuthentication.git
-[submodule "lib/Nausf_UPUProtection"]
-	path = lib/Nausf_UPUProtection
-	url = ../Nausf_UPUProtection.git
-[submodule "lib/Nnrf_AccessToken"]
-	path = lib/Nnrf_AccessToken
-	url = ../Nnrf_AccessToken.git
-[submodule "lib/Nnrf_NFDiscovery"]
-	path = lib/Nnrf_NFDiscovery
-	url = ../Nnrf_NFDiscovery.git
-[submodule "lib/Nnrf_NFManagement"]
-	path = lib/Nnrf_NFManagement
-	url = ../Nnrf_NFManagement.git
-[submodule "lib/Nnssf_NSSAIAvailability"]
-	path = lib/Nnssf_NSSAIAvailability
-	url = ../Nnssf_NSSAIAvailability.git
-[submodule "lib/Nnssf_NSSelection"]
-	path = lib/Nnssf_NSSelection
-	url = ../Nnssf_NSSelection.git
-[submodule "lib/Npcf_AMPolicy"]
-	path = lib/Npcf_AMPolicy
-	url = ../Npcf_AMPolicy.git
-[submodule "lib/Npcf_BDTPolicyControl"]
-	path = lib/Npcf_BDTPolicyControl
-	url = ../Npcf_BDTPolicyControl.git
-[submodule "lib/Npcf_PolicyAuthorization"]
-	path = lib/Npcf_PolicyAuthorization
-	url = ../Npcf_PolicyAuthorization.git
-[submodule "lib/Npcf_SMPolicyControl"]
-	path = lib/Npcf_SMPolicyControl
-	url = ../Npcf_SMPolicyControl.git
-[submodule "lib/Npcf_UEPolicy"]
-	path = lib/Npcf_UEPolicy
-	url = ../Npcf_UEPolicy.git
-[submodule "lib/Nsmf_PDUSession"]
-	path = lib/Nsmf_PDUSession
-	url = ../Nsmf_PDUSession.git
-[submodule "lib/Nudm_EventExposure"]
-	path = lib/Nudm_EventExposure
-	url = ../Nudm_EventExposure.git
-[submodule "lib/Nudm_ParameterProvision"]
-	path = lib/Nudm_ParameterProvision
-	url = ../Nudm_ParameterProvision.git
-[submodule "lib/Nudm_SubscriberDataManagement"]
-	path = lib/Nudm_SubscriberDataManagement
-	url = ../Nudm_SubscriberDataManagement.git
-[submodule "lib/Nudm_UEAuthentication"]
-	path = lib/Nudm_UEAuthentication
-	url = ../Nudm_UEAuthentication.git
-[submodule "lib/Nudm_UEContextManagement"]
-	path = lib/Nudm_UEContextManagement
-	url = ../Nudm_UEContextManagement.git
-[submodule "lib/Nudr_DataRepository"]
-	path = lib/Nudr_DataRepository
-	url = ../Nudr_DataRepository.git
 [submodule "lib/TimeDecode"]
 	path = lib/TimeDecode
 	url = ../TimeDecode.git
@@ -166,3 +94,9 @@
 [submodule "lib/util_3gpp"]
 	path = lib/util_3gpp
 	url = ../util_3gpp.git
+[submodule "lib/logger_conf"]
+	path = lib/logger_conf
+	url = ../logger_conf.git
+[submodule "free5gc-compose"]
+	path = compose
+	url = ../free5gc-compose.git

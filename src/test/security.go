@@ -4,8 +4,8 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"fmt"
-	"github.com/aead/cmac"
 	"free5gc/lib/nas"
+	"github.com/aead/cmac"
 	"reflect"
 )
 
@@ -110,7 +110,7 @@ func NASEncode(ue *RanUeContext, msg *nas.Message) (payload []byte, err error) {
 		}
 		if ciphering {
 			// TODO: Support for ue has nas connection in both accessType
-			if err = NasEncrypt(ue.CipheringAlg, ue.KnasEnc, ue.GetSecurityULCount(), SECURITY_ONLY_ONE_BEARER,
+			if err = NasEncrypt(ue.CipheringAlg, ue.KnasEnc, ue.GetSecurityULCount(), SECURITY_BEARER_3GPP,
 				SECURITY_DIRECTION_UPLINK, payload); err != nil {
 				return
 			}
@@ -120,7 +120,7 @@ func NASEncode(ue *RanUeContext, msg *nas.Message) (payload []byte, err error) {
 		payload = append([]byte{sequenceNumber}, payload[:]...)
 		mac32 := make([]byte, 4)
 		if integrityProtected {
-			mac32, err = NasMacCalculate(ue.IntegrityAlg, ue.KnasInt, ue.GetSecurityULCount(), SECURITY_ONLY_ONE_BEARER, SECURITY_DIRECTION_UPLINK, payload)
+			mac32, err = NasMacCalculate(ue.IntegrityAlg, ue.KnasInt, ue.GetSecurityULCount(), SECURITY_BEARER_3GPP, SECURITY_DIRECTION_UPLINK, payload)
 			if err != nil {
 				return
 			}
@@ -196,7 +196,7 @@ func NASDecode(ue *RanUeContext, securityHeaderType uint8, payload []byte) (msg 
 		ue.DLCountSQN = sequenceNumber
 		if integrityProtected {
 			// ToDo: use real mac calculate
-			mac32, err := NasMacCalculate(ue.IntegrityAlg, ue.KnasInt, ue.GetSecurityDLCount(), SECURITY_ONLY_ONE_BEARER,
+			mac32, err := NasMacCalculate(ue.IntegrityAlg, ue.KnasInt, ue.GetSecurityDLCount(), SECURITY_BEARER_3GPP,
 				SECURITY_DIRECTION_DOWNLINK, payload)
 			if err != nil {
 				return nil, err
@@ -210,7 +210,7 @@ func NASDecode(ue *RanUeContext, securityHeaderType uint8, payload []byte) (msg 
 
 		if ciphering {
 			// TODO: Support for ue has nas connection in both accessType
-			if err = NasEncrypt(ue.CipheringAlg, ue.KnasEnc, ue.GetSecurityDLCount(), SECURITY_ONLY_ONE_BEARER,
+			if err = NasEncrypt(ue.CipheringAlg, ue.KnasEnc, ue.GetSecurityDLCount(), SECURITY_BEARER_3GPP,
 				SECURITY_DIRECTION_DOWNLINK, payload); err != nil {
 				return
 			}

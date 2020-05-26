@@ -2,19 +2,20 @@ package app
 
 import (
 	"fmt"
-	"github.com/sirupsen/logrus"
-	"github.com/urfave/cli"
 	commonConsumerTestLogger "free5gc/lib/CommonConsumerTestData/logger"
-	namfCommLogger "free5gc/lib/Namf_Communication/logger"
-	namfEventExposureLogger "free5gc/lib/Namf_EventExposure/logger"
-	nsmfPDUSessionLogger "free5gc/lib/Nsmf_PDUSession/logger"
-	nudrDataRepositoryLogger "free5gc/lib/Nudr_DataRepository/logger"
 	aperLogger "free5gc/lib/aper/logger"
 	fsmLogger "free5gc/lib/fsm/logger"
 	nasLogger "free5gc/lib/nas/logger"
 	ngapLogger "free5gc/lib/ngap/logger"
+	namfCommLogger "free5gc/lib/openapi/Namf_Communication/logger"
+	namfEventExposureLogger "free5gc/lib/openapi/Namf_EventExposure/logger"
+	nsmfPDUSessionLogger "free5gc/lib/openapi/Nsmf_PDUSession/logger"
+	nudrDataRepositoryLogger "free5gc/lib/openapi/Nudr_DataRepository/logger"
 	openApiLogger "free5gc/lib/openapi/logger"
 	"free5gc/lib/path_util"
+
+	"github.com/sirupsen/logrus"
+	"github.com/urfave/cli"
 )
 
 type NetworkFunction interface {

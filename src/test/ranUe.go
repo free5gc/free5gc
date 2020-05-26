@@ -3,9 +3,11 @@ package test
 import (
 	"encoding/binary"
 	"encoding/hex"
+	// "fmt"
 	"free5gc/lib/UeauCommon"
 	"free5gc/lib/milenage"
 	"free5gc/lib/openapi/models"
+	"regexp"
 )
 
 type RanUeContext struct {
@@ -93,7 +95,10 @@ func (ue *RanUeContext) DerivateKamf(key []byte, snName string, SQN, AK []byte) 
 	P0 = []byte(snName)
 	Kseaf := UeauCommon.GetKDFValue(Kausf, UeauCommon.FC_FOR_KSEAF_DERIVATION, P0, UeauCommon.KDFLen(P0))
 
-	P0 = []byte(ue.Supi)
+	supiRegexp, _ := regexp.Compile("(?:imsi|supi)-([0-9]{5,15})")
+	groups := supiRegexp.FindStringSubmatch(ue.Supi)
+
+	P0 = []byte(groups[1])
 	L0 := UeauCommon.KDFLen(P0)
 	P1 = []byte{0x00, 0x00}
 	L1 := UeauCommon.KDFLen(P1)

@@ -4,7 +4,7 @@ import (
 	"free5gc/lib/nas"
 	"free5gc/lib/nas/nasMessage"
 
-	// Nausf_UEAU_Client "free5gc/lib/Nausf_UEAuthentication"
+	// Nausf_UEAU_Client "free5gc/lib/openapi/Nausf_UEAuthentication"
 	"free5gc/lib/ngap"
 	"free5gc/src/test/ngapTestpacket"
 	// "free5gc/lib/openapi/models"
