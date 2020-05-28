@@ -234,7 +234,7 @@ func TestRegistration(t *testing.T) {
 	_, err = conn.Write(sendMsg)
 	assert.Nil(t, err)
 
-	// recieve 12. NGAP-PDU Session Resource Setup Request(DL nas transport((NAS msg-PDU session setup Accept)))
+	// receive 12. NGAP-PDU Session Resource Setup Request(DL nas transport((NAS msg-PDU session setup Accept)))
 	n, err = conn.Read(recvMsg)
 	assert.Nil(t, err)
 	_, err = ngap.Decoder(recvMsg[:n])
@@ -610,7 +610,7 @@ func TestServiceRequest(t *testing.T) {
 	_, err = conn.Write(sendMsg)
 	assert.Nil(t, err)
 
-	// recieve 12. NGAP-PDU Session Resource Setup Request(DL nas transport((NAS msg-PDU session setup Accept)))
+	// receive 12. NGAP-PDU Session Resource Setup Request(DL nas transport((NAS msg-PDU session setup Accept)))
 	n, err = conn.Read(recvMsg)
 	assert.Nil(t, err)
 	_, err = ngap.Decoder(recvMsg[:n])
@@ -820,7 +820,7 @@ func TestPDUSessionReleaseRequest(t *testing.T) {
 	_, err = conn.Write(sendMsg)
 	assert.Nil(t, err)
 
-	// recieve 12. NGAP-PDU Session Resource Setup Request(DL nas transport((NAS msg-PDU session setup Accept)))
+	// receive 12. NGAP-PDU Session Resource Setup Request(DL nas transport((NAS msg-PDU session setup Accept)))
 	n, err = conn.Read(recvMsg)
 	assert.Nil(t, err)
 	_, err = ngap.Decoder(recvMsg[:n])
@@ -1032,7 +1032,7 @@ func TestXnHandover(t *testing.T) {
 	_, err = conn.Write(sendMsg)
 	assert.Nil(t, err)
 
-	// recieve 12. NGAP-PDU Session Resource Setup Request(DL nas transport((NAS msg-PDU session setup Accept)))
+	// receive 12. NGAP-PDU Session Resource Setup Request(DL nas transport((NAS msg-PDU session setup Accept)))
 	n, err = conn.Read(recvMsg)
 	assert.Nil(t, err)
 	_, err = ngap.Decoder(recvMsg[:n])
@@ -1211,7 +1211,7 @@ func TestPaging(t *testing.T) {
 	_, err = conn.Write(sendMsg)
 	assert.Nil(t, err)
 
-	// recieve 12. NGAP-PDU Session Resource Setup Request(DL nas transport((NAS msg-PDU session setup Accept)))
+	// receive 12. NGAP-PDU Session Resource Setup Request(DL nas transport((NAS msg-PDU session setup Accept)))
 	n, err = conn.Read(recvMsg)
 	assert.Nil(t, err)
 	_, err = ngap.Decoder(recvMsg[:n])
@@ -1469,7 +1469,7 @@ func TestN2Handover(t *testing.T) {
 	_, err = conn.Write(sendMsg)
 	assert.Nil(t, err)
 
-	// recieve 12. NGAP-PDU Session Resource Setup Request(DL nas transport((NAS msg-PDU session setup Accept)))
+	// receive 12. NGAP-PDU Session Resource Setup Request(DL nas transport((NAS msg-PDU session setup Accept)))
 	n, err = conn.Read(recvMsg)
 	assert.Nil(t, err)
 	_, err = ngap.Decoder(recvMsg[:n])
@@ -1782,7 +1782,7 @@ func TestDuplicateRegistration(t *testing.T) {
 	_, err = conn.Write(PduSessionEstablishmentRequestMSG)
 	assert.Nil(t, err)
 
-	// recieve 12. NGAP-PDU Session Resource Setup Request(DL nas transport((NAS msg-PDU session setup Accept)))
+	// receive 12. NGAP-PDU Session Resource Setup Request(DL nas transport((NAS msg-PDU session setup Accept)))
 	n, err = conn.Read(recvMsg)
 	assert.Nil(t, err)
 	_, err = ngap.Decoder(recvMsg[:n])
@@ -1807,7 +1807,7 @@ func TestDuplicateRegistration(t *testing.T) {
 	_, err = conn.Write(sendMsg)
 	assert.Nil(t, err)
 
-	// recieve 12. NGAP-PDU Session Resource Setup Request(DL nas transport((NAS msg-PDU session setup Accept)))
+	// receive 12. NGAP-PDU Session Resource Setup Request(DL nas transport((NAS msg-PDU session setup Accept)))
 	n, err = conn.Read(recvMsg)
 	assert.Nil(t, err)
 	_, err = ngap.Decoder(recvMsg[:n])
