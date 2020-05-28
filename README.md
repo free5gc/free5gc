@@ -99,11 +99,8 @@ You can use `go version` to check your current Go version.
 1. Clone free5GC project in `$GOPATH/src`
     ```bash
     cd $GOPATH/src
-    git clone https://github.com/free5gc/free5gc.git
+    git clone --recursive -b v3.0.2 -j `nproc` https://github.com/free5gc/free5gc.git
     cd free5gc
-    git checkout v3.0.2
-    git submodule sync
-    git submodule update --init --jobs `nproc`
     ```
 
     (Optional) If you want to use the nightly version, runs:
