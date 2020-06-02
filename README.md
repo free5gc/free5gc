@@ -10,8 +10,33 @@
 </p>
 
 
+## Table of Contents
+
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+
+- [Hardware Tested](#hardware-tested)
+- [Questions](#questions)
+- [Recommended Environment](#recommended-environment)
+- [Installation](#installation)
+  - [A. Pre-requisite](#a-pre-requisite)
+  - [B. Install Control Plane Entities](#b-install-control-plane-entities)
+  - [C. Install User Plane Function (UPF)](#c-install-user-plane-function-upf)
+- [Run](#run)
+  - [A. Run Core Network](#a-run-core-network)
+  - [B. Run N3IWF (Individually)](#b-run-n3iwf-individually)
+- [Test](#test)
+- [Release Note](#release-note)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 ## Hardware Tested
 There are no gNB and UE for standalone 5GC available in the market yet.
+
+## Questions
+For questions and support please use the [official forum](https://forum.free5gc.org). The issue list of this repo is exclusively
+for bug reports and feature requests.
 
 ## Recommended Environment
 - Software
@@ -249,10 +274,6 @@ i. TestULCL
 ```
 
 **For more details, you can reference to our [wiki](https://github.com/free5gc/free5gc/wiki)**
-
-## Questions
-For questions and support please use the [official forum](https://forum.free5gc.org). The issue list of this repo is exclusively
-for bug reports and feature requests.
 
 ## Release Note
 Detailed changes for each release are documented in the [release notes](https://github.com/free5gc/free5gc/releases).
