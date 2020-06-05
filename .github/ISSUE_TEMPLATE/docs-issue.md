@@ -10,16 +10,16 @@ assignees: ''
 <!--
 If you don't follow the issue template, your issue may be closed.
 Please note this is an issue tracker, not a support forum.
-For general questions, please use StackOverflow or Slack.
+For general questions, please use forum (https://forum.free5gc.org).
 -->
 
-## What was unclear/insufficient/not covered in the documentation
+## Documentation request
 
-Write here.
+What was unclear/insufficient/not covered in the documentation.
 
-## If possible: Provide some suggestion on how we can enhance the docs
+## Suggestion
 
-Write here.
+If possible: Provide some suggestion on how we can enhance the docs.
 
 ## Additional context
 Add any other context or screenshots about the issue here.

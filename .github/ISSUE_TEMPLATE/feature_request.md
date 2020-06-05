@@ -1,7 +1,7 @@
 ---
 name: Feature request
 about: Suggest an idea for this project
-title: '[Feat]'
+title: "[Feat]"
 labels: ''
 assignees: ''
 
@@ -33,11 +33,6 @@ Add any other context or screenshots about the feature request here.
 ## Issue Template Checklist
 
 <!-- Please answer the questions below. If you don't, your issue may be closed. -->
-
-### Is this issue dialect-specific?
-
-- [ ] No. This issue is relevant to Sequelize as a whole.
-- [ ] Yes. This issue only applies to the following dialect(s): XXX, YYY, ZZZ
 
 ### Would you be willing to resolve this issue by submitting a Pull Request?
 
