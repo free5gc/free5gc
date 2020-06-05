@@ -7,11 +7,8 @@ assignees: ''
 
 ---
 
-<!--
-If you don't follow the issue template, your issue may be closed.
-Please note this is an issue tracker, not a support forum.
-For general questions, please use Forum.
--->
+**If you don't follow the issue template, your issue may be closed.**
+<!-- Remove above line after reporting the issue -->
 
 ## Issue Description
 
