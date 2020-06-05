@@ -12,6 +12,7 @@ assignees: ''
 If you don't follow the issue template, your issue may be closed.
 Please note this is an issue tracker, not a support forum.
 For general questions, please use Forum.
+Also, please refer to TS before bug reporting: https://github.com/free5gc/free5gc/wiki/Trouble_Shooting
 -->
 
 ## Describe the bug
