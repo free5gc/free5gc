@@ -20,7 +20,7 @@ A clear and concise description of what the bug is.
 ## To Reproduce
 Steps to reproduce the behavior:
 1. Change config '...'
-2. Code patch '...' (You can fork the project and give us the patch diff you have modify)
+2. Code patch '...' (You can fork the project and give us the patch diff you have modified)
 3. Run command '...'
 4. Dump packet '...'
 
@@ -41,11 +41,17 @@ If applicable, add screenshots to help explain your problem.
 ### Configuration File
 Provide your configuration here.
 
+If you don't know what to do, you can zip the `config` folder and upload the zip file here.
+
 ### PCAP File
 Dump the packet and provide the pcap file here.
 
+If you don't know what to do, you can use `sudo tcpdump -i any -w free5gc.pcap` before you run the bug reproduce. After that, upload the free5gc.pcap file here.
+
 ### Log File
 Provide the program log file here.
+
+If you do not know what to do, copy the log print on the screen and put it here.
 
 ## System architecture (Option)
 Give the draft of your architecture. What's your scenario, bare metal use case or using k8s, etc.
