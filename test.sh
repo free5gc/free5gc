@@ -29,7 +29,7 @@ do
 done
 shift $(($OPTIND - 1))
 
-TEST_POOL="TestRegistration|TestServiceRequest|TestXnHandover|TestN2Handover|TestDeregistration|TestPDUSessionReleaseRequest|TestPaging|TestNon3GPP"
+TEST_POOL="TestRegistration|TestServiceRequest|TestXnHandover|TestN2Handover|TestDeregistration|TestPDUSessionReleaseRequest|TestPaging|TestNon3GPP|TestAFInfluenceOnTrafficRouting"
 if [[ ! "$1" =~ $TEST_POOL ]]
 then
     echo "Usage: $0 [ ${TEST_POOL//|/ | } ]"
@@ -72,6 +72,8 @@ if [ ${DUMP_NS} ]
 then
     ${EXEC_UPFNS} tcpdump -i any -w ${UPFNS}.pcap &
     TCPDUMP_PID=$(sudo ip netns pids ${UPFNS})
+    sudo -E tcpdump -i lo -w default_ns.pcap &
+    LOCALDUMP=$!
 fi
 
 cd src/upf/build && ${EXEC_UPFNS} ./bin/free5gc-upfd -f config/upfcfg.test.yaml &
@@ -129,6 +131,7 @@ sleep 1
 if [ ${DUMP_NS} ]
 then
     ${EXEC_UPFNS} kill -SIGINT ${TCPDUMP_PID}
+    sudo -E kill -SIGINT ${LOCALDUMP}
 fi
 
 cd ../..
