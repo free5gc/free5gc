@@ -702,7 +702,7 @@ func TestNon3GPPUE(t *testing.T) {
 	eapVendorTypeData = append(eapVendorTypeData, anParameters...)
 
 	// NAS
-	registrationRequest := nasTestpacket.GetRegistrationRequestWith5GMM(nasMessage.RegistrationType5GSInitialRegistration, mobileIdentity5GS, nil, nil)
+	registrationRequest := nasTestpacket.GetRegistrationRequestWith5GMM(nasMessage.RegistrationType5GSInitialRegistration, mobileIdentity5GS, nil, nil, nas.SecurityHeaderTypePlainNas)
 	nasLength := make([]byte, 2)
 	binary.BigEndian.PutUint16(nasLength, uint16(len(registrationRequest)))
 	eapVendorTypeData = append(eapVendorTypeData, nasLength...)
