@@ -295,7 +295,7 @@ func TestRegistration(t *testing.T) {
 	_, err = upfConn.Write(append(tt, b...))
 	assert.Nil(t, err)
 
-	time.Sleep(10 * time.Minute)
+	time.Sleep(1 * time.Second)
 
 	// delete test data
 	test.DelAuthSubscriptionToMongoDB(ue.Supi)
