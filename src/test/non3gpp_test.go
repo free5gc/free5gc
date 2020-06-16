@@ -838,7 +838,7 @@ func TestNon3GPPUE(t *testing.T) {
 
 	// Send NAS Security Mode Complete Msg
 	pdu = nasTestpacket.GetSecurityModeComplete(registrationRequest)
-	pdu, err = EncodeNasPduWithSecurity(ue, pdu)
+	pdu, err = EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypePlainNas, true, true)
 	assert.Nil(t, err)
 
 	// IKE_AUTH - EAP exchange
@@ -1064,7 +1064,7 @@ func TestNon3GPPUE(t *testing.T) {
 
 	// send NAS Registration Complete Msg
 	pdu = nasTestpacket.GetRegistrationComplete(nil)
-	pdu, err = EncodeNasPduWithSecurity(ue, pdu)
+	pdu, err = EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCiphered, true, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1081,7 +1081,7 @@ func TestNon3GPPUE(t *testing.T) {
 		Sd:  "010203",
 	}
 	pdu = nasTestpacket.GetUlNasTransport_PduSessionEstablishmentRequest(10, nasMessage.ULNASTransportRequestTypeInitialRequest, "internet", &sNssai)
-	pdu, err = EncodeNasPduWithSecurity(ue, pdu)
+	pdu, err = EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCiphered, true, false)
 	if err != nil {
 		t.Fatal(err)
 	}
