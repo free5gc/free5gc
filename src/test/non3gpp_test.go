@@ -840,7 +840,7 @@ func TestNon3GPPUE(t *testing.T) {
 
 	// Send NAS Security Mode Complete Msg
 	pdu = nasTestpacket.GetSecurityModeComplete(registrationRequest)
-	pdu, err = EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypePlainNas, true, true)
+	pdu, err = EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCipheredWithNew5gNasSecurityContext, true, true)
 	assert.Nil(t, err)
 
 	// IKE_AUTH - EAP exchange

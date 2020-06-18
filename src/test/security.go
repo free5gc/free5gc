@@ -55,7 +55,6 @@ const (
 )
 
 func NASEncode(ue *RanUeContext, msg *nas.Message, securityContextAvailable bool, newSecurityContext bool) (payload []byte, err error) {
-	var securityHeader []byte
 	var sequenceNumber uint8
 	if ue == nil {
 		err = fmt.Errorf("amfUe is nil")
@@ -73,11 +72,6 @@ func NASEncode(ue *RanUeContext, msg *nas.Message, securityContextAvailable bool
 			ue.ULCount = 0
 			ue.DLOverflow = 0
 			ue.DLCountSQN = 0
-			securityHeader = []byte{msg.SecurityHeader.ProtocolDiscriminator, nas.SecurityHeaderTypeIntegrityProtectedAndCipheredWithNew5gNasSecurityContext}
-		} else if ue.CipheringAlg != ALG_CIPHERING_128_NEA0 {
-			securityHeader = []byte{msg.SecurityHeader.ProtocolDiscriminator, nas.SecurityHeaderTypeIntegrityProtectedAndCiphered}
-		} else {
-			securityHeader = []byte{msg.SecurityHeader.ProtocolDiscriminator, nas.SecurityHeaderTypeIntegrityProtected}
 		}
 
 		sequenceNumber = uint8(ue.ULCount & 0xff)
@@ -103,7 +97,8 @@ func NASEncode(ue *RanUeContext, msg *nas.Message, securityContextAvailable bool
 		// Add mac value
 		payload = append(mac32, payload[:]...)
 		// Add EPD and Security Type
-		payload = append(securityHeader, payload[:]...)
+		msgSecurityHeader := []byte{msg.SecurityHeader.ProtocolDiscriminator, msg.SecurityHeader.SecurityHeaderType}
+		payload = append(msgSecurityHeader, payload[:]...)
 
 		// Increase UL Count
 		ue.ULCount = (ue.ULCount + 1) & 0xffffff

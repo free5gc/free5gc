@@ -200,7 +200,7 @@ func TestRegistration(t *testing.T) {
 
 	// send NAS Security Mode Complete Msg
 	pdu = nasTestpacket.GetSecurityModeComplete(registrationRequest)
-	pdu, err = test.EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypePlainNas, true, true)
+	pdu, err = test.EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCipheredWithNew5gNasSecurityContext, true, true)
 	assert.Nil(t, err)
 	sendMsg, err = test.GetUplinkNASTransport(ue.AmfUeNgapId, ue.RanUeNgapId, pdu)
 	assert.Nil(t, err)
@@ -581,7 +581,7 @@ func TestServiceRequest(t *testing.T) {
 
 	// send NAS Security Mode Complete Msg
 	pdu = nasTestpacket.GetSecurityModeComplete(registrationRequest)
-	pdu, err = test.EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypePlainNas, true, true)
+	pdu, err = test.EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCipheredWithNew5gNasSecurityContext, true, true)
 	assert.Nil(t, err)
 	sendMsg, err = test.GetUplinkNASTransport(ue.AmfUeNgapId, ue.RanUeNgapId, pdu)
 	assert.Nil(t, err)
@@ -792,7 +792,7 @@ func TestPDUSessionReleaseRequest(t *testing.T) {
 
 	// send NAS Security Mode Complete Msg
 	pdu = nasTestpacket.GetSecurityModeComplete(registrationRequest)
-	pdu, err = test.EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypePlainNas, true, true)
+	pdu, err = test.EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCipheredWithNew5gNasSecurityContext, true, true)
 	assert.Nil(t, err)
 	sendMsg, err = test.GetUplinkNASTransport(ue.AmfUeNgapId, ue.RanUeNgapId, pdu)
 	assert.Nil(t, err)
@@ -1005,7 +1005,7 @@ func TestXnHandover(t *testing.T) {
 
 	// send NAS Security Mode Complete Msg
 	pdu = nasTestpacket.GetSecurityModeComplete(registrationRequest)
-	pdu, err = test.EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypePlainNas, true, true)
+	pdu, err = test.EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCipheredWithNew5gNasSecurityContext, true, true)
 	assert.Nil(t, err)
 	sendMsg, err = test.GetUplinkNASTransport(ue.AmfUeNgapId, ue.RanUeNgapId, pdu)
 	assert.Nil(t, err)
@@ -1186,7 +1186,7 @@ func TestPaging(t *testing.T) {
 
 	// send NAS Security Mode Complete Msg
 	pdu = nasTestpacket.GetSecurityModeComplete(registrationRequest)
-	pdu, err = test.EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypePlainNas, true, true)
+	pdu, err = test.EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCipheredWithNew5gNasSecurityContext, true, true)
 	assert.Nil(t, err)
 	sendMsg, err = test.GetUplinkNASTransport(ue.AmfUeNgapId, ue.RanUeNgapId, pdu)
 	assert.Nil(t, err)
@@ -1445,7 +1445,7 @@ func TestN2Handover(t *testing.T) {
 
 	// send NAS Security Mode Complete Msg
 	pdu = nasTestpacket.GetSecurityModeComplete(registrationRequest)
-	pdu, err = test.EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypePlainNas, true, true)
+	pdu, err = test.EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCipheredWithNew5gNasSecurityContext, true, true)
 	assert.Nil(t, err)
 	sendMsg, err = test.GetUplinkNASTransport(ue.AmfUeNgapId, ue.RanUeNgapId, pdu)
 	assert.Nil(t, err)
@@ -1759,7 +1759,7 @@ func TestDuplicateRegistration(t *testing.T) {
 
 	// send NAS Security Mode Complete Msg
 	pdu = nasTestpacket.GetSecurityModeComplete(registrationRequest)
-	pdu, err = test.EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypePlainNas, true, true)
+	pdu, err = test.EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCipheredWithNew5gNasSecurityContext, true, true)
 	assert.Nil(t, err)
 	sendMsg, err = test.GetUplinkNASTransport(ue.AmfUeNgapId, ue.RanUeNgapId, pdu)
 	assert.Nil(t, err)
@@ -2009,7 +2009,7 @@ func TestAFInfluenceOnTrafficRouting(t *testing.T) {
 
 	// send NAS Security Mode Complete Msg
 	pdu = nasTestpacket.GetSecurityModeComplete(registrationRequest)
-	pdu, err = test.EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypePlainNas, true, true)
+	pdu, err = test.EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCipheredWithNew5gNasSecurityContext, true, true)
 	assert.Nil(t, err)
 	sendMsg, err = test.GetUplinkNASTransport(ue.AmfUeNgapId, ue.RanUeNgapId, pdu)
 	assert.Nil(t, err)
