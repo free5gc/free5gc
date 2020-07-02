@@ -3,9 +3,9 @@ package test
 import (
 	"encoding/binary"
 	"encoding/hex"
-	// "fmt"
 	"free5gc/lib/UeauCommon"
 	"free5gc/lib/milenage"
+	"free5gc/lib/nas/security"
 	"free5gc/lib/openapi/models"
 	"regexp"
 )
@@ -109,7 +109,7 @@ func (ue *RanUeContext) DerivateKamf(key []byte, snName string, SQN, AK []byte) 
 // Algorithm key Derivation function defined in TS 33.501 Annex A.9
 func (ue *RanUeContext) DerivateAlgKey() {
 	// Security Key
-	P0 := []byte{N_NAS_ENC_ALG}
+	P0 := []byte{security.NNASEncAlg}
 	L0 := UeauCommon.KDFLen(P0)
 	P1 := []byte{ue.CipheringAlg}
 	L1 := UeauCommon.KDFLen(P1)
@@ -118,7 +118,7 @@ func (ue *RanUeContext) DerivateAlgKey() {
 	ue.KnasEnc = kenc[16:32]
 
 	// Integrity Key
-	P0 = []byte{N_NAS_INT_ALG}
+	P0 = []byte{security.NNASIntAlg}
 	L0 = UeauCommon.KDFLen(P0)
 	P1 = []byte{ue.IntegrityAlg}
 	L1 = UeauCommon.KDFLen(P1)
