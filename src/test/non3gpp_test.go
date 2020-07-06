@@ -9,6 +9,7 @@ import (
 	"free5gc/lib/nas/nasMessage"
 	"free5gc/lib/nas/nasTestpacket"
 	"free5gc/lib/nas/nasType"
+	"free5gc/lib/nas/security"
 	"free5gc/lib/openapi/models"
 	"free5gc/src/n3iwf/context"
 	"free5gc/src/n3iwf/ike/handler"
@@ -501,7 +502,7 @@ func applyXFRMRule(ue_is_initiator bool, childSecurityAssociation *context.Child
 
 func TestNon3GPPUE(t *testing.T) {
 	// New UE
-	ue := NewRanUeContext("imsi-2089300007487", 1, ALG_CIPHERING_128_NEA0, ALG_INTEGRITY_128_NIA2)
+	ue := NewRanUeContext("imsi-2089300007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA2)
 	ue.AmfUeNgapId = 1
 	ue.AuthenticationSubs = getAuthSubscription()
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
@@ -1298,24 +1299,24 @@ func setUESecurityCapability(ue *RanUeContext) (UESecurityCapability *nasType.UE
 		Buffer: []uint8{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
 	}
 	switch ue.CipheringAlg {
-	case ALG_CIPHERING_128_NEA0:
+	case security.AlgCiphering128NEA0:
 		UESecurityCapability.SetEA0_5G(1)
-	case ALG_CIPHERING_128_NEA1:
+	case security.AlgCiphering128NEA1:
 		UESecurityCapability.SetEA1_128_5G(1)
-	case ALG_CIPHERING_128_NEA2:
+	case security.AlgCiphering128NEA2:
 		UESecurityCapability.SetEA2_128_5G(1)
-	case ALG_CIPHERING_128_NEA3:
+	case security.AlgCiphering128NEA3:
 		UESecurityCapability.SetEA3_128_5G(1)
 	}
 
 	switch ue.IntegrityAlg {
-	case ALG_INTEGRITY_128_NIA0:
+	case security.AlgIntegrity128NIA0:
 		UESecurityCapability.SetIA0_5G(1)
-	case ALG_INTEGRITY_128_NIA1:
+	case security.AlgIntegrity128NIA1:
 		UESecurityCapability.SetIA1_128_5G(1)
-	case ALG_INTEGRITY_128_NIA2:
+	case security.AlgIntegrity128NIA2:
 		UESecurityCapability.SetIA2_128_5G(1)
-	case ALG_INTEGRITY_128_NIA3:
+	case security.AlgIntegrity128NIA3:
 		UESecurityCapability.SetIA3_128_5G(1)
 	}
 

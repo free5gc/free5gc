@@ -11,6 +11,7 @@ import (
 	"free5gc/lib/nas/nasMessage"
 	"free5gc/lib/nas/nasTestpacket"
 	"free5gc/lib/nas/nasType"
+	"free5gc/lib/nas/security"
 	"free5gc/lib/ngap"
 	"free5gc/lib/openapi/Npcf_PolicyAuthorization"
 	"free5gc/lib/openapi/models"
@@ -119,8 +120,8 @@ func TestRegistration(t *testing.T) {
 	assert.Nil(t, err)
 
 	// New UE
-	// ue := test.NewRanUeContext("imsi-2089300007487", 1, test.ALG_CIPHERING_128_NEA2, test.ALG_INTEGRITY_128_NIA2)
-	ue := test.NewRanUeContext("imsi-2089300007487", 1, test.ALG_CIPHERING_128_NEA0, test.ALG_INTEGRITY_128_NIA2)
+	// ue := test.NewRanUeContext("imsi-2089300007487", 1, security.AlgCiphering128NEA2, security.AlgIntegrity128NIA2)
+	ue := test.NewRanUeContext("imsi-2089300007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA2)
 	ue.AmfUeNgapId = 1
 	ue.AuthenticationSubs = getAuthSubscription()
 	// insert UE data to MongoDB
@@ -332,7 +333,7 @@ func TestDeregistration(t *testing.T) {
 	assert.Nil(t, err)
 
 	// New UE
-	ue := test.NewRanUeContext("imsi-2089300007487", 1, test.ALG_CIPHERING_128_NEA0, test.ALG_INTEGRITY_128_NIA2)
+	ue := test.NewRanUeContext("imsi-2089300007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA2)
 	ue.AmfUeNgapId = 1
 	ue.AuthenticationSubs = getAuthSubscription()
 	// insert UE data to MongoDB
@@ -502,7 +503,7 @@ func TestServiceRequest(t *testing.T) {
 	assert.Nil(t, err)
 
 	// New UE
-	ue := test.NewRanUeContext("imsi-2089300007487", 1, test.ALG_CIPHERING_128_NEA0, test.ALG_INTEGRITY_128_NIA2)
+	ue := test.NewRanUeContext("imsi-2089300007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA2)
 	ue.AmfUeNgapId = 1
 	ue.AuthenticationSubs = getAuthSubscription()
 	// insert UE data to MongoDB
@@ -713,7 +714,7 @@ func TestPDUSessionReleaseRequest(t *testing.T) {
 	assert.Nil(t, err)
 
 	// New UE
-	ue := test.NewRanUeContext("imsi-2089300007487", 1, test.ALG_CIPHERING_128_NEA0, test.ALG_INTEGRITY_128_NIA2)
+	ue := test.NewRanUeContext("imsi-2089300007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA2)
 	ue.AmfUeNgapId = 1
 	ue.AuthenticationSubs = getAuthSubscription()
 	// insert UE data to MongoDB
@@ -926,7 +927,7 @@ func TestXnHandover(t *testing.T) {
 	assert.Nil(t, err)
 
 	// New UE
-	ue := test.NewRanUeContext("imsi-2089300007487", 1, test.ALG_CIPHERING_128_NEA0, test.ALG_INTEGRITY_128_NIA2)
+	ue := test.NewRanUeContext("imsi-2089300007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA2)
 	ue.AmfUeNgapId = 1
 	ue.AuthenticationSubs = getAuthSubscription()
 	// insert UE data to MongoDB
@@ -1107,7 +1108,7 @@ func TestPaging(t *testing.T) {
 	assert.Nil(t, err)
 
 	// New UE
-	ue := test.NewRanUeContext("imsi-2089300007487", 1, test.ALG_CIPHERING_128_NEA0, test.ALG_INTEGRITY_128_NIA2)
+	ue := test.NewRanUeContext("imsi-2089300007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA2)
 	ue.AmfUeNgapId = 1
 	ue.AuthenticationSubs = getAuthSubscription()
 	// insert UE data to MongoDB
@@ -1366,7 +1367,7 @@ func TestN2Handover(t *testing.T) {
 	assert.Nil(t, err)
 
 	// New UE
-	ue := test.NewRanUeContext("imsi-2089300007487", 1, test.ALG_CIPHERING_128_NEA0, test.ALG_INTEGRITY_128_NIA2)
+	ue := test.NewRanUeContext("imsi-2089300007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA2)
 	ue.AmfUeNgapId = 1
 	ue.AuthenticationSubs = getAuthSubscription()
 	// insert UE data to MongoDB
@@ -1679,8 +1680,8 @@ func TestDuplicateRegistration(t *testing.T) {
 	assert.Nil(t, err)
 
 	// New UE
-	ue := test.NewRanUeContext("imsi-2089300007487", 1, test.ALG_CIPHERING_128_NEA0, test.ALG_INTEGRITY_128_NIA2)
-	// ue := test.NewRanUeContext("imsi-2089300007487", 1, test.ALG_CIPHERING_128_NEA0, test.ALG_INTEGRITY_128_NIA0)
+	ue := test.NewRanUeContext("imsi-2089300007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA2)
+	// ue := test.NewRanUeContext("imsi-2089300007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA0)
 	ue.AmfUeNgapId = 1
 	ue.AuthenticationSubs = getAuthSubscription()
 	// insert UE data to MongoDB
@@ -1929,8 +1930,8 @@ func TestAFInfluenceOnTrafficRouting(t *testing.T) {
 	assert.Nil(t, err)
 
 	// New UE
-	ue := test.NewRanUeContext("imsi-2089300007487", 1, test.ALG_CIPHERING_128_NEA0, test.ALG_INTEGRITY_128_NIA2)
-	// ue := test.NewRanUeContext("imsi-2089300007487", 1, test.ALG_CIPHERING_128_NEA0, test.ALG_INTEGRITY_128_NIA0)
+	ue := test.NewRanUeContext("imsi-2089300007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA2)
+	// ue := test.NewRanUeContext("imsi-2089300007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA0)
 	ue.AmfUeNgapId = 1
 	ue.AuthenticationSubs = getAuthSubscription()
 	// insert UE data to MongoDB
@@ -2093,24 +2094,24 @@ func setUESecurityCapability(ue *test.RanUeContext) (UESecurityCapability *nasTy
 		Buffer: []uint8{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
 	}
 	switch ue.CipheringAlg {
-	case test.ALG_CIPHERING_128_NEA0:
+	case security.AlgCiphering128NEA0:
 		UESecurityCapability.SetEA0_5G(1)
-	case test.ALG_CIPHERING_128_NEA1:
+	case security.AlgCiphering128NEA1:
 		UESecurityCapability.SetEA1_128_5G(1)
-	case test.ALG_CIPHERING_128_NEA2:
+	case security.AlgCiphering128NEA2:
 		UESecurityCapability.SetEA2_128_5G(1)
-	case test.ALG_CIPHERING_128_NEA3:
+	case security.AlgCiphering128NEA3:
 		UESecurityCapability.SetEA3_128_5G(1)
 	}
 
 	switch ue.IntegrityAlg {
-	case test.ALG_INTEGRITY_128_NIA0:
+	case security.AlgIntegrity128NIA0:
 		UESecurityCapability.SetIA0_5G(1)
-	case test.ALG_INTEGRITY_128_NIA1:
+	case security.AlgIntegrity128NIA1:
 		UESecurityCapability.SetIA1_128_5G(1)
-	case test.ALG_INTEGRITY_128_NIA2:
+	case security.AlgIntegrity128NIA2:
 		UESecurityCapability.SetIA2_128_5G(1)
-	case test.ALG_INTEGRITY_128_NIA3:
+	case security.AlgIntegrity128NIA3:
 		UESecurityCapability.SetIA3_128_5G(1)
 	}
 
