@@ -59,7 +59,6 @@ func EncodeNasPduWithSecurity(ue *RanUeContext, pdu []byte, securityHeaderType u
 		ProtocolDiscriminator: nasMessage.Epd5GSMobilityManagementMessage,
 		SecurityHeaderType:    securityHeaderType,
 	}
-	
 	return NASEncode(ue, m, securityContextAvailable, newSecurityContext)
 }
 
