@@ -1560,6 +1560,8 @@ func TestN2Handover(t *testing.T) {
 	// Target RAN create New UE
 	targetUe := deepcopy.Copy(ue).(*test.RanUeContext)
 	targetUe.AmfUeNgapId = 2
+	targetUe.ULCount.Set(ue.ULCount.Overflow(), ue.ULCount.SQN())
+	targetUe.DLCount.Set(ue.DLCount.Overflow(), ue.DLCount.SQN())
 
 	// Target RAN send ngap Handover Request Acknowledge Msg
 	sendMsg, err = test.GetHandoverRequestAcknowledge(targetUe.AmfUeNgapId, targetUe.RanUeNgapId)
@@ -1605,9 +1607,10 @@ func TestN2Handover(t *testing.T) {
 	uplinkDataStatus := nasType.NewUplinkDataStatus(nasMessage.RegistrationRequestUplinkDataStatusType)
 	uplinkDataStatus.SetLen(2)
 	uplinkDataStatus.SetPSI10(1)
-	ueSecurityCapability = setUESecurityCapability(ue)
+	ueSecurityCapability = setUESecurityCapability(targetUe)
 	pdu = nasTestpacket.GetRegistrationRequestWith5GMM(nasMessage.RegistrationType5GSMobilityRegistrationUpdating, mobileIdentity5GS, nil, uplinkDataStatus, ueSecurityCapability)
-	pdu, err = test.EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCiphered, true, false)
+	pdu, err = test.EncodeNasPduWithSecurity(targetUe, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCiphered, true, false)
+	assert.Nil(t, err)
 	sendMsg, err = test.GetInitialUEMessage(targetUe.RanUeNgapId, pdu, "")
 	assert.Nil(t, err)
 	_, err = conn2.Write(sendMsg)
