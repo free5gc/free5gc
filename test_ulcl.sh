@@ -110,7 +110,7 @@ done
 cd src/test
 $GOROOT/bin/go test -v -vet=off -run $1
 
-sleep 1
+sleep 3
 sudo killall -15 free5gc-upfd
 sleep 1
 
