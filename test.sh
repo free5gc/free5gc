@@ -79,8 +79,6 @@ fi
 cd src/upf/build && ${EXEC_UPFNS} ./bin/free5gc-upfd -f config/upfcfg.test.yaml &
 sleep 2
 
-${EXEC_UPFNS} ip link set dev upfgtp0 mtu 1500
-
 if [[ "$1" == "TestNon3GPP" ]]
 then
     UENS="UEns"
