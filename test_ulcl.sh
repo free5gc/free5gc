@@ -44,7 +44,7 @@ do
 done
 shift $(($OPTIND - 1))
 
-TEST_POOL="TestRegistration|TestServiceRequest|TestXnHandover|TestN2Handover|TestDeregistration|TestPDUSessionReleaseRequest|TestPaging"
+TEST_POOL="TestRegistration"
 if [[ ! "$1" =~ $TEST_POOL ]]
 then
     echo "Usage: $0 [ ${TEST_POOL//|/ | } ]"
@@ -134,6 +134,4 @@ for i in $(seq -f "%02g" 1 $UPF_NUM); do
   sudo ip netns del "${UPFNS}${i}"
   sudo ip link del "br-veth${i}"
 done
-
-#cp config/test/smfcfg.single.test.conf config/test/smfcfg.ulcl.test.conf
 
