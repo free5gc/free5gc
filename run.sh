@@ -7,7 +7,6 @@ sudo -E ./bin/free5gc-upfd &
 PID_LIST+=($!)
 
 sleep 1
-sudo ip link set dev upfgtp0 mtu 1500
 
 cd ../../..
 

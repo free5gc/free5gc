@@ -105,14 +105,12 @@ for i in $(seq -f "%02g" 1 $UPF_NUM); do
     fi
     cd src/upf/build && sudo -E ip netns exec "${UPFNS}${i}" ./bin/free5gc-upfd -f config/upfcfg.ulcl.yaml &
     sleep 1
-
-    sudo ip netns exec "${UPFNS}${i}" ip link set dev upfgtp0 mtu 1500
 done
 
 cd src/test
 $GOROOT/bin/go test -v -vet=off -run $1
 
-sleep 1
+sleep 3
 sudo killall -15 free5gc-upfd
 sleep 1
 
