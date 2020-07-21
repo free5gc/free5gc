@@ -49,7 +49,7 @@ func GetPDUSessionResourceSetupResponse(amfUeNgapID int64, ranUeNgapID int64, ip
 	message := ngapTestpacket.BuildPDUSessionResourceSetupResponseForRegistrationTest(amfUeNgapID, ranUeNgapID, ipv4)
 	return ngap.Encoder(message)
 }
-func EncodeNasPduWithSecurity(ue *RanUeContext, pdu []byte) ([]byte, error) {
+func EncodeNasPduWithSecurity(ue *RanUeContext, pdu []byte, securityHeaderType uint8, securityContextAvailable, newSecurityContext bool) ([]byte, error) {
 	m := nas.NewMessage()
 	err := m.PlainNasDecode(&pdu)
 	if err != nil {
@@ -57,9 +57,9 @@ func EncodeNasPduWithSecurity(ue *RanUeContext, pdu []byte) ([]byte, error) {
 	}
 	m.SecurityHeader = nas.SecurityHeader{
 		ProtocolDiscriminator: nasMessage.Epd5GSMobilityManagementMessage,
-		SecurityHeaderType:    nas.SecurityHeaderTypeIntegrityProtectedAndCiphered,
+		SecurityHeaderType:    securityHeaderType,
 	}
-	return NASEncode(ue, m)
+	return NASEncode(ue, m, securityContextAvailable, newSecurityContext)
 }
 
 func GetUEContextReleaseComplete(amfUeNgapID int64, ranUeNgapID int64, pduSessionIDList []int64) ([]byte, error) {

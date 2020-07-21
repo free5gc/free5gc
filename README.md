@@ -44,7 +44,7 @@ for bug reports and feature requests.
 - Software
     - OS: Ubuntu 18.04
     - gcc 7.3.0
-    - Go 1.12.9 linux/amd64
+    - Go 1.14.4 linux/amd64
     - kernel version 5.0.0-23-generic (MUST for UPF)
     
 **Note: Please use Ubuntu 18.04 and kernel version 5.0.0-23-generic** 
@@ -82,21 +82,20 @@ You can use `go version` to check your current Go version.
     * If another version of Go is installed
         - Please remove the previous Go version
             - ```sudo rm -rf /usr/local/go```
-        - Install Go 1.12.9
+        - Install Go 1.14.4
             ```bash
-            wget https://dl.google.com/go/go1.12.9.linux-amd64.tar.gz
-            sudo tar -C /usr/local -zxvf go1.12.9.linux-amd64.tar.gz
+            wget https://dl.google.com/go/go1.14.4.linux-amd64.tar.gz
+            sudo tar -C /usr/local -zxvf go1.14.4.linux-amd64.tar.gz
             ```
     * Clean installation
-        - Install Go 1.12.9
+        - Install Go 1.14.4
              ```bash
-            wget https://dl.google.com/go/go1.12.9.linux-amd64.tar.gz
-            sudo tar -C /usr/local -zxvf go1.12.9.linux-amd64.tar.gz
+            wget https://dl.google.com/go/go1.14.4.linux-amd64.tar.gz
+            sudo tar -C /usr/local -zxvf go1.14.4.linux-amd64.tar.gz
             mkdir -p ~/go/{bin,pkg,src}
             echo 'export GOPATH=$HOME/go' >> ~/.bashrc
             echo 'export GOROOT=/usr/local/go' >> ~/.bashrc
             echo 'export PATH=$PATH:$GOPATH/bin:$GOROOT/bin' >> ~/.bashrc
-            echo 'export GO111MODULE=off' >> ~/.bashrc
             source ~/.bashrc
             ```
 
@@ -123,16 +122,16 @@ You can use `go version` to check your current Go version.
 
 ### B. Install Control Plane Entities
     
-1. Clone free5GC project in `$GOPATH/src`
+1. Clone free5GC project
     ```bash
-    cd $GOPATH/src
-    git clone --recursive -b v3.0.2 -j `nproc` https://github.com/free5gc/free5gc.git
+    cd ~
+    git clone --recursive -b v3.0.3 -j `nproc` https://github.com/free5gc/free5gc.git
     cd free5gc
     ```
 
     (Optional) If you want to use the nightly version, runs:
     ```bash
-    cd $GOPATH/src/free5gc
+    cd ~/free5gc
     git checkout master
     git submodule sync
     git submodule update --init --jobs `nproc`
@@ -142,17 +141,14 @@ You can use `go version` to check your current Go version.
 
 2. Run the script to install dependent packages
     ```bash
-    cd $GOPATH/src/free5gc
-    chmod +x ./install_env.sh
-    ./install_env.sh
-    
-    Please ignore error messages during the package dependencies installation process.
+    cd ~/free5gc
+    go mod download
     ```
     **In step 2, the folder name should remain free5gc. Please do not modify it or the compilation would fail.**
 
-3. Compile network function services in `$GOPATH/src/free5gc` individually, e.g. AMF (redo this step for each NF), or
+3. Compile network function services in `free5gc` individually, e.g. AMF (redo this step for each NF), or
     ```bash
-    cd $GOPATH/src/free5gc
+    cd ~/free5gc
     go build -o bin/amf -x src/amf/amf.go
     ```
     **To build all network functions in one command**
@@ -171,21 +167,21 @@ You can use `go version` to check your current Go version.
 
     Get Linux kernel module 5G GTP-U
     ```bash
-    git clone https://github.com/PrinzOwO/gtp5g.git
+    git clone -b v0.1.0 https://github.com/PrinzOwO/gtp5g.git
     cd gtp5g
     make
     sudo make install
     ```
 2. Build from sources
     ```bash
-    cd $GOPATH/src/free5gc/src/upf
+    cd ~/free5gc/src/upf
     mkdir build
     cd build
     cmake ..
     make -j`nproc`
     ```
     
-**Note: Config is located at** `$GOPATH/src/free5gc/src/upf/build/config/upfcfg.yaml
+**Note: UPF's config is located at** `free5gc/src/upf/build/config/upfcfg.yaml
    `
 
 ## Run
@@ -193,7 +189,7 @@ You can use `go version` to check your current Go version.
 ### A. Run Core Network 
 Option 1. Run network function service individually, e.g. AMF (redo this for each NF), or
 ```bash
-cd $GOPATH/src/free5gc
+cd ~/free5gc
 ./bin/amf
 ```
 
@@ -223,19 +219,19 @@ sudo ip link set dev ipsec0 up
 
 Run N3IWF (root privilege is required):
 ```bash
-cd $GOPATH/src/free5gc/
+cd ~/free5gc/
 sudo ./bin/n3iwf
 ```
 
 ## Test
 Start Wireshark to capture any interface with `pfcp||icmp||gtp` filter and run the tests below to simulate the procedures:
 ```bash
-cd $GOPATH/src/free5gc
+cd ~/free5gc
 chmod +x ./test.sh
 ```
 a. TestRegistration
 ```bash
-(In directory: $GOPATH/src/free5gc)
+(In directory: ~/free5gc)
 ./test.sh TestRegistration
 ```
 b. TestServiceRequest

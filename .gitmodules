@@ -97,3 +97,6 @@
 [submodule "compose"]
 	path = compose
 	url = https://github.com/free5gc/free5gc-compose
+[submodule "lib/idgenerator"]
+	path = lib/idgenerator
+	url = https://github.com/free5gc/idgenerator.git
