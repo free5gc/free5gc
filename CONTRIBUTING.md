@@ -36,7 +36,7 @@ If the reviewer approve the Pull Request, then the Pull Request in this column w
 When the Pull Request is merged or closed, the issue and Pull Requests are moved automatically to this column. 
 
 
-![Git Workflow](docs/imgs/git-workflow.png)
+![Git Workflow](docs/img/git-workflow.png)
 
 
 ## Branch Protected Rules
