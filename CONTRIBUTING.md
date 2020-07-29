@@ -1,8 +1,14 @@
-# Development Worflow
+# Contribution Guidelines
 
+## Filing issues
+                            
+Always try to use the issues templates to reports bug or request new features otherwise your issue could be closed. 
 
-## Kanban Board
+__Sensitive security-related issues should be reported to [security@my5g.org](mailto:security@my5g.org).__
 
+## Issues Management (for Project Members)
+
+To improve the management of the list of things to-do in the project it is used the kanban board from Github.
 
 ### Backlog
 
@@ -51,8 +57,7 @@ When the Pull Request is merged or closed, the issue and Pull Requests are moved
 ## Pull Requests
 
 * In general all Pull Requests should target __develop__ branch.
-
-
+* Always update the Readme instructions when applicable
 
 
 
