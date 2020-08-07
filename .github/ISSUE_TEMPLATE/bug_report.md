@@ -30,11 +30,11 @@ A clear and concise description of what you expected to happen.
 If applicable, add screenshots to help explain your problem.
 
 ## Environment (please complete the following information):
- - free5GC Version [e.g. v3.0.2]
- - OS: [e.g. Ubuntu 18.04 Server]
- - Kernel version [e.g. 5.0.0-23-generic]
-- go version [e.g. 1.12.9 linux/amd64]
- - c compiler version (Option) [e.g. gcc version 7.5.0]
+ - free5GC Version: [e.g. v3.0.100]
+ - OS: [e.g. Ubuntu 200.04 Server]
+ - Kernel version: [e.g. 5.200.0-0-generic]
+ - go version: [e.g. 1.10.0 linux/amd64]
+ - c compiler version (Option): [e.g. gcc version 1.1.0]
 
 ## Trace File
 ### Configuration File
