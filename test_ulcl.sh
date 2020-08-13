@@ -94,6 +94,7 @@ for i in $(seq -f "%02g" 1 $UPF_NUM); do
 
     if [ ${DUMP_NS} ]; then
         sudo ip netns exec "${UPFNS}${i}" tcpdump -i any -w "${UPFNS}${i}.pcap" &
+        sleep 1
         TCPDUMP_PID_[${i}]=$(sudo ip netns pids "${UPFNS}${i}")
     fi
 
