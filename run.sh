@@ -19,7 +19,7 @@ for NF in ${NF_LIST}; do
     PID_LIST+=($!)
 done
 
-sudo ./bin/n3iwf &
+./bin/n3iwf &
 PID_LIST+=($!)
 
 function terminate()
