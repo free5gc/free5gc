@@ -28,6 +28,8 @@
 - [Run](#run)
   - [A. Run Core Network](#a-run-core-network)
   - [B. Run N3IWF (Individually)](#b-run-n3iwf-individually)
+  - [C. Run all in one with outside RAN](#c-run-all-in-one-with-outside-ran)
+  - [D. Deploy with container](#d-deploy-with-container)
 - [Test](#test)
 - [Release Note](#release-note)
 
@@ -222,6 +224,16 @@ Run N3IWF (root privilege is required):
 cd ~/free5gc/
 sudo ./bin/n3iwf
 ```
+
+### C. Run all in one with outside RAN
+
+Reference to [sample config](./sample/ran_attach_config) if need to connect the
+outside RAN with all in one free5GC core network.
+
+### D. Deploy with container
+
+Reference to [free5gc-compose](https://github.com/free5gc/free5gc-compose/) as
+the sample for container deployment.
 
 ## Test
 Start Wireshark to capture any interface with `pfcp||icmp||gtp` filter and run the tests below to simulate the procedures:
