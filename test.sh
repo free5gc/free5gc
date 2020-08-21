@@ -29,7 +29,7 @@ do
 done
 shift $(($OPTIND - 1))
 
-TEST_POOL="TestRegistration|TestServiceRequest|TestXnHandover|TestN2Handover|TestDeregistration|TestPDUSessionReleaseRequest|TestPaging|TestNon3GPP"
+TEST_POOL="TestRegistration|TestServiceRequest|TestXnHandover|TestN2Handover|TestDeregistration|TestPDUSessionReleaseRequest|TestPaging|TestNon3GPP|TestAFInfluenceOnTrafficRouting"
 if [[ ! "$1" =~ $TEST_POOL ]]
 then
     echo "Usage: $0 [ ${TEST_POOL//|/ | } ]"
@@ -72,12 +72,12 @@ if [ ${DUMP_NS} ]
 then
     ${EXEC_UPFNS} tcpdump -i any -w ${UPFNS}.pcap &
     TCPDUMP_PID=$(sudo ip netns pids ${UPFNS})
+    sudo -E tcpdump -i lo -w default_ns.pcap &
+    LOCALDUMP=$!
 fi
 
 cd src/upf/build && ${EXEC_UPFNS} ./bin/free5gc-upfd -f config/upfcfg.test.yaml &
 sleep 2
-
-${EXEC_UPFNS} ip link set dev upfgtp0 mtu 1500
 
 if [[ "$1" == "TestNon3GPP" ]]
 then
@@ -122,13 +122,14 @@ else
     $GOROOT/bin/go test -v -vet=off -run $1
 fi
 
-sleep 1
+sleep 3
 sudo killall -15 free5gc-upfd
 sleep 1
 
 if [ ${DUMP_NS} ]
 then
     ${EXEC_UPFNS} kill -SIGINT ${TCPDUMP_PID}
+    sudo -E kill -SIGINT ${LOCALDUMP}
 fi
 
 cd ../..

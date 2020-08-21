@@ -100,3 +100,6 @@
 [submodule "free5gc-compose"]
 	path = compose
 	url = ../free5gc-compose.git
+[submodule "lib/idgenerator"]
+	path = lib/idgenerator
+	url = ../idgenerator.git

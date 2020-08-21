@@ -1,11 +1,10 @@
 package test
 
 import (
-	"encoding/binary"
 	"encoding/hex"
-	// "fmt"
 	"free5gc/lib/UeauCommon"
 	"free5gc/lib/milenage"
+	"free5gc/lib/nas/security"
 	"free5gc/lib/openapi/models"
 	"regexp"
 )
@@ -14,13 +13,12 @@ type RanUeContext struct {
 	Supi               string
 	RanUeNgapId        int64
 	AmfUeNgapId        int64
-	ULCount            uint32
-	DLOverflow         uint16
-	DLCountSQN         uint8
+	ULCount            security.Count
+	DLCount            security.Count
 	CipheringAlg       uint8
 	IntegrityAlg       uint8
-	KnasEnc            []uint8
-	KnasInt            []uint8
+	KnasEnc            [16]uint8
+	KnasInt            [16]uint8
 	Kamf               []uint8
 	AuthenticationSubs models.AuthenticationSubscription
 }
@@ -32,21 +30,6 @@ func NewRanUeContext(supi string, ranUeNgapId int64, cipheringAlg, integrityAlg 
 	ue.CipheringAlg = cipheringAlg
 	ue.IntegrityAlg = integrityAlg
 	return &ue
-}
-func (ue *RanUeContext) GetSecurityULCount() []byte {
-	var r = make([]byte, 4)
-	binary.BigEndian.PutUint32(r, ue.ULCount&0xffffff)
-	return r
-}
-
-func (ue *RanUeContext) GetSecurityDLCount() []byte {
-	var r = make([]byte, 4)
-	binary.BigEndian.PutUint16(r, ue.DLOverflow)
-	r[3] = ue.DLCountSQN
-	r[2] = r[1]
-	r[1] = r[0]
-	r[0] = 0x00
-	return r
 }
 
 func (ue *RanUeContext) DeriveRESstarAndSetKey(authSubs models.AuthenticationSubscription, RAND []byte, snNmae string) []byte {
@@ -109,20 +92,20 @@ func (ue *RanUeContext) DerivateKamf(key []byte, snName string, SQN, AK []byte) 
 // Algorithm key Derivation function defined in TS 33.501 Annex A.9
 func (ue *RanUeContext) DerivateAlgKey() {
 	// Security Key
-	P0 := []byte{N_NAS_ENC_ALG}
+	P0 := []byte{security.NNASEncAlg}
 	L0 := UeauCommon.KDFLen(P0)
 	P1 := []byte{ue.CipheringAlg}
 	L1 := UeauCommon.KDFLen(P1)
 
 	kenc := UeauCommon.GetKDFValue(ue.Kamf, UeauCommon.FC_FOR_ALGORITHM_KEY_DERIVATION, P0, L0, P1, L1)
-	ue.KnasEnc = kenc[16:32]
+	copy(ue.KnasEnc[:], kenc[16:32])
 
 	// Integrity Key
-	P0 = []byte{N_NAS_INT_ALG}
+	P0 = []byte{security.NNASIntAlg}
 	L0 = UeauCommon.KDFLen(P0)
 	P1 = []byte{ue.IntegrityAlg}
 	L1 = UeauCommon.KDFLen(P1)
 
 	kint := UeauCommon.GetKDFValue(ue.Kamf, UeauCommon.FC_FOR_ALGORITHM_KEY_DERIVATION, P0, L0, P1, L1)
-	ue.KnasInt = kint[16:32]
+	copy(ue.KnasInt[:], kint[16:32])
 }

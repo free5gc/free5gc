@@ -9,6 +9,7 @@ import (
 	"free5gc/lib/nas/nasMessage"
 	"free5gc/lib/nas/nasTestpacket"
 	"free5gc/lib/nas/nasType"
+	"free5gc/lib/nas/security"
 	"free5gc/lib/openapi/models"
 	"free5gc/src/n3iwf/context"
 	"free5gc/src/n3iwf/ike/handler"
@@ -501,7 +502,7 @@ func applyXFRMRule(ue_is_initiator bool, childSecurityAssociation *context.Child
 
 func TestNon3GPPUE(t *testing.T) {
 	// New UE
-	ue := NewRanUeContext("imsi-2089300007487", 1, ALG_CIPHERING_128_NEA0, ALG_INTEGRITY_128_NIA0)
+	ue := NewRanUeContext("imsi-2089300007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA2)
 	ue.AmfUeNgapId = 1
 	ue.AuthenticationSubs = getAuthSubscription()
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
@@ -702,7 +703,9 @@ func TestNon3GPPUE(t *testing.T) {
 	eapVendorTypeData = append(eapVendorTypeData, anParameters...)
 
 	// NAS
-	registrationRequest := nasTestpacket.GetRegistrationRequestWith5GMM(nasMessage.RegistrationType5GSInitialRegistration, mobileIdentity5GS, nil, nil)
+	ueSecurityCapability := setUESecurityCapability(ue)
+	registrationRequest := nasTestpacket.GetRegistrationRequestWith5GMM(nasMessage.RegistrationType5GSInitialRegistration, mobileIdentity5GS, nil, nil, ueSecurityCapability)
+
 	nasLength := make([]byte, 2)
 	binary.BigEndian.PutUint16(nasLength, uint16(len(registrationRequest)))
 	eapVendorTypeData = append(eapVendorTypeData, nasLength...)
@@ -838,7 +841,7 @@ func TestNon3GPPUE(t *testing.T) {
 
 	// Send NAS Security Mode Complete Msg
 	pdu = nasTestpacket.GetSecurityModeComplete(registrationRequest)
-	pdu, err = EncodeNasPduWithSecurity(ue, pdu)
+	pdu, err = EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCipheredWithNew5gNasSecurityContext, true, true)
 	assert.Nil(t, err)
 
 	// IKE_AUTH - EAP exchange
@@ -1064,7 +1067,7 @@ func TestNon3GPPUE(t *testing.T) {
 
 	// send NAS Registration Complete Msg
 	pdu = nasTestpacket.GetRegistrationComplete(nil)
-	pdu, err = EncodeNasPduWithSecurity(ue, pdu)
+	pdu, err = EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCiphered, true, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1081,7 +1084,7 @@ func TestNon3GPPUE(t *testing.T) {
 		Sd:  "010203",
 	}
 	pdu = nasTestpacket.GetUlNasTransport_PduSessionEstablishmentRequest(10, nasMessage.ULNASTransportRequestTypeInitialRequest, "internet", &sNssai)
-	pdu, err = EncodeNasPduWithSecurity(ue, pdu)
+	pdu, err = EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCiphered, true, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1287,4 +1290,35 @@ func TestNon3GPPUE(t *testing.T) {
 	if stats.PacketsSent != stats.PacketsRecv {
 		t.Fatal("Ping Failed")
 	}
+}
+
+func setUESecurityCapability(ue *RanUeContext) (UESecurityCapability *nasType.UESecurityCapability) {
+	UESecurityCapability = &nasType.UESecurityCapability{
+		Iei:    nasMessage.RegistrationRequestUESecurityCapabilityType,
+		Len:    8,
+		Buffer: []uint8{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+	}
+	switch ue.CipheringAlg {
+	case security.AlgCiphering128NEA0:
+		UESecurityCapability.SetEA0_5G(1)
+	case security.AlgCiphering128NEA1:
+		UESecurityCapability.SetEA1_128_5G(1)
+	case security.AlgCiphering128NEA2:
+		UESecurityCapability.SetEA2_128_5G(1)
+	case security.AlgCiphering128NEA3:
+		UESecurityCapability.SetEA3_128_5G(1)
+	}
+
+	switch ue.IntegrityAlg {
+	case security.AlgIntegrity128NIA0:
+		UESecurityCapability.SetIA0_5G(1)
+	case security.AlgIntegrity128NIA1:
+		UESecurityCapability.SetIA1_128_5G(1)
+	case security.AlgIntegrity128NIA2:
+		UESecurityCapability.SetIA2_128_5G(1)
+	case security.AlgIntegrity128NIA3:
+		UESecurityCapability.SetIA3_128_5G(1)
+	}
+
+	return
 }
