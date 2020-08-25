@@ -1,0 +1,30 @@
+name: My5Gcore Workflow
+on: [push]
+
+jobs:
+  build:
+    name: building
+    runs-on: ubuntu-latest
+    steps:
+      - name: Hello world
+        uses: actions/hello-world-javascript-action@v1
+        with:
+          who-to-greet: 'Mona the Octocat'
+        id: hello
+      - name: Echo the greeting's time
+        run: echo 'The time was ${{ steps.hello.outputs.time }}.'
+  
+  test:
+    name: testing
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test 5GS Procedures
+        run: ./test.sh TestRegistration
+        run: ./test.sh TestServiceRequest
+        run: ./test.sh TestXnHandover
+        run: ./test.sh TestN2Handover
+        run: ./test.sh TestDeregistration
+        run: ./test.sh TestPDUSessionReleaseRequest
+        run: ./test.sh TestPaging
+        run: ./test.sh TestNon3GPP
+        run: ./test.sh TestAFInfluenceOnTrafficRouting
