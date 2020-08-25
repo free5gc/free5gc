@@ -26,6 +26,7 @@ jobs:
       # run: ./test.sh TestDeregistration
       # run: ./test.sh TestPDUSessionReleaseRequest
       # run: ./test.sh TestPaging
-      - run: ls -l
-      - run: ./test.sh TestNon3GPP          
+      run: |
+        ls -l
+        ./test.sh TestNon3GPP          
       # run: ./test.sh TestAFInfluenceOnTrafficRouting
