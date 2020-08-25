@@ -19,14 +19,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Test 5GS Procedures
-        # run: ./test.sh TestRegistration
-        # run: ./test.sh TestServiceRequest
-        # run: ./test.sh TestXnHandover
-        # run: ./test.sh TestN2Handover
-        # run: ./test.sh TestDeregistration
-        # run: ./test.sh TestPDUSessionReleaseRequest
-        # run: ./test.sh TestPaging
-        run: 
-          - ls -l
-          - ./test.sh TestNon3GPP          
-        # run: ./test.sh TestAFInfluenceOnTrafficRouting
+      # run: ./test.sh TestRegistration
+      # run: ./test.sh TestServiceRequest
+      # run: ./test.sh TestXnHandover
+      # run: ./test.sh TestN2Handover
+      # run: ./test.sh TestDeregistration
+      # run: ./test.sh TestPDUSessionReleaseRequest
+      # run: ./test.sh TestPaging
+      - run: ls -l
+      - run: ./test.sh TestNon3GPP          
+      # run: ./test.sh TestAFInfluenceOnTrafficRouting
