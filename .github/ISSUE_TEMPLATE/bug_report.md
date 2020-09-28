@@ -1,17 +1,16 @@
 ---
 name: Bug report
-about: Create a report to help us improve. If you do not ensure, you can first discuss
-  in forum.
+about: Creating bug report is highly welcome for improvement. If not fully convince, it can be forward to free5GC forum for further discussion.
 title: "[Bugs]"
 labels: ''
 assignees: ''
 
 ---
 
-**If you don't follow the issue template, your issue may be closed.**
-**Please note this is an issue tracker, not a support forum. For general questions, please use [forum](https://forum.free5gc.org).**
-**Also, please refer to [TS](https://github.com/free5gc/free5gc/wiki/Trouble_Shooting) and [forum](https://forum.free5gc.org) before bug reporting.**
-<!-- Remove above line after reporting the issue -->
+**We will advise people to follow the issue template set, otherwise the issue might be disregarded.**
+**free5GC mainly uses GitHub for issue tracking. Information regarding to general questions or technical support. It will be highly considered if forward to the [forum](https://forum.free5gc.org).**
+**free5GC will appreciate it, if people can refer to [TS](https://github.com/free5gc/free5gc/wiki/Trouble_Shooting) and [forum](https://forum.free5gc.org) prior to bug reporting**
+<!-- Remove warning (above 3 lines) while reporting the issue -->
 
 ## Describe the bug
 A clear and concise description of what the bug is.
@@ -27,7 +26,7 @@ Steps to reproduce the behavior:
 A clear and concise description of what you expected to happen.
 
 ## Screenshots
-If applicable, add screenshots to help explain your problem.
+If applicable, add screenshots to help explain the problem.
 
 ## Environment (please complete the following information):
  - free5GC Version: [e.g. v3.0.100]
@@ -38,25 +37,25 @@ If applicable, add screenshots to help explain your problem.
 
 ## Trace File
 ### Configuration File
-Provide your configuration here.
+Provide the configuration file here.
 
-If you don't know what to do, you can zip the `config` folder and upload the zip file here.
+If not clear of what to do, the `config` folder can be zip and upload it here.
 
 ### PCAP File
 Dump the packet and provide the pcap file here.
 
-If you don't know what to do, you can use `sudo tcpdump -i any -w free5gc.pcap` before you run the bug reproduce. After that, upload the free5gc.pcap file here.
+If not clear of what to do, this command can be used `sudo tcpdump -i any -w free5gc.pcap` prior to running bug reproduce. Then upload the pcap file `free5gc.pcap`.
 
 ### Log File
 Provide the program log file here.
 
-If you do not know what to do, copy the log print on the screen and put it here.
+If not clear of what to do, copy the printed log on the screen and upload it here.
 
 ## System architecture (Option)
-Give the draft of your architecture. What's your scenario, bare metal use case or using k8s, etc.
+Please provide the draft architecture, including the scenario, use cases, installation environment(bare metal, vm, container, or k8s), etc.
 
 ## Walkthrough (Option)
-What you have find or research for short.
+free5GC will be interested on the research or finding in brief.
 
 ## Additional context
-Add any other context about the problem here.
+It will be appreciated if other context can be added here.

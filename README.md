@@ -48,8 +48,8 @@ for bug reports and feature requests.
     - gcc 7.3.0
     - Go 1.14.4 linux/amd64
     - kernel version 5.0.0-23-generic (MUST for UPF)
-    
-**Note: Please use Ubuntu 18.04 and kernel version 5.0.0-23-generic** 
+
+**Note: Please use Ubuntu 18.04 and kernel version 5.0.0-23-generic**
 
 
 You can use `go version` to check your current Go version.
@@ -83,7 +83,7 @@ You can use `go version` to check your current Go version.
 1. Require go language
     * If another version of Go is installed
         - Please remove the previous Go version
-            - ```sudo rm -rf /usr/local/go```
+            - `sudo rm -rf /usr/local/go`
         - Install Go 1.14.4
             ```bash
             wget https://dl.google.com/go/go1.14.4.linux-amd64.tar.gz
@@ -123,11 +123,11 @@ You can use `go version` to check your current Go version.
     ```
 
 ### B. Install Control Plane Entities
-    
+
 1. Clone free5GC project
     ```bash
     cd ~
-    git clone --recursive -b v3.0.3 -j `nproc` https://github.com/free5gc/free5gc.git
+    git clone --recursive -b v3.0.4 -j `nproc` https://github.com/free5gc/free5gc.git
     cd free5gc
     ```
 
@@ -151,16 +151,17 @@ You can use `go version` to check your current Go version.
 3. Compile network function services in `free5gc` individually, e.g. AMF (redo this step for each NF), or
     ```bash
     cd ~/free5gc
-    go build -o bin/amf -x src/amf/amf.go
+    make amf
     ```
     **To build all network functions in one command**
     ```bash
-    ./build.sh
+    cd ~/free5gc
+    make all
     ```
 
 
 ### C. Install User Plane Function (UPF)
-    
+
 1. Please check Linux kernel version if it is `5.0.0-23-generic`
     ```bash
     uname -r
@@ -169,12 +170,18 @@ You can use `go version` to check your current Go version.
 
     Get Linux kernel module 5G GTP-U
     ```bash
-    git clone -b v0.1.0 https://github.com/PrinzOwO/gtp5g.git
+    git clone -b v0.2.0 https://github.com/PrinzOwO/gtp5g.git
     cd gtp5g
     make
     sudo make install
     ```
-2. Build from sources
+
+2. Build from sources (skip this step if you run make all previously) via make, or
+    ```bash
+    cd ~/free5gc
+    make upf
+    ```
+    build manually
     ```bash
     cd ~/free5gc/src/upf
     mkdir build
@@ -182,20 +189,19 @@ You can use `go version` to check your current Go version.
     cmake ..
     make -j`nproc`
     ```
-    
-**Note: UPF's config is located at** `free5gc/src/upf/build/config/upfcfg.yaml
-   `
+
+**Note: UPF's config is located at** `free5gc/src/upf/build/config/upfcfg.yaml`
 
 ## Run
 
-### A. Run Core Network 
+### A. Run Core Network
 Option 1. Run network function service individually, e.g. AMF (redo this for each NF), or
 ```bash
 cd ~/free5gc
 ./bin/amf
 ```
 
-**Note: For N3IWF needs specific configuration in section B** 
+**Note: For N3IWF needs specific configuration in section B**
 
 Option 2. Run whole core network with command
 ```
@@ -227,13 +233,11 @@ sudo ./bin/n3iwf
 
 ### C. Run all in one with outside RAN
 
-Reference to [sample config](./sample/ran_attach_config) if need to connect the
-outside RAN with all in one free5GC core network.
+Reference to [sample config](./sample/ran_attach_config) if need to connect the outside RAN with all in one free5GC core network.
 
 ### D. Deploy with container
 
-Reference to [free5gc-compose](https://github.com/free5gc/free5gc-compose/) as
-the sample for container deployment.
+Reference to [free5gc-compose](https://github.com/free5gc/free5gc-compose/) as the sample for container deployment.
 
 ## Test
 Start Wireshark to capture any interface with `pfcp||icmp||gtp` filter and run the tests below to simulate the procedures:
@@ -246,39 +250,53 @@ a. TestRegistration
 (In directory: ~/free5gc)
 ./test.sh TestRegistration
 ```
-b. TestServiceRequest
+
+b. TestGUTIRegistration
+```bash
+./test.sh TestGUTIRegistration
+```
+
+c. TestServiceRequest
 ```bash
 ./test.sh TestServiceRequest
 ```
-c. TestXnHandover
+
+d. TestXnHandover
 ```bash
 ./test.sh TestXnHandover
 ```
-d. TestDeregistration
+
+e. TestDeregistration
 ```bash
 ./test.sh TestDeregistration
 ```
-e. TestPDUSessionReleaseRequest
+
+f. TestPDUSessionReleaseRequest
 ```bash
 ./test.sh TestPDUSessionReleaseRequest
 ```
 
-f. TestPaging
+g. TestPaging
 ```!
 ./test.sh TestPaging
 ```
 
-g. TestN2Handover
+h. TestN2Handover
 ```!
 ./test.sh TestN2Handover
 ```
 
-h. TestNon3GPP
+i. TestNon3GPP
 ```bash
 ./test.sh TestNon3GPP
 ```
 
-i. TestULCL
+j. TestReSynchronisation
+```bash
+./test.sh TestReSynchronisation
+```
+
+k. TestULCL
 ```bash
 ./test_ulcl.sh -om 3 TestRegistration
 ```
@@ -287,3 +305,4 @@ i. TestULCL
 
 ## Release Note
 Detailed changes for each release are documented in the [release notes](https://github.com/free5gc/free5gc/releases).
+

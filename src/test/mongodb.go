@@ -5,15 +5,23 @@ import (
 	"free5gc/lib/MongoDBLibrary"
 	"free5gc/lib/openapi/models"
 
+	"github.com/calee0219/fatal"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
 func toBsonM(data interface{}) bson.M {
-	tmp, _ := json.Marshal(data)
+	tmp, err := json.Marshal(data)
+	if err != nil {
+		fatal.Fatalf("Marshal error in toBsonM: %+v", err)
+	}
 	var putData = bson.M{}
-	_ = json.Unmarshal(tmp, &putData)
+	err = json.Unmarshal(tmp, &putData)
+	if err != nil {
+		fatal.Fatalf("Unmarshal error in toBsonM: %+v", err)
+	}
 	return putData
 }
+
 func InsertAuthSubscriptionToMongoDB(ueId string, authSubs models.AuthenticationSubscription) {
 	collName := "subscriptionData.authenticationData.authenticationSubscription"
 	filter := bson.M{"ueId": ueId}
@@ -34,7 +42,10 @@ func GetAuthSubscriptionFromMongoDB(ueId string) (authSubs *models.Authenticatio
 		return
 	}
 	authSubs = new(models.AuthenticationSubscription)
-	_ = json.Unmarshal(tmp, authSubs)
+	err = json.Unmarshal(tmp, authSubs)
+	if err != nil {
+		fatal.Fatalf("Unmarshal error in GetAuthSubscriptionFromMongoDB: %+v", err)
+	}
 	return
 }
 
@@ -44,7 +55,8 @@ func DelAuthSubscriptionToMongoDB(ueId string) {
 	MongoDBLibrary.RestfulAPIDeleteMany(collName, filter)
 }
 
-func InsertAccessAndMobilitySubscriptionDataToMongoDB(ueId string, amData models.AccessAndMobilitySubscriptionData, servingPlmnId string) {
+func InsertAccessAndMobilitySubscriptionDataToMongoDB(
+	ueId string, amData models.AccessAndMobilitySubscriptionData, servingPlmnId string) {
 	collName := "subscriptionData.provisionedData.amData"
 	filter := bson.M{"ueId": ueId, "servingPlmnId": servingPlmnId}
 	putData := toBsonM(amData)
@@ -53,7 +65,8 @@ func InsertAccessAndMobilitySubscriptionDataToMongoDB(ueId string, amData models
 	MongoDBLibrary.RestfulAPIPutOne(collName, filter, putData)
 }
 
-func GetAccessAndMobilitySubscriptionDataFromMongoDB(ueId string, servingPlmnId string) (amData *models.AccessAndMobilitySubscriptionData) {
+func GetAccessAndMobilitySubscriptionDataFromMongoDB(
+	ueId string, servingPlmnId string) (amData *models.AccessAndMobilitySubscriptionData) {
 	collName := "subscriptionData.provisionedData.amData"
 	filter := bson.M{"ueId": ueId, "servingPlmnId": servingPlmnId}
 	getData := MongoDBLibrary.RestfulAPIGetOne(collName, filter)
@@ -65,7 +78,10 @@ func GetAccessAndMobilitySubscriptionDataFromMongoDB(ueId string, servingPlmnId 
 		return
 	}
 	amData = new(models.AccessAndMobilitySubscriptionData)
-	_ = json.Unmarshal(tmp, amData)
+	err = json.Unmarshal(tmp, amData)
+	if err != nil {
+		fatal.Fatalf("Unmarshal error in GetAccessAndMobilitySubscriptionDataFromMongoDB: %+v", err)
+	}
 	return
 }
 
@@ -75,7 +91,8 @@ func DelAccessAndMobilitySubscriptionDataFromMongoDB(ueId string, servingPlmnId 
 	MongoDBLibrary.RestfulAPIDeleteMany(collName, filter)
 }
 
-func InsertSessionManagementSubscriptionDataToMongoDB(ueId string, servingPlmnId string, smData models.SessionManagementSubscriptionData) {
+func InsertSessionManagementSubscriptionDataToMongoDB(
+	ueId string, servingPlmnId string, smData models.SessionManagementSubscriptionData) {
 	collName := "subscriptionData.provisionedData.smData"
 	filter := bson.M{"ueId": ueId, "servingPlmnId": servingPlmnId}
 	putData := toBsonM(smData)
@@ -84,7 +101,8 @@ func InsertSessionManagementSubscriptionDataToMongoDB(ueId string, servingPlmnId
 	MongoDBLibrary.RestfulAPIPutOne(collName, filter, putData)
 }
 
-func GetSessionManagementDataFromMongoDB(ueId string, servingPlmnId string) (amData *models.SessionManagementSubscriptionData) {
+func GetSessionManagementDataFromMongoDB(
+	ueId string, servingPlmnId string) (amData *models.SessionManagementSubscriptionData) {
 	collName := "subscriptionData.provisionedData.smData"
 	filter := bson.M{"ueId": ueId, "servingPlmnId": servingPlmnId}
 	getData := MongoDBLibrary.RestfulAPIGetOne(collName, filter)
@@ -96,7 +114,10 @@ func GetSessionManagementDataFromMongoDB(ueId string, servingPlmnId string) (amD
 		return
 	}
 	amData = new(models.SessionManagementSubscriptionData)
-	_ = json.Unmarshal(tmp, amData)
+	err = json.Unmarshal(tmp, amData)
+	if err != nil {
+		fatal.Fatalf("Unmarshal error in GetSessionManagementDataFromMongoDB: %+v", err)
+	}
 	return
 }
 
@@ -106,7 +127,8 @@ func DelSessionManagementSubscriptionDataFromMongoDB(ueId string, servingPlmnId 
 	MongoDBLibrary.RestfulAPIDeleteMany(collName, filter)
 }
 
-func InsertSmfSelectionSubscriptionDataToMongoDB(ueId string, smfSelData models.SmfSelectionSubscriptionData, servingPlmnId string) {
+func InsertSmfSelectionSubscriptionDataToMongoDB(
+	ueId string, smfSelData models.SmfSelectionSubscriptionData, servingPlmnId string) {
 	collName := "subscriptionData.provisionedData.smfSelectionSubscriptionData"
 	filter := bson.M{"ueId": ueId, "servingPlmnId": servingPlmnId}
 	putData := toBsonM(smfSelData)
@@ -115,7 +137,8 @@ func InsertSmfSelectionSubscriptionDataToMongoDB(ueId string, smfSelData models.
 	MongoDBLibrary.RestfulAPIPutOne(collName, filter, putData)
 }
 
-func GetSmfSelectionSubscriptionDataFromMongoDB(ueId string, servingPlmnId string) (smfSelData *models.SmfSelectionSubscriptionData) {
+func GetSmfSelectionSubscriptionDataFromMongoDB(
+	ueId string, servingPlmnId string) (smfSelData *models.SmfSelectionSubscriptionData) {
 	collName := "subscriptionData.provisionedData.smfSelectionSubscriptionData"
 	filter := bson.M{"ueId": ueId, "servingPlmnId": servingPlmnId}
 	getData := MongoDBLibrary.RestfulAPIGetOne(collName, filter)
@@ -127,7 +150,10 @@ func GetSmfSelectionSubscriptionDataFromMongoDB(ueId string, servingPlmnId strin
 		return
 	}
 	smfSelData = new(models.SmfSelectionSubscriptionData)
-	_ = json.Unmarshal(tmp, smfSelData)
+	err = json.Unmarshal(tmp, smfSelData)
+	if err != nil {
+		fatal.Fatalf("Unmarshal error in GetSmfSelectionSubscriptionDataFromMongoDB: %+v", err)
+	}
 	return
 }
 
@@ -157,7 +183,10 @@ func GetAmPolicyDataFromMongoDB(ueId string) (amPolicyData *models.AmPolicyData)
 		return
 	}
 	amPolicyData = new(models.AmPolicyData)
-	_ = json.Unmarshal(tmp, amPolicyData)
+	err = json.Unmarshal(tmp, amPolicyData)
+	if err != nil {
+		fatal.Fatalf("Unmarshal error in GetAmPolicyDataFromMongoDB: %+v", err)
+	}
 	return
 }
 
@@ -187,7 +216,10 @@ func GetSmPolicyDataFromMongoDB(ueId string) (smPolicyData *models.SmPolicyData)
 		return
 	}
 	smPolicyData = new(models.SmPolicyData)
-	_ = json.Unmarshal(tmp, smPolicyData)
+	err = json.Unmarshal(tmp, smPolicyData)
+	if err != nil {
+		fatal.Fatalf("Unmarshal error in GetSmPolicyDataFromMongoDB: %+v", err)
+	}
 	return
 }
 

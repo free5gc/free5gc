@@ -28,3 +28,14 @@ ueRoutingInfo:
         UPF: !!seq
           - BranchingUPF
           - AnchorUPF2
+
+routeProfile:
+  MEC1:
+    forwardingPolicyID: 10
+
+pfdDataForApp:
+  - applicationId: edge
+    pfds:
+      - pfdID: pfd1
+        flowDescriptions:
+          - permit out ip from 60.60.0.1 8080 to any
