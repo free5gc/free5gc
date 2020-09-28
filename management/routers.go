@@ -10,6 +10,8 @@
 package management
 
 import (
+	"free5gc/lib/logger_util"
+	"free5gc/src/nrf/logger"
 	"net/http"
 	"strings"
 
@@ -33,7 +35,7 @@ type Routes []Route
 
 // NewRouter returns a new router.
 func NewRouter() *gin.Engine {
-	router := gin.Default()
+	router := logger_util.NewGinWithLogrus(logger.GinLog)
 	AddService(router)
 	return router
 }
@@ -76,55 +78,55 @@ var routes = Routes{
 		"DeregisterNFInstance",
 		strings.ToUpper("Delete"),
 		"/nf-instances/:nfInstanceID",
-		DeregisterNFInstance,
+		HTTPDeregisterNFInstance,
 	},
 
 	{
 		"GetNFInstance",
 		strings.ToUpper("Get"),
 		"/nf-instances/:nfInstanceID",
-		GetNFInstance,
+		HTTPGetNFInstance,
 	},
 
 	{
 		"RegisterNFInstance",
 		strings.ToUpper("Put"),
 		"/nf-instances/:nfInstanceID",
-		RegisterNFInstance,
+		HTTPRegisterNFInstance,
 	},
 
 	{
 		"UpdateNFInstance",
 		strings.ToUpper("Patch"),
 		"/nf-instances/:nfInstanceID",
-		UpdateNFInstance,
+		HTTPUpdateNFInstance,
 	},
 
 	{
 		"GetNFInstances",
 		strings.ToUpper("Get"),
 		"/nf-instances",
-		GetNFInstances,
+		HTTPGetNFInstances,
 	},
 
 	{
 		"RemoveSubscription",
 		strings.ToUpper("Delete"),
 		"/subscriptions/:subscriptionID",
-		RemoveSubscription,
+		HTTPRemoveSubscription,
 	},
 
 	{
 		"UpdateSubscription",
 		strings.ToUpper("Patch"),
 		"/subscriptions/:subscriptionID",
-		UpdateSubscription,
+		HTTPUpdateSubscription,
 	},
 
 	{
 		"CreateSubscription",
 		strings.ToUpper("Post"),
 		"/subscriptions",
-		CreateSubscription,
+		HTTPCreateSubscription,
 	},
 }

@@ -10,43 +10,70 @@
 package management
 
 import (
-	"free5gc/lib/MongoDBLibrary"
-	"io/ioutil"
+	"free5gc/lib/http_wrapper"
+	"free5gc/lib/openapi"
+	"free5gc/lib/openapi/models"
+	"free5gc/src/nrf/logger"
+	"free5gc/src/nrf/producer"
+
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/bson"
 )
 
 // RemoveSubscription - Deletes a subscription
-func RemoveSubscription(c *gin.Context) {
+func HTTPRemoveSubscription(c *gin.Context) {
 
-	ID := strings.Split(c.Request.URL.Path, "/")
-	subscriptionID := ID[4]
+	req := http_wrapper.NewRequest(c.Request, nil)
+	req.Params["subscriptionID"] = c.Params.ByName("subscriptionID")
 
-	collName := "Subscriptions"
-	filter := bson.M{"subscriptionId": subscriptionID}
+	httpResponse := producer.HandleRemoveSubscriptionRequest(req)
 
-	MongoDBLibrary.RestfulAPIDeleteMany(collName, filter)
-
-	c.JSON(http.StatusNoContent, gin.H{})
-
+	responseBody, err := openapi.Serialize(httpResponse.Body, "application/json")
+	if err != nil {
+		logger.ManagementLog.Warnln(err)
+		problemDetails := models.ProblemDetails{
+			Status: http.StatusInternalServerError,
+			Cause:  "SYSTEM_FAILURE",
+			Detail: err.Error(),
+		}
+		c.JSON(http.StatusInternalServerError, problemDetails)
+	} else {
+		c.Data(httpResponse.Status, "application/json", responseBody)
+	}
 }
 
 // UpdateSubscription - Updates a subscription
-func UpdateSubscription(c *gin.Context) {
-	ID := strings.Split(c.Request.URL.Path, "/")
-	subscriptionID := ID[4]
-
-	collName := "Subscriptions"
-	filter := bson.M{"subscriptionId": subscriptionID}
-	patchJSON, _ := ioutil.ReadAll(c.Request.Body)
-
-	if MongoDBLibrary.RestfulAPIJSONPatch(collName, filter, patchJSON) {
-		SubscriptionData := MongoDBLibrary.RestfulAPIGetOne(collName, filter)
-		c.JSON(http.StatusOK, SubscriptionData)
-	} else {
-		c.JSON(http.StatusNoContent, gin.H{})
+func HTTPUpdateSubscription(c *gin.Context) {
+	requestBody, err := c.GetRawData()
+	if err != nil {
+		problemDetail := models.ProblemDetails{
+			Title:  "System failure",
+			Status: http.StatusInternalServerError,
+			Detail: err.Error(),
+			Cause:  "SYSTEM_FAILURE",
+		}
+		logger.ManagementLog.Errorf("Get Request Body error: %+v", err)
+		c.JSON(http.StatusInternalServerError, problemDetail)
+		return
 	}
+
+	req := http_wrapper.NewRequest(c.Request, nil)
+	req.Params["subscriptionID"] = c.Params.ByName("subscriptionID")
+	req.Body = requestBody
+
+	httpResponse := producer.HandleUpdateSubscriptionRequest(req)
+	responseBody, err := openapi.Serialize(httpResponse.Body, "application/json")
+	if err != nil {
+		logger.ManagementLog.Warnln(err)
+		problemDetails := models.ProblemDetails{
+			Status: http.StatusInternalServerError,
+			Cause:  "SYSTEM_FAILURE",
+			Detail: err.Error(),
+		}
+		c.JSON(http.StatusInternalServerError, problemDetails)
+	} else {
+		c.Data(httpResponse.Status, "application/json", responseBody)
+	}
+
 }

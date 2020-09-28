@@ -3,14 +3,13 @@ package service
 import (
 	"bufio"
 	"fmt"
+	"free5gc/lib/logger_util"
 	"free5gc/lib/path_util"
 	nrf_context "free5gc/src/nrf/context"
-	"free5gc/src/nrf/handler"
 	"free5gc/src/nrf/util"
 	"os/exec"
 	"sync"
 
-	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 
@@ -103,7 +102,7 @@ func (nrf *NRF) Start() {
 	MongoDBLibrary.SetMongoDB(factory.NrfConfig.Configuration.MongoDBName, factory.NrfConfig.Configuration.MongoDBUrl)
 	initLog.Infoln("Server started")
 
-	router := gin.Default()
+	router := logger_util.NewGinWithLogrus(logger.GinLog)
 
 	accesstoken.AddService(router)
 	discovery.AddService(router)
@@ -111,19 +110,17 @@ func (nrf *NRF) Start() {
 
 	nrf_context.InitNrfContext()
 
-	go handler.Handle()
-
 	uri := fmt.Sprintf("%s:%d", factory.NrfConfig.Configuration.Sbi.IPv4Addr, factory.NrfConfig.Configuration.Sbi.Port)
 	initLog.Infoln(uri)
 	server, err := http2_util.NewServer(uri, util.NrfLogPath, router)
 
 	if server == nil {
-		initLog.Errorln("Initialize HTTP server failed: %+v", err)
+		initLog.Errorf("Initialize HTTP server failed: %+v", err)
 		return
 	}
 
 	if err != nil {
-		initLog.Warnln("Initialize HTTP server: +%v", err)
+		initLog.Warnf("Initialize HTTP server: +%v", err)
 	}
 
 	serverScheme := factory.NrfConfig.Configuration.Sbi.Scheme
@@ -134,7 +131,7 @@ func (nrf *NRF) Start() {
 	}
 
 	if err != nil {
-		initLog.Fatalln("HTTP server setup failed: %+v", err)
+		initLog.Fatalf("HTTP server setup failed: %+v", err)
 	}
 }
 
@@ -175,7 +172,7 @@ func (nrf *NRF) Exec(c *cli.Context) error {
 
 	go func() {
 		fmt.Println("NRF  start")
-		if err := command.Start(); err != nil {
+		if err = command.Start(); err != nil {
 			fmt.Printf("NRF Start error: %v", err)
 		}
 		fmt.Println("NRF  end")

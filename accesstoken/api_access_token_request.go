@@ -10,55 +10,51 @@
 package accesstoken
 
 import (
+	"free5gc/lib/http_wrapper"
+	"free5gc/lib/openapi"
 	"free5gc/lib/openapi/models"
-	"log"
-	"net/http"
-
-	"github.com/dgrijalva/jwt-go"
+	"free5gc/src/nrf/logger"
+	"free5gc/src/nrf/producer"
 	"github.com/gin-gonic/gin"
+	"net/http"
 	//"github.com/gin-gonic/gin/binding"
 )
 
 // AccessTokenRequest - Access Token Request
-func AccessTokenRequest(c *gin.Context) {
+func HTTPAccessTokenRequest(c *gin.Context) {
+	logger.AccessTokenLog.Infoln("In HTTPAccessTokenRequest")
 	var accessTokenReq models.AccessTokenReq
 
-	accessTokenReqBindErr := c.Bind(&accessTokenReq)
-	if accessTokenReqBindErr != nil {
-		log.Println("accessTokenReqBindErr", accessTokenReqBindErr)
+	// logger.AccessTokenLog.Infoln("Content Type: ", c.ContentType())
+	err := c.Bind(&accessTokenReq)
+	if err != nil {
+		problemDetail := "[Request Body] " + err.Error()
+		rsp := models.ProblemDetails{
+			Title:  "Malformed request syntax",
+			Status: http.StatusBadRequest,
+			Detail: problemDetail,
+		}
+		logger.AccessTokenLog.Warnln(problemDetail)
+		c.JSON(http.StatusBadRequest, rsp)
+		return
 	}
 
-	//log.Printf("%+v", accessTokenReq.RequesterPlmn)
-	//log.Printf("%+v", accessTokenReq.TargetPlmn)
+	req := http_wrapper.NewRequest(c.Request, accessTokenReq)
+	req.Params["paramName"] = c.Params.ByName("paramName")
 
-	// Param of AccessTokenRsp
-	var expiration int32 = 1000
-	var scope = accessTokenReq.Scope
-	var tokenType = "Bearer"
+	httpResponse := producer.HandleAccessTokenRequest(req)
 
-	// Create AccessToken
-	var accessTokenClaims = models.AccessTokenClaims{
-		"1234567",                         // TODO: NF instance id of the NRF
-		accessTokenReq.NfInstanceId,       // nfInstanceId of service consumer
-		accessTokenReq.TargetNfInstanceId, // nfInstanceId of service producer
-		accessTokenReq.Scope,              // TODO: the name of the NF services for which the access_token is authorized for use
-		expiration,
-		jwt.StandardClaims{},
+	responseBody, err := openapi.Serialize(httpResponse.Body, "application/json")
+
+	if err != nil {
+		logger.AccessTokenLog.Warnln(err)
+		problemDetails := models.ProblemDetails{
+			Status: http.StatusInternalServerError,
+			Cause:  "SYSTEM_FAILURE",
+			Detail: err.Error(),
+		}
+		c.JSON(http.StatusInternalServerError, problemDetails)
+	} else {
+		c.JSON(httpResponse.Status, responseBody)
 	}
-
-	mySigningKey := []byte("NRF") // AllYourBase
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, accessTokenClaims)
-	accessToken, SignedStringErr := token.SignedString(mySigningKey)
-	if SignedStringErr != nil {
-		log.Println(SignedStringErr)
-	}
-
-	rep := &models.AccessTokenRsp{
-		AccessToken: accessToken,
-		TokenType:   tokenType,
-		ExpiresIn:   expiration,
-		Scope:       scope,
-	}
-
-	c.JSON(http.StatusOK, rep)
 }

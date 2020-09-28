@@ -2,7 +2,7 @@
  * NRF UriList
  */
 
-package urilist
+package context
 
 import (
 	"free5gc/lib/openapi/models"

@@ -10,34 +10,34 @@
 package management
 
 import (
-	"fmt"
-	"free5gc/lib/MongoDBLibrary"
-	"free5gc/src/nrf/urilist"
 	"net/http"
-	"strconv"
 
+	"free5gc/lib/http_wrapper"
+	"free5gc/lib/openapi"
+	"free5gc/lib/openapi/models"
+	"free5gc/src/nrf/logger"
+	"free5gc/src/nrf/producer"
 	"github.com/gin-gonic/gin"
-	"github.com/mitchellh/mapstructure"
-	"go.mongodb.org/mongo-driver/bson"
 )
 
 // GetNFInstances - Retrieves a collection of NF Instances
-func GetNFInstances(c *gin.Context) {
+func HTTPGetNFInstances(c *gin.Context) {
 
-	nfType := c.Query("nf-type")
-	//limit := c.Query("limit")
-	limit, err := strconv.Atoi(c.Query("limit"))
-	fmt.Println("limit.........", limit)
-	collName := "urilist"
-	filter := bson.M{"nfType": nfType}
+	req := http_wrapper.NewRequest(c.Request, nil)
+	req.Query = c.Request.URL.Query()
 
-	UL := MongoDBLibrary.RestfulAPIGetOne(collName, filter)
+	httpResponse := producer.HandleGetNFInstancesRequest(req)
 
-	var originalUL urilist.UriList
-	err2 := mapstructure.Decode(UL, &originalUL)
-	if err2 != nil {
-		panic(err)
+	responseBody, err := openapi.Serialize(httpResponse.Body, "application/json")
+	if err != nil {
+		logger.ManagementLog.Warnln(err)
+		problemDetails := models.ProblemDetails{
+			Status: http.StatusInternalServerError,
+			Cause:  "SYSTEM_FAILURE",
+			Detail: err.Error(),
+		}
+		c.JSON(http.StatusInternalServerError, problemDetails)
+	} else {
+		c.Data(httpResponse.Status, "application/json", responseBody)
 	}
-	nnrfUriListLimit(&originalUL, limit)
-	c.JSON(http.StatusOK, originalUL)
 }

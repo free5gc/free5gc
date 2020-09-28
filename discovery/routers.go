@@ -10,6 +10,8 @@
 package discovery
 
 import (
+	"free5gc/lib/logger_util"
+	"free5gc/src/nrf/logger"
 	"net/http"
 	"strings"
 
@@ -33,7 +35,7 @@ type Routes []Route
 
 // NewRouter returns a new router.
 func NewRouter() *gin.Engine {
-	router := gin.Default()
+	router := logger_util.NewGinWithLogrus(logger.GinLog)
 	AddService(router)
 	return router
 }
@@ -76,6 +78,6 @@ var routes = Routes{
 		"SearchNFInstances",
 		strings.ToUpper("Get"),
 		"/nf-instances",
-		SearchNFInstances,
+		HTTPSearchNFInstances,
 	},
 }

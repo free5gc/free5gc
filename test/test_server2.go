@@ -3,8 +3,10 @@ package main
 import (
 	"fmt"
 	"free5gc/lib/http2_util"
+	"free5gc/lib/logger_util"
 	. "free5gc/lib/openapi/models"
 	"free5gc/lib/path_util"
+	"free5gc/src/nrf/logger"
 	"log"
 	"net/http"
 
@@ -18,7 +20,7 @@ var (
 )
 
 func main() {
-	router := gin.Default()
+	router := logger_util.NewGinWithLogrus(logger.GinLog)
 
 	router.POST("", func(c *gin.Context) {
 		/*buf, err := c.GetRawData()

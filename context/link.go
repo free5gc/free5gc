@@ -2,7 +2,7 @@
  * NRF UriList
  */
 
-package urilist
+package context
 
 type Links struct {
 	Item []Item `json:"item" bson:"item"`

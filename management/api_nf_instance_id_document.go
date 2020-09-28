@@ -10,219 +10,154 @@
 package management
 
 import (
-	"encoding/json"
-	"fmt"
-	"free5gc/lib/MongoDBLibrary"
-	"free5gc/lib/TimeDecode"
+	"free5gc/lib/http_wrapper"
+	"free5gc/lib/openapi"
 	"free5gc/lib/openapi/models"
-	nrf_message "free5gc/src/nrf/handler/message"
-	"free5gc/src/nrf/logger"
-	"io/ioutil"
-	"net/http"
-	"strings"
-	"time"
 
+	"free5gc/src/nrf/producer"
+	"net/http"
+
+	"free5gc/src/nrf/logger"
 	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/bson"
 )
 
 // DeregisterNFInstance - Deregisters a given NF Instance
-func DeregisterNFInstance(c *gin.Context) {
+func HTTPDeregisterNFInstance(c *gin.Context) {
 	//parse nfInstanceId
-	InstanceID := strings.Split(c.Request.URL.Path, "/")
-	nfInstanceId := InstanceID[4]
 
-	collName := "NfProfile"
-	filter := bson.M{"nfInstanceId": nfInstanceId}
+	req := http_wrapper.NewRequest(c.Request, nil)
+	req.Params["nfInstanceID"] = c.Params.ByName("nfInstanceID")
 
-	nfProfilesRaw := MongoDBLibrary.RestfulAPIGetMany(collName, filter)
-	time.Sleep(time.Duration(1) * time.Second)
+	httpResponse := producer.HandleNFDeregisterRequest(req)
 
-	MongoDBLibrary.RestfulAPIDeleteMany(collName, filter)
-
-	// nfProfile data for response
-	nfProfiles, err := TimeDecode.Decode(nfProfilesRaw, time.RFC3339)
+	responseBody, err := openapi.Serialize(httpResponse.Body, "application/json")
 	if err != nil {
-		logger.ManagementLog.Info(err)
-	}
-
-	uriList := getNofificationUri(nfProfiles[0])
-
-	//make nfInstanceUri
-	localIP := getServiceIp()
-	uri := fmt.Sprintf("%s%s%s%s%s", "https://", localIP, ":29510", "/nnrf-nfm/v1/nf-instances/", nfInstanceId)
-	//set info for NotificationData
-	Notification_event := models.NotificationEventType_DEREGISTERED
-	nfInstanceUri := uri
-	handler_event := nrf_message.EventNotificationNFDeregisted
-
-	if len(uriList) > 0 {
-		var rsp nrf_message.HandlerResponseMessage
-		for _, uri := range uriList {
-			rsp = HandlerSendMessage(Notification_event, nfInstanceUri, handler_event, uri, c)
+		logger.ManagementLog.Warnln(err)
+		problemDetails := models.ProblemDetails{
+			Status: http.StatusInternalServerError,
+			Cause:  "SYSTEM_FAILURE",
+			Detail: err.Error(),
 		}
-
-		httpResponse := rsp.HTTPResponse
-		if httpResponse.Status == http.StatusNoContent {
-			c.JSON(http.StatusNoContent, gin.H{})
-		}
+		c.JSON(http.StatusInternalServerError, problemDetails)
 	} else {
-		c.JSON(http.StatusNoContent, gin.H{})
+		c.Data(httpResponse.Status, "application/json", responseBody)
 	}
 
 }
 
 // GetNFInstance - Read the profile of a given NF Instance
-func GetNFInstance(c *gin.Context) {
+func HTTPGetNFInstance(c *gin.Context) {
 
-	InstanceID := strings.Split(c.Request.URL.Path, "/")
-	nfInstanceId := InstanceID[4]
+	req := http_wrapper.NewRequest(c.Request, nil)
+	req.Params["nfInstanceID"] = c.Params.ByName("nfInstanceID")
 
-	collName := "NfProfile"
-	filter := bson.M{"nfInstanceId": nfInstanceId}
-	nf := MongoDBLibrary.RestfulAPIGetOne(collName, filter)
+	httpResponse := producer.HandleGetNFInstanceRequest(req)
 
-	c.JSON(http.StatusOK, nf)
+	responseBody, err := openapi.Serialize(httpResponse.Body, "application/json")
+	if err != nil {
+		logger.ManagementLog.Warnln(err)
+		problemDetails := models.ProblemDetails{
+			Status: http.StatusInternalServerError,
+			Cause:  "SYSTEM_FAILURE",
+			Detail: err.Error(),
+		}
+		c.JSON(http.StatusInternalServerError, problemDetails)
+	} else {
+		c.Data(httpResponse.Status, "application/json", responseBody)
+	}
+
 }
 
 // RegisterNFInstance - Register a new NF Instance
-func RegisterNFInstance(c *gin.Context) {
+func HTTPRegisterNFInstance(c *gin.Context) {
 	var nfprofile models.NfProfile
-	var nf models.NfProfile
 
-	if err := c.ShouldBindJSON(&nfprofile); err != nil {
-		logger.ManagementLog.Info(err.Error())
+	// step 1: retrieve http request body
+	requestBody, err := c.GetRawData()
+	if err != nil {
+		problemDetail := models.ProblemDetails{
+			Title:  "System failure",
+			Status: http.StatusInternalServerError,
+			Detail: err.Error(),
+			Cause:  "SYSTEM_FAILURE",
+		}
+		logger.ManagementLog.Errorf("Get Request Body error: %+v", err)
+		c.JSON(http.StatusInternalServerError, problemDetail)
+		return
 	}
 
-	localIP := getServiceIp()
-
-	if nnrfNFManagementDataMoudel(&nf, nfprofile) {
-
-		//make location header
-		locationHeader := setLocationHeader(nfprofile, localIP)
-		//Marshal nf to bson
-		tmp, _ := json.Marshal(nf)
-		var putData = bson.M{}
-		json.Unmarshal(tmp, &putData)
-		//set db info
-		collName := "NfProfile"
-		nfInstanceId := nf.NfInstanceId
-		filter := bson.M{"nfInstanceId": nfInstanceId}
-
-		// Update NF Profile case
-		if MongoDBLibrary.RestfulAPIPutOne(collName, filter, putData) { //true insert
-			uriList := getNofificationUri(nf)
-
-			//set info for NotificationData
-			Notification_event := models.NotificationEventType_PROFILE_CHANGED
-			nfInstanceUri := locationHeader
-			handler_event := nrf_message.EventNotificationNFRegisted
-
-			//receive the rsp from handler
-			if len(uriList) > 0 {
-				var rsp nrf_message.HandlerResponseMessage
-				for _, uri := range uriList {
-					rsp = HandlerSendMessage(Notification_event, nfInstanceUri, handler_event, uri, c)
-				}
-				httpResponse := rsp.HTTPResponse
-				if httpResponse.Status == http.StatusNoContent {
-					//set location header
-					c.Writer.Header().Set("Location", locationHeader)
-					c.JSON(http.StatusOK, putData)
-				}
-				return
-			} else {
-				c.Writer.Header().Set("Location", locationHeader)
-				c.JSON(http.StatusOK, putData)
-				return
-			}
-		} else { // Create NF Profile case
-			uriList := getNofificationUri(nf)
-			//set info for NotificationData
-			Notification_event := models.NotificationEventType_REGISTERED
-			nfInstanceUri := locationHeader
-			handler_event := nrf_message.EventNotificationNFRegisted
-
-			if len(uriList) > 0 {
-				var rsp nrf_message.HandlerResponseMessage
-				for _, uri := range uriList {
-					rsp = HandlerSendMessage(Notification_event, nfInstanceUri, handler_event, uri, c)
-				}
-				//set httpResponse
-				httpResponse := rsp.HTTPResponse
-				if httpResponse.Status == http.StatusNoContent {
-					//set location header
-					c.Writer.Header().Set("Location", locationHeader)
-					c.JSON(http.StatusCreated, putData)
-				}
-				return
-			} else {
-				c.Writer.Header().Set("Location", locationHeader)
-				c.JSON(http.StatusCreated, putData)
-				return
-			}
-		}
-
-	} else {
-
-		str1 := fmt.Sprint(nfprofile.HeartBeatTimer)
-		var problemDetails = models.ProblemDetails{
-			Title:  nfprofile.NfInstanceId,
+	// step 2: convert requestBody to openapi models
+	err = openapi.Deserialize(&nfprofile, requestBody, "application/json")
+	if err != nil {
+		problemDetail := "[Request Body] " + err.Error()
+		rsp := models.ProblemDetails{
+			Title:  "Malformed request syntax",
 			Status: http.StatusBadRequest,
-			Detail: str1,
+			Detail: problemDetail,
 		}
-		c.JSON(http.StatusBadRequest, problemDetails)
+		logger.ManagementLog.Errorln(problemDetail)
+		c.JSON(http.StatusBadRequest, rsp)
 		return
+	}
+
+	// step 3: encapsulate the request by http_wrapper package
+	req := http_wrapper.NewRequest(c.Request, nfprofile)
+
+	// step 4: call producer
+	httpResponse := producer.HandleNFRegisterRequest(req)
+
+	for key, val := range httpResponse.Header {
+		c.Header(key, val[0])
+	}
+
+	responseBody, err := openapi.Serialize(httpResponse.Body, "application/json")
+	if err != nil {
+		logger.ManagementLog.Warnln(err)
+		problemDetails := models.ProblemDetails{
+			Status: http.StatusInternalServerError,
+			Cause:  "SYSTEM_FAILURE",
+			Detail: err.Error(),
+		}
+		c.JSON(http.StatusInternalServerError, problemDetails)
+	} else {
+		c.Data(httpResponse.Status, "application/json", responseBody)
 	}
 }
 
 // UpdateNFInstance - Update NF Instance profile
-func UpdateNFInstance(c *gin.Context) {
+func HTTPUpdateNFInstance(c *gin.Context) {
 
-	InstanceID := strings.Split(c.Request.URL.Path, "/")
-	nfInstanceId := InstanceID[4]
-
-	collName := "NfProfile"
-	filter := bson.M{"nfInstanceId": nfInstanceId}
-
-	patchJSON, _ := ioutil.ReadAll(c.Request.Body)
-
-	if MongoDBLibrary.RestfulAPIJSONPatch(collName, filter, patchJSON) {
-		nf := MongoDBLibrary.RestfulAPIGetOne(collName, filter)
-
-		nfProfilesRaw := []map[string]interface{}{
-			nf,
+	// step 1: retrieve http request body
+	requestBody, err := c.GetRawData()
+	if err != nil {
+		problemDetail := models.ProblemDetails{
+			Title:  "System failure",
+			Status: http.StatusInternalServerError,
+			Detail: err.Error(),
+			Cause:  "SYSTEM_FAILURE",
 		}
+		logger.ManagementLog.Errorf("Get Request Body error: %+v", err)
+		c.JSON(http.StatusInternalServerError, problemDetail)
+		return
+	}
 
-		nfProfiles, err := TimeDecode.Decode(nfProfilesRaw, time.RFC3339)
-		if err != nil {
-			logger.ManagementLog.Info(err.Error())
+	req := http_wrapper.NewRequest(c.Request, nil)
+	req.Params["nfInstanceID"] = c.Params.ByName("nfInstanceID")
+	req.Body = requestBody
+
+	httpResponse := producer.HandleUpdateNFInstanceRequest(req)
+
+	responseBody, err := openapi.Serialize(httpResponse.Body, "application/json")
+	if err != nil {
+		logger.ManagementLog.Warnln(err)
+		problemDetails := models.ProblemDetails{
+			Status: http.StatusInternalServerError,
+			Cause:  "SYSTEM_FAILURE",
+			Detail: err.Error(),
 		}
-		uriList := getNofificationUri(nfProfiles[0])
-
-		//make nfInstanceUri
-		localIP := getServiceIp()
-		uri := fmt.Sprintf("%s%s%s%s%s", "https://", localIP, ":29510", "/nnrf-nfm/v1/nf-instances/", nfInstanceId)
-		//set info for NotificationData
-		Notification_event := models.NotificationEventType_PROFILE_CHANGED
-		nfInstanceUri := uri
-		handler_event := nrf_message.EventNotificationNFProfileChanged
-
-		if len(uriList) > 0 {
-			var rsp nrf_message.HandlerResponseMessage
-			for _, uri := range uriList {
-				rsp = HandlerSendMessage(Notification_event, nfInstanceUri, handler_event, uri, c)
-			}
-			httpResponse := rsp.HTTPResponse
-
-			if httpResponse.Status == http.StatusNoContent {
-				c.JSON(http.StatusOK, nf)
-			}
-		} else {
-			c.JSON(http.StatusOK, nf)
-		}
+		c.JSON(http.StatusInternalServerError, problemDetails)
 	} else {
-		c.JSON(http.StatusNoContent, gin.H{})
+		c.Data(httpResponse.Status, "application/json", responseBody)
 	}
 
 }

@@ -61,5 +61,10 @@ func InitNFService(serivceName []string, version string) []models.NfService {
 }
 
 func GetIPv4Uri() string {
-	return fmt.Sprintf("%s://%s:%d", factory.NrfConfig.Configuration.Sbi.Scheme, factory.NrfConfig.Configuration.Sbi.IPv4Addr, factory.NrfConfig.Configuration.Sbi.Port)
+	return fmt.Sprintf("%s://%s:%d", factory.NrfConfig.Configuration.Sbi.Scheme,
+		factory.NrfConfig.Configuration.Sbi.IPv4Addr, factory.NrfConfig.Configuration.Sbi.Port)
+}
+
+func GetServiceIp() string {
+	return factory.NrfConfig.Configuration.DefaultServiceIP
 }

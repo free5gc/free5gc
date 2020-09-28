@@ -10,37 +10,66 @@
 package management
 
 import (
-	"encoding/json"
-	"free5gc/lib/MongoDBLibrary"
+	"free5gc/lib/http_wrapper"
+	"free5gc/lib/openapi"
 	"free5gc/lib/openapi/models"
-	"log"
+	"free5gc/src/nrf/logger"
+	"free5gc/src/nrf/producer"
+
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/bson"
 )
 
 // Provide SubsciptionId for each request (add by one each time)
 
 // CreateSubscription - Create a new subscription
-func CreateSubscription(c *gin.Context) {
+func HTTPCreateSubscription(c *gin.Context) {
 
 	var subscription models.NrfSubscriptionData
 
-	if err := c.ShouldBindJSON(&subscription); err != nil {
-		log.Panic(err.Error())
+	// step 1: retrieve http request body
+	requestBody, err := c.GetRawData()
+	if err != nil {
+		problemDetail := models.ProblemDetails{
+			Title:  "System failure",
+			Status: http.StatusInternalServerError,
+			Detail: err.Error(),
+			Cause:  "SYSTEM_FAILURE",
+		}
+		logger.ManagementLog.Errorf("Get Request Body error: %+v", err)
+		c.JSON(http.StatusInternalServerError, problemDetail)
+		return
 	}
 
-	subscription.SubscriptionId = setsubscriptionId()
+	// step 2: convert requestBody to openapi models
+	err = openapi.Deserialize(&subscription, requestBody, "application/json")
+	if err != nil {
+		problemDetail := "[Request Body] " + err.Error()
+		rsp := models.ProblemDetails{
+			Title:  "Malformed request syntax",
+			Status: http.StatusBadRequest,
+			Detail: problemDetail,
+		}
+		logger.ManagementLog.Errorln(problemDetail)
+		c.JSON(http.StatusBadRequest, rsp)
+		return
+	}
 
-	tmp, _ := json.Marshal(subscription)
-	var putData = bson.M{}
-	json.Unmarshal(tmp, &putData)
+	req := http_wrapper.NewRequest(c.Request, subscription)
 
-	// TODO: need to store Condition !
-	if MongoDBLibrary.RestfulAPIPost("Subscriptions", bson.M{"subscriptionId": subscription.SubscriptionId}, putData) == false { // subscription id not exist before
-		c.JSON(http.StatusCreated, putData)
+	httpResponse := producer.HandleCreateSubscriptionRequest(req)
+	responseBody, err := openapi.Serialize(httpResponse.Body, "application/json")
+	if err != nil {
+		logger.ManagementLog.Errorln(err)
+		problemDetails := models.ProblemDetails{
+			Status: http.StatusInternalServerError,
+			Cause:  "SYSTEM_FAILURE",
+			Detail: err.Error(),
+		}
+		c.JSON(http.StatusInternalServerError, problemDetails)
 	} else {
-		c.JSON(http.StatusBadRequest, putData)
+		c.Data(httpResponse.Status, "application/json", responseBody)
 	}
+
 }
