@@ -7,15 +7,17 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+/*
 type config struct {
 	Path     string `yaml:"path"`
 	document []byte
-}
+}*/
 
 type context struct {
-	config
-	DbUri  string `yaml:"db_uri"`
-	Logger Logger `yaml:"logger"`
+	Path     string `yaml:"path"`
+	document []byte
+	DbUri    string `yaml:"db_uri"`
+	Logger   Logger `yaml:"logger"`
 }
 
 type Logger struct {
@@ -142,11 +144,13 @@ type WEBUI struct {
 }
 
 var self context
-var context_initialized = 0
+
+// Unused code
+//var context_initialized = 0
 
 func init() {
 	self = context{}
-	context_initialized = 1
+	//context_initialized = 1
 }
 
 func ContextSelf() *context {

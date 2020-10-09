@@ -40,7 +40,8 @@ func GetInitialContextSetupResponse(amfUeNgapID int64, ranUeNgapID int64) ([]byt
 	return ngap.Encoder(message)
 }
 
-func GetInitialContextSetupResponseForServiceRequest(amfUeNgapID int64, ranUeNgapID int64, ipv4 string) ([]byte, error) {
+func GetInitialContextSetupResponseForServiceRequest(
+	amfUeNgapID int64, ranUeNgapID int64, ipv4 string) ([]byte, error) {
 	message := ngapTestpacket.BuildInitialContextSetupResponse(amfUeNgapID, ranUeNgapID, ipv4, nil)
 	return ngap.Encoder(message)
 }
@@ -49,7 +50,8 @@ func GetPDUSessionResourceSetupResponse(amfUeNgapID int64, ranUeNgapID int64, ip
 	message := ngapTestpacket.BuildPDUSessionResourceSetupResponseForRegistrationTest(amfUeNgapID, ranUeNgapID, ipv4)
 	return ngap.Encoder(message)
 }
-func EncodeNasPduWithSecurity(ue *RanUeContext, pdu []byte, securityHeaderType uint8, securityContextAvailable, newSecurityContext bool) ([]byte, error) {
+func EncodeNasPduWithSecurity(ue *RanUeContext, pdu []byte, securityHeaderType uint8,
+	securityContextAvailable, newSecurityContext bool) ([]byte, error) {
 	m := nas.NewMessage()
 	err := m.PlainNasDecode(&pdu)
 	if err != nil {
@@ -78,11 +80,13 @@ func GetPDUSessionResourceReleaseResponse(amfUeNgapID int64, ranUeNgapID int64) 
 }
 func GetPathSwitchRequest(amfUeNgapID int64, ranUeNgapID int64) ([]byte, error) {
 	message := ngapTestpacket.BuildPathSwitchRequest(amfUeNgapID, ranUeNgapID)
-	message.InitiatingMessage.Value.PathSwitchRequest.ProtocolIEs.List = message.InitiatingMessage.Value.PathSwitchRequest.ProtocolIEs.List[0:5]
+	message.InitiatingMessage.Value.PathSwitchRequest.ProtocolIEs.List =
+		message.InitiatingMessage.Value.PathSwitchRequest.ProtocolIEs.List[0:5]
 	return ngap.Encoder(message)
 }
 
-func GetHandoverRequired(amfUeNgapID int64, ranUeNgapID int64, targetGNBID []byte, targetCellID []byte) ([]byte, error) {
+func GetHandoverRequired(
+	amfUeNgapID int64, ranUeNgapID int64, targetGNBID []byte, targetCellID []byte) ([]byte, error) {
 	message := ngapTestpacket.BuildHandoverRequired(amfUeNgapID, ranUeNgapID, targetGNBID, targetCellID)
 	return ngap.Encoder(message)
 }
