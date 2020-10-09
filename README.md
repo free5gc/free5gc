@@ -82,6 +82,8 @@ This guide assumes that you will run all 5GC elements on a single machine.
         5.0.0-23-generic
     ```
 
+You will not be able to run most of the tests in [Test](#test) section unless you deploy a UPF.
+
 2. Golang Version
     * As noted above, free5gc is built and tested with Go 1.14.4
     * To check the version of Go on your system, from a command prompt:
@@ -105,6 +107,7 @@ This guide assumes that you will run all 5GC elements on a single machine.
         wget https://dl.google.com/go/go1.14.4.linux-amd64.tar.gz
         sudo tar -C /usr/local -zxvf go1.14.4.linux-amd64.tar.gz
         mkdir -p ~/go/{bin,pkg,src}
+        # The following assume that your shell is bash
         echo 'export GOPATH=$HOME/go' >> ~/.bashrc
         echo 'export GOROOT=/usr/local/go' >> ~/.bashrc
         echo 'export PATH=$PATH:$GOPATH/bin:$GOROOT/bin' >> ~/.bashrc
@@ -140,11 +143,11 @@ sudo systemctl stop ufw
 ### B. Install Control Plane Elements
     
 1. Clone the free5GC repository
-    * To install the latest stable build (v3.0.3):
+    * To install the latest stable build (v3.0.4):
 
     ```bash
         cd ~
-        git clone --recursive -b v3.0.3 -j `nproc` https://github.com/free5gc/free5gc.git
+        git clone --recursive -b v3.0.4 -j `nproc` https://github.com/free5gc/free5gc.git
         cd free5gc
     ```
 
@@ -193,21 +196,30 @@ uname -r
 2. Retrieve the 5G GTP-U kernel module using `git` and build it
 
 ```bash
-git clone -b v0.1.0 https://github.com/PrinzOwO/gtp5g.git
+git clone -b v0.2.0 https://github.com/PrinzOwO/gtp5g.git
 cd gtp5g
 make
 sudo make install
 ```
 
-3. Build the UPF
+3. Build the UPF (you may skip this step if you built all network functions above):
 
-```bash
-cd ~/free5gc/src/upf
-mkdir build
-cd build
-cmake ..
-make -j`nproc`
-```
+   a. to build using make:
+   
+   ```bash
+   cd ~/free5gc
+   make upf
+   ```
+  
+   b. alternatively, to build manually:
+
+   ```bash
+   cd ~/free5gc/src/upf
+   mkdir build
+   cd build
+   cmake ..
+   make -j`nproc`
+   ```
 
 4. Customize the UPF as desired.  The UPF configuration file is `free5gc/src/upf/build/config/upfcfg.yaml`.
 
@@ -259,9 +271,9 @@ cd ~/free5gc/
 sudo ./bin/n3iwf
 ```
 
-### C. Run all-in-one with outside RAN
+### C. Run all-in-one with external RAN
 
-Refer to this [sample config](./sample/ran_attach_config) if you wish to connect an outside RAN with a complete free5GC core network.
+Refer to this [sample config](./sample/ran_attach_config) if you wish to connect an external RAN with a complete free5GC core network.
 
 ### D. Deploy within containers
 
@@ -269,64 +281,78 @@ Refer to this [sample config](./sample/ran_attach_config) if you wish to connect
 
 ## Test
 
-Start a Wireshark capture on any core-connected interface, applying the filter `'pfcp||icmp||gtp'`.  In order to run the tests, first do this:
+Start a Wireshark capture on any core-connected interface, applying the filter `'pfcp||icmp||gtp'`.
+
+In order to run the tests, first do this:
 
 ```bash
 cd ~/free5gc
 chmod +x ./test.sh
  ```
 
-The tests are all run from withing `~/free5gc`.
+The tests are all run from within `~/free5gc`.
 
-a. `TestRegistration`
+a. TestRegistration
 
 ```bash
 ./test.sh TestRegistration
 ```
 
-b. `TestServiceRequest`
+b. TestGUTIRegistration
+
+```bash
+./test.sh TestGUTIRegistration
+```
+
+c. TestServiceRequest
 
 ```bash
 ./test.sh TestServiceRequest
 ```
 
-c. `TestXnHandover`
+d. TestXnHandover
 
 ```bash
 ./test.sh TestXnHandover
 ```
 
-d. `TestDeregistration`
+e. TestDeregistration
 
 ```bash
 ./test.sh TestDeregistration
 ```
 
-e. `TestPDUSessionReleaseRequest`
+f. TestPDUSessionReleaseRequest
 
 ```bash
 ./test.sh TestPDUSessionReleaseRequest
 ```
 
-f. `TestPaging`
+g. TestPaging
 
 ```bash
 ./test.sh TestPaging
 ```
 
-g. `TestN2Handover`
+h. TestN2Handover
 
 ```bash
-/test.sh TestN2Handover
+./test.sh TestN2Handover
 ```
 
-h. `TestNon3GPP`
+i. TestNon3GPP
 
 ```bash
 ./test.sh TestNon3GPP
 ```
 
-i. `TestULCL`
+j. TestReSynchronisation
+
+```bash
+./test.sh TestReSynchronisation
+```
+
+k. TestULCL
 
 ```bash
 ./test_ulcl.sh -om 3 TestRegistration
