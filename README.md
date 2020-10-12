@@ -175,14 +175,14 @@ go mod download
 
     ```bash
         cd ~/free5gc
-        go build -o bin/amf -x src/amf/amf.go
+        make amf
     ```
 
     * To build all network functions:
 
     ```bash
         cd ~/free5gc
-        ./build.sh
+        make all
     ```
 
 ### C. Install User Plane Function (UPF)
