@@ -703,8 +703,9 @@ func TestNon3GPPUE(t *testing.T) {
 	eapVendorTypeData = append(eapVendorTypeData, anParameters...)
 
 	// NAS
-	ueSecurityCapability := setUESecurityCapability(ue)
-	registrationRequest := nasTestpacket.GetRegistrationRequestWith5GMM(nasMessage.RegistrationType5GSInitialRegistration, mobileIdentity5GS, nil, nil, ueSecurityCapability)
+	ueSecurityCapability := ue.GetUESecurityCapability()
+	registrationRequest := nasTestpacket.GetRegistrationRequest(nasMessage.RegistrationType5GSInitialRegistration,
+		mobileIdentity5GS, nil, ueSecurityCapability, nil, nil, nil)
 
 	nasLength := make([]byte, 2)
 	binary.BigEndian.PutUint16(nasLength, uint16(len(registrationRequest)))
@@ -840,7 +841,9 @@ func TestNon3GPPUE(t *testing.T) {
 	nasData = eapExpanded.VendorData[4:]
 
 	// Send NAS Security Mode Complete Msg
-	pdu = nasTestpacket.GetSecurityModeComplete(registrationRequest)
+	registrationRequestWith5GMM := nasTestpacket.GetRegistrationRequest(nasMessage.RegistrationType5GSInitialRegistration,
+		mobileIdentity5GS, nil, ueSecurityCapability, ue.Get5GMMCapability(), nil, nil)
+	pdu = nasTestpacket.GetSecurityModeComplete(registrationRequestWith5GMM)
 	pdu, err = EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCipheredWithNew5gNasSecurityContext, true, true)
 	assert.Nil(t, err)
 

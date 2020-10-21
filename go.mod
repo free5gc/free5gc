@@ -6,19 +6,19 @@ require (
 	git.cs.nctu.edu.tw/calee/sctp v1.0.0
 	github.com/aead/cmac v0.0.0-20160719120800-7af84192f0b1
 	github.com/antihax/optional v1.0.0
+	github.com/antonfisher/nested-logrus-formatter v1.2.0
 	github.com/bronze1man/radius v0.0.0-20190516032554-afd8baec892d
+	github.com/calee0219/fatal v0.0.1
 	github.com/cydev/zero v0.0.0-20160322155811-4a4535dd56e7
-	github.com/davecgh/go-spew v1.1.1
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/evanphx/json-patch v4.5.0+incompatible
 	github.com/gin-contrib/cors v1.3.0
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/gin-gonic/gin v1.4.0
-	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
-	github.com/google/go-cmp v0.4.0
 	github.com/google/gopacket v1.1.17
 	github.com/google/uuid v1.1.1
+	github.com/ishidawataru/sctp v0.0.0-20191218070446-00ab2ac2db07
 	github.com/kr/text v0.2.0 // indirect
 	github.com/mattn/go-isatty v0.0.8 // indirect
 	github.com/mitchellh/mapstructure v1.1.2
@@ -42,7 +42,6 @@ require (
 	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a // indirect
 	golang.org/x/sys v0.0.0-20200615200032-f1bc736245b1
 	golang.org/x/text v0.3.3 // indirect
-	golang.org/x/tools/gopls v0.4.0 // indirect
 	google.golang.org/appengine v1.6.1 // indirect
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 	gopkg.in/yaml.v2 v2.3.0

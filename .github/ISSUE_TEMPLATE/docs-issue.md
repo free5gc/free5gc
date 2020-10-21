@@ -7,8 +7,8 @@ assignees: ''
 
 ---
 
-**If you don't follow the issue template, your issue may be closed.**
-<!-- Remove above line after reporting the issue -->
+**If the design issue template is not followed, the issue might be closed.**
+<!-- Remove above warning line while reporting the issue -->
 
 ## Documentation request
 
@@ -16,7 +16,7 @@ What was unclear/insufficient/not covered in the documentation.
 
 ## Suggestion
 
-If possible: Provide some suggestion on how we can enhance the docs.
+free5GC will appreciate it, if suggestion’s are forwarded on how documents can be enhance.
 
 ## Additional context
 Add any other context or screenshots about the issue here.
