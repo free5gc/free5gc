@@ -146,8 +146,8 @@ if [[ $1 == "up" ]]; then
   ${EXEC_UPFNS} ip addr add 10.200.200.101/24 dev veth1
   ${EXEC_UPFNS} ip addr add 10.200.200.102/24 dev veth1
 
-  #sudo ip link set dev upfgtp0 mtu 1500
-  #${EXEC_UPFNS} ip link set dev upfgtp0 mtu 1500
+  #sudo ip link set dev upfgtp mtu 1500
+  #${EXEC_UPFNS} ip link set dev upfgtp mtu 1500
 
   sudo ip netns add ${UENS}
   sudo ip link add veth2 type veth peer name veth3
