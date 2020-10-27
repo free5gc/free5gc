@@ -7,13 +7,11 @@ ueRoutingInfo:
     AN: 10.200.200.101
     PathList:
       - DestinationIP: 60.60.0.101
-        DestinationPort: 8888
         UPF: !!seq
           - BranchingUPF
           - AnchorUPF1
 
       - DestinationIP: 60.60.0.103
-        DestinationPort: 9999
         UPF: !!seq
           - BranchingUPF
           - AnchorUPF2
@@ -22,13 +20,22 @@ ueRoutingInfo:
     AN: 10.200.200.102
     PathList:
       - DestinationIP: 10.0.0.10
-        DestinationPort: 8888
         UPF: !!seq
           - BranchingUPF
           - AnchorUPF1
 
       - DestinationIP: 10.0.0.11
-        DestinationPort: 9999
         UPF: !!seq
           - BranchingUPF
           - AnchorUPF2
+
+routeProfile:
+  MEC1:
+    forwardingPolicyID: 10
+
+pfdDataForApp:
+  - applicationId: edge
+    pfds:
+      - pfdID: pfd1
+        flowDescriptions:
+          - permit out ip from 60.60.0.1 8080 to any
