@@ -67,7 +67,7 @@ jobs:
           lsmod | grep gtp
               
       - name: Build NFs
-        run: sudo ./build.sh
+        run: sudo make all
           
       - name: TestRegistration
         run: |
