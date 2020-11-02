@@ -67,18 +67,24 @@ jobs:
           lsmod | grep gtp
               
       - name: Build NFs
-        run: sudo ./build.sh
+        run: sudo make all
           
       - name: TestRegistration
         run: |
           chmod +x test.sh
           ./test.sh TestRegistration
+      
+      - name: TestGUTIRegistration
+        run: ./test.sh TestGUTIRegistration
         
       - name: TestServiceRequest
         run: ./test.sh TestRegistration
       
       - name: TestXnHandover
         run: ./test.sh TestXnHandover
+      
+      - name: TestN2Handover
+        run: ./test.sh TestN2Handover
          
       - name: TestDeregistration
         run: ./test.sh TestDeregistration
@@ -88,12 +94,9 @@ jobs:
          
       - name: TestPaging
         run: ./test.sh TestPaging
-         
-      - name: TestN2Handover
-        run: ./test.sh TestN2Handover
        
       - name: TestNon3GPP
         run: ./test.sh TestNon3GPP
 
-      - name: TestAFInfluenceOnTrafficRouting
-        run: ./test.sh TestAFInfluenceOnTrafficRouting
+      - name: TestReSynchronisation
+        run: ./test.sh TestReSynchronisation

@@ -77,6 +77,8 @@ sudo ip link set free5gc-br up
 sudo ip link set br-veth0 up
 sudo ip link set br-veth0 master free5gc-br
 
+sudo iptables -I FORWARD 1 -j ACCEPT
+
 # Setup network namespace
 for i in $(seq -f "%02g" 1 $UPF_NUM); do
     sudo ip netns add "${UPFNS}${i}"
@@ -124,6 +126,8 @@ done
 sudo ip addr del 60.60.0.1/32 dev lo
 sudo ip link del veth0
 sudo ip link del free5gc-br
+
+sudo iptables -D FORWARD -j ACCEPT
 
 for i in $(seq -f "%02g" 1 $UPF_NUM); do
   if [ ${DUMP_NS} ]; then

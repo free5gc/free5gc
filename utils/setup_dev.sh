@@ -53,7 +53,7 @@ if [[ $1 == "up" ]]; then
   echo "Checking if gtp5g is installed..."
   if [[ ! -d "$FREE5GC_DIR/src/upf/build/gtp5g" ]]; then
     echo "gtp5g not installed"
-    GTP5G_REPO_OWNER="bjoern-r"
+    GTP5G_REPO_OWNER="jplobianco" #bjoern-r"
 
     if [[ $KERNEL_VERSION -ge 5 ]] ; then
       GTP5G_REPO_OWNER="PrinzOwO"
@@ -84,16 +84,16 @@ if [[ $1 == "up" ]]; then
   ######################################################
 
   # adding hostnames to /etc/hosts
-  echo "Adding hostnames to /etc/hosts..."
-  for host in "${HOSTNAMES[@]}"; do
-    grep "$host" /etc/hosts > /dev/null
-    if [[ $? -gt 0 ]]; then
-      echo "$host" >> /etc/hosts > /dev/null
-      echo "Hostname entry '$host' added to /etc/hosts"
-    else
-      echo "Hostname entry '$host' is already specified in /etc/hosts"
-    fi
-  done
+#  echo "Adding hostnames to /etc/hosts..."
+#  for host in "${HOSTNAMES[@]}"; do
+#    grep "$host" /etc/hosts > /dev/null
+#    if [[ $? -gt 0 ]]; then
+#      echo "$host" >> /etc/hosts > /dev/null
+#      echo "Hostname entry '$host' added to /etc/hosts"
+#    else
+#      echo "Hostname entry '$host' is already specified in /etc/hosts"
+#    fi
+#  done
 
   # create network namespaces
   echo "Creating network namespaces.."
@@ -146,8 +146,8 @@ if [[ $1 == "up" ]]; then
   ${EXEC_UPFNS} ip addr add 10.200.200.101/24 dev veth1
   ${EXEC_UPFNS} ip addr add 10.200.200.102/24 dev veth1
 
-  #sudo ip link set dev upfgtp0 mtu 1500
-  #${EXEC_UPFNS} ip link set dev upfgtp0 mtu 1500
+  #sudo ip link set dev upfgtp mtu 1500
+  #${EXEC_UPFNS} ip link set dev upfgtp mtu 1500
 
   sudo ip netns add ${UENS}
   sudo ip link add veth2 type veth peer name veth3
@@ -225,11 +225,11 @@ elif [[ $1 == "down" ]]; then
   fi
   echo "gtp5g cleaned and removed from kernel"
 
-  echo "Removing hostnames from /etc/hosts..."
-  for host in "${HOSTNAMES[@]}"; do
-    sudo sed -i "/$host/d" /etc/hosts
-  done
-  echo "Hostnames removed from /etc/hosts"
+#  echo "Removing hostnames from /etc/hosts..."
+#  for host in "${HOSTNAMES[@]}"; do
+#    sudo sed -i "/$host/d" /etc/hosts
+#  done
+#  echo "Hostnames removed from /etc/hosts"
 
   # TODO: remove message queues
   rm /dev/mqueue/*
