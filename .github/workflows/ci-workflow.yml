@@ -60,7 +60,7 @@ jobs:
       - name: GTP5G module
         run: | 
           uname -r
-          git clone -b v0.2.0 https://github.com/PrinzOwO/gtp5g.git
+          git clone -b v0.2.0 https://github.com/PrinzOwO/gtp5g.git ./src/upf/build/
           cd src/upf/build
           make
           sudo make install    
