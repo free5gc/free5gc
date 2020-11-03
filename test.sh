@@ -39,7 +39,7 @@ fi
 cp config/test/smfcfg.single.test.conf config/test/smfcfg.test.conf
 
 GOPATH=$HOME/go
-if [ $OS == "Ubuntu" ]; then
+if [[ $OS == 'Ubuntu' ]] || [[ $OS == 'Linux Mint' ]]; then
     GOROOT=/usr/local/go
 elif [ $OS == "Fedora" ]; then
     GOROOT=/usr/lib/golang

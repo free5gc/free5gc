@@ -20,7 +20,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.14.7
+          go-version: 1.14.10
         
       - name: Check Versions
         run: |
@@ -37,8 +37,7 @@ jobs:
           sudo ln -s $GOROOT /usr/local/go
           
       - name: Install Go Deps
-        run: | 
-          go mod download
+        run: go mod download
           
       - name: MongoDB
         uses: DigiPie/mongo-action@v1.0.0
@@ -56,47 +55,58 @@ jobs:
           sudo apt -y update
           sudo apt -y install git gcc cmake autoconf libtool pkg-config libmnl-dev libyaml-dev
           go get -u github.com/sirupsen/logrus
-          
+          gcc --version
+
       - name: GTP5G module
         run: | 
           uname -r
-          git clone -b v0.2.0 https://github.com/PrinzOwO/gtp5g.git ./src/upf/build/
-          cd src/upf/build
+          git clone -b v0.2.0 https://github.com/PrinzOwO/gtp5g.git
+          cd gtp5g
           make
           sudo make install    
           lsmod | grep gtp
-              
+
       - name: Build NFs
-        run: sudo make all
+        run: sudo make -f Makefile-CI all
           
       - name: TestRegistration
         run: |
           chmod +x test.sh
-          ./test.sh TestRegistration
+          sudo ./test.sh TestRegistration
+        timeout-minutes: 3
       
       - name: TestGUTIRegistration
-        run: ./test.sh TestGUTIRegistration
+        run: sleep 7 && sudo ./test.sh TestGUTIRegistration
+        timeout-minutes: 3
         
       - name: TestServiceRequest
-        run: ./test.sh TestRegistration
+        run: sleep 7 && sudo ./test.sh TestRegistration
+        timeout-minutes: 3
       
       - name: TestXnHandover
-        run: ./test.sh TestXnHandover
+        run: sleep 7 && sudo ./test.sh TestXnHandover
+        timeout-minutes: 3
       
       - name: TestN2Handover
-        run: ./test.sh TestN2Handover
+        run: sleep 7 && sudo ./test.sh TestN2Handover
+        timeout-minutes: 3
          
       - name: TestDeregistration
-        run: ./test.sh TestDeregistration
+        run: sleep 7 && sudo ./test.sh TestDeregistration
+        timeout-minutes: 3
          
       - name: TestPDUSessionReleaseRequest
-        run: ./test.sh TestPDUSessionReleaseRequest
+        run: sleep 7 && sudo ./test.sh TestPDUSessionReleaseRequest
+        timeout-minutes: 3
          
       - name: TestPaging
-        run: ./test.sh TestPaging
+        run: sleep 7 && sudo ./test.sh TestPaging
+        timeout-minutes: 3
        
       - name: TestNon3GPP
-        run: ./test.sh TestNon3GPP
+        run: sleep 7 && sudo ./test.sh TestNon3GPP
+        timeout-minutes: 3
 
       - name: TestReSynchronisation
-        run: ./test.sh TestReSynchronisation
+        run: sleep 7 && sudo ./test.sh TestReSynchronisation
+        timeout-minutes: 3
