@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # use some fixed parameters for testing (milenage test set 19)
-cd ..
+cd ../../../
 go build -o ./bin/ue -x ./src/ue/ue.go
 sudo ip netns exec UEns ./bin/ue  #--ping=1 #\
 #                                  --plmnid=010203 \
