@@ -1,99 +1,99 @@
 [submodule "webconsole"]
 	path = webconsole
-	url = https://github.com/LABORA-INF-UFG/webconsole.git
+	url = https://github.com/my5G/webconsole.git
 [submodule "src/amf"]
 	path = src/amf
-	url = https://github.com/LABORA-INF-UFG/amf.git
+	url = https://github.com/my5G/amf.git
 [submodule "src/ausf"]
 	path = src/ausf
-	url = https://github.com/LABORA-INF-UFG/ausf.git
+	url = https://github.com/my5G/ausf.git
 [submodule "src/n3iwf"]
 	path = src/n3iwf
-	url = https://github.com/LABORA-INF-UFG/n3iwf.git
+	url = https://github.com/my5G/n3iwf.git
 [submodule "src/nrf"]
 	path = src/nrf
-	url = https://github.com/LABORA-INF-UFG/nrf.git
+	url = https://github.com/my5G/nrf.git
 [submodule "src/nssf"]
 	path = src/nssf
-	url = https://github.com/LABORA-INF-UFG/nssf.git
+	url = https://github.com/my5G/nssf.git
 [submodule "src/pcf"]
 	path = src/pcf
-	url = https://github.com/LABORA-INF-UFG/pcf.git
+	url = https://github.com/my5G/pcf.git
 [submodule "src/smf"]
 	path = src/smf
-	url = https://github.com/LABORA-INF-UFG/smf.git
+	url = https://github.com/my5G/smf.git
 [submodule "src/udm"]
 	path = src/udm
-	url = https://github.com/LABORA-INF-UFG/udm.git
+	url = https://github.com/my5G/udm.git
 [submodule "src/udr"]
 	path = src/udr
-	url = https://github.com/LABORA-INF-UFG/udr.git
+	url = https://github.com/my5G/udr.git
 [submodule "src/upf"]
 	path = src/upf
-	url = https://github.com/LABORA-INF-UFG/upf.git
+	url = https://github.com/my5G/upf.git
 [submodule "lib/aes"]
 	path = lib/aes
-	url = https://github.com/LABORA-INF-UFG/aes.git
+	url = https://github.com/my5G/aes.git
 [submodule "lib/aper"]
 	path = lib/aper
-	url = https://github.com/LABORA-INF-UFG/aper.git
+	url = https://github.com/my5G/aper.git
 [submodule "lib/CommonConsumerTestData"]
 	path = lib/CommonConsumerTestData
-	url = https://github.com/LABORA-INF-UFG/CommonConsumerTestData.git
+	url = https://github.com/my5G/CommonConsumerTestData.git
 [submodule "lib/flowdesc"]
 	path = lib/flowdesc
-	url = https://github.com/LABORA-INF-UFG/flowdesc.git
+	url = https://github.com/my5G/flowdesc.git
 [submodule "lib/fsm"]
 	path = lib/fsm
-	url = https://github.com/LABORA-INF-UFG/fsm.git
+	url = https://github.com/my5G/fsm.git
 [submodule "lib/http2_util"]
 	path = lib/http2_util
-	url = https://github.com/LABORA-INF-UFG/http2_util.git
+	url = https://github.com/my5G/http2_util.git
 [submodule "lib/http_wrapper"]
 	path = lib/http_wrapper
-	url = https://github.com/LABORA-INF-UFG/http_wrapper.git
+	url = https://github.com/my5G/http_wrapper.git
 [submodule "lib/logger_util"]
 	path = lib/logger_util
-	url = https://github.com/LABORA-INF-UFG/logger_util.git
+	url = https://github.com/my5G/logger_util.git
 [submodule "lib/milenage"]
 	path = lib/milenage
-	url = https://github.com/LABORA-INF-UFG/milenage.git
+	url = https://github.com/my5G/milenage.git
 [submodule "lib/MongoDBLibrary"]
 	path = lib/MongoDBLibrary
-	url = https://github.com/LABORA-INF-UFG/MongoDBLibrary.git
+	url = https://github.com/my5G/MongoDBLibrary.git
 [submodule "lib/nas"]
 	path = lib/nas
-	url = https://github.com/LABORA-INF-UFG/nas.git
+	url = https://github.com/my5G/nas.git
 [submodule "lib/ngap"]
 	path = lib/ngap
-	url = https://github.com/LABORA-INF-UFG/ngap.git
+	url = https://github.com/my5G/ngap.git
 [submodule "lib/openapi"]
 	path = lib/openapi
-	url = https://github.com/LABORA-INF-UFG/openapi.git
+	url = https://github.com/my5G/openapi.git
 [submodule "lib/path_util"]
 	path = lib/path_util
-	url = https://github.com/LABORA-INF-UFG/path_util.git
+	url = https://github.com/my5G/path_util.git
 [submodule "lib/pfcp"]
 	path = lib/pfcp
-	url = https://github.com/LABORA-INF-UFG/pfcp.git
+	url = https://github.com/my5G/pfcp.git
 [submodule "lib/TimeDecode"]
 	path = lib/TimeDecode
-	url = https://github.com/LABORA-INF-UFG/TimeDecode.git
+	url = https://github.com/my5G/TimeDecode.git
 [submodule "lib/timer"]
 	path = lib/timer
-	url = https://github.com/LABORA-INF-UFG/timer.git
+	url = https://github.com/my5G/timer.git
 [submodule "lib/tlv"]
 	path = lib/tlv
-	url = https://github.com/LABORA-INF-UFG/tlv.git
+	url = https://github.com/my5G/tlv.git
 [submodule "lib/UeauCommon"]
 	path = lib/UeauCommon
-	url = https://github.com/LABORA-INF-UFG/UeauCommon.git
+	url = https://github.com/my5G/UeauCommon.git
 [submodule "lib/util_3gpp"]
 	path = lib/util_3gpp
-	url = https://github.com/LABORA-INF-UFG/util_3gpp.git
+	url = https://github.com/my5G/util_3gpp.git
 [submodule "lib/logger_conf"]
 	path = lib/logger_conf
-	url = https://github.com/LABORA-INF-UFG/logger_conf
+	url = https://github.com/my5G/logger_conf
 [submodule "lib/idgenerator"]
 	path = lib/idgenerator
-	url = https://github.com/LABORA-INF-UFG/idgenerator.git
+	url = https://github.com/my5G/idgenerator.git
