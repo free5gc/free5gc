@@ -3,6 +3,7 @@
 PID_LIST=()
 
 cd src/upf/build
+sudo -v
 sudo -E ./bin/free5gc-upfd &
 PID_LIST+=($!)
 

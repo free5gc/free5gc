@@ -27,11 +27,6 @@ IFACE=$2
 
 if [[ $1 == "up" ]]; then
   echo "Creating network interfaces and namespaces..."
-
-  # create namespaces
-  sudo ip netns add $UPFNS
-  sudo ip netns add $UENS
-
   # create network interfaces and add ip addresses
   # 5gc network (it's not needed but helps to organize/separate the networks)
   sudo ip link add br-5gc type  bridge
