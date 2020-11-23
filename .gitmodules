@@ -97,3 +97,6 @@
 [submodule "lib/idgenerator"]
 	path = lib/idgenerator
 	url = https://github.com/free5gc/idgenerator.git
+[submodule "openapi"]
+	path = openapi
+	url = https://github.com/fimal/openapi.git
