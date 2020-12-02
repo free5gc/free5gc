@@ -20,19 +20,19 @@
 
 
 - [Hardware Tested](#hardware-tested)
+- [Detail information](#detail-information)
 - [Questions](#questions)
 - [Recommended Environment](#recommended-environment)
 - [Installation](#installation)
   - [A. Prerequisites](#a-prerequisites)
-  - [B. Install Control Plane Elements](#b-install-control-plane-elements)
-  - [C. Install User Plane Function (UPF)](#c-install-user-plane-function-upf)
+  - [B. Install User Plane Function (UPF)](#b-install-user-plane-function-upf)
+  - [C. Install Control Plane Elements](#c-install-control-plane-elements)
 - [Run](#run)
   - [A. Run the Core Network](#a-run-the-core-network)
   - [B. Run the N3IWF (Individually)](#b-run-the-n3iwf-individually)
   - [C. Run all-in-one with outside RAN](#c-run-all-in-one-with-outside-ran)
   - [D. Deploy within containers](#d-deploy-within-containers)
 - [Test](#test)
-- [More information](#more-information)
 - [Release Note](#release-note)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -41,9 +41,13 @@
 
 In the market today, there are neither hardware gNB nor hardware UEs that interface directly with a standalone 5GC, so no hardware testing has yet been performed against free5gc. 
 
+## Detail information
+
+For details, reference to the free5gc [wiki](https://github.com/free5gc/free5gc/wiki).
+
 ## Questions
 
-For questions and support please use the [official forum](https://forum.free5gc.org). The issue list of this repo is exclusively for bug reports and feature requests.
+For questions and support please use the [official forum](https://forum.free5gc.org) or [gitter chat](https://gitter.im/free5gc/community). The issue list of this repo is exclusively for bug reports and feature requests.
 
 ## Recommended Environment
 
@@ -129,7 +133,7 @@ sudo systemctl start mongodb
 
 ```bash
 sudo apt -y update
-sudo apt -y install git gcc cmake autoconf libtool pkg-config libmnl-dev libyaml-dev
+sudo apt -y install git gcc cmake autoconf libtool pkg-config libmnl-dev libyaml-dev linux-headers-$(uname -r)
 go get -u github.com/sirupsen/logrus
 ```
 
@@ -141,7 +145,45 @@ sudo iptables -t nat -A POSTROUTING -o <dn_interface> -j MASQUERADE
 sudo systemctl stop ufw
 ```
 
-### B. Install Control Plane Elements
+### B. Install User Plane Function (UPF)
+    
+1. As noted above, the GTP kernel module used by the UPF requires that you use Linux kernel version `5.0.0-23-generic`.  To verify your version:
+
+```bash
+uname -r
+```
+
+2. Retrieve the 5G GTP-U kernel module using `git` and build it
+
+```bash
+git clone -b v0.2.0 https://github.com/PrinzOwO/gtp5g.git
+cd gtp5g
+make
+sudo make install
+```
+
+3. Build the UPF (you may skip this step if you built all network functions above):
+
+   a. to build using make:
+   
+   ```bash
+   cd ~/free5gc
+   make upf
+   ```
+  
+   b. alternatively, to build manually:
+
+   ```bash
+   cd ~/free5gc/src/upf
+   mkdir build
+   cd build
+   cmake ..
+   make -j`nproc`
+   ```
+
+4. Customize the UPF as desired.  The UPF configuration file is `free5gc/src/upf/build/config/upfcfg.yaml`.
+
+### C. Install Control Plane Elements
     
 1. Clone the free5GC repository
     * To install the latest stable build (v3.0.4):
@@ -185,44 +227,6 @@ go mod download
         cd ~/free5gc
         make all
     ```
-
-### C. Install User Plane Function (UPF)
-    
-1. As noted above, the GTP kernel module used by the UPF requires that you use Linux kernel version `5.0.0-23-generic`.  To verify your version:
-
-```bash
-uname -r
-```
-
-2. Retrieve the 5G GTP-U kernel module using `git` and build it
-
-```bash
-git clone -b v0.2.0 https://github.com/PrinzOwO/gtp5g.git
-cd gtp5g
-make
-sudo make install
-```
-
-3. Build the UPF (you may skip this step if you built all network functions above):
-
-   a. to build using make:
-   
-   ```bash
-   cd ~/free5gc
-   make upf
-   ```
-  
-   b. alternatively, to build manually:
-
-   ```bash
-   cd ~/free5gc/src/upf
-   mkdir build
-   cd build
-   cmake ..
-   make -j`nproc`
-   ```
-
-4. Customize the UPF as desired.  The UPF configuration file is `free5gc/src/upf/build/config/upfcfg.yaml`.
 
 ## Run
 
@@ -358,10 +362,6 @@ k. TestULCL
 ```bash
 ./test_ulcl.sh -om 3 TestRegistration
 ```
-
-## More information
-
-For more details, reference the free5gc [wiki](https://github.com/free5gc/free5gc/wiki).
 
 ## Release Note
 
