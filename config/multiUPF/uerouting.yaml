@@ -1,0 +1,25 @@
+info:
+  version: 1.0.0
+  description: Routing information for UE
+
+ueRoutingInfo: # the list of UE routing information
+  UE1: # Group Name
+    members:
+    - imsi-2089300000000 # Subscription Permanent Identifier of the UE
+    - imsi-2089300000001 # Subscription Permanent Identifier of the UE
+    topology: 
+    # Network topology for this group (Uplink: A->B, Downlink: B->A)
+    # default path derived from this topology
+    # node name should be consistent with smfcfg.yaml
+      - A: gNB1
+        B: UPF1
+      - A: UPF1
+        B: UPF3
+      - A: UPF1
+        B: UPF4
+    specificPath:
+      - dest: 60.60.0.103/32 # the destination IP address on Data Network (DN)
+        # the order of UPF nodes in this path. We use the UPF's name to represent each UPF node.
+        # The UPF's name should be consistent with smfcfg.yaml
+        path: [UPF1, UPF2]
+

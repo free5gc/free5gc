@@ -25,7 +25,6 @@ configuration:
           dns: 
             ipv4: 8.8.8.8
             ipv6: 2001:4860:4860::8888
-          ueSubnet: 60.60.0.0/16
     - sNssai:
         sst: 1
         sd: 112233
@@ -34,7 +33,6 @@ configuration:
           dns: 
             ipv4: 8.8.8.8
             ipv6: 2001:4860:4860::8888
-          ueSubnet: 60.61.0.0/16
   pfcp:
     addr: 10.200.200.1
   userplane_information:
@@ -51,6 +49,8 @@ configuration:
               sd: 010203
             dnnUpfInfoList:
               - dnn: internet
+                pools:
+                  - cidr: 60.60.0.0/16
         interfaces:
           - interfaceType: N3
             endpoints:
@@ -69,6 +69,8 @@ configuration:
               sd: 112233
             dnnUpfInfoList:
               - dnn: internet2
+                pools:
+                  - cidr: 60.61.0.0/16
         interfaces:
           - interfaceType: N3
             endpoints:
