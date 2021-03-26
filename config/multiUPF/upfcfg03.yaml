@@ -1,0 +1,30 @@
+info:
+  version: 1.0.0
+  description: UPF configuration
+
+configuration:
+  # the kind of log output
+    # debugLevel: how detailed to output, value: trace, debug, info, warn, error, fatal, panic
+    # ReportCaller: enable the caller report or not, value: true or false
+  debugLevel: info
+  ReportCaller: false
+
+  # The IP list of the N4 interface on this UPF (Can't set to 0.0.0.0)
+  pfcp:
+    - addr: 10.200.200.103
+
+  # The IP list of the N3/N9 interfaces on this UPF
+  # If there are multiple connection, set addr to 0.0.0.0 or list all the addresses
+  gtpu:
+    - addr: 10.200.200.103
+    # [optional] gtpu.name
+    # - name: upf.5gc.nctu.me
+    # [optional] gtpu.ifname
+    # - ifname: gtpif
+
+  # The DNN list supported by UPF
+  dnn_list:
+    - dnn: internet # Data Network Name
+      cidr: 60.61.0.0/16 # Classless Inter-Domain Routing for assigned IPv4 pool of UE
+      # [optional] dnn_list[*].natifname
+      # natifname: eth0
