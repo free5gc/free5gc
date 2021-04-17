@@ -1,5 +1,5 @@
 info:
-  version: 1.0.0
+  version: 1.0.1
   description: AMF initial local configuration
 
 configuration:
@@ -50,6 +50,15 @@ configuration:
   networkName:  # the name of this core network
     full: free5GC
     short: free
+  networkFeatureSupport5GS: # 5gs Network Feature Support IE, refer to TS 24.501
+    enable: true # append this IE in Registration accept or not
+    imsVoPS: 0 # IMS voice over PS session indicator (uinteger, range: 0~1)
+    emc: 0 # Emergency service support indicator for 3GPP access (uinteger, range: 0~3)
+    emf: 0 # Emergency service fallback indicator for 3GPP access (uinteger, range: 0~3)
+    iwkN26: 0 # Interworking without N26 interface indicator (uinteger, range: 0~1)
+    mpsi: 0 # MPS indicator (uinteger, range: 0~1)
+    emcN3: 0 # Emergency service support indicator for Non-3GPP access (uinteger, range: 0~1)
+    mcsi: 0 # MCS indicator (uinteger, range: 0~1)
   t3502Value: 720  # timer value (seconds) at UE side
   t3512Value: 3600 # timer value (seconds) at UE side
   non3gppDeregistrationTimerValue: 3240 # timer value (seconds) at UE side
