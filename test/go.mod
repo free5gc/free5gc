@@ -3,31 +3,28 @@ module test
 go 1.14
 
 require (
-	github.com/free5gc/CommonConsumerTestData v1.0.0
-	github.com/free5gc/MongoDBLibrary v1.0.0
-	github.com/free5gc/UeauCommon v1.0.0
-	github.com/free5gc/amf v1.3.0
-	github.com/free5gc/aper v1.0.0
-	github.com/free5gc/ausf v1.3.0
-	github.com/free5gc/http2_util v1.0.0
-	github.com/free5gc/logger_util v1.0.0
-	github.com/free5gc/milenage v1.0.0
-	github.com/free5gc/n3iwf v1.3.0
-	github.com/free5gc/nas v1.0.0
-	github.com/free5gc/ngap v1.0.0
-	github.com/free5gc/nrf v1.3.0
-	github.com/free5gc/nssf v1.3.0
-	github.com/free5gc/openapi v1.0.0
-	github.com/free5gc/path_util v1.0.0
-	github.com/free5gc/pcf v1.3.0
-	github.com/free5gc/smf v1.3.0
-	github.com/free5gc/udm v1.3.0
-	github.com/free5gc/udr v1.3.0
 	git.cs.nctu.edu.tw/calee/sctp v1.1.0
 	github.com/Djarvur/go-err113 v0.1.0 // indirect
 	github.com/aws/aws-sdk-go v1.36.24 // indirect
 	github.com/calee0219/fatal v0.0.1
-	github.com/gin-gonic/gin v1.6.3
+	github.com/free5gc/CommonConsumerTestData v1.0.0
+	github.com/free5gc/MongoDBLibrary v1.0.0
+	github.com/free5gc/UeauCommon v1.0.0
+	github.com/free5gc/amf v1.0.0
+	github.com/free5gc/aper v1.0.0
+	github.com/free5gc/ausf v1.0.0
+	github.com/free5gc/milenage v1.0.0
+	github.com/free5gc/n3iwf v1.0.0
+	github.com/free5gc/nas v1.0.0
+	github.com/free5gc/ngap v1.0.1
+	github.com/free5gc/nrf v1.0.0
+	github.com/free5gc/nssf v1.0.0
+	github.com/free5gc/openapi v1.0.0
+	github.com/free5gc/path_util v1.0.0
+	github.com/free5gc/pcf v1.0.0
+	github.com/free5gc/smf v1.0.0
+	github.com/free5gc/udm v1.0.0
+	github.com/free5gc/udr v1.0.0
 	github.com/go-ping/ping v0.0.0-20200918120429-e8ae07c3cec8
 	github.com/golangci/golangci-lint v1.35.2
 	github.com/golangci/misspell v0.3.5 // indirect
