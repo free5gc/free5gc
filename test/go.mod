@@ -11,12 +11,12 @@ require (
 	github.com/free5gc/MongoDBLibrary v1.0.0
 	github.com/free5gc/UeauCommon v1.0.0
 	github.com/free5gc/amf v1.0.0
-	github.com/free5gc/aper v1.0.0
+	github.com/free5gc/aper v1.0.1
 	github.com/free5gc/ausf v1.0.0
 	github.com/free5gc/milenage v1.0.0
 	github.com/free5gc/n3iwf v1.0.0
 	github.com/free5gc/nas v1.0.0
-	github.com/free5gc/ngap v1.0.1
+	github.com/free5gc/ngap v1.0.2
 	github.com/free5gc/nrf v1.0.0
 	github.com/free5gc/nssf v1.0.0
 	github.com/free5gc/openapi v1.0.0
