@@ -52,9 +52,8 @@ require (
 	github.com/vishvananda/netlink v1.1.0
 	go.mongodb.org/mongo-driver v1.4.4
 	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad // indirect
-	golang.org/x/net v0.0.0-20201224014010-6772e930b67b
-	golang.org/x/sys v0.0.0-20210112091331-59c308dcf3cc
-	golang.org/x/text v0.3.5 // indirect
+	golang.org/x/net v0.0.0-20210501142056-aec3718b3fa0
+	golang.org/x/sys v0.0.0-20210603081109-ebe580a85c40
 	golang.org/x/tools v0.0.0-20210111221946-d33bae441459 // indirect
 	gopkg.in/ini.v1 v1.62.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0

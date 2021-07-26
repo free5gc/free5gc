@@ -320,7 +320,7 @@ func buildEAP5GANParameters() []byte {
 	// Build Establishment Cause
 	anParameter = make([]byte, 2)
 	establishmentCause := make([]byte, 1)
-	establishmentCause[0] = message.EstablishmentCauseMO_Data
+	establishmentCause[0] = message.EstablishmentCauseMO_Signalling
 	anParameter[0] = message.ANParametersTypeEstablishmentCause
 	anParameter[1] = byte(len(establishmentCause))
 	anParameter = append(anParameter, establishmentCause...)
