@@ -50,6 +50,7 @@ configuration:
   networkName:  # the name of this core network
     full: free5GC
     short: free
+  locality: area1 # Name of the location where a set of AMF, SMF and UPFs are located
   networkFeatureSupport5GS: # 5gs Network Feature Support IE, refer to TS 24.501
     enable: true # append this IE in Registration accept or not
     imsVoPS: 0 # IMS voice over PS session indicator (uinteger, range: 0~1)

@@ -87,6 +87,7 @@ configuration:
         B: AnchorUPF2
   ue_subnet: 60.60.0.0/16
   nrfUri: http://127.0.0.10:8000
+  locality: area1
   ulcl: false
 
 logger:
