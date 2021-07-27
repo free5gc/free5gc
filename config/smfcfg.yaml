@@ -31,6 +31,9 @@ configuration:
         - dnn: internet # Data Network Name
           dns: # the IP address of DNS
             ipv4: 8.8.8.8
+  plmnList: # the list of PLMN IDs that this SMF belongs to (optional, remove this key when unnecessary)
+    - mcc: "208" # Mobile Country Code (3 digits string, digit: 0~9)
+      mnc: "93" # Mobile Network Code (2 or 3 digits string, digit: 0~9)
   pfcp: # the IP address of N4 interface on this SMF (PFCP)
     addr: 127.0.0.1
   userplane_information: # list of userplane information
