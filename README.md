@@ -17,6 +17,8 @@ The free5GC is an open-source project for 5th generation (5G) mobile core networ
 
 For more information, please refer to [free5GC official site](https://free5gc.org/).
 
+This is test message
+
 ## Documentation
 
 For document, please reference to [Documentation](https://github.com/free5gc/free5gc/wiki).
