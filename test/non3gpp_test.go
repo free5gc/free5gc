@@ -286,18 +286,31 @@ func encryptProcedure(ikeSecurityAssociation *context.IKESecurityAssociation, ik
 
 }
 
+// [TS 24502] 9.3.2.2.2 EAP-Response/5G-NAS message
+// Define EAP-Response/5G-NAS message and AN-Parameters Format.
+
+// [TS 24501] 8.2.6.1.1  REGISTRATION REQUEST message content
+// For dealing with EAP-5G start, return EAP-5G response including
+// "AN-Parameters and NASPDU of Registration Request"
+
 func buildEAP5GANParameters() []byte {
 	var anParameters []byte
 
+	// [TS 24.502] 9.3.2.2.2.3
+	// AN-parameter value field in GUAMI, PLMN ID and NSSAI is coded as value part
+	// Therefore, IEI of AN-parameter is not needed to be included.
+
+	// anParameter = AN-parameter Type | AN-parameter Length | Value part of IE
+
 	// Build GUAMI
 	anParameter := make([]byte, 2)
-	guami := make([]byte, 7)
-	guami[1] = 0x02
-	guami[2] = 0xf8
-	guami[3] = 0x39
-	guami[4] = 0xca
-	guami[5] = 0xfe
-	guami[6] = 0x0
+	guami := make([]byte, 6)
+	guami[0] = 0x02
+	guami[1] = 0xf8
+	guami[2] = 0x39
+	guami[3] = 0xca
+	guami[4] = 0xfe
+	guami[5] = 0x0
 	anParameter[0] = message.ANParametersTypeGUAMI
 	anParameter[1] = byte(len(guami))
 	anParameter = append(anParameter, guami...)
@@ -306,8 +319,8 @@ func buildEAP5GANParameters() []byte {
 
 	// Build Establishment Cause
 	anParameter = make([]byte, 2)
-	establishmentCause := make([]byte, 2)
-	establishmentCause[1] = message.EstablishmentCauseMO_Data
+	establishmentCause := make([]byte, 1)
+	establishmentCause[0] = message.EstablishmentCauseMO_Signalling
 	anParameter[0] = message.ANParametersTypeEstablishmentCause
 	anParameter[1] = byte(len(establishmentCause))
 	anParameter = append(anParameter, establishmentCause...)
@@ -316,11 +329,10 @@ func buildEAP5GANParameters() []byte {
 
 	// Build PLMN ID
 	anParameter = make([]byte, 2)
-	plmnID := make([]byte, 5)
-	plmnID[1] = 3
-	plmnID[2] = 0x02
-	plmnID[3] = 0xf8
-	plmnID[4] = 0x39
+	plmnID := make([]byte, 3)
+	plmnID[0] = 0x02
+	plmnID[1] = 0xf8
+	plmnID[2] = 0x39
 	anParameter[0] = message.ANParametersTypeSelectedPLMNID
 	anParameter[1] = byte(len(plmnID))
 	anParameter = append(anParameter, plmnID...)
@@ -329,22 +341,22 @@ func buildEAP5GANParameters() []byte {
 
 	// Build NSSAI
 	anParameter = make([]byte, 2)
-	nssai := make([]byte, 2)
-	snssai := make([]byte, 6)
-	snssai[1] = 4
-	snssai[2] = 1
-	snssai[3] = 0x01
-	snssai[4] = 0x02
-	snssai[5] = 0x03
+	var nssai []byte
+	// s-nssai = s-nssai length(1 byte) | SST(1 byte) | SD(3 bytes)
+	snssai := make([]byte, 5)
+	snssai[0] = 4
+	snssai[1] = 1
+	snssai[2] = 0x01
+	snssai[3] = 0x02
+	snssai[4] = 0x03
 	nssai = append(nssai, snssai...)
-	snssai = make([]byte, 6)
-	snssai[1] = 4
-	snssai[2] = 1
-	snssai[3] = 0x11
-	snssai[4] = 0x22
-	snssai[5] = 0x33
+	snssai = make([]byte, 5)
+	snssai[0] = 4
+	snssai[1] = 1
+	snssai[2] = 0x11
+	snssai[3] = 0x22
+	snssai[4] = 0x33
 	nssai = append(nssai, snssai...)
-	nssai[1] = 12
 	anParameter[0] = message.ANParametersTypeRequestedNSSAI
 	anParameter[1] = byte(len(nssai))
 	anParameter = append(anParameter, nssai...)
