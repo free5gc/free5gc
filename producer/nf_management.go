@@ -55,9 +55,13 @@ func HandleNFRegisterRequest(request *http_wrapper.Request) *http_wrapper.Respon
 	logger.ManagementLog.Infoln("Handle NFRegisterRequest")
 	nfProfile := request.Body.(models.NfProfile)
 
-	header, response, problemDetails := NFRegisterProcedure(nfProfile)
+	header, response, isUpdate, problemDetails := NFRegisterProcedure(nfProfile)
 
 	if response != nil {
+		if isUpdate {
+			logger.ManagementLog.Traceln("update success")
+			return http_wrapper.NewResponse(http.StatusOK, header, response)
+		}
 		logger.ManagementLog.Traceln("register success")
 		return http_wrapper.NewResponse(http.StatusCreated, header, response)
 	} else if problemDetails != nil {
@@ -309,7 +313,7 @@ func GetNFInstanceProcedure(nfInstanceID string) (response map[string]interface{
 }
 
 func NFRegisterProcedure(nfProfile models.NfProfile) (header http.Header, response bson.M,
-	problemDetails *models.ProblemDetails) {
+	update bool, problemDetails *models.ProblemDetails) {
 	logger.ManagementLog.Traceln("[NRF] In NFRegisterProcedure")
 	var nf models.NfProfile
 
@@ -321,7 +325,7 @@ func NFRegisterProcedure(nfProfile models.NfProfile) (header http.Header, respon
 			Status: http.StatusBadRequest,
 			Detail: str1,
 		}
-		return nil, nil, problemDetails
+		return nil, nil, false, problemDetails
 	}
 
 	// make location header
@@ -354,13 +358,13 @@ func NFRegisterProcedure(nfProfile models.NfProfile) (header http.Header, respon
 		for _, uri := range uriList {
 			problemDetails = SendNFStatusNotify(Notification_event, nfInstanceUri, uri)
 			if problemDetails != nil {
-				return nil, nil, problemDetails
+				return nil, nil, true, problemDetails
 			}
 		}
 
 		header = make(http.Header)
 		header.Add("Location", locationHeaderValue)
-		return header, putData, nil
+		return header, putData, true, nil
 	} else { // Create NF Profile case
 		logger.ManagementLog.Infoln("Create NF Profile")
 		uriList := nrf_context.GetNofificationUri(nf)
@@ -371,14 +375,14 @@ func NFRegisterProcedure(nfProfile models.NfProfile) (header http.Header, respon
 		for _, uri := range uriList {
 			problemDetails = SendNFStatusNotify(Notification_event, nfInstanceUri, uri)
 			if problemDetails != nil {
-				return nil, nil, problemDetails
+				return nil, nil, false, problemDetails
 			}
 		}
 
 		header = make(http.Header)
 		header.Add("Location", locationHeaderValue)
 		logger.ManagementLog.Infoln("Location header: ", locationHeaderValue)
-		return header, putData, nil
+		return header, putData, false, nil
 	}
 }
 
