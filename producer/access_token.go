@@ -2,10 +2,12 @@ package producer
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/dgrijalva/jwt-go"
 
 	"github.com/free5gc/http_wrapper"
+	nrf_context "github.com/free5gc/nrf/context"
 	"github.com/free5gc/nrf/logger"
 	"github.com/free5gc/openapi/models"
 )
@@ -38,16 +40,18 @@ func AccessTokenProcedure(request models.AccessTokenReq) (response *models.Acces
 	var expiration int32 = 1000
 	scope := request.Scope
 	tokenType := "Bearer"
+	now := int32(time.Now().Unix())
 
 	// Create AccessToken
 	accessTokenClaims := models.AccessTokenClaims{
-		Iss:            "1234567",                  // TODO: NF instance id of the NRF
-		Sub:            request.NfInstanceId,       // nfInstanceId of service consumer
-		Aud:            request.TargetNfInstanceId, // nfInstanceId of service producer
-		Scope:          request.Scope,              // TODO: the name of the NF services for which the
-		Exp:            expiration,                 //       access_token is authorized for use
+		Iss:            nrf_context.Nrf_NfInstanceID, // TODO: NF instance id of the NRF
+		Sub:            request.NfInstanceId,         // nfInstanceId of service consumer
+		Aud:            request.TargetNfInstanceId,   // nfInstanceId of service producer
+		Scope:          request.Scope,                // TODO: the name of the NF services for which the
+		Exp:            now + expiration,             // access_token is authorized for use
 		StandardClaims: jwt.StandardClaims{},
 	}
+	accessTokenClaims.IssuedAt = int64(now)
 
 	mySigningKey := []byte("NRF") // AllYourBase
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, accessTokenClaims)
