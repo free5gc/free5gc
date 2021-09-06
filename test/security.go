@@ -34,8 +34,7 @@ func NASEncode(ue *RanUeContext, msg *nas.Message, securityContextAvailable bool
 			return
 		}
 
-		// TODO: Support for ue has nas connection in both accessType
-		if err = security.NASEncrypt(ue.CipheringAlg, ue.KnasEnc, ue.ULCount.Get(), security.Bearer3GPP,
+		if err = security.NASEncrypt(ue.CipheringAlg, ue.KnasEnc, ue.ULCount.Get(), ue.GetBearerType(),
 			security.DirectionUplink, payload); err != nil {
 			return
 		}
@@ -51,8 +50,8 @@ func NASEncode(ue *RanUeContext, msg *nas.Message, securityContextAvailable bool
 		// fmt.Println("security.DirectionUplink", security.DirectionUplink)
 		// fmt.Println("payload", payload)
 
-		mac32, err = security.NASMacCalculate(ue.IntegrityAlg, ue.KnasInt, ue.ULCount.Get(),
-			security.Bearer3GPP, security.DirectionUplink, payload)
+		mac32, err = security.NASMacCalculate(ue.IntegrityAlg, ue.KnasInt, ue.ULCount.Get(), ue.GetBearerType(),
+			security.DirectionUplink, payload)
 		if err != nil {
 			return
 		}
@@ -88,8 +87,7 @@ func NASDecode(ue *RanUeContext, securityHeaderType uint8, payload []byte) (msg 
 		fmt.Println("decode payload is ", payload)
 		// remove header
 		payload = payload[3:]
-
-		if err = security.NASEncrypt(ue.CipheringAlg, ue.KnasEnc, ue.DLCount.Get(), security.Bearer3GPP,
+		if err = security.NASEncrypt(ue.CipheringAlg, ue.KnasEnc, ue.DLCount.Get(), ue.GetBearerType(),
 			security.DirectionDownlink, payload); err != nil {
 			return nil, err
 		}
@@ -127,7 +125,7 @@ func NASDecode(ue *RanUeContext, securityHeaderType uint8, payload []byte) (msg 
 		}
 		ue.DLCount.SetSQN(sequenceNumber)
 
-		mac32, errNas := security.NASMacCalculate(ue.IntegrityAlg, ue.KnasInt, ue.DLCount.Get(), security.Bearer3GPP,
+		mac32, errNas := security.NASMacCalculate(ue.IntegrityAlg, ue.KnasInt, ue.DLCount.Get(), ue.GetBearerType(),
 			security.DirectionDownlink, payload)
 		if errNas != nil {
 			return nil, errNas
@@ -140,9 +138,8 @@ func NASDecode(ue *RanUeContext, securityHeaderType uint8, payload []byte) (msg 
 
 		// remove sequece Number
 		payload = payload[1:]
-		// TODO: Support for ue has nas connection in both accessType
 		if ciphered {
-			if err = security.NASEncrypt(ue.CipheringAlg, ue.KnasEnc, ue.DLCount.Get(), security.Bearer3GPP,
+			if err = security.NASEncrypt(ue.CipheringAlg, ue.KnasEnc, ue.DLCount.Get(), ue.GetBearerType(),
 				security.DirectionDownlink, payload); err != nil {
 				return nil, err
 			}

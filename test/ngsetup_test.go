@@ -20,6 +20,7 @@ import (
 	"github.com/free5gc/ngap"
 	nrf_service "github.com/free5gc/nrf/service"
 	nssf_service "github.com/free5gc/nssf/service"
+	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/path_util"
 	pcf_service "github.com/free5gc/pcf/service"
 	smf_service "github.com/free5gc/smf/service"
@@ -110,8 +111,9 @@ func TestNGSetup(t *testing.T) {
 
 func TestCN(t *testing.T) {
 	// New UE
-	ue := test.NewRanUeContext("imsi-2089300007487", 1, security.AlgCiphering128NEA2, security.AlgIntegrity128NIA2)
-	// ue := test.NewRanUeContext("imsi-2089300007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA0)
+	ue := test.NewRanUeContext("imsi-2089300007487", 1, security.AlgCiphering128NEA2, security.AlgIntegrity128NIA2,
+		models.AccessType__3_GPP_ACCESS)
+	// ue := test.NewRanUeContext("imsi-2089300007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA0, models.AccessType__3_GPP_ACCESS)
 	ue.AmfUeNgapId = 1
 	ue.AuthenticationSubs = test.GetAuthSubscription(TestGenAuthData.MilenageTestSet19.K,
 		TestGenAuthData.MilenageTestSet19.OPC,

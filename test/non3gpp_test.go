@@ -514,7 +514,8 @@ func applyXFRMRule(ue_is_initiator bool, childSecurityAssociation *context.Child
 
 func TestNon3GPPUE(t *testing.T) {
 	// New UE
-	ue := NewRanUeContext("imsi-2089300007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA2)
+	ue := NewRanUeContext("imsi-2089300007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA2,
+		models.AccessType_NON_3_GPP_ACCESS)
 	ue.AmfUeNgapId = 1
 	ue.AuthenticationSubs = getAuthSubscription()
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
