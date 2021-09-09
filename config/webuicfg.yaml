@@ -3,6 +3,23 @@ info:
   description: WebUI initial local configuration
 
 configuration:
-  mongodb: # the mongodb connected by this webui
-    name: free5gc # name of the mongodb
-    url: mongodb://localhost:27017 # a valid URL of the mongodb
+  mongodb:                          # the mongodb connected by this webui
+    name: free5gc                   # name of the mongodb
+    url: mongodb://localhost:27017  # a valid URL of the mongodb
+
+# the kind of log output
+# debugLevel: how detailed to output, value: trace, debug, info, warn, error, fatal, panic
+# ReportCaller: enable the caller report or not, value: true or false
+logger:
+  WEBUI:
+    debugLevel: info
+    ReportCaller: true
+  PathUtil:
+    debugLevel: info
+    ReportCaller: false
+  OpenApi:
+    debugLevel: info
+    ReportCaller: false
+  MongoDBLibrary:
+    debugLevel: info
+    ReportCaller: false

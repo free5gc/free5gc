@@ -28,6 +28,7 @@ type RanUeContext struct {
 	KnasEnc            [16]uint8
 	KnasInt            [16]uint8
 	Kamf               []uint8
+	AnType             models.AccessType
 	AuthenticationSubs models.AuthenticationSubscription
 }
 
@@ -88,12 +89,14 @@ func GetSmPolicyData() (smPolicyData models.SmPolicyData) {
 	return TestRegistrationProcedure.TestSmPolicyDataTable[TestRegistrationProcedure.FREE5GC_CASE]
 }
 
-func NewRanUeContext(supi string, ranUeNgapId int64, cipheringAlg, integrityAlg uint8) *RanUeContext {
+func NewRanUeContext(supi string, ranUeNgapId int64, cipheringAlg, integrityAlg uint8,
+	AnType models.AccessType) *RanUeContext {
 	ue := RanUeContext{}
 	ue.RanUeNgapId = ranUeNgapId
 	ue.Supi = supi
 	ue.CipheringAlg = cipheringAlg
 	ue.IntegrityAlg = integrityAlg
+	ue.AnType = AnType
 	return &ue
 }
 
@@ -253,5 +256,15 @@ func (ue *RanUeContext) Get5GMMCapability() (capability5GMM *nasType.Capability5
 		Iei:   nasMessage.RegistrationRequestCapability5GMMType,
 		Len:   1,
 		Octet: [13]uint8{0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+	}
+}
+
+func (ue *RanUeContext) GetBearerType() uint8 {
+	if ue.AnType == models.AccessType__3_GPP_ACCESS {
+		return security.Bearer3GPP
+	} else if ue.AnType == models.AccessType_NON_3_GPP_ACCESS {
+		return security.BearerNon3GPP
+	} else {
+		return security.OnlyOneBearer
 	}
 }

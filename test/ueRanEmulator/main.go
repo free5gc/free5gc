@@ -190,8 +190,10 @@ func ueRanEmulator() error {
 	fmt.Printf("[UERANEM] NGSetup successfully\n")
 
 	// New UE
-	// ue := test.NewRanUeContext("imsi-2089300007487", 1, security.AlgCiphering128NEA2, security.AlgIntegrity128NIA2)
-	ue := test.NewRanUeContext(uerancfg.Supi, uerancfg.NgapID, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA2)
+	// ue := test.NewRanUeContext("imsi-2089300007487", 1, security.AlgCiphering128NEA2, security.AlgIntegrity128NIA2,
+	//	models.AccessType__3_GPP_ACCESS)
+	ue := test.NewRanUeContext(uerancfg.Supi, uerancfg.NgapID, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA2,
+		models.AccessType__3_GPP_ACCESS)
 	ue.AmfUeNgapId = uerancfg.NgapID
 	ue.AuthenticationSubs = test.GetAuthSubscription(uerancfg.K, uerancfg.Opc, uerancfg.Op)
 
