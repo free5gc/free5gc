@@ -29,7 +29,7 @@ do
 done
 shift $(($OPTIND - 1))
 
-TEST_POOL="TestRegistration|TestGUTIRegistration|TestServiceRequest|TestXnHandover|TestN2Handover|TestDeregistration|TestPDUSessionReleaseRequest|TestPaging|TestNon3GPP|TestReSynchronisation|TestDuplicateRegistration"
+TEST_POOL="TestRegistration|TestGUTIRegistration|TestServiceRequest|TestXnHandover|TestN2Handover|TestDeregistration|TestPDUSessionReleaseRequest|TestPaging|TestNon3GPP|TestAFInfluenceOnTrafficRouting|TestReSynchronisation|TestDuplicateRegistration"
 if [[ ! "$1" =~ $TEST_POOL ]]
 then
     echo "Usage: $0 [ ${TEST_POOL//|/ | } ]"
@@ -51,12 +51,14 @@ EXEC_UPFNS="sudo -E ip netns exec ${UPFNS}"
 
 export GIN_MODE=release
 
+trap handleSIGINT SIGINT
+
 # Setup network namespace
 sudo ip netns add ${UPFNS}
 
 sudo ip link add veth0 type veth peer name veth1
 sudo ip link set veth0 up
-sudo ip addr add 60.60.0.1 dev lo
+sudo ip addr add 10.60.0.1 dev lo
 sudo ip addr add 10.200.200.1/24 dev veth0
 sudo ip addr add 10.200.200.2/24 dev veth0
 
@@ -64,7 +66,7 @@ sudo ip link set veth1 netns ${UPFNS}
 
 ${EXEC_UPFNS} ip link set lo up
 ${EXEC_UPFNS} ip link set veth1 up
-${EXEC_UPFNS} ip addr add 60.60.0.101 dev lo
+${EXEC_UPFNS} ip addr add 10.60.0.101 dev lo
 ${EXEC_UPFNS} ip addr add 10.200.200.101/24 dev veth1
 ${EXEC_UPFNS} ip addr add 10.200.200.102/24 dev veth1
 
@@ -80,7 +82,7 @@ sleep 2
 if [[ "$1" == "TestNon3GPP" ]]
 then
     UENS="UEns"
-    EXEC_UENS="sudo ip netns exec ${UENS}"
+    EXEC_UENS="sudo -E ip netns exec ${UENS}"
 
     sudo ip netns add ${UENS}
 
@@ -106,7 +108,7 @@ then
     if [ ${DUMP_NS} ]
     then
         ${EXEC_UENS} tcpdump -U -i any -w ${UENS}.pcap &
-        sudo -E tcpdump -U -i any '(host 192.168.127.1 or host 10.0.0.1 or host 10.60.0.1)' -w n3iwf.pcap &
+        sudo -E tcpdump -U -i any '(host 192.168.127.1 or host 10.0.0.1 or host 10.200.200.2 or host 10.60.0.1)' -w n3iwf.pcap &
     fi
 
     # Run CN
@@ -114,65 +116,64 @@ then
     sleep 10
 
     # Run N3IWF
-    cd NFs/n3iwf && sudo -E $GOROOT/bin/go run n3iwf.go &
-    sleep 5
+    cd NFs/n3iwf && N3IWF_PID=$(sudo -E $GOROOT/bin/go run cmd/n3iwf.go &)
+    # sleep 5
 
     # Run Test UE
     cd test
     ${EXEC_UENS} $GOROOT/bin/go test -v -vet=off -timeout 0 -run TestNon3GPPUE -args noinit
 
 else
-    #NF_PATH=`pwd`/NFs
-    #./bin/nrf &
-    #sleep 1
-    #./bin/amf &
-    #./bin/ausf &
-    #./bin/nssf &
-    #./bin/smf -smfcfg ./config/test/smfcfg.test.yaml&
-    #./bin/udm &
-    #./bin/udr &
-    #sleep 4
     cd test
     $GOROOT/bin/go test -v -vet=off -run $1
 fi
 
-sleep 3
-sudo killall -15 free5gc-upfd
-sleep 1
+function handleSIGINT
+{
+    echo -e "\033[41;37m Terminating ... \033[0m"
+    terminate $1
+}
 
-if [ ${DUMP_NS} ]
-then
-    # kill all tcpdump processes in the default network namespace
-    sudo killall tcpdump
+function terminate()
+{
+    sleep 3
+    sudo killall -15 free5gc-upfd
     sleep 1
-fi
 
-cd ..
-mkdir -p testkeylog
-for KEYLOG in $(ls *sslkey.log); do
-    mv $KEYLOG testkeylog
-done
-
-sudo ip link del veth0
-sudo ip netns del ${UPFNS}
-sudo ip addr del 60.60.0.1/32 dev lo
-
-if [[ "$1" == "TestNon3GPP" ]]
-then
     if [ ${DUMP_NS} ]
     then
-        sudo ip xfrm state > NWu_SA_state.log
+        # kill all tcpdump processes in the default network namespace
+        sudo killall tcpdump
+        sleep 1
     fi
-    sudo ip xfrm policy flush
-    sudo ip xfrm state flush
-    sudo ip link del veth2
-    sudo ip link del ipsec0
-    ${EXEC_UENS} ip link del ipsec0
-    sudo ip netns del ${UENS}
-    sudo killall n3iwf
-    killall test.test
-    cp -f config/amfcfg.yaml.bak config/amfcfg.yaml
-    rm -f config/amfcfg.yaml.bak
-fi
 
-sleep 2
+    cd ..
+    mkdir -p testkeylog
+    for KEYLOG in $(ls *sslkey.log); do
+        mv $KEYLOG testkeylog
+    done
+
+    sudo ip link del veth0
+    sudo ip netns del ${UPFNS}
+    sudo ip addr del 10.60.0.1/32 dev lo
+
+    if [[ "$1" == "TestNon3GPP" ]]
+    then
+        if [ ${DUMP_NS} ]
+        then
+            sudo ip xfrm state > NWu_SA_state.log
+        fi
+        sudo ip xfrm policy flush
+        sudo ip xfrm state flush
+        sudo ip link del veth2
+        sudo ip link del ipsec0
+        ${EXEC_UENS} ip link del ipsec0
+        sudo ip netns del ${UENS}
+        sudo killall n3iwf
+        killall test.test
+        cp -f config/amfcfg.yaml.bak config/amfcfg.yaml
+        rm -f config/amfcfg.yaml.bak
+    fi
+}
+
+terminate $1
