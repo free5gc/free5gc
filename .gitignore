@@ -1,8 +1,18 @@
+# Swap files
+*.swp
+
 # Toolchain
-# Goland project folder
+# Golang project folder
 .idea/
+
 # Visual Studio Code
 .vscode/
+
+# Build
+build/
+log/
+vendor/
+
 # emacs/vim
 GPATH
 GRTAGS
@@ -10,10 +20,10 @@ GTAGS
 TAGS
 tags
 cscope.*
-# mac
+
+# macOS
 .DS_Store
 
-# debug
+# Debug
 *.log
 *.pcap
-
