@@ -51,6 +51,92 @@ EXEC_UPFNS="sudo -E ip netns exec ${UPFNS}"
 
 export GIN_MODE=release
 
+function terminate()
+{
+    sleep 3
+    sudo killall -15 free5gc-upfd
+    sleep 1
+
+    if [ ${DUMP_NS} ]
+    then
+        # kill all tcpdump processes in the default network namespace
+        sudo killall tcpdump
+        sleep 1
+    fi
+
+    sudo ip link del veth0
+    sudo ip netns del ${UPFNS}
+    sudo ip addr del 60.60.0.1/32 dev lo
+
+    if [[ "$1" == "TestNon3GPP" ]]
+    then
+        # Go back to free5gc folder
+        cd ..
+        if [ ${DUMP_NS} ]
+        then
+            sudo ip xfrm state > ${PCAP_PATH}/NWu_SA_state.log
+        fi
+        sudo ip xfrm policy flush
+        sudo ip xfrm state flush
+        sudo ip link del veth2
+        sudo ip link del ipsec0
+        ${EXEC_UENS} ip link del ipsec0
+        sudo ip netns del ${UENS}
+        sudo killall n3iwf
+        killall test.test
+        cp -f config/amfcfg.yaml.bak config/amfcfg.yaml
+        rm -f config/amfcfg.yaml.bak
+    fi
+
+    sleep 5
+}
+
+function handleSIGINT()
+{
+    echo -e "\033[41;37m Terminating due to SIGINT ... \033[0m"
+    terminate $1
+}
+
+trap handleSIGINT SIGINT
+
+function setupN3ueEnv()
+{
+    UENS="UEns"
+    EXEC_UENS="sudo -E ip netns exec ${UENS}"
+
+    sudo ip netns add ${UENS}
+
+    sudo ip link add veth2 type veth peer name veth3
+    sudo ip addr add 192.168.127.1/24 dev veth2
+    sudo ip link set veth2 up
+
+    sudo ip link set veth3 netns ${UENS}
+    ${EXEC_UENS} ip addr add 192.168.127.2/24 dev veth3
+    ${EXEC_UENS} ip link set lo up
+    ${EXEC_UENS} ip link set veth3 up
+    ${EXEC_UENS} ip link add ipsec0 type vti local 192.168.127.2 remote 192.168.127.1 key 5
+    ${EXEC_UENS} ip link set ipsec0 up
+
+    sudo ip link add name ipsec0 type vti local 192.168.127.1 remote 0.0.0.0 key 5
+    sudo ip addr add 10.0.0.1/24 dev ipsec0
+    sudo ip link set ipsec0 up
+}
+
+function tcpdumpN3IWF()
+{
+    N3IWF_IPSec_iface_addr=192.168.127.1
+    N3IWF_IPsec_inner_addr=10.0.0.1
+    N3IWF_GTP_addr=10.200.200.2
+    UE_DN_addr=60.60.0.1
+
+    ${EXEC_UENS} tcpdump -U -i any -w $PCAP_PATH/$UENS.pcap &
+    TCPDUMP_QUERY=" host $N3IWF_IPSec_iface_addr or \
+                    host $N3IWF_IPsec_inner_addr or \
+                    host $N3IWF_GTP_addr or \
+                    host $UE_DN_addr"
+    sudo -E tcpdump -U -i any $TCPDUMP_QUERY -w $PCAP_PATH/n3iwf.pcap &
+}
+
 # Setup network namespace
 sudo ip netns add ${UPFNS}
 
@@ -70,8 +156,10 @@ ${EXEC_UPFNS} ip addr add 10.200.200.102/24 dev veth1
 
 if [ ${DUMP_NS} ]
 then
-    ${EXEC_UPFNS} tcpdump -U -i any -w ${UPFNS}.pcap &
-    sudo -E tcpdump -U -i lo -w default_ns.pcap &
+    PCAP_PATH=testpcap
+    mkdir -p ${PCAP_PATH}
+    ${EXEC_UPFNS} tcpdump -U -i any -w ${PCAP_PATH}/${UPFNS}.pcap &
+    sudo -E tcpdump -U -i lo -w ${PCAP_PATH}/default_ns.pcap &
 fi
 
 cd NFs/upf/build && ${EXEC_UPFNS} ./bin/free5gc-upfd -f config/upfcfg.test.yaml &
@@ -79,25 +167,8 @@ sleep 2
 
 if [[ "$1" == "TestNon3GPP" ]]
 then
-    UENS="UEns"
-    EXEC_UENS="sudo ip netns exec ${UENS}"
-
-    sudo ip netns add ${UENS}
-
-    sudo ip link add veth2 type veth peer name veth3
-    sudo ip addr add 192.168.127.1/24 dev veth2
-    sudo ip link set veth2 up
-
-    sudo ip link set veth3 netns ${UENS}
-    ${EXEC_UENS} ip addr add 192.168.127.2/24 dev veth3
-    ${EXEC_UENS} ip link set lo up
-    ${EXEC_UENS} ip link set veth3 up
-    ${EXEC_UENS} ip link add ipsec0 type vti local 192.168.127.2 remote 192.168.127.1 key 5
-    ${EXEC_UENS} ip link set ipsec0 up
-
-    sudo ip link add name ipsec0 type vti local 192.168.127.1 remote 0.0.0.0 key 5
-    sudo ip addr add 10.0.0.1/24 dev ipsec0
-    sudo ip link set ipsec0 up
+    # Setup N3UE's namespace, interfaces for IPsec
+    setupN3ueEnv
 
     # Configuration
     cp -f config/amfcfg.yaml config/amfcfg.yaml.bak
@@ -105,8 +176,7 @@ then
 
     if [ ${DUMP_NS} ]
     then
-        ${EXEC_UENS} tcpdump -U -i any -w ${UENS}.pcap &
-        sudo -E tcpdump -U -i any '(host 192.168.127.1 or host 10.0.0.1 or host 10.60.0.1)' -w n3iwf.pcap &
+        tcpdumpN3IWF
     fi
 
     # Run CN
@@ -122,57 +192,8 @@ then
     ${EXEC_UENS} $GOROOT/bin/go test -v -vet=off -timeout 0 -run TestNon3GPPUE -args noinit
 
 else
-    #NF_PATH=`pwd`/NFs
-    #./bin/nrf &
-    #sleep 1
-    #./bin/amf &
-    #./bin/ausf &
-    #./bin/nssf &
-    #./bin/smf -smfcfg ./config/test/smfcfg.test.yaml&
-    #./bin/udm &
-    #./bin/udr &
-    #sleep 4
     cd test
     $GOROOT/bin/go test -v -vet=off -run $1
 fi
 
-sleep 3
-sudo killall -15 free5gc-upfd
-sleep 1
-
-if [ ${DUMP_NS} ]
-then
-    # kill all tcpdump processes in the default network namespace
-    sudo killall tcpdump
-    sleep 1
-fi
-
-cd ..
-mkdir -p testkeylog
-for KEYLOG in $(ls *sslkey.log); do
-    mv $KEYLOG testkeylog
-done
-
-sudo ip link del veth0
-sudo ip netns del ${UPFNS}
-sudo ip addr del 60.60.0.1/32 dev lo
-
-if [[ "$1" == "TestNon3GPP" ]]
-then
-    if [ ${DUMP_NS} ]
-    then
-        sudo ip xfrm state > NWu_SA_state.log
-    fi
-    sudo ip xfrm policy flush
-    sudo ip xfrm state flush
-    sudo ip link del veth2
-    sudo ip link del ipsec0
-    ${EXEC_UENS} ip link del ipsec0
-    sudo ip netns del ${UENS}
-    sudo killall n3iwf
-    killall test.test
-    cp -f config/amfcfg.yaml.bak config/amfcfg.yaml
-    rm -f config/amfcfg.yaml.bak
-fi
-
-sleep 2
+terminate $1

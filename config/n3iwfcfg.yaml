@@ -75,8 +75,8 @@ configuration:
   # debugLevel: how detailed to output, value: trace, debug, info, warn, error, fatal, panic
   # ReportCaller: enable the caller report or not, value: true or false
 logger:
-  N3IWF:
-    debugLevel: info
+  N3IWF: # The default log level is DEBUG to print SA keys. Please change it to INFO when deployed.
+    debugLevel: debug
     ReportCaller: false
   NGAP:
     debugLevel: info
