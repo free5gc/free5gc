@@ -392,6 +392,36 @@ func parseIPAddressInformationToChildSecurityAssociation(
 	return nil
 }
 
+type PDUQoSInfo struct {
+	pduSessionID    uint8
+	qfiList         []uint8
+	isDefault       bool
+	isDSCPSpecified bool
+	DSCP            uint8
+}
+
+func parse5GQoSInfoNotify(n *message.Notification) (info *PDUQoSInfo, err error) {
+	info = new(PDUQoSInfo)
+	var offset int = 0
+	data := n.NotificationData
+	dataLen := int(data[0])
+	info.pduSessionID = data[1]
+	qfiListLen := int(data[2])
+	offset += (3 + qfiListLen)
+
+	if offset > dataLen {
+		return nil, errors.New("parse5GQoSInfoNotify err: Length and content of 5G-QoS-Info-Notify mismatch")
+	}
+
+	info.qfiList = make([]byte, qfiListLen)
+	copy(info.qfiList, data[3:3+qfiListLen])
+
+	info.isDefault = (data[offset] & message.NotifyType5G_QOS_INFOBitDCSICheck) > 0
+	info.isDSCPSpecified = (data[offset] & message.NotifyType5G_QOS_INFOBitDSCPICheck) > 0
+
+	return
+}
+
 func applyXFRMRule(ue_is_initiator bool, childSecurityAssociation *context.ChildSecurityAssociation) error {
 	// Build XFRM information data structure for incoming traffic.
 
@@ -1131,6 +1161,8 @@ func TestNon3GPPUE(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	var QoSInfo *PDUQoSInfo
+
 	var upIPAddr net.IP
 	for _, ikePayload := range decryptedIKEPayload {
 		switch ikePayload.Type() {
@@ -1144,6 +1176,15 @@ func TestNon3GPPUE(t *testing.T) {
 			notification := ikePayload.(*message.Notification)
 			if notification.NotifyMessageType == message.Vendor3GPPNotifyType5G_QOS_INFO {
 				t.Log("Received Qos Flow settings")
+				if info, err := parse5GQoSInfoNotify(notification); err == nil {
+					QoSInfo = info
+					t.Logf("NotificationData:%+v", notification.NotificationData)
+					if QoSInfo.isDSCPSpecified {
+						t.Logf("DSCP is specified but test not support")
+					}
+				} else {
+					t.Logf("%+v", err)
+				}
 			}
 			if notification.NotifyMessageType == message.Vendor3GPPNotifyTypeUP_IP4_ADDRESS {
 				t.Logf("UP IP Address: %+v\n", notification.NotificationData)
@@ -1214,6 +1255,12 @@ func TestNon3GPPUE(t *testing.T) {
 		return
 	}
 
+	var greKeyField uint32
+
+	if QoSInfo != nil {
+		greKeyField |= (uint32(QoSInfo.qfiList[0]) & 0x3F) << 24
+	}
+
 	// New GRE tunnel interface
 	newGRETunnel := &netlink.Gretun{
 		LinkAttrs: netlink.LinkAttrs{
@@ -1221,6 +1268,8 @@ func TestNon3GPPUE(t *testing.T) {
 		},
 		Local:  ueAddr.IP,
 		Remote: upIPAddr,
+		IKey:   greKeyField,
+		OKey:   greKeyField,
 	}
 	if err := netlink.LinkAdd(newGRETunnel); err != nil {
 		t.Fatal(err)

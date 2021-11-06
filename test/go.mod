@@ -10,21 +10,21 @@ require (
 	github.com/free5gc/CommonConsumerTestData v1.0.0
 	github.com/free5gc/MongoDBLibrary v1.0.0
 	github.com/free5gc/UeauCommon v1.0.0
-	github.com/free5gc/amf v1.0.0
-	github.com/free5gc/aper v1.0.1
-	github.com/free5gc/ausf v1.0.0
+	github.com/free5gc/amf v1.0.1
+	github.com/free5gc/aper v1.0.2
+	github.com/free5gc/ausf v1.0.1
 	github.com/free5gc/milenage v1.0.0
-	github.com/free5gc/n3iwf v1.0.0
-	github.com/free5gc/nas v1.0.0
+	github.com/free5gc/n3iwf v1.0.1
+	github.com/free5gc/nas v1.0.1
 	github.com/free5gc/ngap v1.0.2
-	github.com/free5gc/nrf v1.0.0
-	github.com/free5gc/nssf v1.0.0
-	github.com/free5gc/openapi v1.0.0
+	github.com/free5gc/nrf v1.0.1
+	github.com/free5gc/nssf v1.0.1
+	github.com/free5gc/openapi v1.0.1
 	github.com/free5gc/path_util v1.0.0
-	github.com/free5gc/pcf v1.0.0
-	github.com/free5gc/smf v1.0.0
-	github.com/free5gc/udm v1.0.0
-	github.com/free5gc/udr v1.0.0
+	github.com/free5gc/pcf v1.0.1
+	github.com/free5gc/smf v1.0.1
+	github.com/free5gc/udm v1.0.1
+	github.com/free5gc/udr v1.0.1
 	github.com/go-ping/ping v0.0.0-20200918120429-e8ae07c3cec8
 	github.com/golangci/golangci-lint v1.35.2
 	github.com/golangci/misspell v0.3.5 // indirect
@@ -43,17 +43,15 @@ require (
 	github.com/spf13/cast v1.3.1 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/stretchr/objx v0.3.0 // indirect
-	github.com/stretchr/testify v1.6.1
+	github.com/stretchr/testify v1.7.0
 	github.com/tdakkota/asciicheck v0.0.0-20200416200610-e657995f937b // indirect
 	github.com/timakin/bodyclose v0.0.0-20200424151742-cb6215831a94 // indirect
 	github.com/tomarrell/wrapcheck v0.0.0-20201130113247-1683564d9756 // indirect
-	github.com/ugorji/go v1.2.3 // indirect
 	github.com/urfave/cli v1.22.5
 	github.com/vishvananda/netlink v1.1.0
 	go.mongodb.org/mongo-driver v1.4.4
-	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad // indirect
-	golang.org/x/net v0.0.0-20210501142056-aec3718b3fa0
-	golang.org/x/sys v0.0.0-20210603081109-ebe580a85c40
+	golang.org/x/net v0.0.0-20211008194852-3b03d305991f
+	golang.org/x/sys v0.0.0-20211007075335-d3039528d8ac
 	golang.org/x/tools v0.0.0-20210111221946-d33bae441459 // indirect
 	gopkg.in/ini.v1 v1.62.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0
