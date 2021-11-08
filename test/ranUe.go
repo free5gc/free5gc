@@ -2,6 +2,9 @@ package test
 
 import (
 	"encoding/hex"
+	"crypto/hmac"
+	"crypto/sha256"
+	"fmt"
 	"regexp"
 
 	"github.com/calee0219/fatal"
@@ -66,6 +69,26 @@ func GetAuthSubscription(k, opc, op string) models.AuthenticationSubscription {
 
 	authSubs.SequenceNumber = TestGenAuthData.MilenageTestSet19.SQN
 	authSubs.AuthenticationMethod = models.AuthMethod__5_G_AKA
+	return authSubs
+}
+
+func GetEAPAKAPrimeAuthSubscription(k, opc, op string) models.AuthenticationSubscription {
+	var authSubs models.AuthenticationSubscription
+	authSubs.PermanentKey = &models.PermanentKey{
+		PermanentKeyValue: k,
+	}
+	authSubs.Opc = &models.Opc{
+		OpcValue: opc,
+	}
+	authSubs.Milenage = &models.Milenage{
+		Op: &models.Op{
+			OpValue: op,
+		},
+	}
+	authSubs.AuthenticationManagementField = "8000"
+
+	authSubs.SequenceNumber = TestGenAuthData.MilenageTestSet19.SQN
+	authSubs.AuthenticationMethod = models.AuthMethod_EAP_AKA_PRIME
 	return authSubs
 }
 
@@ -169,6 +192,165 @@ func (ue *RanUeContext) DeriveRESstarAndSetKey(
 	kdfVal_for_resStar :=
 		UeauCommon.GetKDFValue(key, FC, P0, UeauCommon.KDFLen(P0), P1, UeauCommon.KDFLen(P1), P2, UeauCommon.KDFLen(P2))
 	return kdfVal_for_resStar[len(kdfVal_for_resStar)/2:]
+
+}
+
+func (ue *RanUeContext) DeriveResEAPMessageAndSetKey(
+	authSubs models.AuthenticationSubscription, eAPMessage []byte, snName string) []byte {
+
+	sqn, err := hex.DecodeString(authSubs.SequenceNumber)
+	if err != nil {
+		fatal.Fatalf("DecodeString error: %+v", err)
+	}
+
+	var attrLen int
+	var rand []byte
+	var autn []byte
+	data := eAPMessage[5:]
+	dataLen := len(data)
+	for i := 3; i < dataLen; i += attrLen {
+		attrType := data[i]
+		attrLen = int(data[i+1]) * 4
+		if attrLen == 0 {
+			fatal.Fatalf("Decode EAP packet error: %+v", fmt.Errorf("attribute length equal to zero"))
+		}
+		if i+attrLen > dataLen {
+			fatal.Fatalf("Decode EAP packet error: %+v", fmt.Errorf("packet length out of range"))
+		}
+		if attrType == 1 { // AT_RAND
+			rand = data[i+4: i+20]
+		} else if attrType == 2 { // AT_AUTN
+			autn = data[i+4: i+20]
+		}
+	}
+	if len(rand) == 0 || len(autn) == 0 {
+		fatal.Fatalf("Decode EAP packet error: %+v", fmt.Errorf("Length of RAND or AUTN is zero"))
+	}
+
+	amf, err := hex.DecodeString(authSubs.AuthenticationManagementField)
+	if err != nil {
+		fatal.Fatalf("DecodeString error: %+v", err)
+	}
+
+	// Run milenage
+	macA, macS := make([]byte, 8), make([]byte, 8)
+	ck, ik := make([]byte, 16), make([]byte, 16)
+	res := make([]byte, 8)
+	ak, akStar := make([]byte, 6), make([]byte, 6)
+
+	opc := make([]byte, 16)
+	_ = opc
+	k, err := hex.DecodeString(authSubs.PermanentKey.PermanentKeyValue)
+	if err != nil {
+		fatal.Fatalf("DecodeString error: %+v", err)
+	}
+
+	if authSubs.Opc.OpcValue == "" {
+		opStr := authSubs.Milenage.Op.OpValue
+		var op []byte
+		op, err = hex.DecodeString(opStr)
+		if err != nil {
+			fatal.Fatalf("DecodeString error: %+v", err)
+		}
+
+		opc, err = milenage.GenerateOPC(k, op)
+		if err != nil {
+			fatal.Fatalf("milenage GenerateOPC error: %+v", err)
+		}
+	} else {
+		opc, err = hex.DecodeString(authSubs.Opc.OpcValue)
+		if err != nil {
+			fatal.Fatalf("DecodeString error: %+v", err)
+		}
+	}
+
+	// Generate MAC_A, MAC_S
+	err = milenage.F1(opc, k, rand, sqn, amf, macA, macS)
+	if err != nil {
+		fatal.Fatalf("regexp Compile error: %+v", err)
+	}
+
+	// Generate RES, CK, IK, AK, AKstar
+	err = milenage.F2345(opc, k, rand, res, ck, ik, ak, akStar)
+	if err != nil {
+		fatal.Fatalf("regexp Compile error: %+v", err)
+	}
+
+	// derive CK' IK'
+	key := append(ck, ik...)
+	FC := UeauCommon.FC_FOR_CK_PRIME_IK_PRIME_DERIVATION
+	P0 := []byte(snName)
+	P1 := autn[:6]
+	kdfVal := UeauCommon.GetKDFValue(key, FC, P0, UeauCommon.KDFLen(P0), P1, UeauCommon.KDFLen(P1))
+	ckPrime := kdfVal[:len(kdfVal)/2]
+	ikPrime := kdfVal[len(kdfVal)/2:]
+
+	// derive Kaut Kausf Kseaf
+	key = append(ikPrime, ckPrime...)
+	// omit "ismi-" part in supi
+	sBase := []byte("EAP-AKA'" + ue.Supi[5:])
+	var MK, prev []byte
+	prfRounds := 208/32 + 1
+	for i := 0; i < prfRounds; i++ {
+		// Create a new HMAC by defining the hash type and the key (as byte array)
+		h := hmac.New(sha256.New, key)
+
+		hexNum := (byte)(i + 1)
+		ap := append(sBase, hexNum)
+		s := append(prev, ap...)
+
+		// Write Data to it
+		if _, err := h.Write(s); err != nil {
+			fatal.Fatalf("EAP-AKA' prf error: %+v", err)
+		}
+
+		// Get result
+		sha := h.Sum(nil)
+		MK = append(MK, sha...)
+		prev = sha
+	}
+	Kaut := MK[16: 48]
+	Kausf := MK[144:176]
+	P0 = []byte(snName)
+	Kseaf := UeauCommon.GetKDFValue(Kausf, UeauCommon.FC_FOR_KSEAF_DERIVATION, P0, UeauCommon.KDFLen(P0))
+
+	// fill response EAP packet
+	resEAPMessage := make([]byte, 40)
+	copy(resEAPMessage, eAPMessage[:8])
+	resEAPMessage[0] = 2
+	resEAPMessage[2] = 0
+	resEAPMessage[3] = 40
+	resEAPMessage[8] = 3 // AT_RES
+	resEAPMessage[9] = 3
+	resEAPMessage[11] = 64
+	copy(resEAPMessage[12:20], res[:])
+	resEAPMessage[20] = 11 // AT_MAC
+	resEAPMessage[21] = 5
+
+	// calculate MAC
+	h := hmac.New(sha256.New, Kaut)
+	if _, err := h.Write(resEAPMessage); err != nil {
+		fatal.Fatalf("MAC calculate error: %+v", err)
+	}
+	sum := h.Sum(nil)
+	copy(resEAPMessage[24:], sum[:16])
+
+	// derive Kamf
+	supiRegexp, err := regexp.Compile("(?:imsi|supi)-([0-9]{5,15})")
+	if err != nil {
+		fatal.Fatalf("regexp Compile error: %+v", err)
+	}
+	groups := supiRegexp.FindStringSubmatch(ue.Supi)
+
+	P0 = []byte(groups[1])
+	L0 := UeauCommon.KDFLen(P0)
+	P1 = []byte{0x00, 0x00}
+	L1 := UeauCommon.KDFLen(P1)
+
+	ue.Kamf = UeauCommon.GetKDFValue(Kseaf, UeauCommon.FC_FOR_KAMF_DERIVATION, P0, L0, P1, L1)
+
+	ue.DerivateAlgKey()
+	return resEAPMessage
 
 }
 
