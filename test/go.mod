@@ -15,11 +15,11 @@ require (
 	github.com/free5gc/ausf v1.0.1
 	github.com/free5gc/milenage v1.0.0
 	github.com/free5gc/n3iwf v1.0.1
-	github.com/free5gc/nas v1.0.1
+	github.com/free5gc/nas v1.0.4
 	github.com/free5gc/ngap v1.0.2
 	github.com/free5gc/nrf v1.0.1
 	github.com/free5gc/nssf v1.0.1
-	github.com/free5gc/openapi v1.0.1
+	github.com/free5gc/openapi v1.0.3
 	github.com/free5gc/path_util v1.0.0
 	github.com/free5gc/pcf v1.0.1
 	github.com/free5gc/smf v1.0.1
