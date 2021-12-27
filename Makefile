@@ -68,7 +68,7 @@ $(WEBCONSOLE)/$(GO_BIN_PATH)/$(WEBCONSOLE): $(WEBCONSOLE)/server.go  $(WEBCONSOL
 	rm -rf ../public && \
 	cp -R build ../public
 	cd $(WEBCONSOLE) && \
-	go build -ldflags "$(WEBCONSOLE_LDFLAGS)" -o $(ROOT_PATH)/$@ ./server.go
+	CGO_ENABLED=0 go build -ldflags "$(WEBCONSOLE_LDFLAGS)" -o $(ROOT_PATH)/$@ ./server.go
 
 clean:
 	rm -rf $(addprefix $(GO_BIN_PATH)/, $(GO_NF))
