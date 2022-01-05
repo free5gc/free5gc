@@ -24,6 +24,7 @@ configuration:
   mongodb:       # the mongodb connected by this PCF
     name: free5gc                  # name of the mongodb
     url: mongodb://localhost:27017 # a valid URL of the mongodb
+  locality: area1 # Name of the location where a set of AMF, SMF, PCF and UPFs are located
 
 # the kind of log output
   # debugLevel: how detailed to output, value: trace, debug, info, warn, error, fatal, panic
