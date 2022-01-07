@@ -107,7 +107,21 @@ fi
 
 function terminate()
 {
-    # Move log
+    moveLog
+
+    if [ $N3IWF_ENABLE -ne 0 ]; then
+        sudo ip xfrm state > ${LOG_PATH}NWu_SA_state.log
+        sudo ip xfrm state flush
+        sudo ip xfrm policy flush
+    fi
+
+    sudo kill -SIGTERM ${PID_LIST[${#PID_LIST[@]}-2]} ${PID_LIST[${#PID_LIST[@]}-1]}
+    sleep 2
+
+}
+
+function moveLog()
+{
     SSLKEY_LOG_PATH=${LOG_PATH_TIME}${SSLKEY_LOG_FOLDER}
     if [ ! -d ${SSLKEY_LOG_PATH} ]; then
         mkdir -p ${SSLKEY_LOG_PATH}
@@ -119,6 +133,7 @@ function terminate()
     mv -f ${LOG_PATH}${NF_LOG_FOLDER}  ${LOG_PATH_TIME}
     mv -f ${LOG_PATH}${LIB_LOG_FOLDER}  ${LOG_PATH_TIME}
     mv ${LOG_PATH}${LOG_NAME}  ${LOG_PATH_TIME}
+<<<<<<< HEAD
 
     sudo kill -SIGTERM ${PID_LIST[${#PID_LIST[@]}-2]} ${PID_LIST[${#PID_LIST[@]}-1]}
 
@@ -127,6 +142,8 @@ function terminate()
         sudo ip link del ipsec0
     fi
     sleep 2
+=======
+>>>>>>> feat(n3iwf): Add xfrm log and flush in script
 }
 
 trap terminate SIGINT
