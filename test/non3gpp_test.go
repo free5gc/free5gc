@@ -16,9 +16,9 @@ import (
 	"golang.org/x/sys/unix"
 
 	"github.com/free5gc/CommonConsumerTestData/UDM/TestGenAuthData"
-	"github.com/free5gc/n3iwf/context"
-	"github.com/free5gc/n3iwf/ike/handler"
-	"github.com/free5gc/n3iwf/ike/message"
+	"github.com/free5gc/n3iwf/pkg/context"
+	"github.com/free5gc/n3iwf/pkg/ike/handler"
+	"github.com/free5gc/n3iwf/pkg/ike/message"
 	"github.com/free5gc/nas"
 	"github.com/free5gc/nas/nasMessage"
 	"github.com/free5gc/nas/nasTestpacket"
