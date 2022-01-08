@@ -92,9 +92,10 @@ for NF in ${NF_LIST}; do
 done
 
 if [ $N3IWF_ENABLE -ne 0 ]; then
-    N3IWF_NWU_ADDR="127.0.0.21"
-    sudo ip link add name ipsec0 type vti local ${N3IWF_NWU_ADDR} remote 0.0.0.0 key 5
-    sudo ip addr add 10.0.0.1/24 dev ipsec0
+    N3IWF_IKE_BIND_ADDRESS="127.0.0.21"
+    N3IWF_UE_ADDR="10.0.0.1/24"
+    sudo ip link add name ipsec0 type vti local ${N3IWF_IKE_BIND_ADDRESS} remote 0.0.0.0 key 5
+    sudo ip addr add ${N3IWF_UE_ADDR} dev ipsec0
     sudo ip link set ipsec0 up
     sleep 1
 
@@ -110,14 +111,14 @@ function terminate()
     moveLog
 
     if [ $N3IWF_ENABLE -ne 0 ]; then
-        sudo ip xfrm state > ${LOG_PATH}NWu_SA_state.log
+        sudo ip xfrm state > ${LOG_PATH_TIME}NWu_SA_state.log
         sudo ip xfrm state flush
         sudo ip xfrm policy flush
+        sudo ip link del ipsec0
     fi
 
     sudo kill -SIGTERM ${PID_LIST[${#PID_LIST[@]}-2]} ${PID_LIST[${#PID_LIST[@]}-1]}
     sleep 2
-
 }
 
 function moveLog()
@@ -133,17 +134,10 @@ function moveLog()
     mv -f ${LOG_PATH}${NF_LOG_FOLDER}  ${LOG_PATH_TIME}
     mv -f ${LOG_PATH}${LIB_LOG_FOLDER}  ${LOG_PATH_TIME}
     mv ${LOG_PATH}${LOG_NAME}  ${LOG_PATH_TIME}
-<<<<<<< HEAD
 
     sudo kill -SIGTERM ${PID_LIST[${#PID_LIST[@]}-2]} ${PID_LIST[${#PID_LIST[@]}-1]}
 
-
-    if [ $N3IWF_ENABLE -ne 0 ]; then
-        sudo ip link del ipsec0
-    fi
     sleep 2
-=======
->>>>>>> feat(n3iwf): Add xfrm log and flush in script
 }
 
 trap terminate SIGINT
