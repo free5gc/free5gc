@@ -2,13 +2,10 @@
 
 PID_LIST=()
 
-cd NFs/upf/build
-sudo -E ./bin/free5gc-upfd &
+sudo -E ./NFs/upf/build/bin/free5gc-upfd -c ./config/upfcfg.yaml -l ./log/nf/upf.log -g ./log/free5gc.log &
 PID_LIST+=($!)
 
 sleep 1
-
-cd ../../..
 
 NF_LIST="nrf amf smf udr pcf udm nssf ausf"
 
