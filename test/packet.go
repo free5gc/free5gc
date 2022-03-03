@@ -4,6 +4,7 @@ import (
 	"github.com/free5gc/nas"
 	"github.com/free5gc/nas/nasMessage"
 	"github.com/free5gc/ngap"
+
 	// Nausf_UEAU_Client "github.com/free5gc/openapi/Nausf_UEAuthentication"
 	// "github.com/free5gc/openapi/models"
 
@@ -46,8 +47,10 @@ func GetInitialContextSetupResponseForServiceRequest(
 	return ngap.Encoder(message)
 }
 
-func GetPDUSessionResourceSetupResponse(pduSessionId int64, amfUeNgapID int64, ranUeNgapID int64, ipv4 string) ([]byte, error) {
-	message := ngapTestpacket.BuildPDUSessionResourceSetupResponseForRegistrationTest(pduSessionId, amfUeNgapID, ranUeNgapID, ipv4)
+func GetPDUSessionResourceSetupResponse(pduSessionId int64, amfUeNgapID int64, ranUeNgapID int64,
+	ipv4 string) ([]byte, error) {
+	message := ngapTestpacket.BuildPDUSessionResourceSetupResponseForRegistrationTest(
+		pduSessionId, amfUeNgapID, ranUeNgapID, ipv4)
 	return ngap.Encoder(message)
 }
 func EncodeNasPduWithSecurity(ue *RanUeContext, pdu []byte, securityHeaderType uint8,
@@ -62,6 +65,20 @@ func EncodeNasPduWithSecurity(ue *RanUeContext, pdu []byte, securityHeaderType u
 		SecurityHeaderType:    securityHeaderType,
 	}
 	return NASEncode(ue, m, securityContextAvailable, newSecurityContext)
+}
+
+func EncodeNasPduInEnvelopeWithSecurity(ue *RanUeContext, pdu []byte, securityHeaderType uint8,
+	securityContextAvailable, newSecurityContext bool) ([]byte, error) {
+	m := nas.NewMessage()
+	err := m.PlainNasDecode(&pdu)
+	if err != nil {
+		return nil, err
+	}
+	m.SecurityHeader = nas.SecurityHeader{
+		ProtocolDiscriminator: nasMessage.Epd5GSMobilityManagementMessage,
+		SecurityHeaderType:    securityHeaderType,
+	}
+	return NASEnvelopeEncode(ue, m, securityContextAvailable, newSecurityContext)
 }
 
 func GetUEContextReleaseComplete(amfUeNgapID int64, ranUeNgapID int64, pduSessionIDList []int64) ([]byte, error) {

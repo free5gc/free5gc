@@ -1,9 +1,9 @@
 package test
 
 import (
-	"encoding/hex"
 	"crypto/hmac"
 	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"regexp"
 
@@ -218,9 +218,9 @@ func (ue *RanUeContext) DeriveResEAPMessageAndSetKey(
 			fatal.Fatalf("Decode EAP packet error: %+v", fmt.Errorf("packet length out of range"))
 		}
 		if attrType == 1 { // AT_RAND
-			rand = data[i+4: i+20]
+			rand = data[i+4 : i+20]
 		} else if attrType == 2 { // AT_AUTN
-			autn = data[i+4: i+20]
+			autn = data[i+4 : i+20]
 		}
 	}
 	if len(rand) == 0 || len(autn) == 0 {
@@ -300,7 +300,7 @@ func (ue *RanUeContext) DeriveResEAPMessageAndSetKey(
 		s := append(prev, ap...)
 
 		// Write Data to it
-		if _, err := h.Write(s); err != nil {
+		if _, err = h.Write(s); err != nil {
 			fatal.Fatalf("EAP-AKA' prf error: %+v", err)
 		}
 
@@ -309,7 +309,7 @@ func (ue *RanUeContext) DeriveResEAPMessageAndSetKey(
 		MK = append(MK, sha...)
 		prev = sha
 	}
-	Kaut := MK[16: 48]
+	Kaut := MK[16:48]
 	Kausf := MK[144:176]
 	P0 = []byte(snName)
 	Kseaf := UeauCommon.GetKDFValue(Kausf, UeauCommon.FC_FOR_KSEAF_DERIVATION, P0, UeauCommon.KDFLen(P0))
@@ -329,7 +329,7 @@ func (ue *RanUeContext) DeriveResEAPMessageAndSetKey(
 
 	// calculate MAC
 	h := hmac.New(sha256.New, Kaut)
-	if _, err := h.Write(resEAPMessage); err != nil {
+	if _, err = h.Write(resEAPMessage); err != nil {
 		fatal.Fatalf("MAC calculate error: %+v", err)
 	}
 	sum := h.Sum(nil)

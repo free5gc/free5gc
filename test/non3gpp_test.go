@@ -16,9 +16,9 @@ import (
 	"golang.org/x/sys/unix"
 
 	"github.com/free5gc/CommonConsumerTestData/UDM/TestGenAuthData"
-	"github.com/free5gc/n3iwf/context"
-	"github.com/free5gc/n3iwf/ike/handler"
-	"github.com/free5gc/n3iwf/ike/message"
+	"github.com/free5gc/n3iwf/pkg/context"
+	"github.com/free5gc/n3iwf/pkg/ike/handler"
+	"github.com/free5gc/n3iwf/pkg/ike/message"
 	"github.com/free5gc/nas"
 	"github.com/free5gc/nas/nasMessage"
 	"github.com/free5gc/nas/nasTestpacket"
@@ -27,34 +27,18 @@ import (
 	"github.com/free5gc/openapi/models"
 )
 
-func createIKEChildSecurityAssociation(chosenSecurityAssociation *message.SecurityAssociation) (*context.ChildSecurityAssociation, error) {
-	childSecurityAssociation := new(context.ChildSecurityAssociation)
-
-	if chosenSecurityAssociation == nil {
-		return nil, errors.New("chosenSecurityAssociation is nil")
-	}
-
-	if len(chosenSecurityAssociation.Proposals) == 0 {
-		return nil, errors.New("No proposal")
-	}
-
-	childSecurityAssociation.SPI = binary.BigEndian.Uint32(chosenSecurityAssociation.Proposals[0].SPI)
-
-	if len(chosenSecurityAssociation.Proposals[0].EncryptionAlgorithm) != 0 {
-		childSecurityAssociation.EncryptionAlgorithm = chosenSecurityAssociation.Proposals[0].EncryptionAlgorithm[0].TransformID
-	}
-	if len(chosenSecurityAssociation.Proposals[0].IntegrityAlgorithm) != 0 {
-		childSecurityAssociation.IntegrityAlgorithm = chosenSecurityAssociation.Proposals[0].IntegrityAlgorithm[0].TransformID
-	}
-	if len(chosenSecurityAssociation.Proposals[0].ExtendedSequenceNumbers) != 0 {
-		if chosenSecurityAssociation.Proposals[0].ExtendedSequenceNumbers[0].TransformID == 0 {
-			childSecurityAssociation.ESN = false
-		} else {
-			childSecurityAssociation.ESN = true
+func generateSPI(n3ue *context.N3IWFUe) []byte {
+	var spi uint32
+	spiByte := make([]byte, 4)
+	for {
+		randomUint64 := handler.GenerateRandomNumber().Uint64()
+		if _, ok := n3ue.N3IWFChildSecurityAssociation[uint32(randomUint64)]; !ok {
+			spi = uint32(randomUint64)
+			binary.BigEndian.PutUint32(spiByte, spi)
+			break
 		}
 	}
-
-	return childSecurityAssociation, nil
+	return spiByte
 }
 
 func getAuthSubscription() (authSubs models.AuthenticationSubscription) {
@@ -463,7 +447,7 @@ func applyXFRMRule(ue_is_initiator bool, childSecurityAssociation *context.Child
 	xfrmState.Dst = childSecurityAssociation.LocalPublicIPAddr
 	xfrmState.Proto = netlink.XFRM_PROTO_ESP
 	xfrmState.Mode = netlink.XFRM_MODE_TUNNEL
-	xfrmState.Spi = int(childSecurityAssociation.SPI)
+	xfrmState.Spi = int(childSecurityAssociation.InboundSPI)
 	xfrmState.Mark = mark
 	xfrmState.Auth = xfrmIntegrityAlgorithm
 	xfrmState.Crypt = xfrmEncryptionAlgorithm
@@ -519,6 +503,7 @@ func applyXFRMRule(ue_is_initiator bool, childSecurityAssociation *context.Child
 	}
 
 	xfrmState.Src, xfrmState.Dst = xfrmState.Dst, xfrmState.Src
+	xfrmState.Spi = int(childSecurityAssociation.OutboundSPI)
 
 	// Commit xfrm state to netlink
 	if err = netlink.XfrmStateAdd(xfrmState); err != nil {
@@ -527,6 +512,7 @@ func applyXFRMRule(ue_is_initiator bool, childSecurityAssociation *context.Child
 
 	// Policy
 	xfrmPolicyTemplate.Src, xfrmPolicyTemplate.Dst = xfrmPolicyTemplate.Dst, xfrmPolicyTemplate.Src
+	xfrmPolicyTemplate.Spi = int(childSecurityAssociation.OutboundSPI)
 
 	xfrmPolicy.Src, xfrmPolicy.Dst = xfrmPolicy.Dst, xfrmPolicy.Src
 	xfrmPolicy.Dir = netlink.XFRM_DIR_OUT
@@ -553,6 +539,12 @@ func TestNon3GPPUE(t *testing.T) {
 		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0xff, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
 	}
 
+	// Used to save IPsec/IKE related data
+	n3ue := new(context.N3IWFUe)
+	n3ue.PduSessionList = make(map[int64]*context.PDUSession)
+	n3ue.N3IWFChildSecurityAssociation = make(map[uint32]*context.ChildSecurityAssociation)
+	n3ue.TemporaryExchangeMsgIDChildSAMapping = make(map[uint32]*context.ChildSecurityAssociation)
+
 	n3iwfUDPAddr, err := net.ResolveUDPAddr("udp", "192.168.127.1:500")
 	if err != nil {
 		t.Fatal(err)
@@ -560,8 +552,9 @@ func TestNon3GPPUE(t *testing.T) {
 	udpConnection := setupUDPSocket(t)
 
 	// IKE_SA_INIT
+	ikeInitiatorSPI := uint64(123123)
 	ikeMessage := new(message.IKEMessage)
-	ikeMessage.BuildIKEHeader(123123, 0, message.IKE_SA_INIT, message.InitiatorBitCheck, 0)
+	ikeMessage.BuildIKEHeader(ikeInitiatorSPI, 0, message.IKE_SA_INIT, message.InitiatorBitCheck, 0)
 
 	// Security Association
 	securityAssociation := ikeMessage.Payloads.BuildSecurityAssociation()
@@ -639,8 +632,10 @@ func TestNon3GPPUE(t *testing.T) {
 	}
 
 	ikeSecurityAssociation := &context.IKESecurityAssociation{
-		LocalSPI:               123123,
+		LocalSPI:               ikeInitiatorSPI,
 		RemoteSPI:              ikeMessage.ResponderSPI,
+		InitiatorMessageID:     0,
+		ResponderMessageID:     0,
 		EncryptionAlgorithm:    proposal.EncryptionAlgorithm[0],
 		IntegrityAlgorithm:     proposal.IntegrityAlgorithm[0],
 		PseudorandomFunction:   proposal.PseudorandomFunction[0],
@@ -653,9 +648,14 @@ func TestNon3GPPUE(t *testing.T) {
 		t.Fatalf("Generate key for IKE SA failed: %+v", err)
 	}
 
+	n3ue.N3IWFIKESecurityAssociation = ikeSecurityAssociation
+
 	// IKE_AUTH
 	ikeMessage.Payloads.Reset()
-	ikeMessage.BuildIKEHeader(123123, ikeSecurityAssociation.RemoteSPI, message.IKE_AUTH, message.InitiatorBitCheck, 1)
+	n3ue.N3IWFIKESecurityAssociation.InitiatorMessageID++
+	ikeMessage.BuildIKEHeader(
+		n3ue.N3IWFIKESecurityAssociation.LocalSPI, n3ue.N3IWFIKESecurityAssociation.RemoteSPI,
+		message.IKE_AUTH, message.InitiatorBitCheck, n3ue.N3IWFIKESecurityAssociation.InitiatorMessageID)
 
 	var ikePayload message.IKEPayloadContainer
 
@@ -665,7 +665,8 @@ func TestNon3GPPUE(t *testing.T) {
 	// Security Association
 	securityAssociation = ikePayload.BuildSecurityAssociation()
 	// Proposal 1
-	proposal = securityAssociation.Proposals.BuildProposal(1, message.TypeESP, []byte{0, 0, 0, 1})
+	inboundSPI := generateSPI(n3ue)
+	proposal = securityAssociation.Proposals.BuildProposal(1, message.TypeESP, inboundSPI)
 	// ENCR
 	proposal.EncryptionAlgorithm.BuildTransform(message.TypeEncryptionAlgorithm, message.ENCR_AES_CBC, &attributeType, &keyLength, nil)
 	// INTEG
@@ -691,6 +692,8 @@ func TestNon3GPPUE(t *testing.T) {
 	if _, err := udpConnection.WriteToUDP(ikeMessageData, n3iwfUDPAddr); err != nil {
 		t.Fatal(err)
 	}
+
+	n3ue.CreateHalfChildSA(n3ue.N3IWFIKESecurityAssociation.InitiatorMessageID, binary.BigEndian.Uint32(inboundSPI))
 
 	// Receive N3IWF reply
 	n, _, err = udpConnection.ReadFromUDP(buffer)
@@ -731,7 +734,9 @@ func TestNon3GPPUE(t *testing.T) {
 
 	// IKE_AUTH - EAP exchange
 	ikeMessage.Payloads.Reset()
-	ikeMessage.BuildIKEHeader(123123, ikeSecurityAssociation.RemoteSPI, message.IKE_AUTH, message.InitiatorBitCheck, 2)
+	n3ue.N3IWFIKESecurityAssociation.InitiatorMessageID++
+	ikeMessage.BuildIKEHeader(n3ue.N3IWFIKESecurityAssociation.LocalSPI, n3ue.N3IWFIKESecurityAssociation.RemoteSPI,
+		message.IKE_AUTH, message.InitiatorBitCheck, n3ue.N3IWFIKESecurityAssociation.InitiatorMessageID)
 
 	ikePayload.Reset()
 
@@ -823,7 +828,9 @@ func TestNon3GPPUE(t *testing.T) {
 
 	// IKE_AUTH - EAP exchange
 	ikeMessage.Payloads.Reset()
-	ikeMessage.BuildIKEHeader(123123, ikeSecurityAssociation.RemoteSPI, message.IKE_AUTH, message.InitiatorBitCheck, 3)
+	n3ue.N3IWFIKESecurityAssociation.InitiatorMessageID++
+	ikeMessage.BuildIKEHeader(n3ue.N3IWFIKESecurityAssociation.LocalSPI, n3ue.N3IWFIKESecurityAssociation.RemoteSPI,
+		message.IKE_AUTH, message.InitiatorBitCheck, n3ue.N3IWFIKESecurityAssociation.InitiatorMessageID)
 
 	ikePayload.Reset()
 
@@ -893,7 +900,9 @@ func TestNon3GPPUE(t *testing.T) {
 
 	// IKE_AUTH - EAP exchange
 	ikeMessage.Payloads.Reset()
-	ikeMessage.BuildIKEHeader(123123, ikeSecurityAssociation.RemoteSPI, message.IKE_AUTH, message.InitiatorBitCheck, 4)
+	n3ue.N3IWFIKESecurityAssociation.InitiatorMessageID++
+	ikeMessage.BuildIKEHeader(n3ue.N3IWFIKESecurityAssociation.LocalSPI, n3ue.N3IWFIKESecurityAssociation.RemoteSPI,
+		message.IKE_AUTH, message.InitiatorBitCheck, n3ue.N3IWFIKESecurityAssociation.InitiatorMessageID)
 
 	ikePayload.Reset()
 
@@ -953,7 +962,9 @@ func TestNon3GPPUE(t *testing.T) {
 
 	// IKE_AUTH - Authentication
 	ikeMessage.Payloads.Reset()
-	ikeMessage.BuildIKEHeader(123123, ikeSecurityAssociation.RemoteSPI, message.IKE_AUTH, message.InitiatorBitCheck, 5)
+	n3ue.N3IWFIKESecurityAssociation.InitiatorMessageID++
+	ikeMessage.BuildIKEHeader(n3ue.N3IWFIKESecurityAssociation.LocalSPI, n3ue.N3IWFIKESecurityAssociation.RemoteSPI,
+		message.IKE_AUTH, message.InitiatorBitCheck, n3ue.N3IWFIKESecurityAssociation.InitiatorMessageID)
 
 	ikePayload.Reset()
 
@@ -1012,7 +1023,7 @@ func TestNon3GPPUE(t *testing.T) {
 			t.Log("Get Authentication from N3IWF")
 		case message.TypeSA:
 			responseSecurityAssociation = ikePayload.(*message.SecurityAssociation)
-			ikeSecurityAssociation.IKEAuthResponseSA = responseSecurityAssociation
+			n3ue.N3IWFIKESecurityAssociation.IKEAuthResponseSA = responseSecurityAssociation
 		case message.TypeTSi:
 			responseTrafficSelectorInitiator = ikePayload.(*message.TrafficSelectorInitiator)
 		case message.TypeTSr:
@@ -1040,12 +1051,18 @@ func TestNon3GPPUE(t *testing.T) {
 		}
 	}
 
-	childSecurityAssociationContext, err := createIKEChildSecurityAssociation(ikeSecurityAssociation.IKEAuthResponseSA)
+	OutboundSPI := binary.BigEndian.Uint32(n3ue.N3IWFIKESecurityAssociation.IKEAuthResponseSA.Proposals[0].SPI)
+	childSecurityAssociationContext, err := n3ue.CompleteChildSA(
+		0x01, OutboundSPI, n3ue.N3IWFIKESecurityAssociation.IKEAuthResponseSA)
 	if err != nil {
 		t.Fatalf("Create child security association context failed: %+v", err)
 		return
 	}
-	err = parseIPAddressInformationToChildSecurityAssociation(childSecurityAssociationContext, net.ParseIP("192.168.127.1"), responseTrafficSelectorInitiator.TrafficSelectors[0], responseTrafficSelectorResponder.TrafficSelectors[0])
+	err = parseIPAddressInformationToChildSecurityAssociation(childSecurityAssociationContext,
+		net.ParseIP("192.168.127.1").To4(),
+		responseTrafficSelectorInitiator.TrafficSelectors[0],
+		responseTrafficSelectorResponder.TrafficSelectors[0])
+
 	if err != nil {
 		t.Fatalf("Parse IP address to child security association failed: %+v", err)
 		return
@@ -1114,7 +1131,7 @@ func TestNon3GPPUE(t *testing.T) {
 
 	// send NAS Registration Complete Msg
 	pdu = nasTestpacket.GetRegistrationComplete(nil)
-	pdu, err = EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCiphered, true, false)
+	pdu, err = EncodeNasPduInEnvelopeWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCiphered, true, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1131,7 +1148,7 @@ func TestNon3GPPUE(t *testing.T) {
 		Sd:  "010203",
 	}
 	pdu = nasTestpacket.GetUlNasTransport_PduSessionEstablishmentRequest(10, nasMessage.ULNASTransportRequestTypeInitialRequest, "internet", &sNssai)
-	pdu, err = EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCiphered, true, false)
+	pdu, err = EncodeNasPduInEnvelopeWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCiphered, true, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1168,6 +1185,7 @@ func TestNon3GPPUE(t *testing.T) {
 		switch ikePayload.Type() {
 		case message.TypeSA:
 			responseSecurityAssociation = ikePayload.(*message.SecurityAssociation)
+			OutboundSPI = binary.BigEndian.Uint32(responseSecurityAssociation.Proposals[0].SPI)
 		case message.TypeTSi:
 			responseTrafficSelectorInitiator = ikePayload.(*message.TrafficSelectorInitiator)
 		case message.TypeTSr:
@@ -1198,11 +1216,14 @@ func TestNon3GPPUE(t *testing.T) {
 
 	// IKE CREATE_CHILD_SA response
 	ikeMessage.Payloads.Reset()
-	ikeMessage.BuildIKEHeader(ikeMessage.InitiatorSPI, ikeMessage.ResponderSPI, message.CREATE_CHILD_SA, message.ResponseBitCheck, ikeMessage.MessageID)
+	ikeMessage.BuildIKEHeader(ikeMessage.InitiatorSPI, ikeMessage.ResponderSPI, message.CREATE_CHILD_SA,
+		message.ResponseBitCheck|message.InitiatorBitCheck, n3ue.N3IWFIKESecurityAssociation.ResponderMessageID)
 
 	ikePayload.Reset()
 
 	// SA
+	inboundSPI = generateSPI(n3ue)
+	responseSecurityAssociation.Proposals[0].SPI = inboundSPI
 	ikePayload = append(ikePayload, responseSecurityAssociation)
 
 	// TSi
@@ -1230,7 +1251,10 @@ func TestNon3GPPUE(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	childSecurityAssociationContextUserPlane, err := createIKEChildSecurityAssociation(responseSecurityAssociation)
+	n3ue.CreateHalfChildSA(n3ue.N3IWFIKESecurityAssociation.ResponderMessageID, binary.BigEndian.Uint32(inboundSPI))
+	childSecurityAssociationContextUserPlane, err := n3ue.CompleteChildSA(
+		n3ue.N3IWFIKESecurityAssociation.ResponderMessageID, OutboundSPI, responseSecurityAssociation)
+
 	if err != nil {
 		t.Fatalf("Create child security association context failed: %+v", err)
 		return
