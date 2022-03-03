@@ -36,12 +36,12 @@ configuration:
                     112233
   AMFSCTPAddresses: # the IP list of N2 interfaces (SCTP) on AMF when using NGAP
     - IP:
-      - 10.200.200.1
+      - 127.0.0.18
 
 
   # --- Bind Interfaces ---
   IKEBindAddress: # IP address of Nwu interface (IKE) on this N3IWF
-    192.168.127.1
+    127.0.0.21
 
   IPSecInterfaceAddress: # IP address of IPSec virtual interface (IPsec tunnel enpoint on this N3IWF)
     10.0.0.1
