@@ -162,7 +162,7 @@ then
     sudo -E tcpdump -U -i lo -w ${PCAP_PATH}/default_ns.pcap &
 fi
 
-cd NFs/upf/build && ${EXEC_UPFNS} ./bin/free5gc-upfd -f config/upfcfg.test.yaml &
+cd NFs/upf/build && ${EXEC_UPFNS} ./bin/free5gc-upfd -c config/upfcfg.test.yaml &
 sleep 2
 
 if [[ "$1" == "TestNon3GPP" ]]
