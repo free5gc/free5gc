@@ -7,17 +7,18 @@ import (
 	"fmt"
 	"regexp"
 
+	"test/consumerTestdata/UDM/TestGenAuthData"
+	"test/consumerTestdata/UDR/TestRegistrationProcedure"
+
 	"github.com/calee0219/fatal"
 	"golang.org/x/net/ipv4"
 
-	"github.com/free5gc/CommonConsumerTestData/UDM/TestGenAuthData"
-	"github.com/free5gc/CommonConsumerTestData/UDR/TestRegistrationProcedure"
-	"github.com/free5gc/UeauCommon"
-	"github.com/free5gc/milenage"
 	"github.com/free5gc/nas/nasMessage"
 	"github.com/free5gc/nas/nasType"
 	"github.com/free5gc/nas/security"
 	"github.com/free5gc/openapi/models"
+	"github.com/free5gc/util/milenage"
+	"github.com/free5gc/util/ueauth"
 )
 
 type RanUeContext struct {
@@ -182,17 +183,19 @@ func (ue *RanUeContext) DeriveRESstarAndSetKey(
 
 	// derive RES*
 	key := append(ck, ik...)
-	FC := UeauCommon.FC_FOR_RES_STAR_XRES_STAR_DERIVATION
+	FC := ueauth.FC_FOR_RES_STAR_XRES_STAR_DERIVATION
 	P0 := []byte(snName)
 	P1 := rand
 	P2 := res
 
 	ue.DerivateKamf(key, snName, sqn, ak)
 	ue.DerivateAlgKey()
-	kdfVal_for_resStar :=
-		UeauCommon.GetKDFValue(key, FC, P0, UeauCommon.KDFLen(P0), P1, UeauCommon.KDFLen(P1), P2, UeauCommon.KDFLen(P2))
+	kdfVal_for_resStar, err :=
+		ueauth.GetKDFValue(key, FC, P0, ueauth.KDFLen(P0), P1, ueauth.KDFLen(P1), P2, ueauth.KDFLen(P2))
+	if err != nil {
+		fatal.Fatalf("GetKDFValue error: %+v", err)
+	}
 	return kdfVal_for_resStar[len(kdfVal_for_resStar)/2:]
-
 }
 
 func (ue *RanUeContext) DeriveResEAPMessageAndSetKey(
@@ -278,16 +281,19 @@ func (ue *RanUeContext) DeriveResEAPMessageAndSetKey(
 
 	// derive CK' IK'
 	key := append(ck, ik...)
-	FC := UeauCommon.FC_FOR_CK_PRIME_IK_PRIME_DERIVATION
+	FC := ueauth.FC_FOR_CK_PRIME_IK_PRIME_DERIVATION
 	P0 := []byte(snName)
 	P1 := autn[:6]
-	kdfVal := UeauCommon.GetKDFValue(key, FC, P0, UeauCommon.KDFLen(P0), P1, UeauCommon.KDFLen(P1))
+	kdfVal, err := ueauth.GetKDFValue(key, FC, P0, ueauth.KDFLen(P0), P1, ueauth.KDFLen(P1))
+	if err != nil {
+		fatal.Fatalf("GetKDFValue error: %+v", err)
+	}
 	ckPrime := kdfVal[:len(kdfVal)/2]
 	ikPrime := kdfVal[len(kdfVal)/2:]
 
 	// derive Kaut Kausf Kseaf
 	key = append(ikPrime, ckPrime...)
-	// omit "ismi-" part in supi
+	// omit "imsi-" part in supi
 	sBase := []byte("EAP-AKA'" + ue.Supi[5:])
 	var MK, prev []byte
 	prfRounds := 208/32 + 1
@@ -312,7 +318,10 @@ func (ue *RanUeContext) DeriveResEAPMessageAndSetKey(
 	Kaut := MK[16:48]
 	Kausf := MK[144:176]
 	P0 = []byte(snName)
-	Kseaf := UeauCommon.GetKDFValue(Kausf, UeauCommon.FC_FOR_KSEAF_DERIVATION, P0, UeauCommon.KDFLen(P0))
+	Kseaf, err := ueauth.GetKDFValue(Kausf, ueauth.FC_FOR_KSEAF_DERIVATION, P0, ueauth.KDFLen(P0))
+	if err != nil {
+		fatal.Fatalf("GetKDFValue error: %+v", err)
+	}
 
 	// fill response EAP packet
 	resEAPMessage := make([]byte, 40)
@@ -343,29 +352,36 @@ func (ue *RanUeContext) DeriveResEAPMessageAndSetKey(
 	groups := supiRegexp.FindStringSubmatch(ue.Supi)
 
 	P0 = []byte(groups[1])
-	L0 := UeauCommon.KDFLen(P0)
+	L0 := ueauth.KDFLen(P0)
 	P1 = []byte{0x00, 0x00}
-	L1 := UeauCommon.KDFLen(P1)
+	L1 := ueauth.KDFLen(P1)
 
-	ue.Kamf = UeauCommon.GetKDFValue(Kseaf, UeauCommon.FC_FOR_KAMF_DERIVATION, P0, L0, P1, L1)
+	ue.Kamf, err = ueauth.GetKDFValue(Kseaf, ueauth.FC_FOR_KAMF_DERIVATION, P0, L0, P1, L1)
+	if err != nil {
+		fatal.Fatalf("GetKDFValue error: %+v", err)
+	}
 
 	ue.DerivateAlgKey()
 	return resEAPMessage
-
 }
 
 func (ue *RanUeContext) DerivateKamf(key []byte, snName string, SQN, AK []byte) {
-
-	FC := UeauCommon.FC_FOR_KAUSF_DERIVATION
+	FC := ueauth.FC_FOR_KAUSF_DERIVATION
 	P0 := []byte(snName)
 	SQNxorAK := make([]byte, 6)
 	for i := 0; i < len(SQN); i++ {
 		SQNxorAK[i] = SQN[i] ^ AK[i]
 	}
 	P1 := SQNxorAK
-	Kausf := UeauCommon.GetKDFValue(key, FC, P0, UeauCommon.KDFLen(P0), P1, UeauCommon.KDFLen(P1))
+	Kausf, err := ueauth.GetKDFValue(key, FC, P0, ueauth.KDFLen(P0), P1, ueauth.KDFLen(P1))
+	if err != nil {
+		fatal.Fatalf("GetKDFValue error: %+v", err)
+	}
 	P0 = []byte(snName)
-	Kseaf := UeauCommon.GetKDFValue(Kausf, UeauCommon.FC_FOR_KSEAF_DERIVATION, P0, UeauCommon.KDFLen(P0))
+	Kseaf, err := ueauth.GetKDFValue(Kausf, ueauth.FC_FOR_KSEAF_DERIVATION, P0, ueauth.KDFLen(P0))
+	if err != nil {
+		fatal.Fatalf("GetKDFValue error: %+v", err)
+	}
 
 	supiRegexp, err := regexp.Compile("(?:imsi|supi)-([0-9]{5,15})")
 	if err != nil {
@@ -374,31 +390,40 @@ func (ue *RanUeContext) DerivateKamf(key []byte, snName string, SQN, AK []byte) 
 	groups := supiRegexp.FindStringSubmatch(ue.Supi)
 
 	P0 = []byte(groups[1])
-	L0 := UeauCommon.KDFLen(P0)
+	L0 := ueauth.KDFLen(P0)
 	P1 = []byte{0x00, 0x00}
-	L1 := UeauCommon.KDFLen(P1)
+	L1 := ueauth.KDFLen(P1)
 
-	ue.Kamf = UeauCommon.GetKDFValue(Kseaf, UeauCommon.FC_FOR_KAMF_DERIVATION, P0, L0, P1, L1)
+	ue.Kamf, err = ueauth.GetKDFValue(Kseaf, ueauth.FC_FOR_KAMF_DERIVATION, P0, L0, P1, L1)
+	if err != nil {
+		fatal.Fatalf("GetKDFValue error: %+v", err)
+	}
 }
 
 // Algorithm key Derivation function defined in TS 33.501 Annex A.9
 func (ue *RanUeContext) DerivateAlgKey() {
 	// Security Key
 	P0 := []byte{security.NNASEncAlg}
-	L0 := UeauCommon.KDFLen(P0)
+	L0 := ueauth.KDFLen(P0)
 	P1 := []byte{ue.CipheringAlg}
-	L1 := UeauCommon.KDFLen(P1)
+	L1 := ueauth.KDFLen(P1)
 
-	kenc := UeauCommon.GetKDFValue(ue.Kamf, UeauCommon.FC_FOR_ALGORITHM_KEY_DERIVATION, P0, L0, P1, L1)
+	kenc, err := ueauth.GetKDFValue(ue.Kamf, ueauth.FC_FOR_ALGORITHM_KEY_DERIVATION, P0, L0, P1, L1)
+	if err != nil {
+		fatal.Fatalf("GetKDFValue error: %+v", err)
+	}
 	copy(ue.KnasEnc[:], kenc[16:32])
 
 	// Integrity Key
 	P0 = []byte{security.NNASIntAlg}
-	L0 = UeauCommon.KDFLen(P0)
+	L0 = ueauth.KDFLen(P0)
 	P1 = []byte{ue.IntegrityAlg}
-	L1 = UeauCommon.KDFLen(P1)
+	L1 = ueauth.KDFLen(P1)
 
-	kint := UeauCommon.GetKDFValue(ue.Kamf, UeauCommon.FC_FOR_ALGORITHM_KEY_DERIVATION, P0, L0, P1, L1)
+	kint, err := ueauth.GetKDFValue(ue.Kamf, ueauth.FC_FOR_ALGORITHM_KEY_DERIVATION, P0, L0, P1, L1)
+	if err != nil {
+		fatal.Fatalf("GetKDFValue error: %+v", err)
+	}
 	copy(ue.KnasInt[:], kint[16:32])
 }
 

@@ -1,14 +1,11 @@
 package test
 
 import (
+	"test/ngapTestpacket"
+
 	"github.com/free5gc/nas"
 	"github.com/free5gc/nas/nasMessage"
 	"github.com/free5gc/ngap"
-
-	// Nausf_UEAU_Client "github.com/free5gc/openapi/Nausf_UEAuthentication"
-	// "github.com/free5gc/openapi/models"
-
-	"test/ngapTestpacket"
 )
 
 func GetNGSetupRequest(gnbId []byte, bitlength uint64, name string) ([]byte, error) {
@@ -47,12 +44,14 @@ func GetInitialContextSetupResponseForServiceRequest(
 	return ngap.Encoder(message)
 }
 
-func GetPDUSessionResourceSetupResponse(pduSessionId int64, amfUeNgapID int64, ranUeNgapID int64,
-	ipv4 string) ([]byte, error) {
-	message := ngapTestpacket.BuildPDUSessionResourceSetupResponseForRegistrationTest(
-		pduSessionId, amfUeNgapID, ranUeNgapID, ipv4)
+func GetPDUSessionResourceSetupResponse(
+	pduSessionId int64, amfUeNgapID int64,
+	ranUeNgapID int64, ipv4 string) ([]byte, error) {
+	message := ngapTestpacket.
+		BuildPDUSessionResourceSetupResponseForRegistrationTest(pduSessionId, amfUeNgapID, ranUeNgapID, ipv4)
 	return ngap.Encoder(message)
 }
+
 func EncodeNasPduWithSecurity(ue *RanUeContext, pdu []byte, securityHeaderType uint8,
 	securityContextAvailable, newSecurityContext bool) ([]byte, error) {
 	m := nas.NewMessage()

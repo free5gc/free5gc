@@ -7,16 +7,16 @@ import (
 	"net"
 	"os"
 	"strings"
-	"test"
 	"time"
 
 	"github.com/calee0219/fatal"
 	"github.com/urfave/cli"
 	"gopkg.in/yaml.v2"
+	"test"
+	"test/nasTestpacket"
 
 	"github.com/free5gc/nas"
 	"github.com/free5gc/nas/nasMessage"
-	"github.com/free5gc/nas/nasTestpacket"
 	"github.com/free5gc/nas/nasType"
 	"github.com/free5gc/nas/security"
 	"github.com/free5gc/ngap"

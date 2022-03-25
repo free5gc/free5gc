@@ -67,7 +67,7 @@ export GIN_MODE=release
 # Setup bridge
 sudo ip link add veth0 type veth peer name br-veth0
 sudo ip link set veth0 up
-# sudo ip addr add 60.60.0.1 dev lo
+# sudo ip addr add 10.60.0.1 dev lo
 sudo ip addr add 10.200.200.1/24 dev veth0
 sudo ip addr add 10.200.200.2/24 dev veth0
 
@@ -88,7 +88,7 @@ for i in $(seq -f "%02g" 1 $UPF_NUM); do
 
     sudo ip netns exec "${UPFNS}${i}" ip link set lo up
     sudo ip netns exec "${UPFNS}${i}" ip link set "veth${i}" up
-#    sudo ip netns exec "${UPFNS}${i}" ip addr add "60.60.0.1${i}" dev lo
+#    sudo ip netns exec "${UPFNS}${i}" ip addr add "10.60.0.1${i}" dev lo
     sudo ip netns exec "${UPFNS}${i}" ip addr add "10.200.200.1${i}/24" dev "veth${i}"
 
     sudo ip link set "br-veth${i}" master free5gc-br
@@ -99,25 +99,27 @@ for i in $(seq -f "%02g" 1 $UPF_NUM); do
         TCPDUMP_PID_[${i}]=$(sudo ip netns pids "${UPFNS}${i}")
     fi
 
-    cd NFs/upf/build && sudo -E ip netns exec "${UPFNS}${i}" ./bin/free5gc-upfd -f "${CONF_DIR}/multiUPF/upfcfg${i}.yaml" &
+    cd NFs/upf/build && sudo -E ip netns exec "${UPFNS}${i}" ./bin/free5gc-upfd -c "${CONF_DIR}/multiUPF/upfcfg${i}.yaml" &
     sleep 1
 done
 
 NF_LIST="nrf amf udr pcf udm nssf ausf"
 F5GC_DIR="$(cd "$( dirname "$0" )" && pwd -P)"
 for NF in ${NF_LIST}; do
-    $F5GC_DIR/bin/${NF} -${NF}cfg "${CONF_DIR}/${NF}cfg.yaml"&
+    $F5GC_DIR/bin/${NF} -c "${CONF_DIR}/${NF}cfg.yaml"&
     PID_LIST+=($!)
+    sleep 0.1
 done
 
-$F5GC_DIR/bin/smf -smfcfg "${CONF_DIR}/multiUPF/smfcfg.ulcl.yaml" -uerouting "${CONF_DIR}/multiUPF/uerouting.yaml"&
+$F5GC_DIR/bin/smf -c "${CONF_DIR}/multiUPF/smfcfg.ulcl.yaml" -u "${CONF_DIR}/multiUPF/uerouting.yaml"&
 PID_LIST+=($!)
 
 cd test
 $GOROOT/bin/go test -v -vet=off -run $1  -args noinit
 
 for ((idx=${#PID_LIST[@]}-1;idx>=0;idx--)); do
-    sudo kill -SIGKILL ${PID_LIST[$idx]}
+    sudo kill -SIGINT ${PID_LIST[$idx]}
+    sleep 0.1
 done
 
 sleep 3
@@ -130,7 +132,7 @@ for KEYLOG in $(ls *sslkey.log); do
      mv $KEYLOG testkeylog
 done
 
-# sudo ip addr del 60.60.0.1/32 dev lo
+# sudo ip addr del 10.60.0.1/32 dev lo
 sudo ip link del veth0
 sudo ip link del free5gc-br
 

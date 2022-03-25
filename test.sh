@@ -29,14 +29,12 @@ do
 done
 shift $(($OPTIND - 1))
 
-TEST_POOL="TestRegistration|TestGUTIRegistration|TestServiceRequest|TestXnHandover|TestN2Handover|TestDeregistration|TestPDUSessionReleaseRequest|TestPaging|TestNon3GPP|TestReSynchronisation|TestDuplicateRegistration|TestEAPAKAPrimeAuthentication"
+TEST_POOL="TestRegistration|TestGUTIRegistration|TestServiceRequest|TestXnHandover|TestN2Handover|TestDeregistration|TestPDUSessionReleaseRequest|TestPaging|TestNon3GPP|TestReSynchronization|TestDuplicateRegistration|TestEAPAKAPrimeAuthentication"
 if [[ ! "$1" =~ $TEST_POOL ]]
 then
     echo "Usage: $0 [ ${TEST_POOL//|/ | } ]"
     exit 1
 fi
-
-cp config/test/smfcfg.single.test.yaml config/test/smfcfg.test.yaml
 
 GOPATH=$HOME/go
 if [ $OS == "Ubuntu" ]; then
@@ -66,15 +64,13 @@ function terminate()
 
     sudo ip link del veth0
     sudo ip netns del ${UPFNS}
-    sudo ip addr del 60.60.0.1/32 dev lo
+    sudo ip addr del 10.60.0.1/32 dev lo
 
     if [[ "$1" == "TestNon3GPP" ]]
     then
-        # Go back to free5gc folder
-        cd ..
         if [ ${DUMP_NS} ]
         then
-            sudo ip xfrm state > ${PCAP_PATH}/NWu_SA_state.log
+            cd .. && sudo ip xfrm state > ${PCAP_PATH}/NWu_SA_state.log
         fi
         sudo ip xfrm policy flush
         sudo ip xfrm state flush
@@ -84,8 +80,6 @@ function terminate()
         sudo ip netns del ${UENS}
         sudo killall n3iwf
         killall test.test
-        cp -f config/amfcfg.yaml.bak config/amfcfg.yaml
-        rm -f config/amfcfg.yaml.bak
     fi
 
     sleep 5
@@ -127,7 +121,7 @@ function tcpdumpN3IWF()
     N3IWF_IPSec_iface_addr=192.168.127.1
     N3IWF_IPsec_inner_addr=10.0.0.1
     N3IWF_GTP_addr=10.200.200.2
-    UE_DN_addr=60.60.0.1
+    UE_DN_addr=10.60.0.1
 
     ${EXEC_UENS} tcpdump -U -i any -w $PCAP_PATH/$UENS.pcap &
     TCPDUMP_QUERY=" host $N3IWF_IPSec_iface_addr or \
@@ -142,7 +136,7 @@ sudo ip netns add ${UPFNS}
 
 sudo ip link add veth0 type veth peer name veth1
 sudo ip link set veth0 up
-sudo ip addr add 60.60.0.1 dev lo
+sudo ip addr add 10.60.0.1 dev lo
 sudo ip addr add 10.200.200.1/24 dev veth0
 sudo ip addr add 10.200.200.2/24 dev veth0
 
@@ -150,7 +144,7 @@ sudo ip link set veth1 netns ${UPFNS}
 
 ${EXEC_UPFNS} ip link set lo up
 ${EXEC_UPFNS} ip link set veth1 up
-${EXEC_UPFNS} ip addr add 60.60.0.101 dev lo
+${EXEC_UPFNS} ip addr add 10.60.0.101 dev lo
 ${EXEC_UPFNS} ip addr add 10.200.200.101/24 dev veth1
 ${EXEC_UPFNS} ip addr add 10.200.200.102/24 dev veth1
 
@@ -167,13 +161,8 @@ sleep 2
 
 if [[ "$1" == "TestNon3GPP" ]]
 then
-    # Setup N3UE's namespace, interfaces for IPsec
+    # setup N3UE's namespace, interfaces for IPsec
     setupN3ueEnv
-
-    # Configuration
-    cp -f config/amfcfg.yaml config/amfcfg.yaml.bak
-    cp -f config/amfcfg.n3test.yaml config/amfcfg.yaml
-
     if [ ${DUMP_NS} ]
     then
         tcpdumpN3IWF
@@ -184,13 +173,12 @@ then
     sleep 10
 
     # Run N3IWF
-    cd NFs/n3iwf && sudo -E $GOROOT/bin/go run n3iwf.go &
+    sudo -E ./bin/n3iwf -c ./config/n3iwfcfg.test.yaml &
     sleep 5
 
     # Run Test UE
     cd test
     ${EXEC_UENS} $GOROOT/bin/go test -v -vet=off -timeout 0 -run TestNon3GPPUE -args noinit
-
 else
     cd test
     $GOROOT/bin/go test -v -vet=off -run $1

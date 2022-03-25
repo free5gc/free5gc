@@ -30,8 +30,8 @@ func TestICMP(t *testing.T) {
 		Flags:    0,
 		TotalLen: 48,
 		TTL:      64,
-		Src:      net.ParseIP("60.60.0.1").To4(),
-		Dst:      net.ParseIP("60.60.0.20").To4(),
+		Src:      net.ParseIP("10.60.0.1").To4(),
+		Dst:      net.ParseIP("10.60.0.20").To4(),
 		ID:       1,
 		Checksum: 0x0240,
 	}

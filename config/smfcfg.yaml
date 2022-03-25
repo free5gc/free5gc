@@ -10,8 +10,8 @@ configuration:
     bindingIPv4: 127.0.0.2  # IP used to bind the service
     port: 8000 # Port used to bind the service
     tls: # the local path of TLS key
-      key: free5gc/support/TLS/smf.key # SMF TLS Certificate
-      pem: free5gc/support/TLS/smf.pem # SMF TLS Private key
+      key: config/TLS/smf.key # SMF TLS Certificate
+      pem: config/TLS/smf.pem # SMF TLS Private key
   serviceNameList: # the SBI services provided by this SMF, refer to TS 29.502
     - nsmf-pdusession # Nsmf_PDUSession service
     - nsmf-event-exposure # Nsmf_EventExposure service
@@ -34,15 +34,16 @@ configuration:
   plmnList: # the list of PLMN IDs that this SMF belongs to (optional, remove this key when unnecessary)
     - mcc: "208" # Mobile Country Code (3 digits string, digit: 0~9)
       mnc: "93" # Mobile Network Code (2 or 3 digits string, digit: 0~9)
+  locality: area1 # Name of the location where a set of AMF, SMF and UPFs are located
   pfcp: # the IP address of N4 interface on this SMF (PFCP)
     addr: 127.0.0.1
-  userplane_information: # list of userplane information
-    up_nodes: # information of userplane node (AN or UPF)
+  userplaneInformation: # list of userplane information
+    upNodes: # information of userplane node (AN or UPF)
       gNB1: # the name of the node
         type: AN # the type of the node (AN or UPF)
       UPF:  # the name of the node
         type: UPF # the type of the node (AN or UPF)
-        node_id: 127.0.0.8 # the IP/FQDN of N4 interface on this UPF (PFCP)
+        nodeID: 127.0.0.8 # the IP/FQDN of N4 interface on this UPF (PFCP)
         sNssaiUpfInfos: # S-NSSAI information list for this UPF
           - sNssai: # S-NSSAI (Single Network Slice Selection Assistance Information)
               sst: 1 # Slice/Service Type (uinteger, range: 0~255)
@@ -50,14 +51,14 @@ configuration:
             dnnUpfInfoList: # DNN information list for this S-NSSAI
               - dnn: internet
                 pools:
-                  - cidr: 60.60.0.0/16
+                  - cidr: 10.60.0.0/16
           - sNssai: # S-NSSAI (Single Network Slice Selection Assistance Information)
               sst: 1 # Slice/Service Type (uinteger, range: 0~255)
               sd: 112233 # Slice Differentiator (3 bytes hex string, range: 000000~FFFFFF)
             dnnUpfInfoList: # DNN information list for this S-NSSAI
               - dnn: internet
                 pools:
-                  - cidr: 60.61.0.0/16
+                  - cidr: 10.61.0.0/16
         interfaces: # Interface list for this UPF
           - interfaceType: N3 # the type of the interface (N3 or N9)
             endpoints: # the IP address of this N3/N9 interface on this UPF
@@ -67,11 +68,10 @@ configuration:
       - A: gNB1
         B: UPF
   nrfUri: http://127.0.0.10:8000 # a valid URI of NRF
-  locality: area1 # Name of the location where a set of AMF, SMF and UPFs are located
 
 # the kind of log output
-  # debugLevel: how detailed to output, value: trace, debug, info, warn, error, fatal, panic
-  # ReportCaller: enable the caller report or not, value: true or false
+# debugLevel: how detailed to output, value: trace, debug, info, warn, error, fatal, panic
+# ReportCaller: enable the caller report or not, value: true or false
 logger:
   SMF:
     debugLevel: info
@@ -83,12 +83,6 @@ logger:
     debugLevel: info
     ReportCaller: false
   Aper:
-    debugLevel: info
-    ReportCaller: false
-  PathUtil:
-    debugLevel: info
-    ReportCaller: false
-  OpenApi:
     debugLevel: info
     ReportCaller: false
   PFCP:

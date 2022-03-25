@@ -1,79 +1,57 @@
 info:
-  version: 1.0.0
+  version: 1.0.1
   description: N3IWF initial local configuration
 
 configuration:
   N3IWFInformation:
     GlobalN3IWFID: # ID used to globally identify an N3IWF
       PLMNID: # Public Land Mobile Network ID, <PLMN ID> = <MCC><MNC>
-        MCC: # Mobile Country Code (3 digits string, digit: 0~9)
-          208
-        MNC: # Mobile Network Code (2 or 3 digits string, digit: 0~9)
-          93
-      N3IWFID: # ID used to identify an N3IWF in PLMN (uinteger, range: 0~65535)
-        135
-    Name: # The name of this N3IWF
-      free5GC_N3IWF
+        MCC: 208 # Mobile Country Code (3 digits string, digit: 0~9)
+        MNC: 93 # Mobile Network Code (2 or 3 digits string, digit: 0~9)
+      N3IWFID: 135 # ID used to identify an N3IWF in PLMN (uinteger, range: 0~65535)
+    Name: free5GC_N3IWF # The name of this N3IWF
     SupportedTAList: # Tracking Area supported by this N3IWF
-      - TAC: # Tracking Area Code (3 bytes hex string, range: 000000~FFFFFF)
-          000001
+      - TAC: 000001 # Tracking Area Code (3 bytes hex string, range: 000000~FFFFFF)
         BroadcastPLMNList: # Refer to TS 38.413
           - PLMNID: # Public Land Mobile Network ID
-              MCC: # Mobile Country Code (3 digits string, digit: 0~9)
-                208
-              MNC: # Mobile Network Code (2 or 3 digits string, digit: 0~9)
-                93
+              MCC: 208 # Mobile Country Code (3 digits string, digit: 0~9)
+              MNC: 93 # Mobile Network Code (2 or 3 digits string, digit: 0~9)
             TAISliceSupportList: # Network Slice supported in this TAI
               - SNSSAI: # Single Network Slice Selection Assistance Information
-                  SST: # Slice/Service Type (1 byte hex string, range: 0~F)
-                    1
-                  SD: # Slice Differentiator (3 bytes hex string, range: 000000~FFFFFF)
-                    010203
-              - SNSSAI:
-                  SST:
-                    1
-                  SD:
-                    112233
+                  SST: 1 # Slice/Service Type (1 byte hex string, range: 0~F)
+                  SD: 010203 # Slice Differentiator (3 bytes hex string, range: 000000~FFFFFF)
+              - SNSSAI: # Single Network Slice Selection Assistance Information
+                  SST: 1 # Slice/Service Type (1 byte hex string, range: 0~F)
+                  SD: 112233 # Slice Differentiator (3 bytes hex string, range: 000000~FFFFFF)
   AMFSCTPAddresses: # the IP list of N2 interfaces (SCTP) on AMF when using NGAP
     - IP:
       - 127.0.0.18
-
+      Port: 38412
 
   # --- Bind Interfaces ---
-  IKEBindAddress: # IP address of Nwu interface (IKE) on this N3IWF
-    127.0.0.21
+  IKEBindAddress: 127.0.0.21 # IP address of Nwu interface (IKE) on this N3IWF
 
-  IPSecInterfaceAddress: # IP address of IPSec virtual interface (IPsec tunnel enpoint on this N3IWF)
-    10.0.0.1
+  IPSecInterfaceAddress: 10.0.0.1 # IP address of IPSec virtual interface (IPsec tunnel enpoint on this N3IWF)
 
-  IPSecInterfaceMark: # IPSec virtual interface mark (Any value except to 0, default value is 7 if not defined)
-    5
+  UEIPAddressRange: 10.0.0.0/24 # IP address allocated to UE in IPSec tunnel
 
-  GTPBindAddress: # IP address of N3 interface (GTP) on this N3IWF
-    10.200.200.2
+  IPSecInterfaceMark: 5 # IPSec virtual interface mark (Any value except to 0, default value is 7 if not defined)
 
-  NASTCPPort: # TCP port which the NAS listens on
-    20000
+  GTPBindAddress: 10.200.200.2 # IP address of N3 interface (GTP) on this N3IWF
 
-  FQDN: # FQDN of this N3IWF
-    n3iwf.free5gc.org
+  NASTCPPort: 20000 # TCP port which the NAS listens on
+
+  FQDN: n3iwf.free5gc.org # FQDN of this N3IWF
 
 
   # --- Security ---
-  PrivateKey: # Private key file path
-
-  CertificateAuthority: # Certificate Authority (CA) file path
-
-  Certificate: # Certificate file path
-
-
-
-  UEIPAddressRange: # IP address allocated to UE in IPSec tunnel
-    10.0.0.0/24
+  PrivateKey: config/TLS/n3iwf.key # Private key file path
+  CertificateAuthority: config/TLS/n3iwf.pem # Certificate Authority (CA) file path
+  Certificate: config/TLS/n3iwf.pem # Certificate file path
 
 # the kind of log output
-  # debugLevel: how detailed to output, value: trace, debug, info, warn, error, fatal, panic
-  # ReportCaller: enable the caller report or not, value: true or false
+# debugLevel: how detailed to output, value: trace, debug, info, warn, error, fatal, panic
+# ReportCaller: enable the caller report or not, value: true or false
 logger:
   N3IWF: # The default log level is DEBUG to print SA keys. Please change it to INFO when deployed.
     debugLevel: debug
@@ -82,8 +60,5 @@ logger:
     debugLevel: info
     ReportCaller: false
   Aper:
-    debugLevel: info
-    ReportCaller: false
-  PathUtil:
     debugLevel: info
     ReportCaller: false

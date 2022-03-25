@@ -7,15 +7,15 @@ import (
 	"reflect"
 	"testing"
 
+	"test/nasTestpacket"
+	"test/ngapTestpacket"
+
 	"github.com/free5gc/aper"
 	"github.com/free5gc/nas"
 	"github.com/free5gc/nas/nasMessage"
-	"github.com/free5gc/nas/nasTestpacket"
 	"github.com/free5gc/nas/nasType"
 	"github.com/free5gc/ngap"
 	"github.com/free5gc/ngap/ngapType"
-
-	"test/ngapTestpacket"
 )
 
 type testEncodeData struct {

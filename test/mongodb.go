@@ -6,8 +6,8 @@ import (
 	"github.com/calee0219/fatal"
 	"go.mongodb.org/mongo-driver/bson"
 
-	"github.com/free5gc/MongoDBLibrary"
 	"github.com/free5gc/openapi/models"
+	"github.com/free5gc/util/mongoapi"
 )
 
 func toBsonM(data interface{}) bson.M {
@@ -28,13 +28,18 @@ func InsertAuthSubscriptionToMongoDB(ueId string, authSubs models.Authentication
 	filter := bson.M{"ueId": ueId}
 	putData := toBsonM(authSubs)
 	putData["ueId"] = ueId
-	MongoDBLibrary.RestfulAPIPutOne(collName, filter, putData)
+	if _, err := mongoapi.RestfulAPIPutOne(collName, filter, putData); err != nil {
+		fatal.Fatalf("InsertAuthSubscriptionToMongoDB err: %+v", err)
+	}
 }
 
 func GetAuthSubscriptionFromMongoDB(ueId string) (authSubs *models.AuthenticationSubscription) {
 	collName := "subscriptionData.authenticationData.authenticationSubscription"
 	filter := bson.M{"ueId": ueId}
-	getData := MongoDBLibrary.RestfulAPIGetOne(collName, filter)
+	getData, err := mongoapi.RestfulAPIGetOne(collName, filter)
+	if err != nil {
+		fatal.Fatalf("GetAuthSubscriptionFromMongoDB err: %+v", err)
+	}
 	if getData == nil {
 		return
 	}
@@ -53,7 +58,9 @@ func GetAuthSubscriptionFromMongoDB(ueId string) (authSubs *models.Authenticatio
 func DelAuthSubscriptionToMongoDB(ueId string) {
 	collName := "subscriptionData.authenticationData.authenticationSubscription"
 	filter := bson.M{"ueId": ueId}
-	MongoDBLibrary.RestfulAPIDeleteMany(collName, filter)
+	if err := mongoapi.RestfulAPIDeleteMany(collName, filter); err != nil {
+		fatal.Fatalf("DelAuthSubscriptionToMongoDB err: %+v", err)
+	}
 }
 
 func InsertAccessAndMobilitySubscriptionDataToMongoDB(
@@ -63,14 +70,19 @@ func InsertAccessAndMobilitySubscriptionDataToMongoDB(
 	putData := toBsonM(amData)
 	putData["ueId"] = ueId
 	putData["servingPlmnId"] = servingPlmnId
-	MongoDBLibrary.RestfulAPIPutOne(collName, filter, putData)
+	if _, err := mongoapi.RestfulAPIPutOne(collName, filter, putData); err != nil {
+		fatal.Fatalf("InsertAccessAndMobilitySubscriptionDataToMongoDB err: %+v", err)
+	}
 }
 
 func GetAccessAndMobilitySubscriptionDataFromMongoDB(
 	ueId string, servingPlmnId string) (amData *models.AccessAndMobilitySubscriptionData) {
 	collName := "subscriptionData.provisionedData.amData"
 	filter := bson.M{"ueId": ueId, "servingPlmnId": servingPlmnId}
-	getData := MongoDBLibrary.RestfulAPIGetOne(collName, filter)
+	getData, err := mongoapi.RestfulAPIGetOne(collName, filter)
+	if err != nil {
+		fatal.Fatalf("GetAccessAndMobilitySubscriptionDataFromMongoDB err: %+v", err)
+	}
 	if getData == nil {
 		return
 	}
@@ -89,7 +101,9 @@ func GetAccessAndMobilitySubscriptionDataFromMongoDB(
 func DelAccessAndMobilitySubscriptionDataFromMongoDB(ueId string, servingPlmnId string) {
 	collName := "subscriptionData.provisionedData.amData"
 	filter := bson.M{"ueId": ueId, "servingPlmnId": servingPlmnId}
-	MongoDBLibrary.RestfulAPIDeleteMany(collName, filter)
+	if err := mongoapi.RestfulAPIDeleteMany(collName, filter); err != nil {
+		fatal.Fatalf("DelAccessAndMobilitySubscriptionDataFromMongoDB err: %+v", err)
+	}
 }
 
 func InsertSessionManagementSubscriptionDataToMongoDB(
@@ -103,14 +117,19 @@ func InsertSessionManagementSubscriptionDataToMongoDB(
 		putData["servingPlmnId"] = servingPlmnId
 		putDatas = append(putDatas, putData)
 	}
-	MongoDBLibrary.RestfulAPIPostMany(collName, filter, putDatas)
+	if err := mongoapi.RestfulAPIPostMany(collName, filter, putDatas); err != nil {
+		fatal.Fatalf("InsertSessionManagementSubscriptionDataToMongoDB err: %+v", err)
+	}
 }
 
 func GetSessionManagementDataFromMongoDB(
 	ueId string, servingPlmnId string) (amData *models.SessionManagementSubscriptionData) {
 	collName := "subscriptionData.provisionedData.smData"
 	filter := bson.M{"ueId": ueId, "servingPlmnId": servingPlmnId}
-	getData := MongoDBLibrary.RestfulAPIGetOne(collName, filter)
+	getData, err := mongoapi.RestfulAPIGetOne(collName, filter)
+	if err != nil {
+		fatal.Fatalf("GetSessionManagementDataFromMongoDB err: %+v", err)
+	}
 	if getData == nil {
 		return
 	}
@@ -129,7 +148,9 @@ func GetSessionManagementDataFromMongoDB(
 func DelSessionManagementSubscriptionDataFromMongoDB(ueId string, servingPlmnId string) {
 	collName := "subscriptionData.provisionedData.smData"
 	filter := bson.M{"ueId": ueId, "servingPlmnId": servingPlmnId}
-	MongoDBLibrary.RestfulAPIDeleteMany(collName, filter)
+	if err := mongoapi.RestfulAPIDeleteMany(collName, filter); err != nil {
+		fatal.Fatalf("DelSessionManagementSubscriptionDataFromMongoDB err: %+v", err)
+	}
 }
 
 func InsertSmfSelectionSubscriptionDataToMongoDB(
@@ -139,14 +160,19 @@ func InsertSmfSelectionSubscriptionDataToMongoDB(
 	putData := toBsonM(smfSelData)
 	putData["ueId"] = ueId
 	putData["servingPlmnId"] = servingPlmnId
-	MongoDBLibrary.RestfulAPIPutOne(collName, filter, putData)
+	if _, err := mongoapi.RestfulAPIPutOne(collName, filter, putData); err != nil {
+		fatal.Fatalf("InsertSmfSelectionSubscriptionDataToMongoDB err: %+v", err)
+	}
 }
 
 func GetSmfSelectionSubscriptionDataFromMongoDB(
 	ueId string, servingPlmnId string) (smfSelData *models.SmfSelectionSubscriptionData) {
 	collName := "subscriptionData.provisionedData.smfSelectionSubscriptionData"
 	filter := bson.M{"ueId": ueId, "servingPlmnId": servingPlmnId}
-	getData := MongoDBLibrary.RestfulAPIGetOne(collName, filter)
+	getData, err := mongoapi.RestfulAPIGetOne(collName, filter)
+	if err != nil {
+		fatal.Fatalf("GetSmfSelectionSubscriptionDataFromMongoDB err: %+v", err)
+	}
 	if getData == nil {
 		return
 	}
@@ -165,7 +191,9 @@ func GetSmfSelectionSubscriptionDataFromMongoDB(
 func DelSmfSelectionSubscriptionDataFromMongoDB(ueId string, servingPlmnId string) {
 	collName := "subscriptionData.provisionedData.smfSelectionSubscriptionData"
 	filter := bson.M{"ueId": ueId, "servingPlmnId": servingPlmnId}
-	MongoDBLibrary.RestfulAPIDeleteMany(collName, filter)
+	if err := mongoapi.RestfulAPIDeleteMany(collName, filter); err != nil {
+		fatal.Fatalf("DelSmfSelectionSubscriptionDataFromMongoDB err: %+v", err)
+	}
 }
 
 func InsertAmPolicyDataToMongoDB(ueId string, amPolicyData models.AmPolicyData) {
@@ -173,13 +201,18 @@ func InsertAmPolicyDataToMongoDB(ueId string, amPolicyData models.AmPolicyData) 
 	filter := bson.M{"ueId": ueId}
 	putData := toBsonM(amPolicyData)
 	putData["ueId"] = ueId
-	MongoDBLibrary.RestfulAPIPutOne(collName, filter, putData)
+	if _, err := mongoapi.RestfulAPIPutOne(collName, filter, putData); err != nil {
+		fatal.Fatalf("InsertAmPolicyDataToMongoDB err: %+v", err)
+	}
 }
 
 func GetAmPolicyDataFromMongoDB(ueId string) (amPolicyData *models.AmPolicyData) {
 	collName := "policyData.ues.amData"
 	filter := bson.M{"ueId": ueId}
-	getData := MongoDBLibrary.RestfulAPIGetOne(collName, filter)
+	getData, err := mongoapi.RestfulAPIGetOne(collName, filter)
+	if err != nil {
+		fatal.Fatalf("GetAmPolicyDataFromMongoDB err: %+v", err)
+	}
 	if getData == nil {
 		return
 	}
@@ -198,7 +231,9 @@ func GetAmPolicyDataFromMongoDB(ueId string) (amPolicyData *models.AmPolicyData)
 func DelAmPolicyDataFromMongoDB(ueId string) {
 	collName := "policyData.ues.amData"
 	filter := bson.M{"ueId": ueId}
-	MongoDBLibrary.RestfulAPIDeleteMany(collName, filter)
+	if err := mongoapi.RestfulAPIDeleteMany(collName, filter); err != nil {
+		fatal.Fatalf("DelAmPolicyDataFromMongoDB err: %+v", err)
+	}
 }
 
 func InsertSmPolicyDataToMongoDB(ueId string, smPolicyData models.SmPolicyData) {
@@ -206,13 +241,18 @@ func InsertSmPolicyDataToMongoDB(ueId string, smPolicyData models.SmPolicyData) 
 	filter := bson.M{"ueId": ueId}
 	putData := toBsonM(smPolicyData)
 	putData["ueId"] = ueId
-	MongoDBLibrary.RestfulAPIPutOne(collName, filter, putData)
+	if _, err := mongoapi.RestfulAPIPutOne(collName, filter, putData); err != nil {
+		fatal.Fatalf("InsertSmPolicyDataToMongoDB err: %+v", err)
+	}
 }
 
 func GetSmPolicyDataFromMongoDB(ueId string) (smPolicyData *models.SmPolicyData) {
 	collName := "policyData.ues.smData"
 	filter := bson.M{"ueId": ueId}
-	getData := MongoDBLibrary.RestfulAPIGetOne(collName, filter)
+	getData, err := mongoapi.RestfulAPIGetOne(collName, filter)
+	if err != nil {
+		fatal.Fatalf("GetSmPolicyDataFromMongoDB err: %+v", err)
+	}
 	if getData == nil {
 		return
 	}
@@ -231,5 +271,7 @@ func GetSmPolicyDataFromMongoDB(ueId string) (smPolicyData *models.SmPolicyData)
 func DelSmPolicyDataFromMongoDB(ueId string) {
 	collName := "policyData.ues.smData"
 	filter := bson.M{"ueId": ueId}
-	MongoDBLibrary.RestfulAPIDeleteMany(collName, filter)
+	if err := mongoapi.RestfulAPIDeleteMany(collName, filter); err != nil {
+		fatal.Fatalf("DelSmPolicyDataFromMongoDB err: %+v", err)
+	}
 }

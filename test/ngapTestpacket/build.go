@@ -3258,7 +3258,7 @@ func buildPDUSessionResourceModifyResponseTransfer() (data ngapType.PDUSessionRe
 
 	qosFlowAddOrModifyResponseItem := ngapType.QosFlowAddOrModifyResponseItem{
 		QosFlowIdentifier: ngapType.QosFlowIdentifier{
-			Value: 1,
+			Value: 5,
 		},
 	}
 
@@ -3445,9 +3445,16 @@ func buildHandoverRequestAcknowledgeTransfer() (data ngapType.HandoverRequestAck
 	// Qos Flow Setup Response List
 	qosFlowSetupResponseItem := ngapType.QosFlowItemWithDataForwarding{
 		QosFlowIdentifier: ngapType.QosFlowIdentifier{
-			Value: 1,
+			Value: 9,
 		},
 	}
+
+	data.DLForwardingUPTNLInformation = new(ngapType.UPTransportLayerInformation)
+	dlForwardingUPTNLInfo := data.DLForwardingUPTNLInformation
+	dlForwardingUPTNLInfo.Present = ngapType.UPTransportLayerInformationPresentGTPTunnel
+	dlForwardingUPTNLInfo.GTPTunnel = new(ngapType.GTPTunnel)
+	dlForwardingUPTNLInfo.GTPTunnel.GTPTEID.Value = aper.OctetString("\x00\x00\x00\x02")
+	dlForwardingUPTNLInfo.GTPTunnel.TransportLayerAddress = ngapConvert.IPAddressToNgap("10.200.200.2", "")
 
 	data.QosFlowSetupResponseList.List = append(data.QosFlowSetupResponseList.List, qosFlowSetupResponseItem)
 

@@ -16,17 +16,17 @@ VERSION = $(shell git describe --tags)
 BUILD_TIME = $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 COMMIT_HASH = $(shell git submodule status | grep $(GO_SRC_PATH)/$(@F) | awk '{print $$(1)}' | cut -c1-8)
 COMMIT_TIME = $(shell cd $(GO_SRC_PATH)/$(@F) && git log --pretty="@%at" -1 | xargs date -u +"%Y-%m-%dT%H:%M:%SZ" -d)
-LDFLAGS = -X github.com/free5gc/version.VERSION=$(VERSION) \
-          -X github.com/free5gc/version.BUILD_TIME=$(BUILD_TIME) \
-          -X github.com/free5gc/version.COMMIT_HASH=$(COMMIT_HASH) \
-          -X github.com/free5gc/version.COMMIT_TIME=$(COMMIT_TIME)
+LDFLAGS = -X github.com/free5gc/util/version.VERSION=$(VERSION) \
+          -X github.com/free5gc/util/version.BUILD_TIME=$(BUILD_TIME) \
+          -X github.com/free5gc/util/version.COMMIT_HASH=$(COMMIT_HASH) \
+          -X github.com/free5gc/util/version.COMMIT_TIME=$(COMMIT_TIME)
 
 WEBCONSOLE_COMMIT_HASH = $(shell git submodule status | grep $(WEBCONSOLE) | awk '{print $$(1)}' | cut -c1-8)
 WEBCONSOLE_COMMIT_TIME = $(shell cd $(WEBCONSOLE) && git log --pretty="@%at" -1 | xargs date -u +"%Y-%m-%dT%H:%M:%SZ" -d)
-WEBCONSOLE_LDFLAGS = -X github.com/free5gc/version.VERSION=$(VERSION) \
-                     -X github.com/free5gc/version.BUILD_TIME=$(BUILD_TIME) \
-                     -X github.com/free5gc/version.COMMIT_HASH=$(WEBCONSOLE_COMMIT_HASH) \
-                     -X github.com/free5gc/version.COMMIT_TIME=$(WEBCONSOLE_COMMIT_TIME)
+WEBCONSOLE_LDFLAGS = -X github.com/free5gc/util/version.VERSION=$(VERSION) \
+                     -X github.com/free5gc/util/version.BUILD_TIME=$(BUILD_TIME) \
+                     -X github.com/free5gc/util/version.COMMIT_HASH=$(WEBCONSOLE_COMMIT_HASH) \
+                     -X github.com/free5gc/util/version.COMMIT_TIME=$(WEBCONSOLE_COMMIT_TIME)
 
 .PHONY: $(NF) $(WEBCONSOLE) clean
 
@@ -37,15 +37,15 @@ nfs: $(NF)
 all: $(NF) $(WEBCONSOLE)
 
 debug: GCFLAGS += -N -l
-debug: clean all
+debug: all
 
 $(GO_NF): % : $(GO_BIN_PATH)/%
 
-$(GO_BIN_PATH)/%: %.go $(NF_GO_FILES)
+$(GO_BIN_PATH)/%: $(NF_GO_FILES)
 # $(@F): The file-within-directory part of the file name of the target.
 	@echo "Start building $(@F)...."
-	cd $(GO_SRC_PATH)/$(@F) && \
-	CGO_ENABLED=0 go build -gcflags "$(GCFLAGS)" -ldflags "$(LDFLAGS)" -o $(ROOT_PATH)/$@ $(@F).go
+	cd $(GO_SRC_PATH)/$(@F)/cmd && \
+	CGO_ENABLED=0 go build -gcflags "$(GCFLAGS)" -ldflags "$(LDFLAGS)" -o $(ROOT_PATH)/$@ main.go
 
 vpath %.go $(addprefix $(GO_SRC_PATH)/, $(GO_NF))
 

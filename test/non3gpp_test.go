@@ -10,18 +10,19 @@ import (
 	"testing"
 	"time"
 
+	"test/consumerTestdata/UDM/TestGenAuthData"
+	"test/nasTestpacket"
+
 	"github.com/go-ping/ping"
 	"github.com/stretchr/testify/assert"
 	"github.com/vishvananda/netlink"
 	"golang.org/x/sys/unix"
 
-	"github.com/free5gc/CommonConsumerTestData/UDM/TestGenAuthData"
 	"github.com/free5gc/n3iwf/pkg/context"
 	"github.com/free5gc/n3iwf/pkg/ike/handler"
 	"github.com/free5gc/n3iwf/pkg/ike/message"
 	"github.com/free5gc/nas"
 	"github.com/free5gc/nas/nasMessage"
-	"github.com/free5gc/nas/nasTestpacket"
 	"github.com/free5gc/nas/nasType"
 	"github.com/free5gc/nas/security"
 	"github.com/free5gc/openapi/models"
@@ -1315,10 +1316,10 @@ func TestNon3GPPUE(t *testing.T) {
 	if linkGRE == nil {
 		t.Fatal("No link named gretun0")
 	}
-	// Link address 60.60.0.1/24
+	// Link address 10.60.0.1/24
 	linkGREAddr := &netlink.Addr{
 		IPNet: &net.IPNet{
-			IP:   net.IPv4(60, 60, 0, 1),
+			IP:   net.IPv4(10, 60, 0, 1),
 			Mask: net.IPv4Mask(255, 255, 255, 255),
 		},
 	}
@@ -1347,7 +1348,7 @@ func TestNon3GPPUE(t *testing.T) {
 	}()
 
 	// Ping remote
-	pinger, err := ping.NewPinger("60.60.0.101")
+	pinger, err := ping.NewPinger("10.60.0.101")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1369,7 +1370,7 @@ func TestNon3GPPUE(t *testing.T) {
 
 	pinger.Count = 5
 	pinger.Timeout = 10 * time.Second
-	pinger.Source = "60.60.0.1"
+	pinger.Source = "10.60.0.1"
 
 	time.Sleep(3 * time.Second)
 

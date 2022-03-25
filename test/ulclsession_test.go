@@ -3,21 +3,21 @@ package test_test
 import (
 	"fmt"
 	"os"
-	"path/filepath"
-
 	"os/exec"
-	"test"
+	"path/filepath"
 	"testing"
 	"time"
+
+	"test"
+	"test/consumerTestdata/UDM/TestGenAuthData"
+	"test/nasTestpacket"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	// ausf_context "github.com/free5gc/ausf/context"
-	"github.com/free5gc/CommonConsumerTestData/UDM/TestGenAuthData"
 	"github.com/free5gc/nas"
 	"github.com/free5gc/nas/nasMessage"
-	"github.com/free5gc/nas/nasTestpacket"
 	"github.com/free5gc/nas/nasType"
 	"github.com/free5gc/nas/security"
 	"github.com/free5gc/ngap"
@@ -31,7 +31,7 @@ func TestULCLAndMultiUPF(t *testing.T) {
 
 func testULCLSessionBase(t *testing.T, ueCount int, upfNum int) {
 	ranN2Ipv4Addr := "127.0.0.1"
-	amfN2Ipv4Addr := "127.0.0.1"
+	amfN2Ipv4Addr := "127.0.0.18"
 	ranN3Ipv4Addr := "10.200.200.1"
 
 	var n int

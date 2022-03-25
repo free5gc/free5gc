@@ -48,6 +48,6 @@ done
 
 sudo ip link del veth0
 sudo ip netns del ${UPFNS}
-sudo ip addr del 60.60.0.1/32 dev lo
+sudo ip addr del 10.60.0.1/32 dev lo
 
 sleep 2

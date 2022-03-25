@@ -21,7 +21,7 @@ then
     exit 1
 fi
 
-UPF_NUM=3
+UPF_NUM=2
 
 while getopts 'om:' OPT;
 do
@@ -44,7 +44,7 @@ do
 done
 shift $(($OPTIND - 1))
 
-TEST_POOL="TestRegistration"
+TEST_POOL="TestRequestTwoPDUSessions"
 if [[ ! "$1" =~ $TEST_POOL ]]
 then
     echo "Usage: $0 [ ${TEST_POOL//|/ | } ]"
@@ -59,8 +59,6 @@ elif [ $OS == "Fedora" ]; then
 fi
 PATH=$PATH:$GOPATH/bin:$GOROOT/bin
 
-cp config/test/smfcfg.ulcl.test.yaml config/test/smfcfg.test.yaml
-
 UPFNS="UPFns"
 
 export GIN_MODE=release
@@ -68,7 +66,7 @@ export GIN_MODE=release
 # Setup bridge
 sudo ip link add veth0 type veth peer name br-veth0
 sudo ip link set veth0 up
-sudo ip addr add 60.60.0.1 dev lo
+sudo ip addr add 10.60.0.1 dev lo
 sudo ip addr add 10.200.200.1/24 dev veth0
 sudo ip addr add 10.200.200.2/24 dev veth0
 
@@ -89,7 +87,7 @@ for i in $(seq -f "%02g" 1 $UPF_NUM); do
 
     sudo ip netns exec "${UPFNS}${i}" ip link set lo up
     sudo ip netns exec "${UPFNS}${i}" ip link set "veth${i}" up
-    sudo ip netns exec "${UPFNS}${i}" ip addr add "60.60.0.1${i}" dev lo
+    sudo ip netns exec "${UPFNS}${i}" ip addr add "10.60.0.1${i}" dev lo
     sudo ip netns exec "${UPFNS}${i}" ip addr add "10.200.200.1${i}/24" dev "veth${i}"
 
     sudo ip link set "br-veth${i}" master free5gc-br
@@ -102,12 +100,13 @@ for i in $(seq -f "%02g" 1 $UPF_NUM); do
 
     sed -i -e "s/10.200.200.10./10.200.200.1${i}/g" ./NFs/upf/build/config/upfcfg.ulcl.yaml
     if [ ${i} -eq 02 ]; then
-        sed -i -e "s/internet/intranet/g" ./NFs/upf/build/config/upfcfg.ulcl.yaml
+        sed -i -e "s/internet/internet2/g" ./NFs/upf/build/config/upfcfg.ulcl.yaml
     else
-        sed -i -e "s/intranet/internet/g" ./NFs/upf/build/config/upfcfg.ulcl.yaml
+        sed -i -e "s/internet2/internet/g" ./NFs/upf/build/config/upfcfg.ulcl.yaml
     fi
-    cd NFs/upf/build && sudo -E ip netns exec "${UPFNS}${i}" ./bin/free5gc-upfd -f config/upfcfg.ulcl.yaml &
+    cd NFs/upf/build && sudo -E ip netns exec "${UPFNS}${i}" ./bin/free5gc-upfd -c config/upfcfg.ulcl.yaml &
     sleep 1
+    sed -i -e "s/internet2/internet/g" ./NFs/upf/build/config/upfcfg.ulcl.yaml
 done
 
 cd test
@@ -123,7 +122,7 @@ for KEYLOG in $(ls *sslkey.log); do
     mv $KEYLOG testkeylog
 done
 
-sudo ip addr del 60.60.0.1/32 dev lo
+sudo ip addr del 10.60.0.1/32 dev lo
 sudo ip link del veth0
 sudo ip link del free5gc-br
 

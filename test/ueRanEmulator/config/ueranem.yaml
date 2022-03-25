@@ -11,7 +11,7 @@ n3Ran:
   addr: 10.100.200.1
   port: 2151
 rawUDP:
-  srcIP: 60.60.0.1
+  srcIP: 10.60.0.1
   srcPort: 30000
   dstIP: 10.10.0.21
   dstPort: 30001

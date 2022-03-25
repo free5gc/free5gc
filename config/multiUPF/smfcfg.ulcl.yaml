@@ -10,8 +10,8 @@ configuration:
     bindingIPv4: 127.0.0.2  # IP used to bind the service
     port: 8000
     tls:
-      key: free5gc/support/TLS/smf.key
-      pem: free5gc/support/TLS/smf.pem
+      key: config/TLS/smf.key
+      pem: config/TLS/smf.pem
   serviceNameList:
     - nsmf-pdusession
     - nsmf-event-exposure
@@ -22,7 +22,7 @@ configuration:
         sd: 010203
       dnnInfos:
         - dnn: internet
-          dns: 
+          dns:
             ipv4: 8.8.8.8
             ipv6: 2001:4860:4860::8888
     - sNssai:
@@ -30,7 +30,7 @@ configuration:
         sd: 112233
       dnnInfos:
         - dnn: internet
-          dns: 
+          dns:
             ipv4: 8.8.8.8
             ipv6: 2001:4860:4860::8888
     - sNssai:
@@ -38,20 +38,24 @@ configuration:
         sd: 112234
       dnnInfos:
         - dnn: internet
-          dns: 
+          dns:
             ipv4: 8.8.8.8
             ipv6: 2001:4860:4860::8888
+  plmnList: # the list of PLMN IDs that this SMF belongs to (optional, remove this key when unnecessary)
+    - mcc: 208 # Mobile Country Code (3 digits string, digit: 0~9)
+      mnc: 93 # Mobile Network Code (2 or 3 digits string, digit: 0~9)
+  locality: area1 # Name of the location where a set of AMF, SMF, PCF and UPFs are located
   pfcp:
     addr: 10.200.200.1
-  userplane_information:
-    up_nodes:
+  userplaneInformation:
+    upNodes:
       gNB1:
         type: AN
         an_ip: 192.188.2.3
 
       UPF1:
         type: UPF
-        node_id: 10.200.200.101
+        nodeID: 10.200.200.101
         sNssaiUpfInfos:
           - sNssai:
               sst: 1
@@ -75,15 +79,15 @@ configuration:
 
       UPF2:
         type: UPF
-        node_id: 10.200.200.102
+        nodeID: 10.200.200.102
         sNssaiUpfInfos:
           - sNssai:
               sst: 1
               sd: 010203
             dnnUpfInfoList:
-               - dnn: internet
-                 pools:
-                  - cidr: 60.60.0.0/16
+              - dnn: internet
+                pools:
+                  - cidr: 10.60.0.0/16
         interfaces:
           - interfaceType: N9
             endpoints:
@@ -92,7 +96,7 @@ configuration:
 
       UPF3:
         type: UPF
-        node_id: 10.200.200.103
+        nodeID: 10.200.200.103
         sNssaiUpfInfos:
           - sNssai:
               sst: 1
@@ -100,7 +104,7 @@ configuration:
             dnnUpfInfoList:
               - dnn: internet
                 pools:
-                  - cidr: 60.61.0.1/32
+                  - cidr: 10.61.0.1/32
         interfaces:
           - interfaceType: N9
             endpoints:
@@ -108,7 +112,7 @@ configuration:
             networkInstance: internet
       UPF4:
         type: UPF
-        node_id: 10.200.200.104
+        nodeID: 10.200.200.104
         sNssaiUpfInfos:
           - sNssai:
               sst: 1
@@ -116,7 +120,7 @@ configuration:
             dnnUpfInfoList:
               - dnn: internet
                 pools:
-                  - cidr: 60.62.0.1/32
+                  - cidr: 10.62.0.1/32
         interfaces:
           - interfaceType: N9
             endpoints:
@@ -124,7 +128,7 @@ configuration:
             networkInstance: internet
       UPF5:
         type: UPF
-        node_id: 10.200.200.105
+        nodeID: 10.200.200.105
         sNssaiUpfInfos:
           - sNssai:
               sst: 1
@@ -132,7 +136,7 @@ configuration:
             dnnUpfInfoList:
               - dnn: internet
                 pools:
-                  - cidr: 60.63.0.1/32
+                  - cidr: 10.63.0.1/32
         interfaces:
           - interfaceType: N3
             endpoints:
@@ -140,7 +144,7 @@ configuration:
             networkInstance: internet
       UPF6:
         type: UPF
-        node_id: 10.200.200.106
+        nodeID: 10.200.200.106
         sNssaiUpfInfos:
           - sNssai:
               sst: 1
@@ -148,7 +152,7 @@ configuration:
             dnnUpfInfoList:
               - dnn: internet
                 pools:
-                  - cidr: 60.64.0.1/32
+                  - cidr: 10.64.0.1/32
         interfaces:
           - interfaceType: N3
             endpoints:
@@ -160,7 +164,6 @@ configuration:
       - A: gNB1
         B: UPF6
   nrfUri: http://127.0.0.10:8000
-  locality: area1
   ulcl: true
 
 logger:
@@ -174,12 +177,6 @@ logger:
     debugLevel: info
     ReportCaller: false
   Aper:
-    debugLevel: info
-    ReportCaller: false
-  PathUtil:
-    debugLevel: info
-    ReportCaller: false
-  OpenApi:
     debugLevel: info
     ReportCaller: false
   PFCP:
