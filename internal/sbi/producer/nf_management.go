@@ -312,6 +312,20 @@ func NFDeregisterProcedure(nfInstanceID string) *models.ProblemDetails {
 		}
 	}
 
+	collNameURI := "urilist"
+	filterURI := bson.M{"nfType": nfProfiles[0].NfType}
+	putData := bson.M{"_link.item": bson.M{"href": nfInstanceUri}, "multi": true}
+	if err := mongoapi.RestfulAPIPullOne(collNameURI, filterURI, putData); err != nil {
+		logger.ManagementLog.Errorf("NFDeregisterProcedure err: %+v", err)
+		problemDetail := &models.ProblemDetails{
+			Title:  "System failure",
+			Status: http.StatusInternalServerError,
+			Detail: err.Error(),
+			Cause:  "SYSTEM_FAILURE",
+		}
+		return problemDetail
+	}
+
 	return nil
 }
 

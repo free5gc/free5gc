@@ -58,8 +58,8 @@ github.com/evanphx/json-patch v0.5.2 h1:xVCHIVMUu1wtM/VkR9jVZ45N3FhZfYMMYGorLCR8
 github.com/evanphx/json-patch v0.5.2/go.mod h1:ZWS5hhDbVDyob71nXKNL0+PWn6ToqBHMikGIFbs31qQ=
 github.com/free5gc/openapi v1.0.4 h1:bC6oqXy8Z+3e532xLMFmrTHvdyv4sNGDPezQSslw5gQ=
 github.com/free5gc/openapi v1.0.4/go.mod h1:KRCnnp0GeK0Bl4gnrX79cQAidKXNENf8VRdG0y9R0Fc=
-github.com/free5gc/util v1.0.1 h1:A8bynjzZXkYMLOq9FN5J4Yg5mdjXhYoXc/FFFwSLPss=
-github.com/free5gc/util v1.0.1/go.mod h1:VsA8FaZAxZW6eKzF/VXN2kuctl19Tj+NYH7ZxkZ+YCA=
+github.com/free5gc/util v1.0.2 h1:BSiP41n0EMAYzddzrxxzezx7sprvtlHYDw6Kya5DOV4=
+github.com/free5gc/util v1.0.2/go.mod h1:VsA8FaZAxZW6eKzF/VXN2kuctl19Tj+NYH7ZxkZ+YCA=
 github.com/gin-contrib/sse v0.1.0 h1:Y/yl/+YNO8GZSjAhjMsSuLt29uWRFHdHYUb5lYOV9qE=
 github.com/gin-contrib/sse v0.1.0/go.mod h1:RHrZQHXnP2xjPF+u1gW/2HnVO7nvIa9PG3Gm+fLHvGI=
 github.com/gin-gonic/gin v1.7.3 h1:aMBzLJ/GMEYmv1UWs2FFTcPISLrQH2mRgL9Glz8xows=
