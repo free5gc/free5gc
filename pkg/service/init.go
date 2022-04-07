@@ -81,12 +81,12 @@ func (nrf *NRF) Initialize(c *cli.Context) error {
 		return err
 	}
 
-	nrf.setLogLevel()
+	nrf.SetLogLevel()
 
 	return nil
 }
 
-func (nrf *NRF) setLogLevel() {
+func (nrf *NRF) SetLogLevel() {
 	if factory.NrfConfig.Logger == nil {
 		logger.InitLog.Warnln("NRF config without log level setting!!!")
 		return
