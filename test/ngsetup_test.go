@@ -18,10 +18,13 @@ import (
 	amf_service "github.com/free5gc/amf/pkg/service"
 	ausf_factory "github.com/free5gc/ausf/pkg/factory"
 	ausf_service "github.com/free5gc/ausf/pkg/service"
+	"github.com/free5gc/nas/security"
+	"github.com/free5gc/ngap"
 	nrf_factory "github.com/free5gc/nrf/pkg/factory"
 	nrf_service "github.com/free5gc/nrf/pkg/service"
 	nssf_factory "github.com/free5gc/nssf/pkg/factory"
 	nssf_service "github.com/free5gc/nssf/pkg/service"
+	"github.com/free5gc/openapi/models"
 	pcf_factory "github.com/free5gc/pcf/pkg/factory"
 	pcf_service "github.com/free5gc/pcf/pkg/service"
 	smf_factory "github.com/free5gc/smf/pkg/factory"
@@ -31,9 +34,6 @@ import (
 	"github.com/free5gc/udm/pkg/suci"
 	udr_factory "github.com/free5gc/udr/pkg/factory"
 	udr_service "github.com/free5gc/udr/pkg/service"
-	"github.com/free5gc/nas/security"
-	"github.com/free5gc/ngap"
-	"github.com/free5gc/openapi/models"
 	logger_util "github.com/free5gc/util/logger"
 	"github.com/free5gc/util/mongoapi"
 )
@@ -108,6 +108,7 @@ func init() {
 		}
 
 		for _, service := range NFs {
+			service.SetLogLevel()
 			go service.Start()
 			time.Sleep(200 * time.Millisecond)
 		}
@@ -493,7 +494,7 @@ func smfConfig(testID string) error {
 								Sd:  "010203",
 							},
 							DnnUpfInfoList: []smf_factory.DnnUpfInfoItem{{
-								Dnn:      "internet",
+								Dnn: "internet",
 								Pools: []smf_factory.UEIPPool{{
 									Cidr: "10.60.0.0/16",
 								}},
