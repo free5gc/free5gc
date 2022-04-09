@@ -18,6 +18,8 @@ import (
 )
 
 const (
+	NrfDefaultTLSPemPath     = "./config/TLS/nrf.pem"
+	NrfDefaultTLSKeyPath     = "./config/TLS/nrf.key"
 	NrfExpectedConfigVersion = "1.0.1"
 	NrfSbiDefaultIPv4        = "127.0.0.10"
 	NrfSbiDefaultPort        = 8000
@@ -208,4 +210,18 @@ func (c *Config) GetSbiRegisterAddr() string {
 
 func (c *Config) GetSbiUri() string {
 	return c.GetSbiScheme() + "://" + c.GetSbiRegisterAddr()
+}
+
+func (c *Config) TLSPemPath() string {
+	if c.Configuration.Sbi.Tls != nil {
+		return c.Configuration.Sbi.Tls.Pem
+	}
+	return NrfDefaultTLSPemPath
+}
+
+func (c *Config) TLSKeyPath() string {
+	if c.Configuration.Sbi.Tls != nil {
+		return c.Configuration.Sbi.Tls.Key
+	}
+	return NrfDefaultTLSKeyPath
 }

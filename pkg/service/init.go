@@ -138,14 +138,6 @@ func (nrf *NRF) Start() {
 	discovery.AddService(router)
 	management.AddService(router)
 
-	pemPath := util.NrfDefaultPemPath
-	keyPath := util.NrfDefaultKeyPath
-	sbi := factory.NrfConfig.Configuration.Sbi
-	if sbi.Tls != nil {
-		pemPath = sbi.Tls.Pem
-		keyPath = sbi.Tls.Key
-	}
-
 	nrf_context.InitNrfContext()
 
 	signalChannel := make(chan os.Signal, 1)
@@ -182,7 +174,9 @@ func (nrf *NRF) Start() {
 	if serverScheme == "http" {
 		err = server.ListenAndServe()
 	} else if serverScheme == "https" {
-		err = server.ListenAndServeTLS(pemPath, keyPath)
+		err = server.ListenAndServeTLS(
+			factory.NrfConfig.TLSPemPath(),
+			factory.NrfConfig.TLSKeyPath())
 	}
 
 	if err != nil {
