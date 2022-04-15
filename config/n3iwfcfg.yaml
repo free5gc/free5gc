@@ -1,5 +1,5 @@
 info:
-  version: 1.0.1
+  version: 1.0.3
   description: N3IWF initial local configuration
 
 configuration:
@@ -23,26 +23,24 @@ configuration:
               - SNSSAI: # Single Network Slice Selection Assistance Information
                   SST: 1 # Slice/Service Type (1 byte hex string, range: 0~F)
                   SD: 112233 # Slice Differentiator (3 bytes hex string, range: 000000~FFFFFF)
+
+  # --- N2 Interfaces ---
   AMFSCTPAddresses: # the IP list of N2 interfaces (SCTP) on AMF when using NGAP
     - IP:
-      - 127.0.0.18
-      Port: 38412
-
-  # --- Bind Interfaces ---
-  IKEBindAddress: 127.0.0.21 # IP address of Nwu interface (IKE) on this N3IWF
-
-  IPSecInterfaceAddress: 10.0.0.1 # IP address of IPSec virtual interface (IPsec tunnel enpoint on this N3IWF)
-
-  UEIPAddressRange: 10.0.0.0/24 # IP address allocated to UE in IPSec tunnel
-
-  IPSecInterfaceMark: 5 # IPSec virtual interface mark (Any value except to 0, default value is 7 if not defined)
-
-  GTPBindAddress: 10.200.200.2 # IP address of N3 interface (GTP) on this N3IWF
-
+        - 127.0.0.18
   NASTCPPort: 20000 # TCP port which the NAS listens on
 
-  FQDN: n3iwf.free5gc.org # FQDN of this N3IWF
+  # --- Nwu Interfaces ---
+  IKEBindAddress: 172.16.2.100 # Nwu interface  IP address (IKE) on this N3IWF
+  IPSecTunnelAddress: 10.0.0.1 # Tunnel IP address of XFRM interface on this N3IWF
+  UEIPAddressRange: 10.0.0.0/24 # IP address pool allocated to UE in IPSec tunnel
+  XFRMInterfaceName: xfrmi # Prefix of XFRM interface name created by N3IWF
+  XFRMInterfaceID: 1 # XFRM interface if_id for IPSec routing (Any value except to 0, default value is 7 if not defined)
 
+  # --- N3 Interfaces ---
+  GTPBindAddress: 127.0.0.33 # IP address of N3 interface (GTP) on this N3IWF
+
+  FQDN: n3iwf.free5gc.org # FQDN of this N3IWF
 
   # --- Security ---
   PrivateKey: config/TLS/n3iwf.key # Private key file path
