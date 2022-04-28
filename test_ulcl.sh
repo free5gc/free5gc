@@ -101,12 +101,15 @@ for i in $(seq -f "%02g" 1 $UPF_NUM); do
     sed -i -e "s/10.200.200.10./10.200.200.1${i}/g" ./NFs/upf/build/config/upfcfg.ulcl.yaml
     if [ ${i} -eq 02 ]; then
         sed -i -e "s/internet/internet2/g" ./NFs/upf/build/config/upfcfg.ulcl.yaml
+        sed -i -e "s/10.60.0.0/10.62.0.0/g" ./NFs/upf/build/config/upfcfg.ulcl.yaml
     else
         sed -i -e "s/internet2/internet/g" ./NFs/upf/build/config/upfcfg.ulcl.yaml
+        sed -i -e "s/10.62.0.0/10.60.0.0/g" ./NFs/upf/build/config/upfcfg.ulcl.yaml
     fi
     cd NFs/upf/build && sudo -E ip netns exec "${UPFNS}${i}" ./bin/free5gc-upfd -c config/upfcfg.ulcl.yaml &
     sleep 1
     sed -i -e "s/internet2/internet/g" ./NFs/upf/build/config/upfcfg.ulcl.yaml
+    sed -i -e "s/10.62.0.0/10.60.0.0/g" ./NFs/upf/build/config/upfcfg.ulcl.yaml
 done
 
 cd test
