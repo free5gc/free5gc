@@ -7,11 +7,11 @@ require (
 	github.com/antihax/optional v1.0.0
 	github.com/calee0219/fatal v0.0.1
 	github.com/free5gc/amf v0.0.0-00010101000000-000000000000
-	github.com/free5gc/aper v1.0.3
+	github.com/free5gc/aper v1.0.4
 	github.com/free5gc/ausf v0.0.0-00010101000000-000000000000
 	github.com/free5gc/n3iwf v0.0.0-00010101000000-000000000000
 	github.com/free5gc/nas v1.0.7
-	github.com/free5gc/ngap v1.0.5
+	github.com/free5gc/ngap v1.0.6
 	github.com/free5gc/nrf v0.0.0-00010101000000-000000000000
 	github.com/free5gc/nssf v0.0.0-00010101000000-000000000000
 	github.com/free5gc/openapi v1.0.4
@@ -19,7 +19,7 @@ require (
 	github.com/free5gc/smf v0.0.0-00010101000000-000000000000
 	github.com/free5gc/udm v0.0.0-00010101000000-000000000000
 	github.com/free5gc/udr v0.0.0-00010101000000-000000000000
-	github.com/free5gc/util v1.0.1
+	github.com/free5gc/util v1.0.2
 	github.com/go-ping/ping v0.0.0-20210506233800-ff8be3320020
 	github.com/google/uuid v1.3.0
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
