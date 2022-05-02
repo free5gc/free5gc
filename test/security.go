@@ -21,20 +21,20 @@ func encapNasMsgToEnvelope(nasPDU []byte) []byte {
 	return nasEnv
 }
 
-func decapEnvelopeToNasMsg(envelope []byte) []byte {
-	// According to TS 24.502 8.2.4,
-	// in order to transport a NAS message over the non-3GPP access between the UE and the N3IWF,
-	// the NAS message shall be framed in a NAS message envelope as defined in subclause 9.4.
-	// According to TS 24.502 9.4,
-	// a NAS message envelope = Length | NAS Message
+// func decapEnvelopeToNasMsg(envelope []byte) []byte {
+// 	// According to TS 24.502 8.2.4,
+// 	// in order to transport a NAS message over the non-3GPP access between the UE and the N3IWF,
+// 	// the NAS message shall be framed in a NAS message envelope as defined in subclause 9.4.
+// 	// According to TS 24.502 9.4,
+// 	// a NAS message envelope = Length | NAS Message
 
-	// Get NAS Message Length
-	nasLen := binary.BigEndian.Uint16(envelope[:2])
-	nas := make([]byte, nasLen)
-	copy(nas, envelope[2:2+nasLen])
+// 	// Get NAS Message Length
+// 	nasLen := binary.BigEndian.Uint16(envelope[:2])
+// 	nas := make([]byte, nasLen)
+// 	copy(nas, envelope[2:2+nasLen])
 
-	return nas
-}
+// 	return nas
+// }
 
 func NASEncode(ue *RanUeContext, msg *nas.Message, securityContextAvailable bool, newSecurityContext bool) (
 	payload []byte, err error) {

@@ -6,6 +6,7 @@ require (
 	git.cs.nctu.edu.tw/calee/sctp v1.1.0
 	github.com/antihax/optional v1.0.0
 	github.com/calee0219/fatal v0.0.1
+	github.com/davecgh/go-spew v1.1.1
 	github.com/free5gc/amf v0.0.0-00010101000000-000000000000
 	github.com/free5gc/aper v1.0.4
 	github.com/free5gc/ausf v0.0.0-00010101000000-000000000000

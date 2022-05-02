@@ -46,7 +46,11 @@ function terminate()
         sudo ip xfrm state flush
         sudo ip xfrm policy flush
         sudo ip link del ipsec0
-        sudo ip link del xfrmi-default
+        XFRMI_LIST=($(ip link | grep xfrmi | awk -F'[:,@]' '{print $2}'))
+        for XFRMI_IF in "${XFRMI_LIST[@]}"
+        do
+            sudo ip link del $XFRMI_IF
+        done
     fi
 
     for ((i=${#PID_LIST[@]}-1;i>=0;i--)); do
@@ -117,13 +121,6 @@ for NF in ${NF_LIST}; do
 done
 
 if [ $N3IWF_ENABLE -ne 0 ]; then
-    N3IWF_IKE_BIND_ADDRESS="127.0.0.21"
-    N3IWF_UE_ADDR="10.0.0.1/24"
-    sudo ip link add name ipsec0 type vti local ${N3IWF_IKE_BIND_ADDRESS} remote 0.0.0.0 key 5
-    sudo ip addr add ${N3IWF_UE_ADDR} dev ipsec0
-    sudo ip link set ipsec0 up
-    sleep 1
-
     sudo ./bin/n3iwf -c ./config/n3iwfcfg.yaml -l ${LOG_PATH}n3iwf.log -lc ${LOG_PATH}${LOG_NAME} &
     SUDO_N3IWF_PID=$!
     sleep 1

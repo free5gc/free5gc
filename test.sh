@@ -74,15 +74,29 @@ function terminate()
         fi
         sudo ip xfrm policy flush
         sudo ip xfrm state flush
-        sudo ip link del veth2
-        sudo ip link del ipsec0
-        ${EXEC_UENS} ip link del ipsec0
         sudo ip netns del ${UENS}
+        removeN3iwfInterfaces
+        sudo ip link del veth2
         sudo killall n3iwf
         killall test.test
     fi
 
     sleep 5
+}
+
+function removeN3iwfInterfaces()
+{
+    # Remove all GRE interfaces
+    GREs=$(ip link show type gre | awk 'NR%2==1 {print $2}' | cut -d @ -f 1)
+    for GRE in ${GREs}; do
+        sudo ip link del ${GRE}
+    done
+
+    # Remove all XFRM interfaces
+    XFRMIs=$(ip link show type xfrm | awk 'NR%2==1 {print $2}' | cut -d @ -f 1)
+    for XFRMI in ${XFRMIs}; do
+        sudo ip link del ${XFRMI}
+    done
 }
 
 function handleSIGINT()
@@ -108,12 +122,6 @@ function setupN3ueEnv()
     ${EXEC_UENS} ip addr add 192.168.127.2/24 dev veth3
     ${EXEC_UENS} ip link set lo up
     ${EXEC_UENS} ip link set veth3 up
-    ${EXEC_UENS} ip link add ipsec0 type vti local 192.168.127.2 remote 192.168.127.1 key 5
-    ${EXEC_UENS} ip link set ipsec0 up
-
-    sudo ip link add name ipsec0 type vti local 192.168.127.1 remote 0.0.0.0 key 5
-    sudo ip addr add 10.0.0.1/24 dev ipsec0
-    sudo ip link set ipsec0 up
 }
 
 function tcpdumpN3IWF()
@@ -161,6 +169,7 @@ sleep 2
 
 if [[ "$1" == "TestNon3GPP" ]]
 then
+    removeN3iwfInterfaces
     # setup N3UE's namespace, interfaces for IPsec
     setupN3ueEnv
     if [ ${DUMP_NS} ]

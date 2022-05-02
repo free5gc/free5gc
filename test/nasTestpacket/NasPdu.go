@@ -93,6 +93,10 @@ func GetPduSessionEstablishmentRequest(pduSessionId uint8) []byte {
 		nasType.NewPDUSessionType(nasMessage.PDUSessionEstablishmentRequestPDUSessionTypeType)
 	pduSessionEstablishmentRequest.PDUSessionType.SetPDUSessionTypeValue(uint8(0x01)) //IPv4 type
 
+	pduSessionEstablishmentRequest.SSCMode =
+		nasType.NewSSCMode(nasMessage.PDUSessionEstablishmentRequestSSCModeType)
+	pduSessionEstablishmentRequest.SSCMode.SetSSCMode(uint8(0x01)) //SSC Mode 1
+
 	pduSessionEstablishmentRequest.ExtendedProtocolConfigurationOptions =
 		nasType.NewExtendedProtocolConfigurationOptions(
 			nasMessage.PDUSessionEstablishmentRequestExtendedProtocolConfigurationOptionsType)
