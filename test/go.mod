@@ -20,14 +20,14 @@ require (
 	github.com/free5gc/smf v0.0.0-00010101000000-000000000000
 	github.com/free5gc/udm v0.0.0-00010101000000-000000000000
 	github.com/free5gc/udr v0.0.0-00010101000000-000000000000
-	github.com/free5gc/util v1.0.2
+	github.com/free5gc/util v1.0.3
 	github.com/go-ping/ping v0.0.0-20210506233800-ff8be3320020
 	github.com/google/uuid v1.3.0
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
 	github.com/stretchr/testify v1.7.0
 	github.com/urfave/cli v1.22.5
 	github.com/vishvananda/netlink v1.1.0
-	go.mongodb.org/mongo-driver v1.7.1
+	go.mongodb.org/mongo-driver v1.8.4
 	golang.org/x/net v0.0.0-20211020060615-d418f374d309
 	golang.org/x/sys v0.0.0-20211007075335-d3039528d8ac
 	gopkg.in/yaml.v2 v2.4.0
