@@ -25,9 +25,6 @@
 [submodule "udr"]
 	path = NFs/udr
 	url = https://github.com/free5gc/udr.git
-[submodule "upf"]
-	path = NFs/upf
-	url = https://github.com/nathalie21005/upf.git
 [submodule "webconsole"]
 	path = webconsole
 	url = https://github.com/nathalie21005/webconsole.git
