@@ -52,7 +52,7 @@ function terminate()
             sudo ip link del $XFRMI_IF
         done
     fi
-
+    
     for ((i=${#PID_LIST[@]}-1;i>=0;i--)); do
         sudo kill -SIGTERM ${PID_LIST[i]}
     done
@@ -102,7 +102,7 @@ if [ $PCAP_MODE -ne 0 ]; then
     PID_LIST+=($SUDO_TCPDUMP_PID $TCPDUMP_PID)
 fi
 
-sudo -E ./NFs/upf/build/bin/free5gc-upfd -c ./config/upfcfg.yaml -l ${LOG_PATH}upf.log -g ${LOG_PATH}${LOG_NAME} &
+sudo -E ./bin/upf -c ./config/upfcfg.yaml -l ${LOG_PATH}upf.log -lc ${LOG_PATH}${LOG_NAME} &
 SUDO_UPF_PID=$!
 sleep 0.1
 UPF_PID=$(pgrep -P $SUDO_UPF_PID)

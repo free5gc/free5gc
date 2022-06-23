@@ -98,25 +98,22 @@ for i in $(seq -f "%02g" 1 $UPF_NUM); do
         TCPDUMP_PID_[${i}]=$(sudo ip netns pids "${UPFNS}${i}")
     fi
 
-    sed -i -e "s/10.200.200.10./10.200.200.1${i}/g" ./NFs/upf/build/config/upfcfg.ulcl.yaml
+    sed -i -e "s/10.200.200.10./10.200.200.1${i}/g" ./config/upfcfg.testulcl.yaml
     if [ ${i} -eq 02 ]; then
-        sed -i -e "s/internet/internet2/g" ./NFs/upf/build/config/upfcfg.ulcl.yaml
-        sed -i -e "s/10.60.0.0/10.62.0.0/g" ./NFs/upf/build/config/upfcfg.ulcl.yaml
+        sed -i -e "s/internet/internet2/g" ./config/upfcfg.testulcl.yaml
     else
-        sed -i -e "s/internet2/internet/g" ./NFs/upf/build/config/upfcfg.ulcl.yaml
-        sed -i -e "s/10.62.0.0/10.60.0.0/g" ./NFs/upf/build/config/upfcfg.ulcl.yaml
+        sed -i -e "s/internet2/internet/g" ./config/upfcfg.testulcl.yaml
     fi
-    cd NFs/upf/build && sudo -E ip netns exec "${UPFNS}${i}" ./bin/free5gc-upfd -c config/upfcfg.ulcl.yaml &
+    sudo -E ip netns exec "${UPFNS}${i}" ./bin/upf -c ./config/upfcfg.testulcl.yaml &
     sleep 1
-    sed -i -e "s/internet2/internet/g" ./NFs/upf/build/config/upfcfg.ulcl.yaml
-    sed -i -e "s/10.62.0.0/10.60.0.0/g" ./NFs/upf/build/config/upfcfg.ulcl.yaml
+    sed -i -e "s/internet2/internet/g" ./config/upfcfg.testulcl.yaml
 done
 
 cd test
 $GOROOT/bin/go test -v -vet=off -run $1
 
 sleep 3
-sudo killall -15 free5gc-upfd
+sudo killall -15 upf
 sleep 1
 
 cd ../..
