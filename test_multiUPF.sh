@@ -99,9 +99,12 @@ for i in $(seq -f "%02g" 1 $UPF_NUM); do
         TCPDUMP_PID_[${i}]=$(sudo ip netns pids "${UPFNS}${i}")
     fi
 
-    cd NFs/upf/build && sudo -E ip netns exec "${UPFNS}${i}" ./bin/free5gc-upfd -c "${CONF_DIR}/multiUPF/upfcfg${i}.yaml" &
+    sudo -E ip netns exec "${UPFNS}${i}" ./bin/upf -c "${CONF_DIR}/multiUPF/upfcfg${i}.yaml" &
     sleep 1
 done
+
+sudo tcpdump -i any 'sctp port 38412 || tcp port 8000 || udp port 8805' -w 'control_plane.pcap' &
+TCPDUMP_CP=($!)
 
 NF_LIST="nrf amf udr pcf udm nssf ausf"
 F5GC_DIR="$(cd "$( dirname "$0" )" && pwd -P)"
@@ -115,7 +118,11 @@ $F5GC_DIR/bin/smf -c "${CONF_DIR}/multiUPF/smfcfg.ulcl.yaml" -u "${CONF_DIR}/mul
 PID_LIST+=($!)
 
 cd test
-$GOROOT/bin/go test -v -vet=off -run $1  -args noinit
+# git clone libgtp5gnl
+# libgtp5gnl will be used to show PDR/FAR during testing
+../make_libgtp5gnl.sh 
+
+$GOROOT/bin/go test -v -vet=off -run $1 -args noinit
 
 for ((idx=${#PID_LIST[@]}-1;idx>=0;idx--)); do
     sudo kill -SIGINT ${PID_LIST[$idx]}
@@ -123,7 +130,7 @@ for ((idx=${#PID_LIST[@]}-1;idx>=0;idx--)); do
 done
 
 sleep 3
-sudo killall -15 free5gc-upfd
+sudo killall -15 upf
 sleep 1
 
 cd ..
@@ -131,6 +138,10 @@ mkdir -p testkeylog
 for KEYLOG in $(ls *sslkey.log); do
      mv $KEYLOG testkeylog
 done
+
+if [ ${DUMP_NS} ]; then
+    sudo kill -SIGINT ${TCPDUMP_CP}
+fi
 
 # sudo ip addr del 10.60.0.1/32 dev lo
 sudo ip link del veth0

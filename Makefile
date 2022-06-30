@@ -3,9 +3,8 @@ GO_SRC_PATH = NFs
 C_BUILD_PATH = build
 ROOT_PATH = $(shell pwd)
 
-NF = $(GO_NF) $(C_NF)
-GO_NF = amf ausf nrf nssf pcf smf udm udr n3iwf
-C_NF = upf
+NF = $(GO_NF)
+GO_NF = amf ausf nrf nssf pcf smf udm udr n3iwf upf
 
 WEBCONSOLE = webconsole
 
