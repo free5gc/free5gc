@@ -390,11 +390,10 @@ func NFRegisterProcedure(nfProfile models.NfProfile) (header http.Header, respon
 
 	err := nrf_context.NnrfNFManagementDataModel(&nf, nfProfile)
 	if err != nil {
-		timer := fmt.Sprint(nfProfile.HeartBeatTimer)
 		problemDetails := &models.ProblemDetails{
-			Title:  nfProfile.NfInstanceId,
+			Title:  "Malformed request syntax",
 			Status: http.StatusBadRequest,
-			Detail: timer,
+			Detail: err.Error(),
 		}
 		return nil, nil, false, problemDetails
 	}
