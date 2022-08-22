@@ -121,6 +121,7 @@ function setupN3ueEnv()
     ${EXEC_UENS} ip addr add 192.168.127.2/24 dev veth3
     ${EXEC_UENS} ip link set lo up
     ${EXEC_UENS} ip link set veth3 up
+    ${EXEC_UENS} ip a
 }
 
 function tcpdumpN3IWF()
@@ -188,6 +189,7 @@ then
     cd test
     if ! go test -v -vet=off -timeout 0 -run TestNon3GPPUE -args noinit; then
         echo "Test result: Failed"
+        terminate $1
         exit 1
     else
         echo "Test result: Succeeded"
@@ -196,6 +198,7 @@ else
     cd test
     if ! go test -v -vet=off -run $1; then
         echo "Test result: Failed"
+        terminate $1
         exit 1
     else
         echo "Test result: Succeeded"

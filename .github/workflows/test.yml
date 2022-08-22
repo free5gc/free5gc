@@ -26,7 +26,6 @@ jobs:
       run: |
         sudo apt-get -y update
         sudo apt-get -y install netcat psmisc iproute2 git gcc g++ cmake autoconf libtool pkg-config libmnl-dev libyaml-dev
-        go install github.com/sirupsen/logrus
 
     - name: Build
       run: |
@@ -34,9 +33,9 @@ jobs:
         git submodule sync
         git submodule update
         make
-
     - name: Basic Test
       run: |
+        ls bin/ -al
         ./test_ci.sh TestRegistration
         sleep 1
         ./test_ci.sh TestGUTIRegistration
@@ -56,5 +55,5 @@ jobs:
         ./test_ci.sh TestReSynchronization
     - name: ULCL Test
       run: ./test_ci_ulcl.sh TestRequestTwoPDUSessions
-    - name: Non3GPP Test
-      run: ./test_ci.sh TestNon3GPP
+    # - name: Non3GPP Test
+    #   run: ./test_ci.sh TestNon3GPP

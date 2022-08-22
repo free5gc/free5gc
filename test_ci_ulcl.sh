@@ -112,32 +112,38 @@ done
 cd test
 if ! go test -v -vet=off -run $1; then
     echo "Test result: Failed"
+    terminate
     exit 1
 else
     echo "Test result: Succeeded"
 fi
 
-sleep 3
-sudo killall -15 upf
-sleep 1
+function terminate()
+{
+    sleep 3
+    sudo killall -15 upf
+    sleep 1
 
-cd ../..
-mkdir -p testkeylog
-for KEYLOG in $(ls *sslkey.log); do
-    mv $KEYLOG testkeylog
-done
+    cd ../..
+    mkdir -p testkeylog
+    for KEYLOG in $(ls *sslkey.log); do
+        mv $KEYLOG testkeylog
+    done
 
-sudo ip addr del 10.60.0.1/32 dev lo
-sudo ip link del veth0
-sudo ip link del free5gc-br
+    sudo ip addr del 10.60.0.1/32 dev lo
+    sudo ip link del veth0
+    sudo ip link del free5gc-br
 
-sudo iptables -D FORWARD -j ACCEPT
+    sudo iptables -D FORWARD -j ACCEPT
 
-for i in $(seq -f "%02g" 1 $UPF_NUM); do
-  if [ ${DUMP_NS} ]; then
-      sudo ip netns exec "${UPFNS}${i}" kill -SIGINT ${TCPDUMP_PID_[$i]}
-  fi
+    for i in $(seq -f "%02g" 1 $UPF_NUM); do
+    if [ ${DUMP_NS} ]; then
+        sudo ip netns exec "${UPFNS}${i}" kill -SIGINT ${TCPDUMP_PID_[$i]}
+    fi
 
-  sudo ip netns del "${UPFNS}${i}"
-  sudo ip link del "br-veth${i}"
-done
+    sudo ip netns del "${UPFNS}${i}"
+    sudo ip link del "br-veth${i}"
+    done
+}
+
+terminate
