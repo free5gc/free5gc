@@ -110,7 +110,12 @@ for i in $(seq -f "%02g" 1 $UPF_NUM); do
 done
 
 cd test
-go test -v -vet=off -run $1
+if ! go test -v -vet=off -run $1; then
+    echo "Test result: Failed"
+    exit 1
+else
+    echo "Test result: Succeeded"
+fi
 
 sleep 3
 sudo killall -15 upf

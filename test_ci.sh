@@ -186,10 +186,20 @@ then
 
     # Run Test UE
     cd test
-    go test -v -vet=off -timeout 0 -run TestNon3GPPUE -args noinit
+    if ! go test -v -vet=off -timeout 0 -run TestNon3GPPUE -args noinit; then
+        echo "Test result: Failed"
+        exit 1
+    else
+        echo "Test result: Succeeded"
+    fi
 else
     cd test
-    go test -v -vet=off -run $1
+    if ! go test -v -vet=off -run $1; then
+        echo "Test result: Failed"
+        exit 1
+    else
+        echo "Test result: Succeeded"
+    fi
 fi
 
 terminate $1
