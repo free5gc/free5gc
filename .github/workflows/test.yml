@@ -1,0 +1,59 @@
+name: Functionality Test
+
+on:
+  push:
+    branches:
+        - main
+  pull_request:
+
+jobs:
+  build:
+    runs-on: [self-hosted, linux, x64]
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: 1.18.3
+
+    - name: Start MongoDB
+      uses: supercharge/mongodb-github-action@1.7.0
+      with:
+        mongodb-version: 4.4
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get -y update
+        sudo apt-get -y install netcat psmisc iproute2 git gcc g++ cmake autoconf libtool pkg-config libmnl-dev libyaml-dev
+
+    - name: Build
+      run: |
+        git submodule init
+        git submodule sync
+        git submodule update
+        make
+    - name: Basic Test
+      run: |
+        ls bin/ -al
+        ./test_ci.sh TestRegistration
+        sleep 1
+        ./test_ci.sh TestGUTIRegistration
+        sleep 1
+        ./test_ci.sh TestServiceRequest
+        sleep 1
+        ./test_ci.sh TestXnHandover
+        sleep 1
+        ./test_ci.sh TestDeregistration
+        sleep 1
+        ./test_ci.sh TestPDUSessionReleaseRequest
+        sleep 1
+        ./test_ci.sh TestPaging
+        sleep 1
+        ./test_ci.sh TestN2Handover
+        sleep 1
+        ./test_ci.sh TestReSynchronization
+    - name: ULCL Test
+      run: ./test_ci_ulcl.sh TestRequestTwoPDUSessions
+    # - name: Non3GPP Test
+    #   run: ./test_ci.sh TestNon3GPP
