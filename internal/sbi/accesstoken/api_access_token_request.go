@@ -10,7 +10,9 @@
 package accesstoken
 
 import (
+	"encoding/json"
 	"net/http"
+	"reflect"
 
 	"github.com/gin-gonic/gin"
 
@@ -25,9 +27,47 @@ import (
 func HTTPAccessTokenRequest(c *gin.Context) {
 	logger.AccessTokenLog.Infoln("In HTTPAccessTokenRequest")
 	var accessTokenReq models.AccessTokenReq
+	var r *http.Request = c.Request
 
-	// logger.AccessTokenLog.Infoln("Content Type: ", c.ContentType())
-	err := c.Bind(&accessTokenReq)
+	// Request parser
+	err := r.ParseForm()
+	if err != nil {
+		logger.AccessTokenLog.Errorf(err.Error())
+		return
+	}
+	rt := reflect.TypeOf(accessTokenReq)
+	for key, value := range r.PostForm {
+		var name string
+		var vt reflect.Type
+		for i := 0; i < rt.NumField(); i++ {
+			if tag := rt.Field(i).Tag.Get("yaml"); tag == key {
+				name = rt.Field(i).Name
+				vt = rt.Field(i).Type
+				break
+			}
+		}
+		if vt.Name() == "string" || vt.Name() == "NfType" {
+			reflect.ValueOf(&accessTokenReq).Elem().FieldByName(name).SetString(value[0])
+		} else {
+			plmnid := models.PlmnId{}
+			err = json.Unmarshal([]byte(value[0]), &plmnid)
+			if err != nil {
+				problemDetail := "[Request Body] " + err.Error()
+				rsp := models.ProblemDetails{
+					Title:  "Json Unmarshal Error",
+					Status: http.StatusBadRequest,
+					Detail: problemDetail,
+				}
+				logger.AccessTokenLog.Errorln(problemDetail)
+				c.JSON(http.StatusBadRequest, rsp)
+				return
+			}
+			reflectvalue := reflect.ValueOf(&plmnid)
+			reflect.ValueOf(&accessTokenReq).Elem().FieldByName(name).Set(reflectvalue)
+		}
+	}
+
+	err = c.Bind(&accessTokenReq)
 	if err != nil {
 		problemDetail := "[Request Body] " + err.Error()
 		rsp := models.ProblemDetails{
@@ -56,6 +96,6 @@ func HTTPAccessTokenRequest(c *gin.Context) {
 		}
 		c.JSON(http.StatusInternalServerError, problemDetails)
 	} else {
-		c.JSON(httpResponse.Status, responseBody)
+		c.Data(httpResponse.Status, "application/json", responseBody)
 	}
 }

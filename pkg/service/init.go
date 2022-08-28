@@ -175,8 +175,8 @@ func (nrf *NRF) Start() {
 		err = server.ListenAndServe()
 	} else if serverScheme == "https" {
 		err = server.ListenAndServeTLS(
-			factory.NrfConfig.TLSPemPath(),
-			factory.NrfConfig.TLSKeyPath())
+			factory.NrfConfig.NrfCertPemPath(),
+			factory.NrfConfig.NrfCertKeyPath())
 	}
 
 	if err != nil {
