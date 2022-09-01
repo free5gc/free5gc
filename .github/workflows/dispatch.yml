@@ -83,27 +83,27 @@ jobs:
         N3IWF_PATCH: ${{ inputs.n3iwf_patch }}
         PCF_PATCH: ${{ inputs.pcf_patch }}
 
-    # - name: Basic Test
-    #   run: |
-    #     ls bin/ -al
-    #     ./test_ci.sh TestRegistration
-    #     sleep 1
-    #     ./test_ci.sh TestGUTIRegistration
-    #     sleep 1
-    #     ./test_ci.sh TestServiceRequest
-    #     sleep 1
-    #     ./test_ci.sh TestXnHandover
-    #     sleep 1
-    #     ./test_ci.sh TestDeregistration
-    #     sleep 1
-    #     ./test_ci.sh TestPDUSessionReleaseRequest
-    #     sleep 1
-    #     ./test_ci.sh TestPaging
-    #     sleep 1
-    #     ./test_ci.sh TestN2Handover
-    #     sleep 1
-    #     ./test_ci.sh TestReSynchronization
-    # - name: ULCL Test
-    #   run: ./test_ci_ulcl.sh TestRequestTwoPDUSessions
+    - name: Basic Test
+      run: |
+        ls bin/ -al
+        ./test_ci.sh TestRegistration
+        sleep 1
+        ./test_ci.sh TestGUTIRegistration
+        sleep 1
+        ./test_ci.sh TestServiceRequest
+        sleep 1
+        ./test_ci.sh TestXnHandover
+        sleep 1
+        ./test_ci.sh TestDeregistration
+        sleep 1
+        ./test_ci.sh TestPDUSessionReleaseRequest
+        sleep 1
+        ./test_ci.sh TestPaging
+        sleep 1
+        ./test_ci.sh TestN2Handover
+        sleep 1
+        ./test_ci.sh TestReSynchronization
+    - name: ULCL Test
+      run: ./test_ci_ulcl.sh TestRequestTwoPDUSessions
     # - name: Non3GPP Test
     #   run: ./test_ci.sh TestNon3GPP
