@@ -105,5 +105,5 @@ jobs:
         ./test_ci.sh TestReSynchronization
     - name: ULCL Test
       run: ./test_ci_ulcl.sh TestRequestTwoPDUSessions
-    # - name: Non3GPP Test
-    #   run: ./test_ci.sh TestNon3GPP
+    - name: remove uncommitted changes
+      run: ./patch.sh
