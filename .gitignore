@@ -1,5 +1,5 @@
 # Toolchain
-libgtp5gnl/
+go-gtp5gnl/
 # Go vendor
 vendor/
 # Goland project folder
