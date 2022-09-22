@@ -1,5 +1,5 @@
 info:
-  version: 1.0.3
+  version: 1.0.4
   description: N3IWF initial local configuration
 
 configuration:
@@ -47,6 +47,12 @@ configuration:
   PrivateKey: config/TLS/n3iwf.key # Private key file path
   CertificateAuthority: config/TLS/n3iwf.pem # Certificate Authority (CA) file path
   Certificate: config/TLS/n3iwf.pem # Certificate file path
+
+  # sending dead peer detection message
+  LivenessCheck:
+    enable: true # true or false
+    transFreq: 60s # frequency of transmission
+    maxRetryTimes: 4 # the max number of DPD response of UE
 
 # the kind of log output
 # debugLevel: how detailed to output, value: trace, debug, info, warn, error, fatal, panic

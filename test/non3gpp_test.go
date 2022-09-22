@@ -15,6 +15,7 @@ import (
 	"test/nasTestpacket"
 
 	"github.com/davecgh/go-spew/spew"
+	"github.com/free5gc/util/ueauth"
 	"github.com/go-ping/ping"
 	"github.com/stretchr/testify/assert"
 	"github.com/vishvananda/netlink"
@@ -967,6 +968,10 @@ func TestNon3GPPUE(t *testing.T) {
 	if _, err := udpConnection.WriteToUDP(ikeMessageData, n3iwfUDPAddr); err != nil {
 		t.Fatalf("Write IKE maessage fail: %+v", err)
 	}
+	realMessage1, _ := ikeMessage.Encode()
+	ikeSecurityAssociation := &context.IKESecurityAssociation{
+		ResponderSignedOctets: realMessage1,
+	}
 
 	// Receive N3IWF reply
 	buffer := make([]byte, 65535)
@@ -1003,7 +1008,7 @@ func TestNon3GPPUE(t *testing.T) {
 		}
 	}
 
-	ikeSecurityAssociation := &context.IKESecurityAssociation{
+	ikeSecurityAssociation = &context.IKESecurityAssociation{
 		LocalSPI:               ikeInitiatorSPI,
 		RemoteSPI:              ikeMessage.ResponderSPI,
 		InitiatorMessageID:     0,
@@ -1014,6 +1019,7 @@ func TestNon3GPPUE(t *testing.T) {
 		DiffieHellmanGroup:     proposal.DiffieHellmanGroup[0],
 		ConcatenatedNonce:      append(localNonce, remoteNonce...),
 		DiffieHellmanSharedKey: sharedKeyExchangeData,
+		ResponderSignedOctets:  append(ikeSecurityAssociation.ResponderSignedOctets, remoteNonce...),
 	}
 
 	if err := generateKeyForIKESA(ikeSecurityAssociation); err != nil {
@@ -1032,7 +1038,7 @@ func TestNon3GPPUE(t *testing.T) {
 	var ikePayload message.IKEPayloadContainer
 
 	// Identification
-	ikePayload.BuildIdentificationInitiator(message.ID_FQDN, []byte("UE"))
+	ikePayload.BuildIdentificationInitiator(message.ID_KEY_ID, []byte("UE"))
 
 	// Security Association
 	securityAssociation = ikePayload.BuildSecurityAssociation()
@@ -1348,7 +1354,54 @@ func TestNon3GPPUE(t *testing.T) {
 	ikePayload.Reset()
 
 	// Authentication
-	ikePayload.BuildAuthentication(message.SharedKeyMesageIntegrityCode, []byte{1, 2, 3})
+	// Derive Kn3iwf
+	P0 := make([]byte, 4)
+	binary.BigEndian.PutUint32(P0, ue.ULCount.Get()-1)
+	L0 := ueauth.KDFLen(P0)
+	P1 := []byte{security.AccessTypeNon3GPP}
+	L1 := ueauth.KDFLen(P1)
+
+	Kn3iwf, err := ueauth.GetKDFValue(ue.Kamf, ueauth.FC_FOR_KGNB_KN3IWF_DERIVATION, P0, L0, P1, L1)
+	if err != nil {
+		t.Fatalf("Get Kn3iwf error : %+v", err)
+	}
+
+	pseudorandomFunction, ok := handler.NewPseudorandomFunction(ikeSecurityAssociation.SK_pi,
+		ikeSecurityAssociation.PseudorandomFunction.TransformID)
+	if !ok {
+		t.Fatalf("Get an unsupported pseudorandom funcion. This may imply an unsupported transform is chosen.")
+	}
+	var idPayload message.IKEPayloadContainer
+	idPayload.BuildIdentificationInitiator(message.ID_KEY_ID, []byte("UE"))
+	idPayloadData, err := idPayload.Encode()
+	if err != nil {
+		t.Fatalf("Encode IKE payload failed : %+v", err)
+	}
+	if _, err := pseudorandomFunction.Write(idPayloadData[4:]); err != nil {
+		t.Fatalf("Pseudorandom function write error: %+v", err)
+	}
+	ikeSecurityAssociation.ResponderSignedOctets = append(ikeSecurityAssociation.ResponderSignedOctets,
+		pseudorandomFunction.Sum(nil)...)
+
+	transformPseudorandomFunction := ikeSecurityAssociation.PseudorandomFunction
+
+	pseudorandomFunction, ok = handler.NewPseudorandomFunction(Kn3iwf, transformPseudorandomFunction.TransformID)
+	if !ok {
+		t.Fatalf("Get an unsupported pseudorandom funcion. This may imply an unsupported transform is chosen.")
+	}
+	if _, err := pseudorandomFunction.Write([]byte("Key Pad for IKEv2")); err != nil {
+		t.Fatalf("Pseudorandom function write error: %+v", err)
+	}
+	secret := pseudorandomFunction.Sum(nil)
+	pseudorandomFunction, ok = handler.NewPseudorandomFunction(secret, transformPseudorandomFunction.TransformID)
+	if !ok {
+		t.Fatalf("Get an unsupported pseudorandom funcion. This may imply an unsupported transform is chosen.")
+	}
+	pseudorandomFunction.Reset()
+	if _, err := pseudorandomFunction.Write(ikeSecurityAssociation.ResponderSignedOctets); err != nil {
+		t.Fatalf("Pseudorandom function write error: %+v", err)
+	}
+	ikePayload.BuildAuthentication(message.SharedKeyMesageIntegrityCode, pseudorandomFunction.Sum(nil))
 
 	// Configuration Request
 	configurationRequest := ikePayload.BuildConfiguration(message.CFG_REQUEST)
