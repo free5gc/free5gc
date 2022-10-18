@@ -65,7 +65,7 @@ func initLogFile(logNfPath, log5gcPath string) error {
 	if logNfPath != "" {
 		nfDir, _ := filepath.Split(logNfPath)
 		tmpDir := filepath.Join(nfDir, "key")
-		if err := os.MkdirAll(tmpDir, 0775); err != nil {
+		if err := os.MkdirAll(tmpDir, 0o775); err != nil {
 			logger.InitLog.Errorf("Make directory %s failed: %+v", tmpDir, err)
 			return err
 		}

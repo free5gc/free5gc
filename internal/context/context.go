@@ -1,34 +1,95 @@
 package context
 
 import (
+	"crypto/rsa"
+	"crypto/x509"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
 	"github.com/google/uuid"
+	"github.com/pkg/errors"
 
 	"github.com/free5gc/nrf/internal/logger"
 	"github.com/free5gc/nrf/pkg/factory"
+	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
 )
 
 var (
 	NrfNfProfile     models.NfProfile
 	Nrf_NfInstanceID string
+	RootPrivKey      *rsa.PrivateKey
+	RootCert         *x509.Certificate
+	NrfPrivKey       *rsa.PrivateKey
+	NrfPubKey        *rsa.PublicKey
+	NrfCert          *x509.Certificate
+	NrfCertPemPath   string
 )
 
-func InitNrfContext() {
+func InitNrfContext() error {
 	config := factory.NrfConfig
-	logger.InitLog.Infof("nrfconfig Info: Version[%s] Description[%s]", config.Info.Version, config.Info.Description)
+	logger.InitLog.Infof("nrfconfig Info: Version[%s] Description[%s]",
+		config.Info.Version, config.Info.Description)
 	configuration := config.Configuration
 
-	NrfNfProfile.NfInstanceId = uuid.New().String()
+	Nrf_NfInstanceID = uuid.New().String()
+	NrfNfProfile.NfInstanceId = Nrf_NfInstanceID
 	NrfNfProfile.NfType = models.NfType_NRF
 	NrfNfProfile.NfStatus = models.NfStatus_REGISTERED
 
 	serviceNameList := configuration.ServiceNameList
 
+	if config.GetOAuth() {
+		var err error
+		rootPrivKeyPath := config.GetRootPrivKeyPath()
+		RootPrivKey, err = openapi.ParsePrivateKeyFromPEM(rootPrivKeyPath)
+		if err != nil {
+			logger.InitLog.Warnf("No root private key: %v; generate new one", err)
+			err = makeDir(rootPrivKeyPath)
+			if err != nil {
+				return errors.Wrapf(err, "NRF init")
+			}
+			RootPrivKey, err = openapi.GenerateRSAKeyPair("", rootPrivKeyPath)
+			if err != nil {
+				return errors.Wrapf(err, "NRF init")
+			}
+		}
+
+		rootCertPath := config.GetRootCertPath()
+		RootCert, err = openapi.ParseCertFromPEM(rootCertPath)
+		if err != nil {
+			logger.InitLog.Warnf("No root cert: %v; generate new one", err)
+			err = makeDir(rootCertPath)
+			if err != nil {
+				return errors.Wrapf(err, "NRF init")
+			}
+			RootCert, err = openapi.GenerateRootCertificate(rootCertPath, RootPrivKey)
+			if err != nil {
+				return errors.Wrapf(err, "NRF init")
+			}
+		}
+
+		NrfPrivKey, err = openapi.GenerateRSAKeyPair("", "")
+		if err != nil {
+			return errors.Wrapf(err, "NRF init")
+		}
+		NrfPubKey = &NrfPrivKey.PublicKey
+
+		NrfCertPemPath = openapi.GetNFCertPath(
+			config.GetCertBasePath(), string(NrfNfProfile.NfType))
+		NrfCert, err = openapi.GenerateCertificate(
+			string(NrfNfProfile.NfType), Nrf_NfInstanceID,
+			NrfCertPemPath, NrfPubKey, RootCert, RootPrivKey)
+		if err != nil {
+			return errors.Wrapf(err, "NRF init")
+		}
+	}
+
 	NFServices := InitNFService(serviceNameList, config.Info.Version)
 	NrfNfProfile.NfServices = &NFServices
+	return nil
 }
 
 func InitNFService(srvNameList []string, version string) []models.NfService {
@@ -59,4 +120,12 @@ func InitNFService(srvNameList []string, version string) []models.NfService {
 		}
 	}
 	return NFServices
+}
+
+func makeDir(filePath string) error {
+	dir, _ := filepath.Split(filePath)
+	if err := os.MkdirAll(dir, 0o775); err != nil {
+		return errors.Wrapf(err, "makeDir(%s):", dir)
+	}
+	return nil
 }

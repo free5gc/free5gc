@@ -2,10 +2,7 @@ package producer
 
 import (
 	"crypto/x509"
-	"encoding/pem"
-	"io/ioutil"
 	"net/http"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -16,6 +13,7 @@ import (
 	nrf_context "github.com/free5gc/nrf/internal/context"
 	"github.com/free5gc/nrf/internal/logger"
 	"github.com/free5gc/nrf/pkg/factory"
+	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/util/httpwrapper"
 	"github.com/free5gc/util/mongoapi"
@@ -59,7 +57,7 @@ func AccessTokenProcedure(request models.AccessTokenReq) (
 
 	// Create AccessToken
 	accessTokenClaims := models.AccessTokenClaims{
-		Iss:            nrf_context.Nrf_NfInstanceID, // TODO: NF instance id of the NRF
+		Iss:            nrf_context.Nrf_NfInstanceID, // NF instance id of the NRF
 		Sub:            request.NfInstanceId,         // nfInstanceId of service consumer
 		Aud:            request.TargetNfInstanceId,   // nfInstanceId of service producer
 		Scope:          request.Scope,                // TODO: the name of the NF services for which the
@@ -68,25 +66,9 @@ func AccessTokenProcedure(request models.AccessTokenReq) (
 	}
 	accessTokenClaims.IssuedAt = int64(now)
 
-	// Use RSA as a signing method
-	signBytes, err := ioutil.ReadFile(factory.NrfConfig.NrfCertKeyPath())
-	if err != nil {
-		logger.AccessTokenLog.Warnln("SigningBytes error: ", err)
-		return nil, &models.AccessTokenErr{
-			Error: "invalid_request",
-		}
-	}
-
-	signKey, err := jwt.ParseRSAPrivateKeyFromPEM(signBytes)
-	if err != nil {
-		logger.AccessTokenLog.Warnln("SigningKey error: ", err)
-		return nil, &models.AccessTokenErr{
-			Error: "invalid_request",
-		}
-	}
-
+	// Use NRF private key to sign AccessToken
 	token := jwt.NewWithClaims(jwt.GetSigningMethod("RS512"), accessTokenClaims)
-	accessToken, err := token.SignedString(signKey)
+	accessToken, err := token.SignedString(nrf_context.NrfPrivKey)
 	if err != nil {
 		logger.AccessTokenLog.Warnln("Signed string error: ", err)
 		return nil, &models.AccessTokenErr{
@@ -148,37 +130,13 @@ func AccessTokenScopeCheck(req models.AccessTokenReq) *models.AccessTokenErr {
 	}
 
 	// Verify NF's certificate with root certificate
-	rootCertPemPath := factory.NrfConfig.RootCertPemPath()
-	rootPEM, err := ioutil.ReadFile(rootCertPemPath)
-	if err != nil {
-		logger.AccessTokenLog.Errorln("Certificate verify error: " + err.Error())
-		return &models.AccessTokenErr{
-			Error: "invalid_client",
-		}
-	}
-
-	// Note: NF's PEM/KEY should be put in the same path
-	nfPemDir, _ := filepath.Split(factory.NrfConfig.NrfCertPemPath())
-	certPEM, err := ioutil.ReadFile(nfPemDir + strings.ToLower(reqNfType) + ".pem")
-	if err != nil {
-		logger.AccessTokenLog.Errorln("Certificate verify error: " + err.Error())
-		return &models.AccessTokenErr{
-			Error: "invalid_client",
-		}
-	}
-
 	roots := x509.NewCertPool()
-	ok := roots.AppendCertsFromPEM(rootPEM)
-	if !ok {
-		logger.AccessTokenLog.Errorln("Certificate verify error: Append root cert error")
-		return &models.AccessTokenErr{
-			Error: "invalid_client",
-		}
-	}
+	roots.AddCert(nrf_context.RootCert)
 
-	block, _ := pem.Decode(certPEM)
-	cert, err := x509.ParseCertificate(block.Bytes)
+	nfCert, err := openapi.ParseCertFromPEM(
+		openapi.GetNFCertPath(factory.NrfConfig.GetCertBasePath(), reqNfType))
 	if err != nil {
+		logger.AccessTokenLog.Errorln("NF Certificate get error: " + err.Error())
 		return &models.AccessTokenErr{
 			Error: "invalid_client",
 		}
@@ -188,14 +146,14 @@ func AccessTokenScopeCheck(req models.AccessTokenReq) *models.AccessTokenErr {
 		Roots:   roots,
 		DNSName: reqNfType,
 	}
-	if _, err = cert.Verify(opts); err != nil {
+	if _, err = nfCert.Verify(opts); err != nil {
 		logger.AccessTokenLog.Errorln("Certificate verify error: " + err.Error())
 		return &models.AccessTokenErr{
 			Error: "invalid_client",
 		}
 	}
 
-	uri := cert.URIs[0]
+	uri := nfCert.URIs[0]
 	id := strings.Split(uri.Opaque, ":")[1]
 	if id != reqNfInstanceId {
 		logger.AccessTokenLog.Errorln("Certificate verify error: NF Instance Id mismatch (Expected ID: " +

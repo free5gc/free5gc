@@ -38,8 +38,9 @@ func HandleNFDiscoveryRequest(request *httpwrapper.Request) *httpwrapper.Respons
 	return httpwrapper.NewResponse(http.StatusForbidden, nil, problemDetails)
 }
 
-func NFDiscoveryProcedure(queryParameters url.Values) (response *models.SearchResult,
-	problemDetails *models.ProblemDetails) {
+func NFDiscoveryProcedure(
+	queryParameters url.Values,
+) (response *models.SearchResult, problemDetails *models.ProblemDetails) {
 	if queryParameters["target-nf-type"] == nil || queryParameters["requester-nf-type"] == nil {
 		problemDetails := &models.ProblemDetails{
 			Title:  "Invalid Parameter",

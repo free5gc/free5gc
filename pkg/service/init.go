@@ -130,7 +130,7 @@ func (nrf *NRF) Start() {
 		logger.InitLog.Errorf("SetMongoDB failed: %+v", err)
 		return
 	}
-	logger.InitLog.Infoln("Server started")
+	logger.InitLog.Infoln("Server starting")
 
 	router := logger_util.NewGinWithLogrus(logger.GinLog)
 
@@ -138,7 +138,11 @@ func (nrf *NRF) Start() {
 	discovery.AddService(router)
 	management.AddService(router)
 
-	nrf_context.InitNrfContext()
+	err := nrf_context.InitNrfContext()
+	if err != nil {
+		logger.InitLog.Errorln(err)
+		return
+	}
 
 	signalChannel := make(chan os.Signal, 1)
 	signal.Notify(signalChannel, os.Interrupt, syscall.SIGTERM)
@@ -174,9 +178,8 @@ func (nrf *NRF) Start() {
 	if serverScheme == "http" {
 		err = server.ListenAndServe()
 	} else if serverScheme == "https" {
-		err = server.ListenAndServeTLS(
-			factory.NrfConfig.NrfCertPemPath(),
-			factory.NrfConfig.NrfCertKeyPath())
+		// TODO: support TLS mutual authentication for OAuth
+		err = server.ListenAndServeTLS("", "")
 	}
 
 	if err != nil {

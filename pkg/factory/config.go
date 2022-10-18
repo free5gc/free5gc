@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 
 	"github.com/asaskevich/govalidator"
@@ -18,10 +19,9 @@ import (
 )
 
 const (
-	NrfDefaultCertPemPath     = "./config/cert/nrf.pem"
-	NrfDefaultCertKeyPath     = "./config/cert/nrf.key"
-	NrfDefaultRootCertPemPath = "./config/cert/root.pem"
-	NrfDefaultRootCertKeyPath = "./config/cert/root.key"
+	NrfDefaultCertBasePath    = "./config/cert"
+	NrfDefaultRootCertName    = "root.pem"
+	NrfDefaultRootPrivKeyPath = "./config/key/root.key"
 	NrfExpectedConfigVersion  = "1.0.2"
 	NrfSbiDefaultIPv4         = "127.0.0.10"
 	NrfSbiDefaultPort         = 8000
@@ -116,8 +116,9 @@ type Sbi struct {
 	// IPv6Addr  string `yaml:"ipv6Addr,omitempty"`
 	BindingIPv4 string `yaml:"bindingIPv4,omitempty" valid:"host,required"` // IP used to run the server in the node.
 	Port        int    `yaml:"port,omitempty" valid:"port,optional"`
-	Cert        *Cert  `yaml:"cert,omitempty" valid:"optional"`
-	RootCert    *Cert  `yaml:"rootcert,omitempty" valid:"optional"`
+	CertBase    string `yaml:"certBase,omitempty" valid:"optional"`
+	RootPrivKey string `yaml:"rootPrivKey,omitempty" valid:"optional"`
+	OAuth       bool   `yaml:"oauth,omitempty" valid:"optional"`
 }
 
 func (s *Sbi) validate() (bool, error) {
@@ -125,29 +126,8 @@ func (s *Sbi) validate() (bool, error) {
 		return str == "https" || str == "http"
 	})
 
-	if c := s.Cert; c != nil {
-		if result, err := c.validate(); err != nil {
-			return result, err
-		}
-	}
-	if rc := s.RootCert; rc != nil {
-		if result, err := rc.validate(); err != nil {
-			return result, err
-		}
-	}
-
 	result, err := govalidator.ValidateStruct(s)
 	return result, appendInvalid(err)
-}
-
-type Cert struct {
-	Pem string `yaml:"pem,omitempty" valid:"type(string),minstringlength(1),required"`
-	Key string `yaml:"key,omitempty" valid:"type(string),minstringlength(1),required"`
-}
-
-func (c *Cert) validate() (bool, error) {
-	result, err := govalidator.ValidateStruct(c)
-	return result, err
 }
 
 func appendInvalid(err error) error {
@@ -220,30 +200,24 @@ func (c *Config) GetSbiUri() string {
 	return c.GetSbiScheme() + "://" + c.GetSbiRegisterAddr()
 }
 
-func (c *Config) NrfCertPemPath() string {
-	if c.Configuration.Sbi.Cert != nil {
-		return c.Configuration.Sbi.Cert.Pem
-	}
-	return NrfDefaultCertPemPath
+func (c *Config) GetOAuth() bool {
+	return c.Configuration.Sbi.OAuth
 }
 
-func (c *Config) NrfCertKeyPath() string {
-	if c.Configuration.Sbi.Cert != nil {
-		return c.Configuration.Sbi.Cert.Key
+func (c *Config) GetCertBasePath() string {
+	if c.Configuration.Sbi.CertBase != "" {
+		return c.Configuration.Sbi.CertBase
 	}
-	return NrfDefaultCertKeyPath
+	return NrfDefaultCertBasePath
 }
 
-func (c *Config) RootCertPemPath() string {
-	if c.Configuration.Sbi.RootCert != nil {
-		return c.Configuration.Sbi.RootCert.Pem
-	}
-	return NrfDefaultRootCertPemPath
+func (c *Config) GetRootCertPath() string {
+	return filepath.Join(c.GetCertBasePath(), NrfDefaultRootCertName)
 }
 
-func (c *Config) RootCertKeyPath() string {
-	if c.Configuration.Sbi.RootCert != nil {
-		return c.Configuration.Sbi.RootCert.Key
+func (c *Config) GetRootPrivKeyPath() string {
+	if c.Configuration.Sbi.RootPrivKey != "" {
+		return c.Configuration.Sbi.RootPrivKey
 	}
-	return NrfDefaultRootCertKeyPath
+	return NrfDefaultRootPrivKeyPath
 }

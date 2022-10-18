@@ -56,8 +56,8 @@ github.com/envoyproxy/go-control-plane v0.9.4/go.mod h1:6rpuAdCZL397s3pYoYcLgu1m
 github.com/envoyproxy/protoc-gen-validate v0.1.0/go.mod h1:iSmxcyjqTsJpI2R4NaDN7+kN2VEUnK/pcBlmesArF7c=
 github.com/evanphx/json-patch v0.5.2 h1:xVCHIVMUu1wtM/VkR9jVZ45N3FhZfYMMYGorLCR8P3k=
 github.com/evanphx/json-patch v0.5.2/go.mod h1:ZWS5hhDbVDyob71nXKNL0+PWn6ToqBHMikGIFbs31qQ=
-github.com/free5gc/openapi v1.0.4 h1:bC6oqXy8Z+3e532xLMFmrTHvdyv4sNGDPezQSslw5gQ=
-github.com/free5gc/openapi v1.0.4/go.mod h1:KRCnnp0GeK0Bl4gnrX79cQAidKXNENf8VRdG0y9R0Fc=
+github.com/free5gc/openapi v1.0.6-0.20221018065050-08bdf6f426e3 h1:yfa85FhvKXDYT0qCK/GHaIak4CcF/20khEYkl4r3V4Q=
+github.com/free5gc/openapi v1.0.6-0.20221018065050-08bdf6f426e3/go.mod h1:cQRBF7Px8638imOacsQon1YHtMwSM6MUdZCtFtTPKmo=
 github.com/free5gc/util v1.0.3 h1:or/gqHCAi3j2YKd+nzViRnc/tl1tuuJAYxCao6IbOAU=
 github.com/free5gc/util v1.0.3/go.mod h1:DL1Dnryh//Ps5B+hfXbhU1R07fVfrmPs4uuTO4g9yTg=
 github.com/gin-contrib/sse v0.1.0 h1:Y/yl/+YNO8GZSjAhjMsSuLt29uWRFHdHYUb5lYOV9qE=

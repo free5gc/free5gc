@@ -383,8 +383,12 @@ func GetNFInstanceProcedure(nfInstanceID string) map[string]interface{} {
 	return response
 }
 
-func NFRegisterProcedure(nfProfile models.NfProfile) (header http.Header, response bson.M,
-	update bool, problemDetails *models.ProblemDetails) {
+func NFRegisterProcedure(
+	nfProfile models.NfProfile,
+) (
+	header http.Header, response bson.M,
+	update bool, problemDetails *models.ProblemDetails,
+) {
 	logger.ManagementLog.Traceln("[NRF] In NFRegisterProcedure")
 	var nf models.NfProfile
 
@@ -483,7 +487,8 @@ func NFRegisterProcedure(nfProfile models.NfProfile) (header http.Header, respon
 }
 
 func SendNFStatusNotify(Notification_event models.NotificationEventType, nfInstanceUri string,
-	url string) *models.ProblemDetails {
+	url string,
+) *models.ProblemDetails {
 	// Set client and set url
 	configuration := Nnrf_NFManagement.NewConfiguration()
 	// url = fmt.Sprintf("%s%s", url, "/notification")
