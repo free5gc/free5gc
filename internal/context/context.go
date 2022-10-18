@@ -129,3 +129,21 @@ func makeDir(filePath string) error {
 	}
 	return nil
 }
+
+func SignNFCert(nfType, nfId string) error {
+	nfPemPath := openapi.GetNFCertPath(factory.NrfConfig.GetCertBasePath(), nfType)
+
+	// Get NF's Public key from file
+	nfPubKey, err := openapi.ParsePublicKeyFromPEM(nfPemPath)
+	if err != nil {
+		return errors.Wrapf(err, "sign NF cert")
+	}
+
+	// Write back new NF's Certificate to file
+	_, err = openapi.GenerateCertificate(
+		nfType, nfId, nfPemPath, nfPubKey, RootCert, RootPrivKey)
+	if err != nil {
+		return errors.Wrapf(err, "sign NF cert")
+	}
+	return nil
+}

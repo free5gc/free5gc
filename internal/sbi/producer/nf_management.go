@@ -482,6 +482,12 @@ func NFRegisterProcedure(
 		header := make(http.Header)
 		header.Add("Location", locationHeaderValue)
 		logger.ManagementLog.Infoln("Location header: ", locationHeaderValue)
+
+		// Generate NF's pubkey certificate with root certificate
+		err := nrf_context.SignNFCert(string(nf.NfType), nfInstanceId)
+		if err != nil {
+			logger.ManagementLog.Warnln(err)
+		}
 		return header, putData, false, nil
 	}
 }
