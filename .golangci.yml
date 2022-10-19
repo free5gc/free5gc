@@ -198,7 +198,12 @@ linters-settings:
     multi-if: false   # Enforces newlines (or comments) after every multi-line if statement
     multi-func: false # Enforces newlines (or comments) after every multi-line function signature
   gci:
-    local-prefixes: "github.com/free5gc"
+    sections:
+      - standard
+      - default
+      - prefix(github.com/free5gc)
+    section-separators:
+      - newLine
   misspell:
     #locale: US
     ignore-words:
