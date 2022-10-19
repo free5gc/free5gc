@@ -164,14 +164,9 @@ func (nrf *NRF) Start() {
 	bindAddr := factory.NrfConfig.GetSbiBindingAddr()
 	logger.InitLog.Infof("Binding addr: [%s]", bindAddr)
 	server, err := httpwrapper.NewHttp2Server(bindAddr, nrf.KeyLogPath, router)
-
-	if server == nil {
-		logger.InitLog.Errorf("Initialize HTTP server failed: %+v", err)
-		return
-	}
-
 	if err != nil {
 		logger.InitLog.Warnf("Initialize HTTP server: +%v", err)
+		return
 	}
 
 	serverScheme := factory.NrfConfig.GetSbiScheme()
@@ -179,7 +174,9 @@ func (nrf *NRF) Start() {
 		err = server.ListenAndServe()
 	} else if serverScheme == "https" {
 		// TODO: support TLS mutual authentication for OAuth
-		err = server.ListenAndServeTLS("", "")
+		err = server.ListenAndServeTLS(
+			factory.NrfConfig.GetNrfCertPemPath(),
+			factory.NrfConfig.GetNrfPrivKeyPath())
 	}
 
 	if err != nil {
