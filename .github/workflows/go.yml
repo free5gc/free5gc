@@ -12,7 +12,6 @@ jobs:
     strategy:
       matrix:
         go: [ '1.17', '1.18' ]
-    name: Go ${{ matrix.go }} sample
     steps:
     - uses: actions/checkout@v3
 
