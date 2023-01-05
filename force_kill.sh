@@ -12,5 +12,6 @@ sudo ip link del ipsec0
 sudo ip link del xfrmi-default
 sudo rm /dev/mqueue/*
 sudo rm -f /tmp/free5gc_unix_sock
-mongo --eval "db.NfProfile.drop()" free5gc
+mongo --eval "db.NfProfile.drop();db.applicationData.influenceData.subsToNotify.drop();db.applicationData.subsToNotify.drop();db.policyData.subsToNotify.drop();db.exposureData.subsToNotify.drop()" free5gc
+mongosh --eval "db.NfProfile.drop();db.applicationData.influenceData.subsToNotify.drop();db.applicationData.subsToNotify.drop();db.policyData.subsToNotify.drop();db.exposureData.subsToNotify.drop()" free5gc
 
