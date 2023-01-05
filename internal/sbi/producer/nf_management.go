@@ -13,6 +13,7 @@ import (
 
 	nrf_context "github.com/free5gc/nrf/internal/context"
 	"github.com/free5gc/nrf/internal/logger"
+	"github.com/free5gc/nrf/pkg/factory"
 	"github.com/free5gc/openapi/Nnrf_NFManagement"
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/util/httpwrapper"
@@ -483,10 +484,12 @@ func NFRegisterProcedure(
 		header.Add("Location", locationHeaderValue)
 		logger.ManagementLog.Infoln("Location header: ", locationHeaderValue)
 
-		// Generate NF's pubkey certificate with root certificate
-		err := nrf_context.SignNFCert(string(nf.NfType), nfInstanceId)
-		if err != nil {
-			logger.ManagementLog.Warnln(err)
+		if factory.NrfConfig.GetOAuth() {
+			// Generate NF's pubkey certificate with root certificate
+			err := nrf_context.SignNFCert(string(nf.NfType), nfInstanceId)
+			if err != nil {
+				logger.ManagementLog.Warnln(err)
+			}
 		}
 		return header, putData, false, nil
 	}
