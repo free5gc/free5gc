@@ -15,7 +15,7 @@ require (
 	github.com/free5gc/ngap v1.0.6
 	github.com/free5gc/nrf v0.0.0-00010101000000-000000000000
 	github.com/free5gc/nssf v0.0.0-00010101000000-000000000000
-	github.com/free5gc/openapi v1.0.5
+	github.com/free5gc/openapi v1.0.6-0.20221120170212-ee7254ad5999
 	github.com/free5gc/pcf v0.0.0-00010101000000-000000000000
 	github.com/free5gc/smf v0.0.0-00010101000000-000000000000
 	github.com/free5gc/udm v0.0.0-00010101000000-000000000000
@@ -29,7 +29,7 @@ require (
 	github.com/vishvananda/netlink v1.1.0
 	go.mongodb.org/mongo-driver v1.8.4
 	golang.org/x/net v0.0.0-20211020060615-d418f374d309
-	golang.org/x/sys v0.0.0-20211007075335-d3039528d8ac
+	golang.org/x/sys v0.1.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 

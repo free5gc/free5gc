@@ -82,8 +82,9 @@ github.com/free5gc/nas v1.0.7/go.mod h1:qPj0gxFk81cH9zIkg4hm3ID0hkYofBlzZzcciBnJ
 github.com/free5gc/ngap v1.0.6 h1:f9sKqHMNrFZVo9Kp8hAyrCXSoI8l746N5O+DFn7vKHA=
 github.com/free5gc/ngap v1.0.6/go.mod h1:TG1kwwU/EyIlJ3bxY591rdxpD5ZeYnLZTzoWjcfvrBM=
 github.com/free5gc/openapi v1.0.4/go.mod h1:KRCnnp0GeK0Bl4gnrX79cQAidKXNENf8VRdG0y9R0Fc=
-github.com/free5gc/openapi v1.0.5 h1:S25JqyrTgLwcH6pqZE6U448vv0RKg1CoH48AQ4Cj/d4=
 github.com/free5gc/openapi v1.0.5/go.mod h1:KRCnnp0GeK0Bl4gnrX79cQAidKXNENf8VRdG0y9R0Fc=
+github.com/free5gc/openapi v1.0.6-0.20221120170212-ee7254ad5999 h1:vsp9fEwWHrqVipHKn1N5i/LJl5jwmNdCHX1BJm9Vk7M=
+github.com/free5gc/openapi v1.0.6-0.20221120170212-ee7254ad5999/go.mod h1:cQRBF7Px8638imOacsQon1YHtMwSM6MUdZCtFtTPKmo=
 github.com/free5gc/pfcp v1.0.4 h1:11ous/chOya/bG0bHAHHEUc7JUB2g6svABock8Ta2Zs=
 github.com/free5gc/pfcp v1.0.4/go.mod h1:6S74Z5fSH1ch7MFG3aaWakQMc1WFCND8oIRNl5/ZamU=
 github.com/free5gc/tlv v1.0.1 h1:DTMe/NG2T7JOJ7zAlbah/dfFw28s8HWlShUAEt1bV7g=
@@ -446,8 +447,9 @@ golang.org/x/sys v0.0.0-20201119102817-f84b799fce68/go.mod h1:h1NjWce9XRLGQEsW7w
 golang.org/x/sys v0.0.0-20210124154548-22da62e12c0c/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20210423082822-04245dca01da/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20210603081109-ebe580a85c40/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
-golang.org/x/sys v0.0.0-20211007075335-d3039528d8ac h1:oN6lz7iLW/YC7un8pq+9bOLyXrprv2+DKfkJY+2LJJw=
 golang.org/x/sys v0.0.0-20211007075335-d3039528d8ac/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
+golang.org/x/sys v0.1.0 h1:kunALQeHf1/185U1i0GOB/fy1IPRDDpuoOOqRReG57U=
+golang.org/x/sys v0.1.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/term v0.0.0-20201117132131-f5c789dd3221/go.mod h1:Nr5EML6q2oocZ2LXRh80K7BxOlk5/8JxuGnuhpl+muw=
 golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1/go.mod h1:bj7SfCRtBDWHUb9snDiAeCFNEtKQo2Wmx5Cou7ajbmo=
 golang.org/x/text v0.0.0-20170915032832-14c0d48ead0c/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
