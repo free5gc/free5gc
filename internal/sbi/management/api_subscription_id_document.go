@@ -30,7 +30,7 @@ func HTTPRemoveSubscription(c *gin.Context) {
 
 	responseBody, err := openapi.Serialize(httpResponse.Body, "application/json")
 	if err != nil {
-		logger.ManagementLog.Warnln(err)
+		logger.NfmLog.Warnln(err)
 		problemDetails := models.ProblemDetails{
 			Status: http.StatusInternalServerError,
 			Cause:  "SYSTEM_FAILURE",
@@ -52,7 +52,7 @@ func HTTPUpdateSubscription(c *gin.Context) {
 			Detail: err.Error(),
 			Cause:  "SYSTEM_FAILURE",
 		}
-		logger.ManagementLog.Errorf("Get Request Body error: %+v", err)
+		logger.NfmLog.Errorf("Get Request Body error: %+v", err)
 		c.JSON(http.StatusInternalServerError, problemDetail)
 		return
 	}
@@ -64,7 +64,7 @@ func HTTPUpdateSubscription(c *gin.Context) {
 	httpResponse := producer.HandleUpdateSubscriptionRequest(req)
 	responseBody, err := openapi.Serialize(httpResponse.Body, "application/json")
 	if err != nil {
-		logger.ManagementLog.Warnln(err)
+		logger.NfmLog.Warnln(err)
 		problemDetails := models.ProblemDetails{
 			Status: http.StatusInternalServerError,
 			Cause:  "SYSTEM_FAILURE",

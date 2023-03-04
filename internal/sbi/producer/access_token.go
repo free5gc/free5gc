@@ -21,7 +21,7 @@ import (
 
 func HandleAccessTokenRequest(request *httpwrapper.Request) *httpwrapper.Response {
 	// Param of AccessTokenRsp
-	logger.AccessTokenLog.Infoln("Handle AccessTokenRequest")
+	logger.AccTokenLog.Infoln("Handle AccessTokenRequest")
 
 	accessTokenReq := request.Body.(models.AccessTokenReq)
 
@@ -43,7 +43,7 @@ func HandleAccessTokenRequest(request *httpwrapper.Request) *httpwrapper.Respons
 func AccessTokenProcedure(request models.AccessTokenReq) (
 	*models.AccessTokenRsp, *models.AccessTokenErr,
 ) {
-	logger.AccessTokenLog.Infoln("In AccessTokenProcedure")
+	logger.AccTokenLog.Infoln("In AccessTokenProcedure")
 
 	var expiration int32 = 1000
 	scope := request.Scope
@@ -56,21 +56,22 @@ func AccessTokenProcedure(request models.AccessTokenReq) (
 	}
 
 	// Create AccessToken
+	nrfCtx := nrf_context.GetSelf()
 	accessTokenClaims := models.AccessTokenClaims{
-		Iss:            nrf_context.Nrf_NfInstanceID, // NF instance id of the NRF
-		Sub:            request.NfInstanceId,         // nfInstanceId of service consumer
-		Aud:            request.TargetNfInstanceId,   // nfInstanceId of service producer
-		Scope:          request.Scope,                // TODO: the name of the NF services for which the
-		Exp:            now + expiration,             // access_token is authorized for use
+		Iss:            nrfCtx.Nrf_NfInstanceID,    // NF instance id of the NRF
+		Sub:            request.NfInstanceId,       // nfInstanceId of service consumer
+		Aud:            request.TargetNfInstanceId, // nfInstanceId of service producer
+		Scope:          request.Scope,              // TODO: the name of the NF services for which the
+		Exp:            now + expiration,           // access_token is authorized for use
 		StandardClaims: jwt.StandardClaims{},
 	}
 	accessTokenClaims.IssuedAt = int64(now)
 
 	// Use NRF private key to sign AccessToken
 	token := jwt.NewWithClaims(jwt.GetSigningMethod("RS512"), accessTokenClaims)
-	accessToken, err := token.SignedString(nrf_context.NrfPrivKey)
+	accessToken, err := token.SignedString(nrfCtx.NrfPrivKey)
 	if err != nil {
-		logger.AccessTokenLog.Warnln("Signed string error: ", err)
+		logger.AccTokenLog.Warnln("Signed string error: ", err)
 		return nil, &models.AccessTokenErr{
 			Error: "invalid_request",
 		}
@@ -108,7 +109,7 @@ func AccessTokenScopeCheck(req models.AccessTokenReq) *models.AccessTokenErr {
 	filter := bson.M{"nfInstanceId": reqNfInstanceId}
 	consumerNfInfo, err := mongoapi.RestfulAPIGetOne(collName, filter)
 	if err != nil {
-		logger.AccessTokenLog.Errorln("mongoapi RestfulAPIGetOne error: " + err.Error())
+		logger.AccTokenLog.Errorln("mongoapi RestfulAPIGetOne error: " + err.Error())
 		return &models.AccessTokenErr{
 			Error: "invalid_client",
 		}
@@ -117,7 +118,7 @@ func AccessTokenScopeCheck(req models.AccessTokenReq) *models.AccessTokenErr {
 	nfProfile := models.NfProfile{}
 	err = mapstructure.Decode(consumerNfInfo, &nfProfile)
 	if err != nil {
-		logger.AccessTokenLog.Errorln("Certificate verify error: " + err.Error())
+		logger.AccTokenLog.Errorln("Certificate verify error: " + err.Error())
 		return &models.AccessTokenErr{
 			Error: "invalid_client",
 		}
@@ -131,12 +132,13 @@ func AccessTokenScopeCheck(req models.AccessTokenReq) *models.AccessTokenErr {
 
 	// Verify NF's certificate with root certificate
 	roots := x509.NewCertPool()
-	roots.AddCert(nrf_context.RootCert)
+	nrfCtx := nrf_context.GetSelf()
+	roots.AddCert(nrfCtx.RootCert)
 
 	nfCert, err := openapi.ParseCertFromPEM(
 		openapi.GetNFCertPath(factory.NrfConfig.GetCertBasePath(), reqNfType))
 	if err != nil {
-		logger.AccessTokenLog.Errorln("NF Certificate get error: " + err.Error())
+		logger.AccTokenLog.Errorln("NF Certificate get error: " + err.Error())
 		return &models.AccessTokenErr{
 			Error: "invalid_client",
 		}
@@ -147,7 +149,7 @@ func AccessTokenScopeCheck(req models.AccessTokenReq) *models.AccessTokenErr {
 		DNSName: reqNfType,
 	}
 	if _, err = nfCert.Verify(opts); err != nil {
-		logger.AccessTokenLog.Errorln("Certificate verify error: " + err.Error())
+		logger.AccTokenLog.Errorln("Certificate verify error: " + err.Error())
 		return &models.AccessTokenErr{
 			Error: "invalid_client",
 		}
@@ -156,7 +158,7 @@ func AccessTokenScopeCheck(req models.AccessTokenReq) *models.AccessTokenErr {
 	uri := nfCert.URIs[0]
 	id := strings.Split(uri.Opaque, ":")[1]
 	if id != reqNfInstanceId {
-		logger.AccessTokenLog.Errorln("Certificate verify error: NF Instance Id mismatch (Expected ID: " +
+		logger.AccTokenLog.Errorln("Certificate verify error: NF Instance Id mismatch (Expected ID: " +
 			reqNfInstanceId + " Received ID: " + id + ")")
 		return &models.AccessTokenErr{
 			Error: "invalid_client",
@@ -170,7 +172,7 @@ func AccessTokenScopeCheck(req models.AccessTokenReq) *models.AccessTokenErr {
 	filter = bson.M{"nfType": reqTargetNfType}
 	producerNfInfo, err := mongoapi.RestfulAPIGetOne(collName, filter)
 	if err != nil {
-		logger.AccessTokenLog.Errorln("mongoapi.RestfulApiGetOne error: " + err.Error())
+		logger.AccTokenLog.Errorln("mongoapi.RestfulApiGetOne error: " + err.Error())
 		return &models.AccessTokenErr{
 			Error: "invalid_client",
 		}
@@ -180,7 +182,7 @@ func AccessTokenScopeCheck(req models.AccessTokenReq) *models.AccessTokenErr {
 	err = mapstructure.Decode(producerNfInfo, &nfProfile)
 	nfServices := *nfProfile.NfServices
 	if err != nil {
-		logger.AccessTokenLog.Errorln("Certificate verify error: " + err.Error())
+		logger.AccTokenLog.Errorln("Certificate verify error: " + err.Error())
 		return &models.AccessTokenErr{
 			Error: "invalid_client",
 		}
@@ -207,7 +209,7 @@ func AccessTokenScopeCheck(req models.AccessTokenReq) *models.AccessTokenErr {
 			}
 		}
 		if !found {
-			logger.AccessTokenLog.Errorln("Certificate verify error: Request out of scope (" + reqNfService + ")")
+			logger.AccTokenLog.Errorln("Certificate verify error: Request out of scope (" + reqNfService + ")")
 			return &models.AccessTokenErr{
 				Error: "invalid_scope",
 			}

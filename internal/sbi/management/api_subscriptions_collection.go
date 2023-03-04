@@ -36,7 +36,7 @@ func HTTPCreateSubscription(c *gin.Context) {
 			Detail: err.Error(),
 			Cause:  "SYSTEM_FAILURE",
 		}
-		logger.ManagementLog.Errorf("Get Request Body error: %+v", err)
+		logger.NfmLog.Errorf("Get Request Body error: %+v", err)
 		c.JSON(http.StatusInternalServerError, problemDetail)
 		return
 	}
@@ -50,7 +50,7 @@ func HTTPCreateSubscription(c *gin.Context) {
 			Status: http.StatusBadRequest,
 			Detail: problemDetail,
 		}
-		logger.ManagementLog.Errorln(problemDetail)
+		logger.NfmLog.Errorln(problemDetail)
 		c.JSON(http.StatusBadRequest, rsp)
 		return
 	}
@@ -60,7 +60,7 @@ func HTTPCreateSubscription(c *gin.Context) {
 	httpResponse := producer.HandleCreateSubscriptionRequest(req)
 	responseBody, err := openapi.Serialize(httpResponse.Body, "application/json")
 	if err != nil {
-		logger.ManagementLog.Errorln(err)
+		logger.NfmLog.Errorln(err)
 		problemDetails := models.ProblemDetails{
 			Status: http.StatusInternalServerError,
 			Cause:  "SYSTEM_FAILURE",

@@ -1,77 +1,86 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 
-	"github.com/asaskevich/govalidator"
 	"github.com/urfave/cli"
 
 	"github.com/free5gc/nrf/internal/logger"
-	"github.com/free5gc/nrf/internal/util"
-	nrf_service "github.com/free5gc/nrf/pkg/service"
+	"github.com/free5gc/nrf/pkg/factory"
+	"github.com/free5gc/nrf/pkg/service"
+	logger_util "github.com/free5gc/util/logger"
 	"github.com/free5gc/util/version"
 )
 
-var NRF = &nrf_service.NRF{}
+var NRF *service.NrfApp
 
 func main() {
 	app := cli.NewApp()
 	app.Name = "nrf"
 	app.Usage = "5G Network Repository Function (NRF)"
 	app.Action = action
-	app.Flags = NRF.GetCliCmd()
+	app.Flags = []cli.Flag{
+		cli.StringFlag{
+			Name:  "config, c",
+			Usage: "Load configuration from `FILE`",
+		},
+		cli.StringSliceFlag{
+			Name:  "log, l",
+			Usage: "Output NF log to `FILE`",
+		},
+	}
 	if err := app.Run(os.Args); err != nil {
-		logger.AppLog.Errorf("NRF Run Error: %v\n", err)
+		logger.MainLog.Errorf("NRF Run Error: %v\n", err)
 	}
 }
 
-func action(c *cli.Context) error {
-	if err := initLogFile(c.String("log"), c.String("log5gc")); err != nil {
-		logger.AppLog.Errorf("%+v", err)
+func action(cliCtx *cli.Context) error {
+	tlsKeyLogPath, err := initLogFile(cliCtx.StringSlice("log"))
+	if err != nil {
 		return err
 	}
 
-	if err := NRF.Initialize(c); err != nil {
-		switch errType := err.(type) {
-		case govalidator.Errors:
-			validErrs := err.(govalidator.Errors).Errors()
-			for _, validErr := range validErrs {
-				logger.CfgLog.Errorf("%+v", validErr)
-			}
-		default:
-			logger.CfgLog.Errorf("%+v", errType)
-		}
-		logger.CfgLog.Errorf("[-- PLEASE REFER TO SAMPLE CONFIG FILE COMMENTS --]")
-		return fmt.Errorf("Failed to initialize !!")
+	logger.MainLog.Infoln("NRF version: ", version.GetVersion())
+
+	cfg, err := factory.ReadConfig(cliCtx.String("config"))
+	if err != nil {
+		return err
 	}
+	factory.NrfConfig = cfg
 
-	logger.AppLog.Infoln(c.App.Name)
-	logger.AppLog.Infoln("NRF version: ", version.GetVersion())
+	nrf, err := service.NewApp(cfg)
+	if err != nil {
+		return err
+	}
+	NRF = nrf
 
-	NRF.Start()
+	nrf.Start(tlsKeyLogPath)
 
 	return nil
 }
 
-func initLogFile(logNfPath, log5gcPath string) error {
-	NRF.KeyLogPath = util.NrfDefaultKeyLogPath
+func initLogFile(logNfPath []string) (string, error) {
+	logTlsKeyPath := ""
 
-	if err := logger.LogFileHook(logNfPath, log5gcPath); err != nil {
-		return err
-	}
+	for _, path := range logNfPath {
+		if err := logger_util.LogFileHook(logger.Log, path); err != nil {
+			return "", err
+		}
 
-	if logNfPath != "" {
-		nfDir, _ := filepath.Split(logNfPath)
+		if logTlsKeyPath != "" {
+			continue
+		}
+
+		nfDir, _ := filepath.Split(path)
 		tmpDir := filepath.Join(nfDir, "key")
 		if err := os.MkdirAll(tmpDir, 0o775); err != nil {
 			logger.InitLog.Errorf("Make directory %s failed: %+v", tmpDir, err)
-			return err
+			return "", err
 		}
-		_, name := filepath.Split(util.NrfDefaultKeyLogPath)
-		NRF.KeyLogPath = filepath.Join(tmpDir, name)
+		_, name := filepath.Split(factory.NrfDefaultTLSKeyLogPath)
+		logTlsKeyPath = filepath.Join(tmpDir, name)
 	}
 
-	return nil
+	return logTlsKeyPath, nil
 }

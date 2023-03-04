@@ -17,7 +17,7 @@ import (
 	"github.com/free5gc/openapi/models"
 )
 
-var (
+type NRFContext struct {
 	NrfNfProfile     models.NfProfile
 	Nrf_NfInstanceID string
 	RootPrivKey      *rsa.PrivateKey
@@ -25,7 +25,9 @@ var (
 	NrfPrivKey       *rsa.PrivateKey
 	NrfPubKey        *rsa.PublicKey
 	NrfCert          *x509.Certificate
-)
+}
+
+var nrfContext NRFContext
 
 func InitNrfContext() error {
 	config := factory.NrfConfig
@@ -33,66 +35,65 @@ func InitNrfContext() error {
 		config.Info.Version, config.Info.Description)
 	configuration := config.Configuration
 
-	Nrf_NfInstanceID = uuid.New().String()
-	NrfNfProfile.NfInstanceId = Nrf_NfInstanceID
-	NrfNfProfile.NfType = models.NfType_NRF
-	NrfNfProfile.NfStatus = models.NfStatus_REGISTERED
+	nrfContext.NrfNfProfile.NfInstanceId = uuid.New().String()
+	nrfContext.NrfNfProfile.NfType = models.NfType_NRF
+	nrfContext.NrfNfProfile.NfStatus = models.NfStatus_REGISTERED
 
 	serviceNameList := configuration.ServiceNameList
 
 	if config.GetOAuth() {
 		var err error
 		rootPrivKeyPath := config.GetRootPrivKeyPath()
-		RootPrivKey, err = openapi.ParsePrivateKeyFromPEM(rootPrivKeyPath)
+		nrfContext.RootPrivKey, err = openapi.ParsePrivateKeyFromPEM(rootPrivKeyPath)
 		if err != nil {
 			logger.InitLog.Warnf("No root private key: %v; generate new one", err)
 			err = makeDir(rootPrivKeyPath)
 			if err != nil {
 				return errors.Wrapf(err, "NRF init")
 			}
-			RootPrivKey, err = openapi.GenerateRSAKeyPair("", rootPrivKeyPath)
+			nrfContext.RootPrivKey, err = openapi.GenerateRSAKeyPair("", rootPrivKeyPath)
 			if err != nil {
 				return errors.Wrapf(err, "NRF init")
 			}
 		}
 
 		rootCertPath := config.GetRootCertPemPath()
-		RootCert, err = openapi.ParseCertFromPEM(rootCertPath)
+		nrfContext.RootCert, err = openapi.ParseCertFromPEM(rootCertPath)
 		if err != nil {
 			logger.InitLog.Warnf("No root cert: %v; generate new one", err)
 			err = makeDir(rootCertPath)
 			if err != nil {
 				return errors.Wrapf(err, "NRF init")
 			}
-			RootCert, err = openapi.GenerateRootCertificate(rootCertPath, RootPrivKey)
+			nrfContext.RootCert, err = openapi.GenerateRootCertificate(rootCertPath, nrfContext.RootPrivKey)
 			if err != nil {
 				return errors.Wrapf(err, "NRF init")
 			}
 		}
 
 		nrfPrivKeyPath := config.GetNrfPrivKeyPath()
-		NrfPrivKey, err = openapi.ParsePrivateKeyFromPEM(nrfPrivKeyPath)
+		nrfContext.NrfPrivKey, err = openapi.ParsePrivateKeyFromPEM(nrfPrivKeyPath)
 		if err != nil {
 			logger.InitLog.Warnf("No NF priv key: %v; generate new one", err)
-			NrfPrivKey, err = openapi.GenerateRSAKeyPair("", nrfPrivKeyPath)
+			nrfContext.NrfPrivKey, err = openapi.GenerateRSAKeyPair("", nrfPrivKeyPath)
 			if err != nil {
 				return errors.Wrapf(err, "NRF init")
 			}
 		}
-		NrfPubKey = &NrfPrivKey.PublicKey
+		nrfContext.NrfPubKey = &nrfContext.NrfPrivKey.PublicKey
 
 		nrfCertPath := config.GetNrfCertPemPath()
 		logger.InitLog.Infof("generate new NRF cert")
-		NrfCert, err = openapi.GenerateCertificate(
-			string(NrfNfProfile.NfType), Nrf_NfInstanceID,
-			nrfCertPath, NrfPubKey, RootCert, RootPrivKey)
+		nrfContext.NrfCert, err = openapi.GenerateCertificate(
+			string(nrfContext.NrfNfProfile.NfType), nrfContext.Nrf_NfInstanceID,
+			nrfCertPath, nrfContext.NrfPubKey, nrfContext.RootCert, nrfContext.RootPrivKey)
 		if err != nil {
 			return errors.Wrapf(err, "NRF init")
 		}
 	}
 
 	NFServices := InitNFService(serviceNameList, config.Info.Version)
-	NrfNfProfile.NfServices = &NFServices
+	nrfContext.NrfNfProfile.NfServices = &NFServices
 	return nil
 }
 
@@ -140,7 +141,7 @@ func SignNFCert(nfType, nfId string) error {
 	// Get NF's Certificate from file
 	nfCert, err := openapi.ParseCertFromPEM(nfCertPath)
 	if err != nil {
-		logger.ManagementLog.Warnf("No NF cert: %v; generate new one", err)
+		logger.NfmLog.Warnf("No NF cert: %v; generate new one", err)
 
 		// Get NF's Public key from file
 		var nfPubKey *rsa.PublicKey
@@ -151,7 +152,7 @@ func SignNFCert(nfType, nfId string) error {
 
 		// Generate new NF's Certificate to file
 		_, err = openapi.GenerateCertificate(
-			nfType, nfId, nfCertPath, nfPubKey, RootCert, RootPrivKey)
+			nfType, nfId, nfCertPath, nfPubKey, nrfContext.RootCert, nrfContext.RootPrivKey)
 		if err != nil {
 			return errors.Wrapf(err, "sign NF cert")
 		}
@@ -163,11 +164,15 @@ func SignNFCert(nfType, nfId string) error {
 
 		// Re-generate new NF's Certificate to file
 		_, err = openapi.GenerateCertificate(
-			nfType, nfId, nfCertPath, nfPubkey, RootCert, RootPrivKey)
+			nfType, nfId, nfCertPath, nfPubkey, nrfContext.RootCert, nrfContext.RootPrivKey)
 		if err != nil {
 			return errors.Wrapf(err, "sign NF cert")
 		}
 	}
 
 	return nil
+}
+
+func GetSelf() *NRFContext {
+	return &nrfContext
 }

@@ -58,9 +58,7 @@ func nnrfNFManagementCondition(nf *models.NfProfile, nfprofile models.NfProfile)
 	// PlmnList
 	if nfprofile.PlmnList != nil {
 		a := make([]models.PlmnId, len(*nfprofile.PlmnList))
-		for i := 0; i < len(*nfprofile.PlmnList); i++ {
-			a[i] = (*nfprofile.PlmnList)[i]
-		}
+		copy(a, *nfprofile.PlmnList)
 		nf.PlmnList = &a
 	} else {
 		nf.PlmnList = &[]models.PlmnId{
@@ -79,18 +77,14 @@ func nnrfNFManagementCondition(nf *models.NfProfile, nfprofile models.NfProfile)
 	if nfprofile.Ipv4Addresses != nil {
 		// fmt.Println("NsiList")
 		a := make([]string, len(nfprofile.Ipv4Addresses))
-		for i := 0; i < len(nfprofile.Ipv4Addresses); i++ {
-			a[i] = (nfprofile.Ipv4Addresses)[i]
-		}
+		copy(a, nfprofile.Ipv4Addresses)
 		nf.Ipv4Addresses = a
 	}
 	// ipv6Addresses
 	if nfprofile.Ipv6Addresses != nil {
 		// fmt.Println("NsiList")
 		a := make([]string, len(nfprofile.Ipv6Addresses))
-		for i := 0; i < len(nfprofile.Ipv6Addresses); i++ {
-			a[i] = (nfprofile.Ipv6Addresses)[i]
-		}
+		copy(a, nfprofile.Ipv4Addresses)
 		nf.Ipv6Addresses = a
 	}
 }
@@ -100,9 +94,7 @@ func nnrfNFManagementOption(nf *models.NfProfile, nfprofile models.NfProfile) {
 	if nfprofile.SNssais != nil {
 		// fmt.Println("SNssais")
 		a := make([]models.Snssai, len(*nfprofile.SNssais))
-		for i := 0; i < len(*nfprofile.SNssais); i++ {
-			a[i] = (*nfprofile.SNssais)[i]
-		}
+		copy(a, *nfprofile.SNssais)
 		nf.SNssais = &a
 	}
 
@@ -110,33 +102,25 @@ func nnrfNFManagementOption(nf *models.NfProfile, nfprofile models.NfProfile) {
 	if nfprofile.NsiList != nil {
 		// fmt.Println("NsiList")
 		a := make([]string, len(nfprofile.NsiList))
-		for i := 0; i < len(nfprofile.NsiList); i++ {
-			a[i] = (nfprofile.NsiList)[i]
-		}
+		copy(a, nfprofile.NsiList)
 		nf.NsiList = a
 	}
 	// allowedPlmns
 	if nfprofile.AllowedPlmns != nil {
 		a := make([]models.PlmnId, len(*nfprofile.AllowedPlmns))
-		for i := 0; i < len(*nfprofile.AllowedPlmns); i++ {
-			a[i] = (*nfprofile.AllowedPlmns)[i]
-		}
+		copy(a, *nfprofile.AllowedPlmns)
 		nf.AllowedPlmns = &a
 	}
 	// allowedNfTypes
 	if nfprofile.AllowedNfTypes != nil {
 		a := make([]models.NfType, len(nfprofile.AllowedNfTypes))
-		for i := 0; i < len(nfprofile.AllowedNfTypes); i++ {
-			a[i] = (nfprofile.AllowedNfTypes)[i]
-		}
+		copy(a, nfprofile.AllowedNfTypes)
 		nf.AllowedNfTypes = a
 	}
 	// allowedNfDomains
 	if nfprofile.AllowedNfDomains != nil {
 		a := make([]string, len(nfprofile.AllowedNfDomains))
-		for i := 0; i < len(nfprofile.AllowedNfDomains); i++ {
-			a[i] = (nfprofile.AllowedNfDomains)[i]
-		}
+		copy(a, nfprofile.AllowedNfDomains)
 		nf.AllowedNfDomains = a
 	}
 
@@ -144,9 +128,7 @@ func nnrfNFManagementOption(nf *models.NfProfile, nfprofile models.NfProfile) {
 	if nfprofile.AllowedNssais != nil {
 		// fmt.Println("SNssais")
 		a := make([]models.Snssai, len(*nfprofile.AllowedNssais))
-		for i := 0; i < len(*nfprofile.AllowedNssais); i++ {
-			a[i] = (*nfprofile.AllowedNssais)[i]
-		}
+		copy(a, *nfprofile.AllowedNssais)
 		nf.AllowedNssais = &a
 	}
 	// Priority
@@ -392,9 +374,7 @@ func nnrfNFManagementOption(nf *models.NfProfile, nfprofile models.NfProfile) {
 	// nfServices
 	if nfprofile.NfServices != nil {
 		a := make([]models.NfService, len(*nfprofile.NfServices))
-		for i := 0; i < len(*nfprofile.NfServices); i++ {
-			a[i] = (*nfprofile.NfServices)[i]
-		}
+		copy(a, *nfprofile.NfServices)
 		nf.NfServices = &a
 	}
 	//
@@ -417,12 +397,12 @@ func SetLocationHeader(nfprofile models.NfProfile) string {
 
 	ul, err := mongoapi.RestfulAPIGetOne(collName, filter)
 	if err != nil {
-		logger.ManagementLog.Errorf("SetLocationHeader err: %+v", err)
+		logger.NfmLog.Errorf("SetLocationHeader err: %+v", err)
 	}
 
 	var originalUL UriList
 	if err1 := mapstructure.Decode(ul, &originalUL); err1 != nil {
-		logger.ManagementLog.Errorf("SetLocationHeader err: %+v", err1)
+		logger.NfmLog.Errorf("SetLocationHeader err: %+v", err1)
 	}
 
 	// obtain location header = NF URI
@@ -431,22 +411,22 @@ func SetLocationHeader(nfprofile models.NfProfile) string {
 
 	tmp, err := json.Marshal(modifyUL)
 	if err != nil {
-		logger.ManagementLog.Errorf("SetLocationHeader err: %+v", err)
+		logger.NfmLog.Errorf("SetLocationHeader err: %+v", err)
 	}
 	putData := bson.M{}
 	err = json.Unmarshal(tmp, &putData)
 	if err != nil {
-		logger.ManagementLog.Errorf("SetLocationHeader err: %+v", err)
+		logger.NfmLog.Errorf("SetLocationHeader err: %+v", err)
 	}
 
 	existed, err := mongoapi.RestfulAPIPutOne(collName, filter, putData)
 	if err != nil {
-		logger.ManagementLog.Errorf("SetLocationHeader err: %+v", err)
+		logger.NfmLog.Errorf("SetLocationHeader err: %+v", err)
 	} else {
 		if existed {
-			logger.ManagementLog.Info("urilist update")
+			logger.NfmLog.Info("urilist update")
 		} else {
-			logger.ManagementLog.Info("urilist create")
+			logger.NfmLog.Info("urilist create")
 		}
 	}
 
@@ -456,12 +436,12 @@ func SetLocationHeader(nfprofile models.NfProfile) string {
 func setUriListByFilter(filter bson.M, uriList *[]string) {
 	filterNfTypeResultsRaw, err := mongoapi.RestfulAPIGetMany("Subscriptions", filter)
 	if err != nil {
-		logger.ManagementLog.Errorf("setUriListByFilter err: %+v", err)
+		logger.NfmLog.Errorf("setUriListByFilter err: %+v", err)
 	}
 
 	var filterNfTypeResults []models.NrfSubscriptionData
 	if err := openapi.Convert(filterNfTypeResultsRaw, &filterNfTypeResults); err != nil {
-		logger.ManagementLog.Errorf("setUriListByFilter err: %+v", err)
+		logger.NfmLog.Errorf("setUriListByFilter err: %+v", err)
 	}
 
 	for _, subscr := range filterNfTypeResults {
@@ -557,12 +537,12 @@ func GetNofificationUri(nfProfile models.NfProfile) []string {
 			for _, guami := range *(*nfProfile.AmfInfo).GuamiList {
 				tmp, err := json.Marshal(guami)
 				if err != nil {
-					logger.ManagementLog.Error(err)
+					logger.NfmLog.Error(err)
 				}
 				guamiMarshal := bson.M{}
 				err = json.Unmarshal(tmp, &guamiMarshal)
 				if err != nil {
-					logger.ManagementLog.Error(err)
+					logger.NfmLog.Error(err)
 				}
 
 				guamiListBsonArray = append(guamiListBsonArray, bson.M{"subscrCond": bson.M{"$elemMatch": guamiMarshal}})
@@ -581,12 +561,12 @@ func GetNofificationUri(nfProfile models.NfProfile) []string {
 		for _, snssai := range *nfProfile.SNssais {
 			tmp, err := json.Marshal(snssai)
 			if err != nil {
-				logger.ManagementLog.Error(err)
+				logger.NfmLog.Error(err)
 			}
 			snssaiMarshal := bson.M{}
 			err = json.Unmarshal(tmp, &snssaiMarshal)
 			if err != nil {
-				logger.ManagementLog.Error(err)
+				logger.NfmLog.Error(err)
 			}
 
 			snssaisBsonArray = append(snssaisBsonArray, bson.M{"subscrCond": bson.M{"$elemMatch": snssaiMarshal}})

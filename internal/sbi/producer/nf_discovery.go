@@ -20,7 +20,7 @@ import (
 
 func HandleNFDiscoveryRequest(request *httpwrapper.Request) *httpwrapper.Response {
 	// Get all query parameters
-	logger.DiscoveryLog.Infoln("Handle NFDiscoveryRequest")
+	logger.DiscLog.Infoln("Handle NFDiscoveryRequest")
 
 	response, problemDetails := NFDiscoveryProcedure(request.Query)
 	// Send Response
@@ -57,7 +57,7 @@ func NFDiscoveryProcedure(
 		complexQueryStruct := &models.ComplexQuery{}
 		err := json.Unmarshal([]byte(complexQuery), complexQueryStruct)
 		if err != nil {
-			logger.DiscoveryLog.Warnln("UnMasrhal complexQuery Error: ", err)
+			logger.DiscLog.Warnln("UnMasrhal complexQuery Error: ", err)
 		}
 		// Check either CNF or DNF
 		if complexQueryStruct.CNf != nil && complexQueryStruct.DNf != nil {
@@ -77,12 +77,12 @@ func NFDiscoveryProcedure(
 
 	// Build Query Filter
 	var filter bson.M = buildFilter(queryParameters)
-	logger.DiscoveryLog.Traceln("Query filter: ", filter)
+	logger.DiscLog.Traceln("Query filter: ", filter)
 
 	// Use the filter to find documents
 	nfProfilesRaw, err := mongoapi.RestfulAPIGetMany("NfProfile", filter)
 	if err != nil {
-		logger.DiscoveryLog.Errorf("NFDiscoveryProcedure err: %+v", err)
+		logger.DiscLog.Errorf("NFDiscoveryProcedure err: %+v", err)
 		problemDetails := &models.ProblemDetails{
 			Title:  "System failure",
 			Status: http.StatusInternalServerError,
@@ -95,7 +95,7 @@ func NFDiscoveryProcedure(
 	// nfProfile data for response
 	var nfProfilesStruct []models.NfProfile
 	if err := timedecode.Decode(nfProfilesRaw, &nfProfilesStruct); err != nil {
-		logger.DiscoveryLog.Errorf("NF Profile Raw decode error: %+v", err)
+		logger.DiscLog.Errorf("NF Profile Raw decode error: %+v", err)
 		problemDetails := &models.ProblemDetails{
 			Title:  "System failure",
 			Status: http.StatusInternalServerError,
@@ -108,21 +108,21 @@ func NFDiscoveryProcedure(
 	// handle ipv4 & ipv6
 	if queryParameters["target-nf-type"][0] == "BSF" {
 		for i, nfProfile := range nfProfilesStruct {
-			if nfProfile.BsfInfo.Ipv4AddressRanges != nil {
+			if nfProfile.BsfInfo != nil && nfProfile.BsfInfo.Ipv4AddressRanges != nil {
 				for j := range *nfProfile.BsfInfo.Ipv4AddressRanges {
 					ipv4IntStart, err := strconv.Atoi((((*(*nfProfilesStruct[i].BsfInfo).Ipv4AddressRanges)[j]).Start))
 					if err != nil {
-						logger.DiscoveryLog.Warnln("ipv4IntStart Atoi Error: ", err)
+						logger.DiscLog.Warnln("ipv4IntStart Atoi Error: ", err)
 					}
 					((*(*nfProfilesStruct[i].BsfInfo).Ipv4AddressRanges)[j]).Start = context.Ipv4IntToIpv4String(int64(ipv4IntStart))
 					ipv4IntEnd, err := strconv.Atoi((((*(*nfProfilesStruct[i].BsfInfo).Ipv4AddressRanges)[j]).End))
 					if err != nil {
-						logger.DiscoveryLog.Warnln("ipv4IntEnd Atoi Error: ", err)
+						logger.DiscLog.Warnln("ipv4IntEnd Atoi Error: ", err)
 					}
 					((*(*nfProfilesStruct[i].BsfInfo).Ipv4AddressRanges)[j]).End = context.Ipv4IntToIpv4String(int64(ipv4IntEnd))
 				}
 			}
-			if nfProfile.BsfInfo.Ipv6PrefixRanges != nil {
+			if nfProfile.BsfInfo != nil && nfProfile.BsfInfo.Ipv6PrefixRanges != nil {
 				for j := range *nfProfile.BsfInfo.Ipv6PrefixRanges {
 					ipv6IntStart := new(big.Int)
 					ipv6IntStart.SetString(((*(*nfProfilesStruct[i].BsfInfo).Ipv6PrefixRanges)[j]).Start, 10)
@@ -244,20 +244,20 @@ func buildFilter(queryParameters url.Values) bson.M {
 				targetPlmnListtruct := &models.PlmnId{}
 				err := json.Unmarshal([]byte(temptargetPlmn), targetPlmnListtruct)
 				if err != nil {
-					logger.DiscoveryLog.Warnln("Unmarshal Error in targetPlmnListtruct: ", err)
+					logger.DiscLog.Warnln("Unmarshal Error in targetPlmnListtruct: ", err)
 				}
 
 				targetPlmnByteArray, err := bson.Marshal(targetPlmnListtruct)
 				if err != nil {
-					logger.DiscoveryLog.Warnln("Unmarshal Error in targetPlmnListtruct: ", err)
+					logger.DiscLog.Warnln("Unmarshal Error in targetPlmnListtruct: ", err)
 				}
 
 				targetPlmnBsonM := bson.M{}
 				err = bson.Unmarshal(targetPlmnByteArray, &targetPlmnBsonM)
 				if err != nil {
-					logger.DiscoveryLog.Warnln("Unmarshal Error in targetPlmnBsonM: ", err)
+					logger.DiscLog.Warnln("Unmarshal Error in targetPlmnBsonM: ", err)
 				}
-				logger.DiscoveryLog.Traceln("temp target Plmn:", temptargetPlmn)
+				logger.DiscLog.Traceln("temp target Plmn:", temptargetPlmn)
 
 				targetPlmnListBsonArray = append(targetPlmnListBsonArray, bson.M{"plmnList": bson.M{"$elemMatch": targetPlmnBsonM}})
 			}
@@ -315,18 +315,18 @@ func buildFilter(queryParameters url.Values) bson.M {
 				snssaiStruct := &models.Snssai{}
 				err := json.Unmarshal([]byte(tempSnssai), snssaiStruct)
 				if err != nil {
-					logger.DiscoveryLog.Warnln("Unmarshal Error in snssaiStruct", err)
+					logger.DiscLog.Warnln("Unmarshal Error in snssaiStruct", err)
 				}
 
 				snssaiByteArray, err := bson.Marshal(snssaiStruct)
 				if err != nil {
-					logger.DiscoveryLog.Warnln("Unmarshal Error in snssaiStruct", err)
+					logger.DiscLog.Warnln("Unmarshal Error in snssaiStruct", err)
 				}
 
 				snssaiBsonM := bson.M{}
 				err = bson.Unmarshal(snssaiByteArray, &snssaiBsonM)
 				if err != nil {
-					logger.DiscoveryLog.Warnln("Unmarshal Error in snssaiBsonM", err)
+					logger.DiscLog.Warnln("Unmarshal Error in snssaiBsonM", err)
 				}
 
 				snssaisBsonArray = append(snssaisBsonArray, bson.M{"sNssais": bson.M{"$elemMatch": snssaiBsonM}})
@@ -446,18 +446,18 @@ func buildFilter(queryParameters url.Values) bson.M {
 		taiStruct := &models.Tai{}
 		err := json.Unmarshal([]byte(tai), taiStruct)
 		if err != nil {
-			logger.DiscoveryLog.Warnln("Unmarshal Error in taiStruct: ", err)
+			logger.DiscLog.Warnln("Unmarshal Error in taiStruct: ", err)
 		}
 
 		taiByteArray, err := bson.Marshal(taiStruct)
 		if err != nil {
-			logger.DiscoveryLog.Warnln("Unmarshal Error in taiByteArray: ", err)
+			logger.DiscLog.Warnln("Unmarshal Error in taiByteArray: ", err)
 		}
 
 		taiBsonM := bson.M{}
 		err = bson.Unmarshal(taiByteArray, &taiBsonM)
 		if err != nil {
-			logger.DiscoveryLog.Warnln("Unmarshal Error in taiByteArray: ", err)
+			logger.DiscLog.Warnln("Unmarshal Error in taiByteArray: ", err)
 		}
 		if targetNfType == "SMF" {
 			taiFilter = bson.M{
@@ -506,18 +506,18 @@ func buildFilter(queryParameters url.Values) bson.M {
 			guamiStruct := &models.Guami{}
 			err := json.Unmarshal([]byte(guami), guamiStruct)
 			if err != nil {
-				logger.DiscoveryLog.Warnln("Unmarshal Error in guamiStruct: ", err)
+				logger.DiscLog.Warnln("Unmarshal Error in guamiStruct: ", err)
 			}
 
 			guamiByteArray, err := bson.Marshal(guamiStruct)
 			if err != nil {
-				logger.DiscoveryLog.Warnln("Unmarshal Error in guamiByteArray: ", err)
+				logger.DiscLog.Warnln("Unmarshal Error in guamiByteArray: ", err)
 			}
 
 			guamiBsonM := bson.M{}
 			err = bson.Unmarshal(guamiByteArray, &guamiBsonM)
 			if err != nil {
-				logger.DiscoveryLog.Warnln("Unmarshal Error in guamiByteArray: ", err)
+				logger.DiscLog.Warnln("Unmarshal Error in guamiByteArray: ", err)
 			}
 
 			guamiFilter := bson.M{
@@ -1069,7 +1069,7 @@ func buildFilter(queryParameters url.Values) bson.M {
 		chfSupportedPlmnStruct := &models.PlmnId{}
 		err := json.Unmarshal([]byte(chfSupportedPlmn), chfSupportedPlmnStruct)
 		if err != nil {
-			logger.DiscoveryLog.Warnln("Unmarshal Error in chfSupportedPlmnStruct: ", err)
+			logger.DiscLog.Warnln("Unmarshal Error in chfSupportedPlmnStruct: ", err)
 		}
 
 		encodedchfSupportedPlmn := chfSupportedPlmnStruct.Mcc + chfSupportedPlmnStruct.Mnc
@@ -1148,7 +1148,7 @@ func buildFilter(queryParameters url.Values) bson.M {
 		complexQueryStruct := &models.ComplexQuery{}
 		err := json.Unmarshal([]byte(complexQuery), complexQueryStruct)
 		if err != nil {
-			logger.DiscoveryLog.Warnln("Unmarshal Error in complexQuery: ", err)
+			logger.DiscLog.Warnln("Unmarshal Error in complexQuery: ", err)
 		}
 		complexQueryFilter := complexQueryFilter(complexQueryStruct)
 		filter["$and"] = append(filter["$and"].([]bson.M), complexQueryFilter)
@@ -1328,18 +1328,18 @@ func complexQueryFilterSubprocess(queryParameters map[string]*AtomElem, complexQ
 				targetPlmnListtruct := &models.PlmnId{}
 				err := json.Unmarshal([]byte(temptargetPlmn), targetPlmnListtruct)
 				if err != nil {
-					logger.DiscoveryLog.Warnln("Unmarshal Error in targetPlmnListstruct: ", err)
+					logger.DiscLog.Warnln("Unmarshal Error in targetPlmnListstruct: ", err)
 				}
 
 				targetPlmnByteArray, err := bson.Marshal(targetPlmnListtruct)
 				if err != nil {
-					logger.DiscoveryLog.Warnln("Unmarshal Error in targetPlmnByteArray: ", err)
+					logger.DiscLog.Warnln("Unmarshal Error in targetPlmnByteArray: ", err)
 				}
 
 				targetPlmnBsonM := bson.M{}
 				err = bson.Unmarshal(targetPlmnByteArray, &targetPlmnBsonM)
 				if err != nil {
-					logger.DiscoveryLog.Warnln("Unmarshal Error in targetPlmnBsonM: ", err)
+					logger.DiscLog.Warnln("Unmarshal Error in targetPlmnBsonM: ", err)
 				}
 
 				targetPlmnListBsonArray = append(targetPlmnListBsonArray, targetPlmnBsonM)
@@ -1425,18 +1425,18 @@ func complexQueryFilterSubprocess(queryParameters map[string]*AtomElem, complexQ
 				snssaiStruct := &models.Snssai{}
 				err := json.Unmarshal([]byte(tempSnssai), snssaiStruct)
 				if err != nil {
-					logger.DiscoveryLog.Warnln("Unmarshal Error in snssaiStruct: ", err)
+					logger.DiscLog.Warnln("Unmarshal Error in snssaiStruct: ", err)
 				}
 
 				snssaiByteArray, err := bson.Marshal(snssaiStruct)
 				if err != nil {
-					logger.DiscoveryLog.Warnln("Unmarshal Error in snssaiByteArray: ", err)
+					logger.DiscLog.Warnln("Unmarshal Error in snssaiByteArray: ", err)
 				}
 
 				snssaiBsonM := bson.M{}
 				err = bson.Unmarshal(snssaiByteArray, &snssaiBsonM)
 				if err != nil {
-					logger.DiscoveryLog.Warnln("Unmarshal Error in snssaiBsonM: ", err)
+					logger.DiscLog.Warnln("Unmarshal Error in snssaiBsonM: ", err)
 				}
 
 				snssaisBsonArray = append(snssaisBsonArray, snssaiBsonM)
@@ -1561,18 +1561,18 @@ func complexQueryFilterSubprocess(queryParameters map[string]*AtomElem, complexQ
 		taiStruct := &models.Tai{}
 		err := json.Unmarshal([]byte(tempTai), taiStruct)
 		if err != nil {
-			logger.DiscoveryLog.Warnln("Unmarshal Error in taiStruct: ", err)
+			logger.DiscLog.Warnln("Unmarshal Error in taiStruct: ", err)
 		}
 
 		taiByteArray, err := bson.Marshal(taiStruct)
 		if err != nil {
-			logger.DiscoveryLog.Warnln("Unmarshal Error in taiByteArray: ", err)
+			logger.DiscLog.Warnln("Unmarshal Error in taiByteArray: ", err)
 		}
 
 		taiBsonM := bson.M{}
 		err = bson.Unmarshal(taiByteArray, &taiBsonM)
 		if err != nil {
-			logger.DiscoveryLog.Warnln("Unmarshal Error in taiByteArray: ", err)
+			logger.DiscLog.Warnln("Unmarshal Error in taiByteArray: ", err)
 		}
 		if targetNfType == "SMF" {
 			taiFilter = bson.M{
@@ -1653,18 +1653,18 @@ func complexQueryFilterSubprocess(queryParameters map[string]*AtomElem, complexQ
 			guamiStruct := &models.Guami{}
 			err := json.Unmarshal([]byte(tempguami), guamiStruct)
 			if err != nil {
-				logger.DiscoveryLog.Warnln("Unmarshal Error in guamiStruct: ", err)
+				logger.DiscLog.Warnln("Unmarshal Error in guamiStruct: ", err)
 			}
 
 			guamiByteArray, err := bson.Marshal(guamiStruct)
 			if err != nil {
-				logger.DiscoveryLog.Warnln("Unmarshal Error in guamiByteArray: ", err)
+				logger.DiscLog.Warnln("Unmarshal Error in guamiByteArray: ", err)
 			}
 
 			guamiBsonM := bson.M{}
 			err = bson.Unmarshal(guamiByteArray, &guamiBsonM)
 			if err != nil {
-				logger.DiscoveryLog.Warnln("Unmarshal Error in guamiByteArray: ", err)
+				logger.DiscLog.Warnln("Unmarshal Error in guamiByteArray: ", err)
 			}
 
 			guamiFilter = bson.M{

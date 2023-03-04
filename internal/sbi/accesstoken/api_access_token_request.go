@@ -25,14 +25,14 @@ import (
 
 // AccessTokenRequest - Access Token Request
 func HTTPAccessTokenRequest(c *gin.Context) {
-	logger.AccessTokenLog.Infoln("In HTTPAccessTokenRequest")
+	logger.AccTokenLog.Infoln("In HTTPAccessTokenRequest")
 	var accessTokenReq models.AccessTokenReq
 	var r *http.Request = c.Request
 
 	// Request parser
 	err := r.ParseForm()
 	if err != nil {
-		logger.AccessTokenLog.Errorf(err.Error())
+		logger.AccTokenLog.Errorf(err.Error())
 		return
 	}
 	rt := reflect.TypeOf(accessTokenReq)
@@ -58,7 +58,7 @@ func HTTPAccessTokenRequest(c *gin.Context) {
 					Status: http.StatusBadRequest,
 					Detail: problemDetail,
 				}
-				logger.AccessTokenLog.Errorln(problemDetail)
+				logger.AccTokenLog.Errorln(problemDetail)
 				c.JSON(http.StatusBadRequest, rsp)
 				return
 			}
@@ -75,7 +75,7 @@ func HTTPAccessTokenRequest(c *gin.Context) {
 			Status: http.StatusBadRequest,
 			Detail: problemDetail,
 		}
-		logger.AccessTokenLog.Warnln(problemDetail)
+		logger.AccTokenLog.Warnln(problemDetail)
 		c.JSON(http.StatusBadRequest, rsp)
 		return
 	}
@@ -88,7 +88,7 @@ func HTTPAccessTokenRequest(c *gin.Context) {
 	responseBody, err := openapi.Serialize(httpResponse.Body, "application/json")
 
 	if err != nil {
-		logger.AccessTokenLog.Warnln(err)
+		logger.AccTokenLog.Warnln(err)
 		problemDetails := models.ProblemDetails{
 			Status: http.StatusInternalServerError,
 			Cause:  "SYSTEM_FAILURE",
@@ -96,6 +96,6 @@ func HTTPAccessTokenRequest(c *gin.Context) {
 		}
 		c.JSON(http.StatusInternalServerError, problemDetails)
 	} else {
-		c.Data(httpResponse.Status, "application/json", responseBody)
+		c.JSON(httpResponse.Status, responseBody)
 	}
 }

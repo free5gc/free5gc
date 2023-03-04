@@ -22,13 +22,13 @@ import (
 )
 
 func HandleNFDeregisterRequest(request *httpwrapper.Request) *httpwrapper.Response {
-	logger.ManagementLog.Infoln("Handle NFDeregisterRequest")
+	logger.NfmLog.Infoln("Handle NFDeregisterRequest")
 	nfInstanceId := request.Params["nfInstanceID"]
 
 	problemDetails := NFDeregisterProcedure(nfInstanceId)
 
 	if problemDetails != nil {
-		logger.ManagementLog.Infoln("[NRF] Dergeister Success")
+		logger.NfmLog.Infoln("[NRF] Dergeister Success")
 		return httpwrapper.NewResponse(int(problemDetails.Status), nil, problemDetails)
 	} else {
 		return httpwrapper.NewResponse(http.StatusNoContent, nil, nil)
@@ -36,7 +36,7 @@ func HandleNFDeregisterRequest(request *httpwrapper.Request) *httpwrapper.Respon
 }
 
 func HandleGetNFInstanceRequest(request *httpwrapper.Request) *httpwrapper.Response {
-	logger.ManagementLog.Infoln("Handle GetNFInstanceRequest")
+	logger.NfmLog.Infoln("Handle GetNFInstanceRequest")
 	nfInstanceId := request.Params["nfInstanceID"]
 
 	response := GetNFInstanceProcedure(nfInstanceId)
@@ -53,32 +53,32 @@ func HandleGetNFInstanceRequest(request *httpwrapper.Request) *httpwrapper.Respo
 }
 
 func HandleNFRegisterRequest(request *httpwrapper.Request) *httpwrapper.Response {
-	logger.ManagementLog.Infoln("Handle NFRegisterRequest")
+	logger.NfmLog.Infoln("Handle NFRegisterRequest")
 	nfProfile := request.Body.(models.NfProfile)
 
 	header, response, isUpdate, problemDetails := NFRegisterProcedure(nfProfile)
 
 	if response != nil {
 		if isUpdate {
-			logger.ManagementLog.Traceln("update success")
+			logger.NfmLog.Traceln("update success")
 			return httpwrapper.NewResponse(http.StatusOK, header, response)
 		}
-		logger.ManagementLog.Traceln("register success")
+		logger.NfmLog.Traceln("register success")
 		return httpwrapper.NewResponse(http.StatusCreated, header, response)
 	} else if problemDetails != nil {
-		logger.ManagementLog.Traceln("register failed")
+		logger.NfmLog.Traceln("register failed")
 		return httpwrapper.NewResponse(int(problemDetails.Status), nil, problemDetails)
 	}
 	problemDetails = &models.ProblemDetails{
 		Status: http.StatusForbidden,
 		Cause:  "UNSPECIFIED",
 	}
-	logger.ManagementLog.Traceln("register failed")
+	logger.NfmLog.Traceln("register failed")
 	return httpwrapper.NewResponse(http.StatusForbidden, nil, problemDetails)
 }
 
 func HandleUpdateNFInstanceRequest(request *httpwrapper.Request) *httpwrapper.Response {
-	logger.ManagementLog.Infoln("Handle UpdateNFInstanceRequest")
+	logger.NfmLog.Infoln("Handle UpdateNFInstanceRequest")
 	nfInstanceID := request.Params["nfInstanceID"]
 	patchJSON := request.Body.([]byte)
 
@@ -91,11 +91,11 @@ func HandleUpdateNFInstanceRequest(request *httpwrapper.Request) *httpwrapper.Re
 }
 
 func HandleGetNFInstancesRequest(request *httpwrapper.Request) *httpwrapper.Response {
-	logger.ManagementLog.Infoln("Handle GetNFInstancesRequest")
+	logger.NfmLog.Infoln("Handle GetNFInstancesRequest")
 	nfType := request.Query.Get("nf-type")
 	limit, err := strconv.Atoi(request.Query.Get("limit"))
 	if err != nil {
-		logger.ManagementLog.Errorln("Error in string conversion: ", limit)
+		logger.NfmLog.Errorln("Error in string conversion: ", limit)
 		problemDetails := models.ProblemDetails{
 			Title:  "Invalid Parameter",
 			Status: http.StatusBadRequest,
@@ -107,22 +107,22 @@ func HandleGetNFInstancesRequest(request *httpwrapper.Request) *httpwrapper.Resp
 
 	response, problemDetails := GetNFInstancesProcedure(nfType, limit)
 	if response != nil {
-		logger.ManagementLog.Traceln("GetNFInstances success")
+		logger.NfmLog.Traceln("GetNFInstances success")
 		return httpwrapper.NewResponse(http.StatusOK, nil, response)
 	} else if problemDetails != nil {
-		logger.ManagementLog.Traceln("GetNFInstances failed")
+		logger.NfmLog.Traceln("GetNFInstances failed")
 		return httpwrapper.NewResponse(int(problemDetails.Status), nil, problemDetails)
 	}
 	problemDetails = &models.ProblemDetails{
 		Status: http.StatusForbidden,
 		Cause:  "UNSPECIFIED",
 	}
-	logger.ManagementLog.Traceln("GetNFInstances failed")
+	logger.NfmLog.Traceln("GetNFInstances failed")
 	return httpwrapper.NewResponse(http.StatusForbidden, nil, problemDetails)
 }
 
 func HandleRemoveSubscriptionRequest(request *httpwrapper.Request) *httpwrapper.Response {
-	logger.ManagementLog.Infoln("Handle RemoveSubscription")
+	logger.NfmLog.Infoln("Handle RemoveSubscription")
 	subscriptionID := request.Params["subscriptionID"]
 
 	RemoveSubscriptionProcedure(subscriptionID)
@@ -131,7 +131,7 @@ func HandleRemoveSubscriptionRequest(request *httpwrapper.Request) *httpwrapper.
 }
 
 func HandleUpdateSubscriptionRequest(request *httpwrapper.Request) *httpwrapper.Response {
-	logger.ManagementLog.Infoln("Handle UpdateSubscription")
+	logger.NfmLog.Infoln("Handle UpdateSubscription")
 	subscriptionID := request.Params["subscriptionID"]
 	patchJSON := request.Body.([]byte)
 
@@ -145,22 +145,22 @@ func HandleUpdateSubscriptionRequest(request *httpwrapper.Request) *httpwrapper.
 }
 
 func HandleCreateSubscriptionRequest(request *httpwrapper.Request) *httpwrapper.Response {
-	logger.ManagementLog.Infoln("Handle CreateSubscriptionRequest")
+	logger.NfmLog.Infoln("Handle CreateSubscriptionRequest")
 	subscription := request.Body.(models.NrfSubscriptionData)
 
 	response, problemDetails := CreateSubscriptionProcedure(subscription)
 	if response != nil {
-		logger.ManagementLog.Traceln("CreateSubscription success")
+		logger.NfmLog.Traceln("CreateSubscription success")
 		return httpwrapper.NewResponse(http.StatusCreated, nil, response)
 	} else if problemDetails != nil {
-		logger.ManagementLog.Traceln("CreateSubscription failed")
+		logger.NfmLog.Traceln("CreateSubscription failed")
 		return httpwrapper.NewResponse(int(problemDetails.Status), nil, problemDetails)
 	}
 	problemDetails = &models.ProblemDetails{
 		Status: http.StatusForbidden,
 		Cause:  "UNSPECIFIED",
 	}
-	logger.ManagementLog.Traceln("CreateSubscription failed")
+	logger.NfmLog.Traceln("CreateSubscription failed")
 	return httpwrapper.NewResponse(http.StatusForbidden, nil, problemDetails)
 }
 
@@ -169,12 +169,12 @@ func CreateSubscriptionProcedure(subscription models.NrfSubscriptionData) (bson.
 
 	tmp, err := json.Marshal(subscription)
 	if err != nil {
-		logger.ManagementLog.Errorln("Marshal error in CreateSubscriptionProcedure: ", err)
+		logger.NfmLog.Errorln("Marshal error in CreateSubscriptionProcedure: ", err)
 	}
 	putData := bson.M{}
 	err = json.Unmarshal(tmp, &putData)
 	if err != nil {
-		logger.ManagementLog.Errorln("Unmarshal error in CreateSubscriptionProcedure: ", err)
+		logger.NfmLog.Errorln("Unmarshal error in CreateSubscriptionProcedure: ", err)
 	}
 
 	// TODO: need to store Condition !
@@ -182,7 +182,7 @@ func CreateSubscriptionProcedure(subscription models.NrfSubscriptionData) (bson.
 		putData) // subscription id not exist before
 	if err != nil || existed {
 		if err != nil {
-			logger.ManagementLog.Errorf("CreateSubscriptionProcedure err: %+v", err)
+			logger.NfmLog.Errorf("CreateSubscriptionProcedure err: %+v", err)
 		}
 		problemDetails := &models.ProblemDetails{
 			Status: http.StatusBadRequest,
@@ -212,7 +212,7 @@ func RemoveSubscriptionProcedure(subscriptionID string) {
 	filter := bson.M{"subscriptionId": subscriptionID}
 
 	if err := mongoapi.RestfulAPIDeleteMany(collName, filter); err != nil {
-		logger.ManagementLog.Errorf("RemoveSubscriptionProcedure err: %+v", err)
+		logger.NfmLog.Errorf("RemoveSubscriptionProcedure err: %+v", err)
 	}
 }
 
@@ -224,7 +224,7 @@ func GetNFInstancesProcedure(nfType string, limit int) (*nrf_context.UriList, *m
 
 	UL, err := mongoapi.RestfulAPIGetOne(collName, filter)
 	if err != nil {
-		logger.ManagementLog.Errorf("GetNFInstancesProcedure err: %+v", err)
+		logger.NfmLog.Errorf("GetNFInstancesProcedure err: %+v", err)
 		problemDetail := &models.ProblemDetails{
 			Title:  "System failure",
 			Status: http.StatusInternalServerError,
@@ -233,10 +233,10 @@ func GetNFInstancesProcedure(nfType string, limit int) (*nrf_context.UriList, *m
 		}
 		return nil, problemDetail
 	}
-	logger.ManagementLog.Infoln("UL: ", UL)
+	logger.NfmLog.Infoln("UL: ", UL)
 	originalUL := &nrf_context.UriList{}
 	if err := mapstructure.Decode(UL, originalUL); err != nil {
-		logger.ManagementLog.Errorf("Decode error in GetNFInstancesProcedure: %+v", err)
+		logger.NfmLog.Errorf("Decode error in GetNFInstancesProcedure: %+v", err)
 		problemDetail := &models.ProblemDetails{
 			Title:  "System failure",
 			Status: http.StatusInternalServerError,
@@ -256,7 +256,7 @@ func NFDeregisterProcedure(nfInstanceID string) *models.ProblemDetails {
 
 	nfProfilesRaw, err := mongoapi.RestfulAPIGetMany(collName, filter)
 	if err != nil {
-		logger.ManagementLog.Errorf("NFDeregisterProcedure err: %+v", err)
+		logger.NfmLog.Errorf("NFDeregisterProcedure err: %+v", err)
 		problemDetail := &models.ProblemDetails{
 			Title:  "System failure",
 			Status: http.StatusInternalServerError,
@@ -268,7 +268,7 @@ func NFDeregisterProcedure(nfInstanceID string) *models.ProblemDetails {
 	time.Sleep(time.Duration(1) * time.Second)
 
 	if err := mongoapi.RestfulAPIDeleteMany(collName, filter); err != nil {
-		logger.ManagementLog.Errorf("NFDeregisterProcedure err: %+v", err)
+		logger.NfmLog.Errorf("NFDeregisterProcedure err: %+v", err)
 		problemDetail := &models.ProblemDetails{
 			Title:  "System failure",
 			Status: http.StatusInternalServerError,
@@ -281,7 +281,7 @@ func NFDeregisterProcedure(nfInstanceID string) *models.ProblemDetails {
 	// nfProfile data for response
 	var nfProfiles []models.NfProfile
 	if err := timedecode.Decode(nfProfilesRaw, &nfProfiles); err != nil {
-		logger.ManagementLog.Warnln("Time decode error: ", err)
+		logger.NfmLog.Warnln("Time decode error: ", err)
 		problemDetails := &models.ProblemDetails{
 			Status: http.StatusInternalServerError,
 			Cause:  "NOTIFICATION_ERROR",
@@ -291,7 +291,7 @@ func NFDeregisterProcedure(nfInstanceID string) *models.ProblemDetails {
 	}
 
 	if len(nfProfiles) == 0 {
-		logger.ManagementLog.Warnf("NFProfile[%s] not found", nfInstanceID)
+		logger.NfmLog.Warnf("NFProfile[%s] not found", nfInstanceID)
 		problemDetails := &models.ProblemDetails{
 			Status: http.StatusNotFound,
 			Cause:  "RESOURCE_URI_STRUCTURE_NOT_FOUND",
@@ -317,7 +317,7 @@ func NFDeregisterProcedure(nfInstanceID string) *models.ProblemDetails {
 	filterURI := bson.M{"nfType": nfProfiles[0].NfType}
 	putData := bson.M{"_link.item": bson.M{"href": nfInstanceUri}, "multi": true}
 	if err := mongoapi.RestfulAPIPullOne(collNameURI, filterURI, putData); err != nil {
-		logger.ManagementLog.Errorf("NFDeregisterProcedure err: %+v", err)
+		logger.NfmLog.Errorf("NFDeregisterProcedure err: %+v", err)
 		problemDetail := &models.ProblemDetails{
 			Title:  "System failure",
 			Status: http.StatusInternalServerError,
@@ -335,13 +335,13 @@ func UpdateNFInstanceProcedure(nfInstanceID string, patchJSON []byte) map[string
 	filter := bson.M{"nfInstanceId": nfInstanceID}
 
 	if err := mongoapi.RestfulAPIJSONPatch(collName, filter, patchJSON); err != nil {
-		logger.ManagementLog.Errorf("UpdateNFInstanceProcedure err: %+v", err)
+		logger.NfmLog.Errorf("UpdateNFInstanceProcedure err: %+v", err)
 		return nil
 	}
 
 	nf, err := mongoapi.RestfulAPIGetOne(collName, filter)
 	if err != nil {
-		logger.ManagementLog.Errorf("UpdateNFInstanceProcedure err: %+v", err)
+		logger.NfmLog.Errorf("UpdateNFInstanceProcedure err: %+v", err)
 		return nil
 	}
 
@@ -351,11 +351,11 @@ func UpdateNFInstanceProcedure(nfInstanceID string, patchJSON []byte) map[string
 
 	var nfProfiles []models.NfProfile
 	if err := timedecode.Decode(nfProfilesRaw, &nfProfiles); err != nil {
-		logger.ManagementLog.Errorf("UpdateNFInstanceProcedure err: %+v", err)
+		logger.NfmLog.Errorf("UpdateNFInstanceProcedure err: %+v", err)
 	}
 
 	if len(nfProfiles) == 0 {
-		logger.ManagementLog.Warnf("NFProfile[%s] not found", nfInstanceID)
+		logger.NfmLog.Warnf("NFProfile[%s] not found", nfInstanceID)
 		return nil
 	}
 
@@ -377,7 +377,7 @@ func GetNFInstanceProcedure(nfInstanceID string) map[string]interface{} {
 	filter := bson.M{"nfInstanceId": nfInstanceID}
 	response, err := mongoapi.RestfulAPIGetOne(collName, filter)
 	if err != nil {
-		logger.ManagementLog.Errorf("GetNFInstanceProcedure err: %+v", err)
+		logger.NfmLog.Errorf("GetNFInstanceProcedure err: %+v", err)
 		return nil
 	}
 
@@ -390,7 +390,7 @@ func NFRegisterProcedure(
 	header http.Header, response bson.M,
 	update bool, problemDetails *models.ProblemDetails,
 ) {
-	logger.ManagementLog.Traceln("[NRF] In NFRegisterProcedure")
+	logger.NfmLog.Traceln("[NRF] In NFRegisterProcedure")
 	var nf models.NfProfile
 
 	err := nrf_context.NnrfNFManagementDataModel(&nf, nfProfile)
@@ -408,7 +408,7 @@ func NFRegisterProcedure(
 	// Marshal nf to bson
 	tmp, err := json.Marshal(nf)
 	if err != nil {
-		logger.ManagementLog.Errorln("Marshal error in NFRegisterProcedure: ", err)
+		logger.NfmLog.Errorln("Marshal error in NFRegisterProcedure: ", err)
 		problemDetails := &models.ProblemDetails{
 			Title:  "System failure",
 			Status: http.StatusInternalServerError,
@@ -420,7 +420,7 @@ func NFRegisterProcedure(
 	putData := bson.M{}
 	err = json.Unmarshal(tmp, &putData)
 	if err != nil {
-		logger.ManagementLog.Errorln("Unmarshal error in NFRegisterProcedure: ", err)
+		logger.NfmLog.Errorln("Unmarshal error in NFRegisterProcedure: ", err)
 		problemDetails := &models.ProblemDetails{
 			Title:  "System failure",
 			Status: http.StatusInternalServerError,
@@ -437,7 +437,7 @@ func NFRegisterProcedure(
 	// Update NF Profile case
 	existed, err := mongoapi.RestfulAPIPutOne(collName, filter, putData)
 	if err != nil {
-		logger.ManagementLog.Errorf("NFRegisterProcedure err: %+v", err)
+		logger.NfmLog.Errorf("NFRegisterProcedure err: %+v", err)
 		problemDetails := &models.ProblemDetails{
 			Title:  "System failure",
 			Status: http.StatusInternalServerError,
@@ -448,7 +448,7 @@ func NFRegisterProcedure(
 	}
 
 	if existed {
-		logger.ManagementLog.Infoln("RestfulAPIPutOne Update")
+		logger.NfmLog.Infoln("RestfulAPIPutOne Update")
 		uriList := nrf_context.GetNofificationUri(nf)
 
 		// set info for NotificationData
@@ -467,7 +467,7 @@ func NFRegisterProcedure(
 		header.Add("Location", locationHeaderValue)
 		return header, putData, true, nil
 	} else { // Create NF Profile case
-		logger.ManagementLog.Infoln("Create NF Profile")
+		logger.NfmLog.Infoln("Create NF Profile")
 		uriList := nrf_context.GetNofificationUri(nf)
 		// set info for NotificationData
 		Notification_event := models.NotificationEventType_REGISTERED
@@ -482,13 +482,13 @@ func NFRegisterProcedure(
 
 		header := make(http.Header)
 		header.Add("Location", locationHeaderValue)
-		logger.ManagementLog.Infoln("Location header: ", locationHeaderValue)
+		logger.NfmLog.Infoln("Location header: ", locationHeaderValue)
 
 		if factory.NrfConfig.GetOAuth() {
 			// Generate NF's pubkey certificate with root certificate
 			err := nrf_context.SignNFCert(string(nf.NfType), nfInstanceId)
 			if err != nil {
-				logger.ManagementLog.Warnln(err)
+				logger.NfmLog.Warnln(err)
 			}
 		}
 		return header, putData, false, nil
@@ -511,7 +511,7 @@ func SendNFStatusNotify(Notification_event models.NotificationEventType, nfInsta
 
 	res, err := client.NotificationApi.NotificationPost(context.TODO(), notifcationData)
 	if err != nil {
-		logger.ManagementLog.Infof("Notify fail: %v", err)
+		logger.NfmLog.Infof("Notify fail: %v", err)
 		problemDetails := &models.ProblemDetails{
 			Status: http.StatusInternalServerError,
 			Cause:  "NOTIFICATION_ERROR",
@@ -522,11 +522,11 @@ func SendNFStatusNotify(Notification_event models.NotificationEventType, nfInsta
 	if res != nil {
 		defer func() {
 			if resCloseErr := res.Body.Close(); resCloseErr != nil {
-				logger.ManagementLog.Errorf("NotificationApi response body cannot close: %+v", resCloseErr)
+				logger.NfmLog.Errorf("NotificationApi response body cannot close: %+v", resCloseErr)
 			}
 		}()
 		if status := res.StatusCode; status != http.StatusNoContent {
-			logger.ManagementLog.Warnln("Error status in NotificationPost: ", status)
+			logger.NfmLog.Warnln("Error status in NotificationPost: ", status)
 			problemDetails := &models.ProblemDetails{
 				Status: int32(status),
 				Cause:  "NOTIFICATION_ERROR",

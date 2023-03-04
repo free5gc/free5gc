@@ -25,10 +25,10 @@ import (
 func HTTPSearchNFInstances(c *gin.Context) {
 	// var searchNFInstance context.SearchNFInstances
 	// c.BindQuery(&searchNFInstance)
-	// logger.DiscoveryLog.Infoln("searchNFInstance: ", searchNFInstance)
-	// logger.DiscoveryLog.Infoln("targetNFType: ", searchNFInstance.TargetNFType)
-	// logger.DiscoveryLog.Infoln("requesterNFType: ", searchNFInstance.RequesterNFType)
-	// logger.DiscoveryLog.Infoln("ChfSupportedPlmn: ", searchNFInstance.ChfSupportedPlmn)
+	// logger.DiscLog.Infoln("searchNFInstance: ", searchNFInstance)
+	// logger.DiscLog.Infoln("targetNFType: ", searchNFInstance.TargetNFType)
+	// logger.DiscLog.Infoln("requesterNFType: ", searchNFInstance.RequesterNFType)
+	// logger.DiscLog.Infoln("ChfSupportedPlmn: ", searchNFInstance.ChfSupportedPlmn)
 
 	req := httpwrapper.NewRequest(c.Request, nil)
 	req.Query = c.Request.URL.Query()
@@ -36,7 +36,7 @@ func HTTPSearchNFInstances(c *gin.Context) {
 
 	responseBody, err := openapi.Serialize(httpResponse.Body, "application/json")
 	if err != nil {
-		logger.DiscoveryLog.Warnln(err)
+		logger.DiscLog.Warnln(err)
 		problemDetails := models.ProblemDetails{
 			Status: http.StatusInternalServerError,
 			Cause:  "SYSTEM_FAILURE",

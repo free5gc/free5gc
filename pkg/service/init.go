@@ -1,130 +1,89 @@
 package service
 
 import (
-	"bufio"
-	"fmt"
+	"io/ioutil"
 	"os"
-	"os/exec"
 	"os/signal"
 	"runtime/debug"
-	"sync"
 	"syscall"
 	"time"
 
 	"github.com/sirupsen/logrus"
-	"github.com/urfave/cli"
 
 	nrf_context "github.com/free5gc/nrf/internal/context"
 	"github.com/free5gc/nrf/internal/logger"
 	"github.com/free5gc/nrf/internal/sbi/accesstoken"
 	"github.com/free5gc/nrf/internal/sbi/discovery"
 	"github.com/free5gc/nrf/internal/sbi/management"
-	"github.com/free5gc/nrf/internal/util"
 	"github.com/free5gc/nrf/pkg/factory"
 	"github.com/free5gc/util/httpwrapper"
 	logger_util "github.com/free5gc/util/logger"
 	"github.com/free5gc/util/mongoapi"
 )
 
-type NRF struct {
-	KeyLogPath string
+type NrfApp struct {
+	cfg    *factory.Config
+	nrfCtx *nrf_context.NRFContext
 }
 
-type (
-	// Commands information.
-	Commands struct {
-		config string
+func NewApp(cfg *factory.Config) (*NrfApp, error) {
+	nrf := &NrfApp{cfg: cfg}
+	nrf.SetLogEnable(cfg.GetLogEnable())
+	nrf.SetLogLevel(cfg.GetLogLevel())
+	nrf.SetReportCaller(cfg.GetLogReportCaller())
+
+	err := nrf_context.InitNrfContext()
+	if err != nil {
+		logger.InitLog.Errorln(err)
+		return nrf, err
 	}
-)
-
-var commands Commands
-
-var cliCmd = []cli.Flag{
-	cli.StringFlag{
-		Name:  "config, c",
-		Usage: "Load configuration from `FILE`",
-	},
-	cli.StringFlag{
-		Name:  "log, l",
-		Usage: "Output NF log to `FILE`",
-	},
-	cli.StringFlag{
-		Name:  "log5gc, lc",
-		Usage: "Output free5gc log to `FILE`",
-	},
+	nrf.nrfCtx = nrf_context.GetSelf()
+	return nrf, nil
 }
 
-func (*NRF) GetCliCmd() (flags []cli.Flag) {
-	return cliCmd
-}
-
-func (nrf *NRF) Initialize(c *cli.Context) error {
-	commands = Commands{
-		config: c.String("config"),
-	}
-
-	if commands.config != "" {
-		if err := factory.InitConfigFactory(commands.config); err != nil {
-			return err
-		}
-	} else {
-		if err := factory.InitConfigFactory(util.NrfDefaultConfigPath); err != nil {
-			return err
-		}
-	}
-
-	if err := factory.CheckConfigVersion(); err != nil {
-		return err
-	}
-
-	if _, err := factory.NrfConfig.Validate(); err != nil {
-		return err
-	}
-
-	nrf.SetLogLevel()
-
-	return nil
-}
-
-func (nrf *NRF) SetLogLevel() {
-	if factory.NrfConfig.Logger == nil {
-		logger.InitLog.Warnln("NRF config without log level setting!!!")
+func (a *NrfApp) SetLogEnable(enable bool) {
+	logger.MainLog.Infof("Log enable is set to [%v]", enable)
+	if enable && logger.Log.Out == os.Stderr {
+		return
+	} else if !enable && logger.Log.Out == ioutil.Discard {
 		return
 	}
 
-	if factory.NrfConfig.Logger.NRF != nil {
-		if factory.NrfConfig.Logger.NRF.DebugLevel != "" {
-			level, err := logrus.ParseLevel(factory.NrfConfig.Logger.NRF.DebugLevel)
-			if err != nil {
-				logger.InitLog.Warnf("NRF Log level [%s] is invalid, set to [info] level",
-					factory.NrfConfig.Logger.NRF.DebugLevel)
-				logger.SetLogLevel(logrus.InfoLevel)
-			} else {
-				logger.InitLog.Infof("NRF Log level is set to [%s] level", level)
-				logger.SetLogLevel(level)
-			}
-		} else {
-			logger.InitLog.Infoln("NRF Log level not set. Default set to [info] level")
-			logger.SetLogLevel(logrus.InfoLevel)
-		}
-		logger.SetReportCaller(factory.NrfConfig.Logger.NRF.ReportCaller)
+	a.cfg.SetLogEnable(enable)
+	if enable {
+		logger.Log.SetOutput(os.Stderr)
+	} else {
+		logger.Log.SetOutput(ioutil.Discard)
 	}
 }
 
-func (nrf *NRF) FilterCli(c *cli.Context) (args []string) {
-	for _, flag := range nrf.GetCliCmd() {
-		name := flag.GetName()
-		value := fmt.Sprint(c.Generic(name))
-		if value == "" {
-			continue
-		}
-
-		args = append(args, "--"+name, value)
+func (a *NrfApp) SetLogLevel(level string) {
+	lvl, err := logrus.ParseLevel(level)
+	if err != nil {
+		logger.MainLog.Warnf("Log level [%s] is invalid", level)
+		return
 	}
-	return args
+
+	logger.MainLog.Infof("Log level is set to [%s]", level)
+	if lvl == logger.Log.GetLevel() {
+		return
+	}
+
+	a.cfg.SetLogLevel(level)
+	logger.Log.SetLevel(lvl)
 }
 
-func (nrf *NRF) Start() {
+func (a *NrfApp) SetReportCaller(reportCaller bool) {
+	logger.MainLog.Infof("Report Caller is set to [%v]", reportCaller)
+	if reportCaller == logger.Log.ReportCaller {
+		return
+	}
+
+	a.cfg.SetLogReportCaller(reportCaller)
+	logger.Log.SetReportCaller(reportCaller)
+}
+
+func (a *NrfApp) Start(tlsKeyLogPath string) {
 	if err := mongoapi.SetMongoDB(factory.NrfConfig.Configuration.MongoDBName,
 		factory.NrfConfig.Configuration.MongoDBUrl); err != nil {
 		logger.InitLog.Errorf("SetMongoDB failed: %+v", err)
@@ -137,12 +96,6 @@ func (nrf *NRF) Start() {
 	accesstoken.AddService(router)
 	discovery.AddService(router)
 	management.AddService(router)
-
-	err := nrf_context.InitNrfContext()
-	if err != nil {
-		logger.InitLog.Errorln(err)
-		return
-	}
 
 	signalChannel := make(chan os.Signal, 1)
 	signal.Notify(signalChannel, os.Interrupt, syscall.SIGTERM)
@@ -157,13 +110,13 @@ func (nrf *NRF) Start() {
 		<-signalChannel
 		// Waiting for other NFs to deregister
 		time.Sleep(2 * time.Second)
-		nrf.Terminate()
+		a.Terminate()
 		os.Exit(0)
 	}()
 
 	bindAddr := factory.NrfConfig.GetSbiBindingAddr()
 	logger.InitLog.Infof("Binding addr: [%s]", bindAddr)
-	server, err := httpwrapper.NewHttp2Server(bindAddr, nrf.KeyLogPath, router)
+	server, err := httpwrapper.NewHttp2Server(bindAddr, tlsKeyLogPath, router)
 	if err != nil {
 		logger.InitLog.Warnf("Initialize HTTP server: +%v", err)
 		return
@@ -184,79 +137,7 @@ func (nrf *NRF) Start() {
 	}
 }
 
-func (nrf *NRF) Exec(c *cli.Context) error {
-	logger.InitLog.Traceln("args:", c.String("nrfcfg"))
-	args := nrf.FilterCli(c)
-	logger.InitLog.Traceln("filter: ", args)
-	command := exec.Command("./nrf", args...)
-
-	if err := nrf.Initialize(c); err != nil {
-		return err
-	}
-
-	stdout, err := command.StdoutPipe()
-	if err != nil {
-		logger.InitLog.Fatalln(err)
-	}
-	wg := sync.WaitGroup{}
-	wg.Add(3)
-	go func() {
-		defer func() {
-			if p := recover(); p != nil {
-				// Print stack for panic to log. Fatalf() will let program exit.
-				logger.InitLog.Fatalf("panic: %v\n%s", p, string(debug.Stack()))
-			}
-		}()
-
-		in := bufio.NewScanner(stdout)
-		for in.Scan() {
-			fmt.Println(in.Text())
-		}
-		wg.Done()
-	}()
-
-	stderr, err := command.StderrPipe()
-	if err != nil {
-		logger.InitLog.Fatalln(err)
-	}
-	go func() {
-		defer func() {
-			if p := recover(); p != nil {
-				// Print stack for panic to log. Fatalf() will let program exit.
-				logger.InitLog.Fatalf("panic: %v\n%s", p, string(debug.Stack()))
-			}
-		}()
-
-		in := bufio.NewScanner(stderr)
-		fmt.Println("NRF log start")
-		for in.Scan() {
-			fmt.Println(in.Text())
-		}
-		wg.Done()
-	}()
-
-	go func() {
-		defer func() {
-			if p := recover(); p != nil {
-				// Print stack for panic to log. Fatalf() will let program exit.
-				logger.InitLog.Fatalf("panic: %v\n%s", p, string(debug.Stack()))
-			}
-		}()
-
-		fmt.Println("NRF  start")
-		if err = command.Start(); err != nil {
-			fmt.Printf("NRF Start error: %v", err)
-		}
-		fmt.Println("NRF  end")
-		wg.Done()
-	}()
-
-	wg.Wait()
-
-	return err
-}
-
-func (nrf *NRF) Terminate() {
+func (a *NrfApp) Terminate() {
 	logger.InitLog.Infof("Terminating NRF...")
 
 	logger.InitLog.Infof("Remove NF Profile...")
