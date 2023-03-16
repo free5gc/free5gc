@@ -20,10 +20,10 @@ import (
 
 const (
 	NrfDefaultTLSKeyLogPath      = "./log/nrfsslkey.log"
-	NrfDefaultCertPemPath        = "./config/cert/nrf.pem"
-	NrfDefaultPrivateKeyPath     = "./config/cert/nrf.key"
-	NrfDefaultRootCertPemPath    = "./config/cert/root.pem"
-	NrfDefaultRootPrivateKeyPath = "./config/cert/root.key"
+	NrfDefaultCertPemPath        = "./cert/nrf.pem"
+	NrfDefaultPrivateKeyPath     = "./cert/nrf.key"
+	NrfDefaultRootCertPemPath    = "./cert/root.pem"
+	NrfDefaultRootPrivateKeyPath = "./cert/root.key"
 	NrfDefaultConfigPath         = "./config/nrfcfg.yaml"
 	NrfSbiDefaultIPv4            = "127.0.0.10"
 	NrfSbiDefaultPort            = 8000
