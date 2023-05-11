@@ -5,7 +5,7 @@ go 1.17
 require (
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d
 	github.com/free5gc/openapi v1.0.6
-	github.com/free5gc/util v1.0.5-0.20230306071612-a52909216bd2
+	github.com/free5gc/util v1.0.5-0.20230511064842-2e120956883b
 	github.com/gin-gonic/gin v1.9.0
 	github.com/golang-jwt/jwt v3.2.1+incompatible
 	github.com/google/uuid v1.3.0
