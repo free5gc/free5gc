@@ -1,5 +1,5 @@
 info:
-  version: 1.0.1
+  version: 1.0.2
   description: UDR initial local configuration
 
 configuration:
@@ -9,17 +9,14 @@ configuration:
     bindingIPv4: 127.0.0.4  # IP used to bind the service
     port: 8000 # port used to bind the service
     tls: # the local path of TLS key
-      pem: config/TLS/udr.pem # UDR TLS Certificate
-      key: config/TLS/udr.key # UDR TLS Private key
+      pem: cert/udr.pem # UDR TLS Certificate
+      key: cert/udr.key # UDR TLS Private key
   mongodb:
     name: free5gc # Database name in MongoDB
     url: mongodb://localhost:27017 # URL of MongoDB
   nrfUri: http://127.0.0.10:8000 # a valid URI of NRF
 
-# the kind of log output
-# debugLevel: how detailed to output, value: trace, debug, info, warn, error, fatal, panic
-# ReportCaller: enable the caller report or not, value: true or false
-logger:
-  UDR:
-    debugLevel: info
-    ReportCaller: false
+logger: # log output setting
+  enable: true # true or false
+  level: info # how detailed to output, value: trace, debug, info, warn, error, fatal, panic
+  reportCaller: false # enable the caller report or not, value: true or false

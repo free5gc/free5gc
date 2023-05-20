@@ -1,5 +1,5 @@
 info:
-  version: 1.0.2
+  version: 1.0.3
   description: UDM initial local configuration
 
 configuration:
@@ -15,8 +15,8 @@ configuration:
     bindingIPv4: 127.0.0.3  # IP used to bind the service
     port: 8000 # Port used to bind the service
     tls: # the local path of TLS key
-      pem: config/TLS/udm.pem # UDM TLS Certificate
-      key: config/TLS/udm.key # UDM TLS Private key
+      pem: cert/udm.pem # UDM TLS Certificate
+      key: cert/udm.key # UDM TLS Private key
   nrfUri: http://127.0.0.10:8000 # a valid URI of NRF
 
   # test data set from TS33501-f60 Annex C.4
@@ -28,10 +28,7 @@ configuration:
       PrivateKey: F1AB1074477EBCC7F554EA1C5FC368B1616730155E0041AC447D6301975FECDA
       PublicKey: 0472DA71976234CE833A6907425867B82E074D44EF907DFB4B3E21C1C2256EBCD15A7DED52FCBB097A4ED250E036C7B9C8C7004C4EEDC4F068CD7BF8D3F900E3B4
 
-# the kind of log output
-# debugLevel: how detailed to output, value: trace, debug, info, warn, error, fatal, panic
-# ReportCaller: enable the caller report or not, value: true or false
-logger:
-  UDM:
-    debugLevel: info
-    ReportCaller: false
+logger: # log output setting
+  enable: true # true or false
+  level: info # how detailed to output, value: trace, debug, info, warn, error, fatal, panic
+  reportCaller: false # enable the caller report or not, value: true or false

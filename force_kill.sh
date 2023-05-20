@@ -9,9 +9,12 @@ done
 sudo killall tcpdump
 sudo ip link del upfgtp
 sudo ip link del ipsec0
-sudo ip link del xfrmi-default
+XFRMI_LIST=($(ip link | grep xfrmi | awk -F'[:,@]' '{print $2}'))
+for XFRMI_IF in "${XFRMI_LIST[@]}"
+do
+    sudo ip link del $XFRMI_IF
+done
 sudo rm /dev/mqueue/*
 sudo rm -f /tmp/free5gc_unix_sock
 mongo --eval "db.NfProfile.drop();db.applicationData.influenceData.subsToNotify.drop();db.applicationData.subsToNotify.drop();db.policyData.subsToNotify.drop();db.exposureData.subsToNotify.drop()" free5gc
 mongosh --eval "db.NfProfile.drop();db.applicationData.influenceData.subsToNotify.drop();db.applicationData.subsToNotify.drop();db.policyData.subsToNotify.drop();db.exposureData.subsToNotify.drop()" free5gc
-

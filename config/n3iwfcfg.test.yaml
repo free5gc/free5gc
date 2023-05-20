@@ -1,5 +1,5 @@
 info:
-  version: 1.0.4
+  version: 1.0.5
   description: N3IWF initial local configuration
 
 configuration:
@@ -27,9 +27,8 @@ configuration:
   # --- N2 Interfaces ---
   AMFSCTPAddresses: # the IP list of N2 interfaces (SCTP) on AMF when using NGAP
     - IP:
-      - 10.200.200.1
+        - 10.200.200.1
       Port: 38412
-
   NASTCPPort: 20000 # TCP port which the NAS listens on
 
   # --- Nwu Interfaces ---
@@ -45,9 +44,9 @@ configuration:
   FQDN: n3iwf.free5gc.org # FQDN of this N3IWF
 
   # --- Security ---
-  PrivateKey: config/TLS/n3iwf.key # Private key file path
-  CertificateAuthority: config/TLS/n3iwf.pem # Certificate Authority (CA) file path
-  Certificate: config/TLS/n3iwf.pem # Certificate file path
+  PrivateKey: cert/n3iwf.key # Private key file path
+  CertificateAuthority: cert/n3iwf.pem # Certificate Authority (CA) file path
+  Certificate: cert/n3iwf.pem # Certificate file path
 
   # sending dead peer detection message
   LivenessCheck:
@@ -55,16 +54,7 @@ configuration:
     transFreq: 60s # frequency of transmission
     maxRetryTimes: 4 # the max number of DPD response of UE
 
-# the kind of log output
-# debugLevel: how detailed to output, value: trace, debug, info, warn, error, fatal, panic
-# ReportCaller: enable the caller report or not, value: true or false
-logger:
-  N3IWF: # The default log level is DEBUG to print SA keys. Please change it to INFO when deployed.
-    debugLevel: debug
-    ReportCaller: false
-  NGAP:
-    debugLevel: info
-    ReportCaller: false
-  Aper:
-    debugLevel: info
-    ReportCaller: false
+logger: # log output setting
+  enable: true # true or false
+  level: info # how detailed to output, value: trace, debug, info, warn, error, fatal, panic
+  reportCaller: false # enable the caller report or not, value: true or false

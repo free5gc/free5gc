@@ -1,5 +1,5 @@
 info:
-  version: 1.0.1
+  version: 1.0.2
   description: NSSF initial local configuration
 
 configuration:
@@ -10,8 +10,8 @@ configuration:
     bindingIPv4: 127.0.0.31  # IP used to bind the service
     port: 8000 # Port used to bind the service
     tls: # the local path of TLS key
-      pem: config/TLS/nssf.pem # NSSF TLS Certificate
-      key: config/TLS/nssf.key # NSSF TLS Private key
+      pem: cert/nssf.pem # NSSF TLS Certificate
+      key: cert/nssf.key # NSSF TLS Private key
   serviceNameList: # the SBI services provided by this SMF, refer to TS 29.531
     - nnssf-nsselection # Nnssf_NSSelection service
     - nnssf-nssaiavailability # Nnssf_NSSAIAvailability service
@@ -346,10 +346,7 @@ configuration:
             sst: 1 # Slice/Service Type (uinteger, range: 0~255)
             sd: 000003 # Slice Differentiator (3 bytes hex string, range: 000000~FFFFFF)
 
-# the kind of log output
-# debugLevel: how detailed to output, value: trace, debug, info, warn, error, fatal, panic
-# ReportCaller: enable the caller report or not, value: true or false
-logger:
-  NSSF:
-    debugLevel: info
-    ReportCaller: false
+logger: # log output setting
+  enable: true # true or false
+  level: info # how detailed to output, value: trace, debug, info, warn, error, fatal, panic
+  reportCaller: false # enable the caller report or not, value: true or false
