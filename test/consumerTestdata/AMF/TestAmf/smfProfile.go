@@ -6,9 +6,9 @@ import (
 	"github.com/free5gc/openapi/models"
 )
 
-func BuildSmfNfProfile() (string, models.NfProfile) {
-	uuId := uuid.New().String()
-	profile := models.NfProfile{
+func BuildSmfNfProfile() (uuId string, profile models.NfProfile) {
+	uuId = uuid.New().String()
+	profile = models.NfProfile{
 		NfInstanceId: uuId,
 		NfType:       models.NfType_SMF,
 		NfStatus:     models.NfStatus_REGISTERED,
@@ -62,5 +62,6 @@ func BuildSmfNfProfile() (string, models.NfProfile) {
 			},
 		},
 	}
-	return uuId, profile
+	return
+
 }
