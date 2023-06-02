@@ -306,7 +306,7 @@ func (ue *RanUeContext) DeriveResEAPMessageAndSetKey(
 		s := append(prev, ap...)
 
 		// Write Data to it
-		if _, err = h.Write(s); err != nil {
+		if _, err := h.Write(s); err != nil {
 			fatal.Fatalf("EAP-AKA' prf error: %+v", err)
 		}
 
@@ -338,7 +338,7 @@ func (ue *RanUeContext) DeriveResEAPMessageAndSetKey(
 
 	// calculate MAC
 	h := hmac.New(sha256.New, Kaut)
-	if _, err = h.Write(resEAPMessage); err != nil {
+	if _, err := h.Write(resEAPMessage); err != nil {
 		fatal.Fatalf("MAC calculate error: %+v", err)
 	}
 	sum := h.Sum(nil)
