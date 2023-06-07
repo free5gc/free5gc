@@ -3,8 +3,9 @@ package test_test
 import (
 	"fmt"
 	"os"
+	"os/signal"
 	"strings"
-	"sync"
+	"syscall"
 	"testing"
 	"time"
 
@@ -208,9 +209,10 @@ func TestCN(t *testing.T) {
 
 	defer beforeClose(ue)
 
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-	wg.Wait()
+	// subscribe os signal
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Signal(syscall.SIGUSR1))
+	<-c
 }
 
 func beforeClose(ue *test.RanUeContext) {
