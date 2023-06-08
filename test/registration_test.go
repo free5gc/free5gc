@@ -2799,7 +2799,7 @@ func TestAFInfluenceOnTrafficRouting(t *testing.T) {
 	NfTerminate()
 }
 
-func TestReSynchronisation(t *testing.T) {
+func TestReSynchronization(t *testing.T) {
 	var n int
 	var sendMsg []byte
 	var recvMsg = make([]byte, 2048)
