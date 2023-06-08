@@ -15,7 +15,6 @@ import (
 	"test/nasTestpacket"
 
 	"github.com/davecgh/go-spew/spew"
-	"github.com/free5gc/util/ueauth"
 	"github.com/go-ping/ping"
 	"github.com/stretchr/testify/assert"
 	"github.com/vishvananda/netlink"
@@ -30,6 +29,7 @@ import (
 	"github.com/free5gc/nas/nasType"
 	"github.com/free5gc/nas/security"
 	"github.com/free5gc/openapi/models"
+	"github.com/free5gc/util/ueauth"
 )
 
 var (
@@ -44,7 +44,12 @@ var (
 	ueInnerAddr                  = new(net.IPNet)
 )
 
-func generateSPI(n3ue *context.N3IWFUe) []byte {
+type N3IWFUe struct {
+	context.N3IWFIkeUe
+	context.N3IWFRanUe
+}
+
+func generateSPI(n3ue *N3IWFUe) []byte {
 	var spi uint32
 	spiByte := make([]byte, 4)
 	for {
@@ -651,7 +656,7 @@ func applyXFRMRule(ue_is_initiator bool, ifId uint32, childSecurityAssociation *
 func sendPduSessionEstablishmentRequest(
 	pduSessionId uint8,
 	ue *RanUeContext,
-	n3Info *context.N3IWFUe,
+	n3Info *N3IWFUe,
 	ikeSA *context.IKESecurityAssociation,
 	ikeConn *net.UDPConn,
 	nasConn *net.TCPConn,
@@ -909,7 +914,7 @@ func TestNon3GPPUE(t *testing.T) {
 	}
 
 	// Used to save IPsec/IKE related data
-	n3ue := new(context.N3IWFUe)
+	n3ue := new(N3IWFUe)
 	n3ue.PduSessionList = make(map[int64]*context.PDUSession)
 	n3ue.N3IWFChildSecurityAssociation = make(map[uint32]*context.ChildSecurityAssociation)
 	n3ue.TemporaryExchangeMsgIDChildSAMapping = make(map[uint32]*context.ChildSecurityAssociation)

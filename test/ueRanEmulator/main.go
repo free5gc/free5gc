@@ -9,11 +9,12 @@ import (
 	"strings"
 	"time"
 
+	"test"
+	"test/nasTestpacket"
+
 	"github.com/calee0219/fatal"
 	"github.com/urfave/cli"
 	"gopkg.in/yaml.v2"
-	"test"
-	"test/nasTestpacket"
 
 	"github.com/free5gc/nas"
 	"github.com/free5gc/nas/nasMessage"

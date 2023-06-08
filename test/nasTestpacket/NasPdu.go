@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	"net"
 
 	"github.com/free5gc/nas"
 	"github.com/free5gc/nas/logger"
@@ -239,57 +238,11 @@ func GetPduSessionModificationRequest(pduSessionId uint8) []byte {
 	pduSessionModificationRequest.SetMessageType(nas.MsgTypePDUSessionModificationRequest)
 	pduSessionModificationRequest.PDUSessionID.SetPDUSessionID(pduSessionId)
 	pduSessionModificationRequest.PTI.SetPTI(0x00)
-
-	rules := nasType.QoSRules{
-		nasType.QoSRule{
-			Identifier: 0,
-			DQR:        false,
-			Operation:  nasType.OperationCodeCreateNewQoSRule,
-			Precedence: 200,
-			PacketFilterList: nasType.PacketFilterList{
-				nasType.PacketFilter{
-					Identifier: 0x01,
-					Direction:  nasType.PacketFilterDirectionBidirectional,
-					Components: nasType.PacketFilterComponentList{
-						&nasType.PacketFilterIPv4RemoteAddress{
-							Address: net.ParseIP("192.168.0.0").To4(),
-							Mask:    net.IPMask{255, 255, 255, 0},
-						},
-						&nasType.PacketFilterIPv4LocalAddress{
-							Address: net.ParseIP("10.60.0.0").To4(),
-							Mask:    net.IPMask{255, 255, 255, 0},
-						},
-						&nasType.PacketFilterRemotePortRange{
-							LowLimit:  3000,
-							HighLimit: 6000,
-						},
-					},
-				},
-			},
-		},
-	}
-	if qosRuleBytes, err := rules.MarshalBinary(); err == nil {
-		pduSessionModificationRequest.RequestedQosRules = nasType.NewRequestedQosRules(0x7A)
-		pduSessionModificationRequest.RequestedQosRules.SetLen(uint16(len(qosRuleBytes)))
-		pduSessionModificationRequest.RequestedQosRules.SetQoSRules(qosRuleBytes)
-	}
-
-	qosFlowDescs := nasType.QoSFlowDescs{
-		nasType.QoSFlowDesc{
-			OperationCode: nasType.OperationCodeCreateNewQoSFlowDescription,
-			Parameters: nasType.QoSFlowParameterList{
-				&nasType.QoSFlow5QI{
-					FiveQI: 5,
-				},
-			},
-		},
-	}
-
-	if qosFlowDescsBytes, err := qosFlowDescs.MarshalBinary(); err == nil {
-		pduSessionModificationRequest.RequestedQosFlowDescriptions = nasType.NewRequestedQosFlowDescriptions(0x79)
-		pduSessionModificationRequest.RequestedQosFlowDescriptions.SetLen(uint16(len(qosFlowDescsBytes)))
-		pduSessionModificationRequest.RequestedQosFlowDescriptions.SetQoSFlowDescriptions(qosFlowDescsBytes)
-	}
+	// pduSessionModificationRequest.RequestedQosFlowDescriptions = nasType.NewRequestedQosFlowDescriptions(nasMessage.
+	// PDUSessionModificationRequestRequestedQosFlowDescriptionsType)
+	// pduSessionModificationRequest.RequestedQosFlowDescriptions.SetLen(6)
+	// pduSessionModificationRequest.RequestedQosFlowDescriptions.SetQoSFlowDescriptions([]uint8{0x09, 0x20, 0x41, 0x01,
+	// 0x01, 0x09})
 
 	m.GsmMessage.PDUSessionModificationRequest = pduSessionModificationRequest
 

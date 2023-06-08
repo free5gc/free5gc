@@ -1,6 +1,7 @@
 package test_test
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"os/exec"
@@ -15,6 +16,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	// ausf_context "github.com/free5gc/ausf/context"
 	"github.com/free5gc/nas"
 	"github.com/free5gc/nas/nasMessage"
 	"github.com/free5gc/nas/nasType"
@@ -24,8 +26,11 @@ import (
 	"github.com/free5gc/openapi/models"
 )
 
+var ueCount = flag.Int("ueCount", 1, "Number of ue")
+var upfNum = flag.Int("upfNum", 1, "Number of upf")
+
 func TestULCLAndMultiUPF(t *testing.T) {
-	testULCLSessionBase(t, 4, 6)
+	testULCLSessionBase(t, *ueCount, *upfNum)
 }
 
 func testULCLSessionBase(t *testing.T, ueCount int, upfNum int) {
@@ -227,7 +232,7 @@ func testULCLSessionBase(t *testing.T, ueCount int, upfNum int) {
 
 		// check PDR and FAR start(For ULCL)
 		dir, _ := os.Getwd()
-		cmdPath := dir + "/../go-gtp5gnl/bin/"
+		cmdPath := dir + "/go-gtp5gnl/bin/"
 		gtp5gTunnelCmdPath := filepath.Clean(cmdPath)
 
 		for ns_num := 1; ns_num < upfNum+1; ns_num++ {

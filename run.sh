@@ -102,7 +102,7 @@ if [ $PCAP_MODE -ne 0 ]; then
     PID_LIST+=($SUDO_TCPDUMP_PID $TCPDUMP_PID)
 fi
 
-sudo -E ./bin/upf -c ./config/upfcfg.yaml -l ${LOG_PATH}upf.log -lc ${LOG_PATH}${LOG_NAME} &
+sudo -E ./bin/upf -c ./config/upfcfg.yaml -l ${LOG_PATH}${LOG_NAME} &
 SUDO_UPF_PID=$!
 sleep 0.1
 UPF_PID=$(pgrep -P $SUDO_UPF_PID)
@@ -110,7 +110,6 @@ PID_LIST+=($SUDO_UPF_PID $UPF_PID)
 
 mongo --eval "db.NfProfile.drop();db.applicationData.influenceData.subsToNotify.drop();db.applicationData.subsToNotify.drop();db.policyData.subsToNotify.drop();db.exposureData.subsToNotify.drop()" free5gc
 mongosh --eval "db.NfProfile.drop();db.applicationData.influenceData.subsToNotify.drop();db.applicationData.subsToNotify.drop();db.policyData.subsToNotify.drop();db.exposureData.subsToNotify.drop()" free5gc
-
 sleep 0.1
 
 NF_LIST="nrf amf smf udr pcf udm nssf ausf"
@@ -118,13 +117,13 @@ NF_LIST="nrf amf smf udr pcf udm nssf ausf"
 export GIN_MODE=release
 
 for NF in ${NF_LIST}; do
-    ./bin/${NF} -c ./config/${NF}cfg.yaml -l ${LOG_PATH}${NF}.log -lc ${LOG_PATH}${LOG_NAME} &
+    ./bin/${NF} -c ./config/${NF}cfg.yaml -l ${LOG_PATH}${LOG_NAME} &
     PID_LIST+=($!)
     sleep 0.1
 done
 
 if [ $N3IWF_ENABLE -ne 0 ]; then
-    sudo ./bin/n3iwf -c ./config/n3iwfcfg.yaml -l ${LOG_PATH}n3iwf.log -lc ${LOG_PATH}${LOG_NAME} &
+    sudo ./bin/n3iwf -c ./config/n3iwfcfg.yaml -l ${LOG_PATH}${LOG_NAME} &
     SUDO_N3IWF_PID=$!
     sleep 1
     N3IWF_PID=$(pgrep -P $SUDO_N3IWF_PID)

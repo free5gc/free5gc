@@ -1,11 +1,11 @@
 info:
-  version: 1.0.1
+  version: 1.0.7
   description: Routing information for UE
 
 ueRoutingInfo: # the list of UE routing information
   UE1: # Group Name
     members:
-    - imsi-2089300007487 # Subscription Permanent Identifier of the UE
+    - imsi-208930000007487 # Subscription Permanent Identifier of the UE
     topology: # Network topology for this group (Uplink: A->B, Downlink: B->A)
     # default path derived from this topology
     # node name should be consistent with smfcfg.yaml
@@ -21,7 +21,7 @@ ueRoutingInfo: # the list of UE routing information
 
   UE2: # Group Name
     members:
-    - imsi-2089300007486 # Subscription Permanent Identifier of the UE
+    - imsi-208930000007486 # Subscription Permanent Identifier of the UE
     topology: # Network topology for this group (Uplink: A->B, Downlink: B->A)
     # default path derived from this topology
     # node name should be consistent with smfcfg.yaml
@@ -35,3 +35,13 @@ ueRoutingInfo: # the list of UE routing information
         # The UPF's name should be consistent with smfcfg.yaml
         path: [BranchingUPF, AnchorUPF2]
 
+routeProfile: # Maintains the mapping between RouteProfileID and ForwardingPolicyID of UPF
+  MEC1: # Route Profile identifier
+    forwardingPolicyID: 10 # Forwarding Policy ID of the route profile
+
+pfdDataForApp: # PFDs for an Application
+  - applicationId: edge # Application identifier
+    pfds: # PFDs for the Application
+      - pfdID: pfd1 # PFD identifier
+        flowDescriptions: # Represents a 3-tuple with protocol, server ip and server port for UL/DL application traffic
+          - permit out ip from 10.60.0.1 8080 to any

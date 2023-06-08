@@ -10,9 +10,9 @@ configuration:
     registerIPv4: 127.0.0.10 # IP used to serve NFs or register to another NRF
     bindingIPv4: 127.0.0.10  # IP used to bind the service
     port: 8000 # port used to bind the service
-    # cert: config/cert/nrf.pem # NRF Certificate
-    # rootcert: config/cert/root.pem # Root Certificate
-    # oauth: false # OAuth2
+    tls: # the local path of TLS key
+      pem: cert/nrf.pem # NRF TLS Certificate
+      key: cert/nrf.key # NRF TLS Private key
   DefaultPlmnId:
     mcc: 208 # Mobile Country Code (3 digits string, digit: 0~9)
     mnc: 93 # Mobile Network Code (2 or 3 digits string, digit: 0~9)
@@ -20,10 +20,7 @@ configuration:
     - nnrf-nfm # Nnrf_NFManagement service
     - nnrf-disc # Nnrf_NFDiscovery service
 
-# the kind of log output
-# debugLevel: how detailed to output, value: trace, debug, info, warn, error, fatal, panic
-# ReportCaller: enable the caller report or not, value: true or false
-logger:
-  NRF:
-    debugLevel: info
-    ReportCaller: false
+logger: # log output setting
+  enable: true # true or false
+  level: info # how detailed to output, value: trace, debug, info, warn, error, fatal, panic
+  reportCaller: false # enable the caller report or not, value: true or false

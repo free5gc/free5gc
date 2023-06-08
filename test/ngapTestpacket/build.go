@@ -1064,25 +1064,27 @@ func BuildHandoverRequestAcknowledge(amfUeNgapID, ranUeNgapID int64) (pdu ngapTy
 
 	handoverRequestAcknowledgeIEs.List = append(handoverRequestAcknowledgeIEs.List, ie)
 
-	//PDU Session Resource Failed to setup List
-	ie = ngapType.HandoverRequestAcknowledgeIEs{}
-	ie.Id.Value = ngapType.ProtocolIEIDPDUSessionResourceFailedToSetupListHOAck
-	ie.Criticality.Value = ngapType.CriticalityPresentIgnore
-	ie.Value.Present = ngapType.HandoverRequestAcknowledgeIEsPresentPDUSessionResourceFailedToSetupListHOAck
-	ie.Value.PDUSessionResourceFailedToSetupListHOAck = new(ngapType.PDUSessionResourceFailedToSetupListHOAck)
+	/*
+		//PDU Session Resource Failed to setup List
+		ie = ngapType.HandoverRequestAcknowledgeIEs{}
+		ie.Id.Value = ngapType.ProtocolIEIDPDUSessionResourceFailedToSetupListHOAck
+		ie.Criticality.Value = ngapType.CriticalityPresentIgnore
+		ie.Value.Present = ngapType.HandoverRequestAcknowledgeIEsPresentPDUSessionResourceFailedToSetupListHOAck
+		ie.Value.PDUSessionResourceFailedToSetupListHOAck = new(ngapType.PDUSessionResourceFailedToSetupListHOAck)
 
-	pDUSessionResourceFailedToSetupListHOAck := ie.Value.PDUSessionResourceFailedToSetupListHOAck
+		pDUSessionResourceFailedToSetupListHOAck := ie.Value.PDUSessionResourceFailedToSetupListHOAck
 
-	//PDU Session Resource Failed to setup Item
-	pDUSessionResourceFailedToSetupItemHOAck := ngapType.PDUSessionResourceFailedToSetupItemHOAck{}
-	pDUSessionResourceFailedToSetupItemHOAck.PDUSessionID.Value = 11
-	pDUSessionResourceFailedToSetupItemHOAck.HandoverResourceAllocationUnsuccessfulTransfer =
-		GetHandoverResourceAllocationUnsuccessfulTransfer()
+		//PDU Session Resource Failed to setup Item
+		pDUSessionResourceFailedToSetupItemHOAck := ngapType.PDUSessionResourceFailedToSetupItemHOAck{}
+		pDUSessionResourceFailedToSetupItemHOAck.PDUSessionID.Value = 11
+		pDUSessionResourceFailedToSetupItemHOAck.HandoverResourceAllocationUnsuccessfulTransfer =
+			GetHandoverResourceAllocationUnsuccessfulTransfer()
 
-	pDUSessionResourceFailedToSetupListHOAck.List =
-		append(pDUSessionResourceFailedToSetupListHOAck.List, pDUSessionResourceFailedToSetupItemHOAck)
+		pDUSessionResourceFailedToSetupListHOAck.List =
+			append(pDUSessionResourceFailedToSetupListHOAck.List, pDUSessionResourceFailedToSetupItemHOAck)
 
-	handoverRequestAcknowledgeIEs.List = append(handoverRequestAcknowledgeIEs.List, ie)
+		handoverRequestAcknowledgeIEs.List = append(handoverRequestAcknowledgeIEs.List, ie)
+	*/
 
 	//Target To Source TransparentContainer
 	ie = ngapType.HandoverRequestAcknowledgeIEs{}
@@ -3258,7 +3260,7 @@ func buildPDUSessionResourceModifyResponseTransfer() (data ngapType.PDUSessionRe
 
 	qosFlowAddOrModifyResponseItem := ngapType.QosFlowAddOrModifyResponseItem{
 		QosFlowIdentifier: ngapType.QosFlowIdentifier{
-			Value: 5,
+			Value: 1,
 		},
 	}
 

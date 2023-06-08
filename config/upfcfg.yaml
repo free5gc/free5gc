@@ -17,6 +17,7 @@ gtpu:
       type: N3
       # name: upf.5gc.nctu.me
       # ifname: gtpif
+      # mtu: 1400
 
 # The DNN list supported by UPF
 dnnList:

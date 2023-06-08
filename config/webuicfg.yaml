@@ -1,5 +1,5 @@
 info:
-  version: 1.0.0
+  version: 1.0.1
   description: WebUI initial local configuration
 
 configuration:
@@ -7,10 +7,7 @@ configuration:
     name: free5gc # name of the mongodb
     url: mongodb://localhost:27017 # a valid URL of the mongodb
 
-# the kind of log output
-# debugLevel: how detailed to output, value: trace, debug, info, warn, error, fatal, panic
-# ReportCaller: enable the caller report or not, value: true or false
-logger:
-  WEBUI:
-    debugLevel: info
-    ReportCaller: false
+logger: # log output setting
+  enable: true # true or false
+  level: info # how detailed to output, value: trace, debug, info, warn, error, fatal, panic
+  reportCaller: false # enable the caller report or not, value: true or false
