@@ -178,15 +178,22 @@ func AccessTokenScopeCheck(req models.AccessTokenReq) *models.AccessTokenErr {
 		}
 	}
 
+	if len(producerNfInfo) == 0 {
+		logger.AccTokenLog.Errorln("no producerNfInfor for targetNfType " + reqTargetNfType)
+		return &models.AccessTokenErr{
+			Error: "invalid_client",
+		}
+	}
+
 	nfProfile = models.NfProfile{}
 	err = mapstructure.Decode(producerNfInfo, &nfProfile)
-	nfServices := *nfProfile.NfServices
 	if err != nil {
 		logger.AccTokenLog.Errorln("Certificate verify error: " + err.Error())
 		return &models.AccessTokenErr{
 			Error: "invalid_client",
 		}
 	}
+	nfServices := *nfProfile.NfServices
 
 	scopes := strings.Split(req.Scope, " ")
 
