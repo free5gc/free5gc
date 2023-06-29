@@ -686,6 +686,7 @@ func TestServiceRequest(t *testing.T) {
 
 	time.Sleep(1 * time.Second)
 
+	ue.AmfUeNgapId = 2
 	// send NAS Service Request
 	pdu = nasTestpacket.GetServiceRequest(nasMessage.ServiceTypeData)
 	pdu, err = test.EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtected, true, false)
@@ -919,13 +920,14 @@ func TestGUTIRegistration(t *testing.T) {
 
 	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
 	// innerRegistrationRequest will be encapsulated in the registrationRequest
+	ue.AmfUeNgapId = 2
 	innerRegistrationRequest := nasTestpacket.GetRegistrationRequest(nasMessage.RegistrationType5GSInitialRegistration,
 		GUTI5GS, nil, ue.GetUESecurityCapability(), ue.Get5GMMCapability(), nil, nil)
 	registrationRequest = nasTestpacket.GetRegistrationRequest(nasMessage.RegistrationType5GSInitialRegistration,
 		GUTI5GS, nil, ueSecurityCapability, nil, innerRegistrationRequest, nil)
 	pdu, err = test.EncodeNasPduWithSecurity(ue, registrationRequest, nas.SecurityHeaderTypeIntegrityProtected, true, true)
 	require.Nil(t, err)
-	sendMsg, err = test.GetInitialUEMessage(ue.RanUeNgapId, registrationRequest, "")
+	sendMsg, err = test.GetInitialUEMessage(ue.RanUeNgapId, pdu, "")
 	require.Nil(t, err)
 	_, err = conn.Write(sendMsg)
 	require.Nil(t, err)
@@ -1005,7 +1007,7 @@ func TestGUTIRegistration(t *testing.T) {
 		"Received wrong GMM message. Expected Security Mode Command.")
 
 	// send NAS Security Mode Complete Msg
-	pdu = nasTestpacket.GetSecurityModeComplete(nil)
+	pdu = nasTestpacket.GetSecurityModeComplete(innerRegistrationRequest)
 	pdu, err = test.EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCipheredWithNew5gNasSecurityContext, true, true)
 	require.Nil(t, err)
 	sendMsg, err = test.GetUplinkNASTransport(ue.AmfUeNgapId, ue.RanUeNgapId, pdu)
@@ -1928,6 +1930,7 @@ func TestPaging(t *testing.T) {
 	_, err = ngap.Decoder(recvMsg[:n])
 	assert.Nil(t, err)
 
+	ue.AmfUeNgapId = 2
 	// send NAS Service Request
 	pdu = nasTestpacket.GetServiceRequest(nasMessage.ServiceTypeMobileTerminatedServices)
 	pdu, err = test.EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtected, true, false)
@@ -2275,7 +2278,7 @@ func TestN2Handover(t *testing.T) {
 		mobileIdentity5GS, nil, ueSecurityCapability, ue.Get5GMMCapability(), nil, uplinkDataStatus)
 	pdu, err = test.EncodeNasPduWithSecurity(targetUe, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCiphered, true, false)
 	assert.Nil(t, err)
-	sendMsg, err = test.GetInitialUEMessage(targetUe.RanUeNgapId, pdu, "")
+	sendMsg, err = test.GetUplinkNASTransport(targetUe.AmfUeNgapId, targetUe.RanUeNgapId, pdu)
 	assert.Nil(t, err)
 	_, err = conn2.Write(sendMsg)
 	assert.Nil(t, err)
@@ -2287,7 +2290,7 @@ func TestN2Handover(t *testing.T) {
 	assert.Nil(t, err)
 
 	// Target RAN send ngap Initial Context Setup Response Msg
-	sendMsg, err = test.GetInitialContextSetupResponseForServiceRequest(targetUe.AmfUeNgapId, targetUe.RanUeNgapId, "10.200.200.2")
+	sendMsg, err = test.GetPDUSessionResourceSetupResponseForPaging(targetUe.AmfUeNgapId, targetUe.RanUeNgapId, "10.200.200.2")
 	assert.Nil(t, err)
 	_, err = conn2.Write(sendMsg)
 	assert.Nil(t, err)
@@ -2796,7 +2799,7 @@ func TestAFInfluenceOnTrafficRouting(t *testing.T) {
 	NfTerminate()
 }
 
-func TestReSynchronisation(t *testing.T) {
+func TestReSynchronization(t *testing.T) {
 	var n int
 	var sendMsg []byte
 	var recvMsg = make([]byte, 2048)
