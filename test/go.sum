@@ -83,13 +83,15 @@ github.com/envoyproxy/go-control-plane v0.9.4/go.mod h1:6rpuAdCZL397s3pYoYcLgu1m
 github.com/envoyproxy/protoc-gen-validate v0.1.0/go.mod h1:iSmxcyjqTsJpI2R4NaDN7+kN2VEUnK/pcBlmesArF7c=
 github.com/evanphx/json-patch v0.5.2 h1:xVCHIVMUu1wtM/VkR9jVZ45N3FhZfYMMYGorLCR8P3k=
 github.com/evanphx/json-patch v0.5.2/go.mod h1:ZWS5hhDbVDyob71nXKNL0+PWn6ToqBHMikGIFbs31qQ=
-github.com/free5gc/aper v1.0.4 h1:Ufbf5lzbXBOhSdUSaIdAhFMOjggsX4p6eWMrpzrrD60=
 github.com/free5gc/aper v1.0.4/go.mod h1:3K/m47BIPR2xhBkuHD1unp2LnArVtt3iTI4De0bCqpI=
+github.com/free5gc/aper v1.0.5-0.20230614030933-c73735898582 h1:IV9PXKo6MH62e7nngSqr+cwjuoffkouPMmyX3jHC9Ds=
+github.com/free5gc/aper v1.0.5-0.20230614030933-c73735898582/go.mod h1:ybHxhYnRqQ9wD4yB9r/3MZdbCYCjtqUyfLpSnJpwWd4=
 github.com/free5gc/nas v1.1.0/go.mod h1:fjWwpyp7/wOyL72HTkjvIe9YTCfGyZosjITsI5sXyuU=
 github.com/free5gc/nas v1.1.1 h1:xUsqOOrb3kH38TQCzwZY7WN6WJkIerjERNjORDtnCbo=
 github.com/free5gc/nas v1.1.1/go.mod h1:fjWwpyp7/wOyL72HTkjvIe9YTCfGyZosjITsI5sXyuU=
-github.com/free5gc/ngap v1.0.6 h1:f9sKqHMNrFZVo9Kp8hAyrCXSoI8l746N5O+DFn7vKHA=
 github.com/free5gc/ngap v1.0.6/go.mod h1:TG1kwwU/EyIlJ3bxY591rdxpD5ZeYnLZTzoWjcfvrBM=
+github.com/free5gc/ngap v1.0.7-0.20230614061954-9c128114ab1f h1:wgXjoknZ7JJoZ72J15g/f2/0DgdCpfcTg189lnhUPuY=
+github.com/free5gc/ngap v1.0.7-0.20230614061954-9c128114ab1f/go.mod h1:lKA1sLTYM3CGEBhZVxkGGJIkai5+Bvy2yHIMhb7Vx/k=
 github.com/free5gc/openapi v1.0.4/go.mod h1:KRCnnp0GeK0Bl4gnrX79cQAidKXNENf8VRdG0y9R0Fc=
 github.com/free5gc/openapi v1.0.6 h1:ytRjU/YZRI8UhKKyfajXSyGB6s1YDFkJ1weeAGJ8LXw=
 github.com/free5gc/openapi v1.0.6/go.mod h1:iw/N0E+FlX44EEx24IBi2EdZW8v+bkj3ETWPGnlK9DI=
