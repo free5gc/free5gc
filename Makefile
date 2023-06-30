@@ -10,6 +10,7 @@ WEBCONSOLE = webconsole
 
 NF_GO_FILES = $(shell find $(GO_SRC_PATH)/$(%) -name "*.go" ! -name "*_test.go")
 WEBCONSOLE_GO_FILES = $(shell find $(WEBCONSOLE) -name "*.go" ! -name "*_test.go")
+WEBCONSOLE_JS_FILES = $(shell find $(WEBCONSOLE)/frontend -name '*.js' ! -path "*/node_modules/*")
 
 VERSION = $(shell git describe --tags)
 BUILD_TIME = $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
@@ -59,7 +60,7 @@ $(C_NF): % :
 
 $(WEBCONSOLE): $(WEBCONSOLE)/$(GO_BIN_PATH)/$(WEBCONSOLE)
 
-$(WEBCONSOLE)/$(GO_BIN_PATH)/$(WEBCONSOLE): $(WEBCONSOLE)/server.go  $(WEBCONSOLE_GO_FILES)
+$(WEBCONSOLE)/$(GO_BIN_PATH)/$(WEBCONSOLE): $(WEBCONSOLE)/server.go $(WEBCONSOLE_GO_FILES) $(WEBCONSOLE_JS_FILES)
 	@echo "Start building $(@F)...."
 	cd $(WEBCONSOLE)/frontend && \
 	yarn install && \
