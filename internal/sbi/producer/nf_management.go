@@ -93,16 +93,29 @@ func HandleUpdateNFInstanceRequest(request *httpwrapper.Request) *httpwrapper.Re
 func HandleGetNFInstancesRequest(request *httpwrapper.Request) *httpwrapper.Response {
 	logger.NfmLog.Infoln("Handle GetNFInstancesRequest")
 	nfType := request.Query.Get("nf-type")
-	limit, err := strconv.Atoi(request.Query.Get("limit"))
-	if err != nil {
-		logger.NfmLog.Errorln("Error in string conversion: ", limit)
-		problemDetails := models.ProblemDetails{
-			Title:  "Invalid Parameter",
-			Status: http.StatusBadRequest,
-			Detail: err.Error(),
-		}
+	limit_param := request.Query.Get("limit")
+	limit := 0
+	if limit_param != "" {
+		var err error
+		limit, err = strconv.Atoi(request.Query.Get("limit"))
+		if err != nil {
+			logger.NfmLog.Errorln("Error in string conversion: ", limit)
+			problemDetails := models.ProblemDetails{
+				Title:  "Invalid Parameter",
+				Status: http.StatusBadRequest,
+				Detail: err.Error(),
+			}
 
-		return httpwrapper.NewResponse(int(problemDetails.Status), nil, problemDetails)
+			return httpwrapper.NewResponse(int(problemDetails.Status), nil, problemDetails)
+		}
+		if limit < 1 {
+			problemDetails := models.ProblemDetails{
+				Title:  "Invalid Parameter",
+				Status: http.StatusBadRequest,
+				Detail: "limit must be greater than 0",
+			}
+			return httpwrapper.NewResponse(int(problemDetails.Status), nil, problemDetails)
+		}
 	}
 
 	response, problemDetails := GetNFInstancesProcedure(nfType, limit)

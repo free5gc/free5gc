@@ -637,6 +637,10 @@ func GetNofificationUri(nfProfile models.NfProfile) []string {
 func NnrfUriListLimit(originalUL *UriList, limit int) {
 	// response limit
 
+	if limit <= 0 {
+		return
+	}
+
 	if limit < len(originalUL.Link.Item) {
 		var i int
 		var b *Links = new(Links)
