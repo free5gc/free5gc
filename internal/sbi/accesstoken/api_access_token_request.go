@@ -18,7 +18,6 @@ import (
 
 	"github.com/free5gc/nrf/internal/logger"
 	"github.com/free5gc/nrf/internal/sbi/producer"
-	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/util/httpwrapper"
 )
@@ -85,17 +84,5 @@ func HTTPAccessTokenRequest(c *gin.Context) {
 
 	httpResponse := producer.HandleAccessTokenRequest(req)
 
-	responseBody, err := openapi.Serialize(httpResponse.Body, "application/json")
-
-	if err != nil {
-		logger.AccTokenLog.Warnln(err)
-		problemDetails := models.ProblemDetails{
-			Status: http.StatusInternalServerError,
-			Cause:  "SYSTEM_FAILURE",
-			Detail: err.Error(),
-		}
-		c.JSON(http.StatusInternalServerError, problemDetails)
-	} else {
-		c.JSON(httpResponse.Status, responseBody)
-	}
+	c.JSON(httpResponse.Status, httpResponse.Body)
 }
