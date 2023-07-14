@@ -70,8 +70,8 @@ func InsertAccessAndMobilitySubscriptionDataToMongoDB(
 	for index := range amData.Nssai.DefaultSingleNssais {
 		amData.Nssai.DefaultSingleNssais[index].Sd = strings.ToLower(amData.Nssai.DefaultSingleNssais[index].Sd)
 	}
-	for _, Snssai := range amData.Nssai.SingleNssais {
-		Snssai.Sd = strings.ToLower(Snssai.Sd)
+	for index := range amData.Nssai.SingleNssais {
+		amData.Nssai.SingleNssais[index].Sd = strings.ToLower(amData.Nssai.SingleNssais[index].Sd)
 	}
 
 	collName := "subscriptionData.provisionedData.amData"
