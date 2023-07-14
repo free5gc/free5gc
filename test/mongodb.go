@@ -2,6 +2,8 @@ package test
 
 import (
 	"encoding/json"
+	"strings"
+	"unicode"
 
 	"github.com/calee0219/fatal"
 	"go.mongodb.org/mongo-driver/bson"
@@ -65,6 +67,13 @@ func DelAuthSubscriptionToMongoDB(ueId string) {
 
 func InsertAccessAndMobilitySubscriptionDataToMongoDB(
 	ueId string, amData models.AccessAndMobilitySubscriptionData, servingPlmnId string) {
+	for index := range amData.Nssai.DefaultSingleNssais {
+		amData.Nssai.DefaultSingleNssais[index].Sd = strings.ToLower(amData.Nssai.DefaultSingleNssais[index].Sd)
+	}
+	for _, Snssai := range amData.Nssai.SingleNssais {
+		Snssai.Sd = strings.ToLower(Snssai.Sd)
+	}
+
 	collName := "subscriptionData.provisionedData.amData"
 	filter := bson.M{"ueId": ueId, "servingPlmnId": servingPlmnId}
 	putData := toBsonM(amData)
@@ -108,6 +117,9 @@ func DelAccessAndMobilitySubscriptionDataFromMongoDB(ueId string, servingPlmnId 
 
 func InsertSessionManagementSubscriptionDataToMongoDB(
 	ueId string, servingPlmnId string, smDatas []models.SessionManagementSubscriptionData) {
+	for index := range smDatas {
+		smDatas[index].SingleNssai.Sd = strings.ToLower(smDatas[index].SingleNssai.Sd)
+	}
 	var putDatas = make([]interface{}, 0, len(smDatas))
 	collName := "subscriptionData.provisionedData.smData"
 	filter := bson.M{"ueId": ueId, "servingPlmnId": servingPlmnId}
@@ -117,6 +129,7 @@ func InsertSessionManagementSubscriptionDataToMongoDB(
 		putData["servingPlmnId"] = servingPlmnId
 		putDatas = append(putDatas, putData)
 	}
+
 	if err := mongoapi.RestfulAPIPostMany(collName, filter, putDatas); err != nil {
 		fatal.Fatalf("InsertSessionManagementSubscriptionDataToMongoDB err: %+v", err)
 	}
@@ -155,6 +168,20 @@ func DelSessionManagementSubscriptionDataFromMongoDB(ueId string, servingPlmnId 
 
 func InsertSmfSelectionSubscriptionDataToMongoDB(
 	ueId string, smfSelData models.SmfSelectionSubscriptionData, servingPlmnId string) {
+	for sst_sd, SubscribedSnssaiInfo := range smfSelData.SubscribedSnssaiInfos {
+		ContainsUppercase := false
+		for _, char := range sst_sd {
+			if unicode.IsUpper(char) {
+				ContainsUppercase = true
+			}
+		}
+		if ContainsUppercase {
+			new_sst_sd := strings.ToLower(sst_sd)
+			newSubscribedSnssaiInfo := SubscribedSnssaiInfo
+			delete(smfSelData.SubscribedSnssaiInfos, sst_sd)
+			smfSelData.SubscribedSnssaiInfos[new_sst_sd] = newSubscribedSnssaiInfo
+		}
+	}
 	collName := "subscriptionData.provisionedData.smfSelectionSubscriptionData"
 	filter := bson.M{"ueId": ueId, "servingPlmnId": servingPlmnId}
 	putData := toBsonM(smfSelData)
@@ -237,10 +264,27 @@ func DelAmPolicyDataFromMongoDB(ueId string) {
 }
 
 func InsertSmPolicyDataToMongoDB(ueId string, smPolicyData models.SmPolicyData) {
+	for sst_sd, SmPolicySnssaiData := range smPolicyData.SmPolicySnssaiData {
+		ContainsUppercase := false
+		for _, char := range sst_sd {
+			if unicode.IsUpper(char) {
+				ContainsUppercase = true
+			}
+		}
+		if ContainsUppercase {
+			new_sst_sd := strings.ToLower(sst_sd)
+			newSmPolicySnssaiData := SmPolicySnssaiData
+			newSmPolicySnssaiData.Snssai.Sd = strings.ToLower(newSmPolicySnssaiData.Snssai.Sd)
+			delete(smPolicyData.SmPolicySnssaiData, sst_sd)
+			smPolicyData.SmPolicySnssaiData[new_sst_sd] = newSmPolicySnssaiData
+		}
+	}
+
 	collName := "policyData.ues.smData"
 	filter := bson.M{"ueId": ueId}
 	putData := toBsonM(smPolicyData)
 	putData["ueId"] = ueId
+
 	if _, err := mongoapi.RestfulAPIPutOne(collName, filter, putData); err != nil {
 		fatal.Fatalf("InsertSmPolicyDataToMongoDB err: %+v", err)
 	}
