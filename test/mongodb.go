@@ -129,7 +129,6 @@ func InsertSessionManagementSubscriptionDataToMongoDB(
 		putData["servingPlmnId"] = servingPlmnId
 		putDatas = append(putDatas, putData)
 	}
-
 	if err := mongoapi.RestfulAPIPostMany(collName, filter, putDatas); err != nil {
 		fatal.Fatalf("InsertSessionManagementSubscriptionDataToMongoDB err: %+v", err)
 	}
@@ -284,7 +283,6 @@ func InsertSmPolicyDataToMongoDB(ueId string, smPolicyData models.SmPolicyData) 
 	filter := bson.M{"ueId": ueId}
 	putData := toBsonM(smPolicyData)
 	putData["ueId"] = ueId
-
 	if _, err := mongoapi.RestfulAPIPutOne(collName, filter, putData); err != nil {
 		fatal.Fatalf("InsertSmPolicyDataToMongoDB err: %+v", err)
 	}
