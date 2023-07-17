@@ -230,12 +230,14 @@ func RemoveSubscriptionProcedure(subscriptionID string) {
 }
 
 func GetNFInstancesProcedure(nfType string, limit int) (*nrf_context.UriList, *models.ProblemDetails) {
-	// nfType := c.Query("nf-type")
-	// limit, err := strconv.Atoi(c.Query("limit"))
 	collName := "urilist"
 	filter := bson.M{"nfType": nfType}
+	if nfType == "" {
+		// if the query parameter is not present, do not filter by nfType
+		filter = bson.M{}
+	}
 
-	UL, err := mongoapi.RestfulAPIGetOne(collName, filter)
+	ULs, err := mongoapi.RestfulAPIGetMany(collName, filter)
 	if err != nil {
 		logger.NfmLog.Errorf("GetNFInstancesProcedure err: %+v", err)
 		problemDetail := &models.ProblemDetails{
@@ -246,21 +248,28 @@ func GetNFInstancesProcedure(nfType string, limit int) (*nrf_context.UriList, *m
 		}
 		return nil, problemDetail
 	}
-	logger.NfmLog.Infoln("UL: ", UL)
-	originalUL := &nrf_context.UriList{}
-	if err := mapstructure.Decode(UL, originalUL); err != nil {
-		logger.NfmLog.Errorf("Decode error in GetNFInstancesProcedure: %+v", err)
-		problemDetail := &models.ProblemDetails{
-			Title:  "System failure",
-			Status: http.StatusInternalServerError,
-			Detail: err.Error(),
-			Cause:  "SYSTEM_FAILURE",
+	logger.NfmLog.Infoln("ULs: ", ULs)
+	rspUriList := &nrf_context.UriList{}
+	for _, UL := range ULs {
+		originalUL := &nrf_context.UriList{}
+		if err := mapstructure.Decode(UL, originalUL); err != nil {
+			logger.NfmLog.Errorf("Decode error in GetNFInstancesProcedure: %+v", err)
+			problemDetail := &models.ProblemDetails{
+				Title:  "System failure",
+				Status: http.StatusInternalServerError,
+				Detail: err.Error(),
+				Cause:  "SYSTEM_FAILURE",
+			}
+			return nil, problemDetail
 		}
-		return nil, problemDetail
+		rspUriList.Link.Item = append(rspUriList.Link.Item, originalUL.Link.Item...)
+		if nfType != "" && rspUriList.NfType == "" {
+			rspUriList.NfType = originalUL.NfType
+		}
 	}
-	nrf_context.NnrfUriListLimit(originalUL, limit)
-	// c.JSON(http.StatusOK, originalUL)
-	return originalUL, nil
+
+	nrf_context.NnrfUriListLimit(rspUriList, limit)
+	return rspUriList, nil
 }
 
 func NFDeregisterProcedure(nfInstanceID string) *models.ProblemDetails {
