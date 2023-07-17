@@ -27,17 +27,19 @@ func HandleAccessTokenRequest(request *httpwrapper.Request) *httpwrapper.Respons
 
 	response, errResponse := AccessTokenProcedure(accessTokenReq)
 
-	if response != nil {
+	if errResponse != nil {
+		return httpwrapper.NewResponse(http.StatusBadRequest, nil, errResponse)
+	} else if response != nil {
 		// status code is based on SPEC, and option headers
 		return httpwrapper.NewResponse(http.StatusOK, nil, response)
-	} else if errResponse != nil {
-		return httpwrapper.NewResponse(http.StatusBadRequest, nil, errResponse)
 	}
+
+	logger.AccTokenLog.Errorln("AccessTokenProcedure returned neither an error nor a response")
 	problemDetails := &models.ProblemDetails{
-		Status: http.StatusForbidden,
+		Status: http.StatusInternalServerError,
 		Cause:  "UNSPECIFIED",
 	}
-	return httpwrapper.NewResponse(http.StatusForbidden, nil, problemDetails)
+	return httpwrapper.NewResponse(int(problemDetails.Status), nil, problemDetails)
 }
 
 func AccessTokenProcedure(request models.AccessTokenReq) (
