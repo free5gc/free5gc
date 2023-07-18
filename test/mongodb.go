@@ -256,19 +256,11 @@ func DelAmPolicyDataFromMongoDB(ueId string) {
 
 func InsertSmPolicyDataToMongoDB(ueId string, smPolicyData models.SmPolicyData) {
 	for sst_sd, SmPolicySnssaiData := range smPolicyData.SmPolicySnssaiData {
-		ContainsUppercase := false
-		for _, char := range sst_sd {
-			if unicode.IsUpper(char) {
-				ContainsUppercase = true
-			}
-		}
-		if ContainsUppercase {
-			new_sst_sd := strings.ToLower(sst_sd)
-			newSmPolicySnssaiData := SmPolicySnssaiData
-			newSmPolicySnssaiData.Snssai.Sd = strings.ToLower(newSmPolicySnssaiData.Snssai.Sd)
-			delete(smPolicyData.SmPolicySnssaiData, sst_sd)
-			smPolicyData.SmPolicySnssaiData[new_sst_sd] = newSmPolicySnssaiData
-		}
+		new_sst_sd := strings.ToLower(sst_sd)
+		newSmPolicySnssaiData := SmPolicySnssaiData
+		newSmPolicySnssaiData.Snssai.Sd = strings.ToLower(newSmPolicySnssaiData.Snssai.Sd)
+		delete(smPolicyData.SmPolicySnssaiData, sst_sd)
+		smPolicyData.SmPolicySnssaiData[new_sst_sd] = newSmPolicySnssaiData
 	}
 
 	collName := "policyData.ues.smData"
