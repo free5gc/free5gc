@@ -38,10 +38,55 @@ func HandleNFDiscoveryRequest(request *httpwrapper.Request) *httpwrapper.Respons
 	return httpwrapper.NewResponse(http.StatusForbidden, nil, problemDetails)
 }
 
+func validateQueryParameters(queryParameters url.Values) bool {
+	NFs := map[string]bool{
+		"NRF":    true,
+		"UDM":    true,
+		"AMF":    true,
+		"SMF":    true,
+		"AUSF":   true,
+		"NEF":    true,
+		"PCF":    true,
+		"SMSF":   true,
+		"NSSF":   true,
+		"UDR":    true,
+		"LMF":    true,
+		"GMLC":   true,
+		"5G_EIR": true,
+		"SEPP":   true,
+		"UPF":    true,
+		"N3IWF":  true,
+		"AF":     true,
+		"UDSF":   true,
+		"BSF":    true,
+		"CHF":    true,
+		"NWDAF":  true,
+	}
+	var tgt, req string
+	if queryParameters["target-nf-type"] != nil {
+		tgt = queryParameters["target-nf-type"][0]
+	}
+	if queryParameters["requester-nf-type"] != nil {
+		req = queryParameters["requester-nf-type"][0]
+	}
+
+	if !(NFs[tgt] && NFs[req]) {
+		return false
+	}
+
+	if queryParameters["supi"] != nil {
+		if !strings.Contains(queryParameters["supi"][0], "imsi-") {
+			return false
+		}
+	}
+
+	return true
+}
+
 func NFDiscoveryProcedure(
 	queryParameters url.Values,
 ) (response *models.SearchResult, problemDetails *models.ProblemDetails) {
-	if queryParameters["target-nf-type"] == nil || queryParameters["requester-nf-type"] == nil {
+	if !validateQueryParameters(queryParameters) {
 		problemDetails := &models.ProblemDetails{
 			Title:  "Invalid Parameter",
 			Status: http.StatusBadRequest,
