@@ -168,18 +168,10 @@ func DelSessionManagementSubscriptionDataFromMongoDB(ueId string, servingPlmnId 
 func InsertSmfSelectionSubscriptionDataToMongoDB(
 	ueId string, smfSelData models.SmfSelectionSubscriptionData, servingPlmnId string) {
 	for sst_sd, SubscribedSnssaiInfo := range smfSelData.SubscribedSnssaiInfos {
-		ContainsUppercase := false
-		for _, char := range sst_sd {
-			if unicode.IsUpper(char) {
-				ContainsUppercase = true
-			}
-		}
-		if ContainsUppercase {
-			new_sst_sd := strings.ToLower(sst_sd)
-			newSubscribedSnssaiInfo := SubscribedSnssaiInfo
-			delete(smfSelData.SubscribedSnssaiInfos, sst_sd)
-			smfSelData.SubscribedSnssaiInfos[new_sst_sd] = newSubscribedSnssaiInfo
-		}
+		new_sst_sd := strings.ToLower(sst_sd)
+		newSubscribedSnssaiInfo := SubscribedSnssaiInfo
+		delete(smfSelData.SubscribedSnssaiInfos, sst_sd)
+		smfSelData.SubscribedSnssaiInfos[new_sst_sd] = newSubscribedSnssaiInfo
 	}
 	collName := "subscriptionData.provisionedData.smfSelectionSubscriptionData"
 	filter := bson.M{"ueId": ueId, "servingPlmnId": servingPlmnId}
