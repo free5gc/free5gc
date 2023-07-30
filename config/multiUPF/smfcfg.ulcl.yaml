@@ -1,5 +1,5 @@
 info:
-  version: 1.0.2
+  version: 1.0.7
   description: SMF initial local configuration
 
 configuration:
@@ -7,11 +7,11 @@ configuration:
   sbi:
     scheme: http
     registerIPv4: 127.0.0.2 # IP used to register to NRF
-    bindingIPv4: 127.0.0.2  # IP used to bind the service
+    bindingIPv4: 127.0.0.2 # IP used to bind the service
     port: 8000
     tls:
-      key: config/TLS/smf.key
-      pem: config/TLS/smf.pem
+      key: cert/smf.key
+      pem: cert/smf.pem
   serviceNameList:
     - nsmf-pdusession
     - nsmf-event-exposure
@@ -46,7 +46,9 @@ configuration:
       mnc: 93 # Mobile Network Code (2 or 3 digits string, digit: 0~9)
   locality: area1 # Name of the location where a set of AMF, SMF, PCF and UPFs are located
   pfcp:
-    addr: 10.200.200.1
+    nodeID: 10.200.200.1
+    listenAddr: 10.200.200.1
+    externalAddr: 10.200.200.1
   userplaneInformation:
     upNodes:
       gNB1:
@@ -56,6 +58,7 @@ configuration:
       UPF1:
         type: UPF
         nodeID: 10.200.200.101
+        addr: 10.200.200.101
         sNssaiUpfInfos:
           - sNssai:
               sst: 1
@@ -71,15 +74,18 @@ configuration:
           - interfaceType: N3
             endpoints:
               - 10.200.200.101
-            networkInstance: internet
+            networkInstances:
+              - internet
           - interfaceType: N9
             endpoints:
               - 10.200.200.101
-            networkInstance: internet
+            networkInstances:
+              - internet
 
       UPF2:
         type: UPF
         nodeID: 10.200.200.102
+        addr: 10.200.200.102
         sNssaiUpfInfos:
           - sNssai:
               sst: 1
@@ -92,11 +98,13 @@ configuration:
           - interfaceType: N9
             endpoints:
               - 10.200.200.102
-            networkInstance: internet
+            networkInstances:
+              - internet
 
       UPF3:
         type: UPF
         nodeID: 10.200.200.103
+        addr: 10.200.200.103
         sNssaiUpfInfos:
           - sNssai:
               sst: 1
@@ -109,10 +117,12 @@ configuration:
           - interfaceType: N9
             endpoints:
               - 10.200.200.103
-            networkInstance: internet
+            networkInstances:
+              - internet
       UPF4:
         type: UPF
         nodeID: 10.200.200.104
+        addr: 10.200.200.104
         sNssaiUpfInfos:
           - sNssai:
               sst: 1
@@ -125,10 +135,12 @@ configuration:
           - interfaceType: N9
             endpoints:
               - 10.200.200.104
-            networkInstance: internet
+            networkInstances:
+              - internet
       UPF5:
         type: UPF
         nodeID: 10.200.200.105
+        addr: 10.200.200.105
         sNssaiUpfInfos:
           - sNssai:
               sst: 1
@@ -141,10 +153,12 @@ configuration:
           - interfaceType: N3
             endpoints:
               - 10.200.200.105
-            networkInstance: internet
+            networkInstances:
+              - internet
       UPF6:
         type: UPF
         nodeID: 10.200.200.106
+        addr: 10.200.200.106
         sNssaiUpfInfos:
           - sNssai:
               sst: 1
@@ -157,7 +171,8 @@ configuration:
           - interfaceType: N3
             endpoints:
               - 10.200.200.106
-            networkInstance: internet
+            networkInstances:
+              - internet
     links:
       - A: gNB1
         B: UPF5
@@ -166,19 +181,20 @@ configuration:
   nrfUri: http://127.0.0.10:8000
   ulcl: true
 
-logger:
-  SMF:
-    debugLevel: info
-    ReportCaller: false
-  NAS:
-    debugLevel: info
-    ReportCaller: false
-  NGAP:
-    debugLevel: info
-    ReportCaller: false
-  Aper:
-    debugLevel: info
-    ReportCaller: false
-  PFCP:
-    debugLevel: info
-    ReportCaller: false
+  # retransmission timer for pdu session modification command
+  t3591:
+    enable: true     # true or false
+    expireTime: 16s   # default is 6 seconds
+    maxRetryTimes: 3 # the max number of retransmission
+  # retransmission timer for pdu session release command
+  t3592:
+    enable: true     # true or false
+    expireTime: 16s   # default is 6 seconds
+    maxRetryTimes: 3 # the max number of retransmission
+  #urrPeriod: 10 # default usage report period in seconds
+  #urrThreshold: 1000 # default usage report threshold in bytes
+
+logger: # log output setting
+  enable: true # true or false
+  level: info # how detailed to output, value: trace, debug, info, warn, error, fatal, panic
+  reportCaller: false # enable the caller report or not, value: true or false
