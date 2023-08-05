@@ -2,6 +2,7 @@ package test
 
 import (
 	"encoding/json"
+	"strings"
 
 	"github.com/calee0219/fatal"
 	"go.mongodb.org/mongo-driver/bson"
@@ -67,6 +68,12 @@ func InsertAccessAndMobilitySubscriptionDataToMongoDB(
 	ueId string, amData models.AccessAndMobilitySubscriptionData, servingPlmnId string) {
 	collName := "subscriptionData.provisionedData.amData"
 	filter := bson.M{"ueId": ueId, "servingPlmnId": servingPlmnId}
+	for i := range amData.Nssai.DefaultSingleNssais {
+		amData.Nssai.DefaultSingleNssais[i].Sd = strings.ToLower(amData.Nssai.DefaultSingleNssais[i].Sd)
+	}
+	for i := range amData.Nssai.SingleNssais {
+		amData.Nssai.SingleNssais[i].Sd = strings.ToLower(amData.Nssai.SingleNssais[i].Sd)
+	}
 	putData := toBsonM(amData)
 	putData["ueId"] = ueId
 	putData["servingPlmnId"] = servingPlmnId
@@ -112,6 +119,7 @@ func InsertSessionManagementSubscriptionDataToMongoDB(
 	collName := "subscriptionData.provisionedData.smData"
 	filter := bson.M{"ueId": ueId, "servingPlmnId": servingPlmnId}
 	for _, smData := range smDatas {
+		smData.SingleNssai.Sd = strings.ToLower(smData.SingleNssai.Sd)
 		putData := toBsonM(smData)
 		putData["ueId"] = ueId
 		putData["servingPlmnId"] = servingPlmnId
@@ -157,6 +165,11 @@ func InsertSmfSelectionSubscriptionDataToMongoDB(
 	ueId string, smfSelData models.SmfSelectionSubscriptionData, servingPlmnId string) {
 	collName := "subscriptionData.provisionedData.smfSelectionSubscriptionData"
 	filter := bson.M{"ueId": ueId, "servingPlmnId": servingPlmnId}
+	// Sd to lower case
+	for key, val := range smfSelData.SubscribedSnssaiInfos {
+		delete(smfSelData.SubscribedSnssaiInfos, key)
+		smfSelData.SubscribedSnssaiInfos[strings.ToLower(key)] = val
+	}
 	putData := toBsonM(smfSelData)
 	putData["ueId"] = ueId
 	putData["servingPlmnId"] = servingPlmnId
@@ -239,6 +252,12 @@ func DelAmPolicyDataFromMongoDB(ueId string) {
 func InsertSmPolicyDataToMongoDB(ueId string, smPolicyData models.SmPolicyData) {
 	collName := "policyData.ues.smData"
 	filter := bson.M{"ueId": ueId}
+	for key, val := range smPolicyData.SmPolicySnssaiData {
+		delete(smPolicyData.SmPolicySnssaiData, key)
+		val.Snssai.Sd = strings.ToLower(val.Snssai.Sd)
+		smPolicyData.SmPolicySnssaiData[strings.ToLower(key)] = val
+	}
+
 	putData := toBsonM(smPolicyData)
 	putData["ueId"] = ueId
 	if _, err := mongoapi.RestfulAPIPutOne(collName, filter, putData); err != nil {
