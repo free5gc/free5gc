@@ -323,7 +323,7 @@ func amfConfig(testID string) error {
 				},
 				SNssaiList: []models.Snssai{{
 					Sst: 1,
-					Sd:  "010203",
+					Sd:  "fedcba",
 				}, {
 					Sst: 1,
 					Sd:  "112233",
@@ -445,7 +445,7 @@ func smfConfig(testID string) error {
 			SNssaiInfo: []*smf_factory.SnssaiInfoItem{{
 				SNssai: &models.Snssai{
 					Sst: 1,
-					Sd:  "010203",
+					Sd:  "fedcba",
 				},
 				DnnInfos: []*smf_factory.SnssaiDnnInfoItem{{
 					Dnn: "internet",
@@ -494,7 +494,7 @@ func smfConfig(testID string) error {
 						SNssaiInfos: []*smf_factory.SnssaiUpfInfoItem{{
 							SNssai: &models.Snssai{
 								Sst: 1,
-								Sd:  "010203",
+								Sd:  "fedcba",
 							},
 							DnnUpfInfoList: []*smf_factory.DnnUpfInfoItem{{
 								Dnn:      "internet",
@@ -842,7 +842,7 @@ func nssfConfig() error {
 				},
 				SupportedSnssaiList: []models.Snssai{{
 					Sst: 1,
-					Sd:  "010203",
+					Sd:  "fedcba",
 				}, {
 					Sst: 1,
 					Sd:  "112233",
@@ -915,7 +915,7 @@ func nssfConfig() error {
 			}, {
 				Snssai: &models.Snssai{
 					Sst: 1,
-					Sd:  "010203",
+					Sd:  "fedcba",
 				},
 				NsiInformationList: []models.NsiInformation{{
 					NrfId: "http://127.0.0.10:8000/nnrf-nfm/v1/nf-instances",
