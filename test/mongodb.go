@@ -252,12 +252,6 @@ func DelAmPolicyDataFromMongoDB(ueId string) {
 func InsertSmPolicyDataToMongoDB(ueId string, smPolicyData models.SmPolicyData) {
 	collName := "policyData.ues.smData"
 	filter := bson.M{"ueId": ueId}
-	/*for key, val := range smPolicyData.SmPolicySnssaiData {
-		delete(smPolicyData.SmPolicySnssaiData, key)
-		val.Snssai.Sd = strings.ToLower(val.Snssai.Sd)
-		smPolicyData.SmPolicySnssaiData[strings.ToLower(key)] = val
-	}*/
-
 	putData := toBsonM(smPolicyData)
 	putData["ueId"] = ueId
 	if _, err := mongoapi.RestfulAPIPutOne(collName, filter, putData); err != nil {
