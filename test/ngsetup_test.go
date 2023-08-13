@@ -285,6 +285,7 @@ func amfConfig(testID string) error {
 		Configuration: &amf_factory.Configuration{
 			AmfName:    "AMF",
 			NgapIpList: ngapIpList,
+			NgapPort:   38412,
 			Sbi: &amf_factory.Sbi{
 				Scheme:       "http",
 				RegisterIPv4: "127.0.0.18",
