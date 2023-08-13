@@ -201,6 +201,15 @@ func TestRegistration(t *testing.T) {
 	_, err = conn.Write(sendMsg)
 	assert.Nil(t, err)
 
+	// receive UE Configuration Update Command Msg
+	n, err = conn.Read(recvMsg)
+	assert.Nil(t, err)
+	ngapPdu, err = ngap.Decoder(recvMsg[:n])
+	assert.Nil(t, err)
+	assert.True(t, ngapPdu.Present == ngapType.NGAPPDUPresentInitiatingMessage &&
+		ngapPdu.InitiatingMessage.ProcedureCode.Value == ngapType.ProcedureCodeDownlinkNASTransport,
+		"No ConfigurationUpdateCommand received.")
+
 	time.Sleep(100 * time.Millisecond)
 	// send GetPduSessionEstablishmentRequest Msg
 
