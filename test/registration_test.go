@@ -641,7 +641,7 @@ func TestServiceRequest(t *testing.T) {
 
 	sNssai := models.Snssai{
 		Sst: 1,
-		Sd:  "010203",
+		Sd:  "fedcba",
 	}
 	pdu = nasTestpacket.GetUlNasTransport_PduSessionEstablishmentRequest(10, nasMessage.ULNASTransportRequestTypeInitialRequest, "internet", &sNssai)
 	pdu, err = test.EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCiphered, true, false)
@@ -1199,7 +1199,7 @@ func TestPDUSessionReleaseRequest(t *testing.T) {
 
 	sNssai := models.Snssai{
 		Sst: 1,
-		Sd:  "010203",
+		Sd:  "fedcba",
 	}
 	pdu = nasTestpacket.GetUlNasTransport_PduSessionEstablishmentRequest(10, nasMessage.ULNASTransportRequestTypeInitialRequest, "internet", &sNssai)
 	pdu, err = test.EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCiphered, true, false)
@@ -1412,7 +1412,7 @@ func TestPDUSessionReleaseAbnormal(t *testing.T) {
 
 	sNssai := models.Snssai{
 		Sst: 1,
-		Sd:  "010203",
+		Sd:  "fedcba",
 	}
 	pdu = nasTestpacket.GetUlNasTransport_PduSessionEstablishmentRequest(10, nasMessage.ULNASTransportRequestTypeInitialRequest, "internet", &sNssai)
 	pdu, err = test.EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCiphered, true, false)
@@ -1663,7 +1663,7 @@ func TestXnHandover(t *testing.T) {
 
 	sNssai := models.Snssai{
 		Sst: 1,
-		Sd:  "010203",
+		Sd:  "fedcba",
 	}
 	pdu = nasTestpacket.GetUlNasTransport_PduSessionEstablishmentRequest(10, nasMessage.ULNASTransportRequestTypeInitialRequest, "internet", &sNssai)
 	pdu, err = test.EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCiphered, true, false)
@@ -1861,7 +1861,7 @@ func TestPaging(t *testing.T) {
 	// send PduSessionEstablishmentRequest Msg
 	sNssai := models.Snssai{
 		Sst: 1,
-		Sd:  "010203",
+		Sd:  "fedcba",
 	}
 	pdu = nasTestpacket.GetUlNasTransport_PduSessionEstablishmentRequest(10, nasMessage.ULNASTransportRequestTypeInitialRequest, "internet", &sNssai)
 	pdu, err = test.EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCiphered, true, false)
@@ -2143,7 +2143,7 @@ func TestN2Handover(t *testing.T) {
 	// send PduSessionEstablishmentRequest Msg
 	sNssai := models.Snssai{
 		Sst: 1,
-		Sd:  "010203",
+		Sd:  "fedcba",
 	}
 	pdu = nasTestpacket.GetUlNasTransport_PduSessionEstablishmentRequest(10, nasMessage.ULNASTransportRequestTypeInitialRequest, "internet", &sNssai)
 	pdu, err = test.EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCiphered, true, false)
@@ -2481,7 +2481,7 @@ func TestDuplicateRegistration(t *testing.T) {
 
 	sNssai := models.Snssai{
 		Sst: 1,
-		Sd:  "010203",
+		Sd:  "fedcba",
 	}
 	pdu = nasTestpacket.GetUlNasTransport_PduSessionEstablishmentRequest(10, nasMessage.ULNASTransportRequestTypeInitialRequest, "internet", &sNssai)
 	pdu, err = test.EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCiphered, true, false)
@@ -2751,7 +2751,7 @@ func TestAFInfluenceOnTrafficRouting(t *testing.T) {
 	// send GetPduSessionEstablishmentRequest Msg
 
 	pdu = nasTestpacket.GetUlNasTransport_PduSessionEstablishmentRequest(10, nasMessage.ULNASTransportRequestTypeInitialRequest, "internet",
-		&models.Snssai{Sst: 1, Sd: "010203"})
+		&models.Snssai{Sst: 1, Sd: "fedcba"})
 	pdu, err = test.EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCiphered, true, false)
 	assert.Nil(t, err)
 	sendMsg, err = test.GetUplinkNASTransport(ue.AmfUeNgapId, ue.RanUeNgapId, pdu)
@@ -3037,7 +3037,7 @@ func TestReSynchronization(t *testing.T) {
 
 	sNssai := models.Snssai{
 		Sst: 1,
-		Sd:  "010203",
+		Sd:  "fedcba",
 	}
 	pdu = nasTestpacket.GetUlNasTransport_PduSessionEstablishmentRequest(10, nasMessage.ULNASTransportRequestTypeInitialRequest, "internet", &sNssai)
 	pdu, err = test.EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCiphered, true, false)
@@ -3276,7 +3276,7 @@ func TestRequestTwoPDUSessions(t *testing.T) {
 
 	sNssai := models.Snssai{
 		Sst: 1,
-		Sd:  "010203",
+		Sd:  "fedcba",
 	}
 	pdu = nasTestpacket.GetUlNasTransport_PduSessionEstablishmentRequest(10, nasMessage.ULNASTransportRequestTypeInitialRequest, "internet", &sNssai)
 	pdu, err = test.EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCiphered, true, false)
@@ -3612,7 +3612,7 @@ func TestEAPAKAPrimeAuthentication(t *testing.T) {
 
 	sNssai := models.Snssai{
 		Sst: 1,
-		Sd:  "010203",
+		Sd:  "fedcba",
 	}
 	pdu = nasTestpacket.GetUlNasTransport_PduSessionEstablishmentRequest(10, nasMessage.ULNASTransportRequestTypeInitialRequest, "internet", &sNssai)
 	pdu, err = test.EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCiphered, true, false)
