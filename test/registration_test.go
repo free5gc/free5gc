@@ -206,7 +206,7 @@ func TestRegistration(t *testing.T) {
 
 	sNssai := models.Snssai{
 		Sst: 1,
-		Sd:  "010203",
+		Sd:  "fedcba",
 	}
 	pdu = nasTestpacket.GetUlNasTransport_PduSessionEstablishmentRequest(10, nasMessage.ULNASTransportRequestTypeInitialRequest, "internet", &sNssai)
 	pdu, err = test.EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCiphered, true, false)

@@ -90,7 +90,7 @@ func BuildNGSetupRequest() (pdu ngapType.NGAPPDU) {
 	sliceSupportItem.SNSSAI.SST.Value = aper.OctetString("\x01")
 	// optional
 	sliceSupportItem.SNSSAI.SD = new(ngapType.SD)
-	sliceSupportItem.SNSSAI.SD.Value = aper.OctetString("\x01\x02\x03")
+	sliceSupportItem.SNSSAI.SD.Value = aper.OctetString("\xfe\xdc\xba")
 
 	sliceSupportList.List = append(sliceSupportList.List, sliceSupportItem)
 
