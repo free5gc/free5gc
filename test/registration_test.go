@@ -211,8 +211,8 @@ func TestRegistration(t *testing.T) {
 		"No ConfigurationUpdateCommand received.")
 
 	time.Sleep(100 * time.Millisecond)
-	// send GetPduSessionEstablishmentRequest Msg
 
+	// send GetPduSessionEstablishmentRequest Msg
 	sNssai := models.Snssai{
 		Sst: 1,
 		Sd:  "fedcba",
@@ -441,6 +441,15 @@ func TestDeregistration(t *testing.T) {
 	_, err = conn.Write(sendMsg)
 	require.Nil(t, err)
 
+	// receive UE Configuration Update Command Msg
+	n, err = conn.Read(recvMsg)
+	assert.Nil(t, err)
+	ngapPdu, err = ngap.Decoder(recvMsg[:n])
+	assert.Nil(t, err)
+	assert.True(t, ngapPdu.Present == ngapType.NGAPPDUPresentInitiatingMessage &&
+		ngapPdu.InitiatingMessage.ProcedureCode.Value == ngapType.ProcedureCodeDownlinkNASTransport,
+		"No ConfigurationUpdateCommand received.")
+
 	time.Sleep(500 * time.Millisecond)
 
 	// send NAS Deregistration Request (UE Originating)
@@ -646,8 +655,16 @@ func TestServiceRequest(t *testing.T) {
 	_, err = conn.Write(sendMsg)
 	assert.Nil(t, err)
 
-	// send PduSessionEstablishmentRequest Msg
+	// receive UE Configuration Update Command Msg
+	n, err = conn.Read(recvMsg)
+	assert.Nil(t, err)
+	ngapPdu, err = ngap.Decoder(recvMsg[:n])
+	assert.Nil(t, err)
+	assert.True(t, ngapPdu.Present == ngapType.NGAPPDUPresentInitiatingMessage &&
+		ngapPdu.InitiatingMessage.ProcedureCode.Value == ngapType.ProcedureCodeDownlinkNASTransport,
+		"No ConfigurationUpdateCommand received.")
 
+	// send PduSessionEstablishmentRequest Msg
 	sNssai := models.Snssai{
 		Sst: 1,
 		Sd:  "fedcba",
@@ -880,6 +897,15 @@ func TestGUTIRegistration(t *testing.T) {
 	_, err = conn.Write(sendMsg)
 	require.Nil(t, err)
 
+	// receive UE Configuration Update Command Msg
+	n, err = conn.Read(recvMsg)
+	assert.Nil(t, err)
+	ngapPdu, err = ngap.Decoder(recvMsg[:n])
+	assert.Nil(t, err)
+	assert.True(t, ngapPdu.Present == ngapType.NGAPPDUPresentInitiatingMessage &&
+		ngapPdu.InitiatingMessage.ProcedureCode.Value == ngapType.ProcedureCodeDownlinkNASTransport,
+		"No ConfigurationUpdateCommand received.")
+
 	time.Sleep(500 * time.Millisecond)
 
 	// send NAS Deregistration Request (UE Originating)
@@ -1045,6 +1071,15 @@ func TestGUTIRegistration(t *testing.T) {
 	_, err = conn.Write(sendMsg)
 	assert.Nil(t, err)
 
+	// receive UE Configuration Update Command Msg
+	n, err = conn.Read(recvMsg)
+	assert.Nil(t, err)
+	ngapPdu, err = ngap.Decoder(recvMsg[:n])
+	assert.Nil(t, err)
+	assert.True(t, ngapPdu.Present == ngapType.NGAPPDUPresentInitiatingMessage &&
+		ngapPdu.InitiatingMessage.ProcedureCode.Value == ngapType.ProcedureCodeDownlinkNASTransport,
+		"No ConfigurationUpdateCommand received.")
+
 	time.Sleep(1000 * time.Millisecond)
 
 	// delete test data
@@ -1204,8 +1239,16 @@ func TestPDUSessionReleaseRequest(t *testing.T) {
 	_, err = conn.Write(sendMsg)
 	assert.Nil(t, err)
 
-	// send PduSessionEstablishmentRequest Msg
+	// receive UE Configuration Update Command Msg
+	n, err = conn.Read(recvMsg)
+	assert.Nil(t, err)
+	ngapPdu, err = ngap.Decoder(recvMsg[:n])
+	assert.Nil(t, err)
+	assert.True(t, ngapPdu.Present == ngapType.NGAPPDUPresentInitiatingMessage &&
+		ngapPdu.InitiatingMessage.ProcedureCode.Value == ngapType.ProcedureCodeDownlinkNASTransport,
+		"No ConfigurationUpdateCommand received.")
 
+	// send PduSessionEstablishmentRequest Msg
 	sNssai := models.Snssai{
 		Sst: 1,
 		Sd:  "fedcba",
@@ -1417,8 +1460,16 @@ func TestPDUSessionReleaseAbnormal(t *testing.T) {
 	_, err = conn.Write(sendMsg)
 	assert.Nil(t, err)
 
-	// send PduSessionEstablishmentRequest Msg
+	// receive UE Configuration Update Command Msg
+	n, err = conn.Read(recvMsg)
+	assert.Nil(t, err)
+	ngapPdu, err = ngap.Decoder(recvMsg[:n])
+	assert.Nil(t, err)
+	assert.True(t, ngapPdu.Present == ngapType.NGAPPDUPresentInitiatingMessage &&
+		ngapPdu.InitiatingMessage.ProcedureCode.Value == ngapType.ProcedureCodeDownlinkNASTransport,
+		"No ConfigurationUpdateCommand received.")
 
+	// send PduSessionEstablishmentRequest Msg
 	sNssai := models.Snssai{
 		Sst: 1,
 		Sd:  "fedcba",
@@ -1668,8 +1719,16 @@ func TestXnHandover(t *testing.T) {
 	_, err = conn.Write(sendMsg)
 	assert.Nil(t, err)
 
-	// send PduSessionEstablishmentRequest Msg
+	// receive UE Configuration Update Command Msg
+	n, err = conn.Read(recvMsg)
+	assert.Nil(t, err)
+	ngapPdu, err = ngap.Decoder(recvMsg[:n])
+	assert.Nil(t, err)
+	assert.True(t, ngapPdu.Present == ngapType.NGAPPDUPresentInitiatingMessage &&
+		ngapPdu.InitiatingMessage.ProcedureCode.Value == ngapType.ProcedureCodeDownlinkNASTransport,
+		"No ConfigurationUpdateCommand received.")
 
+	// send PduSessionEstablishmentRequest Msg
 	sNssai := models.Snssai{
 		Sst: 1,
 		Sd:  "fedcba",
@@ -1866,6 +1925,15 @@ func TestPaging(t *testing.T) {
 	assert.Nil(t, err)
 	_, err = conn.Write(sendMsg)
 	assert.Nil(t, err)
+
+	// receive UE Configuration Update Command Msg
+	n, err = conn.Read(recvMsg)
+	assert.Nil(t, err)
+	ngapPdu, err = ngap.Decoder(recvMsg[:n])
+	assert.Nil(t, err)
+	assert.True(t, ngapPdu.Present == ngapType.NGAPPDUPresentInitiatingMessage &&
+		ngapPdu.InitiatingMessage.ProcedureCode.Value == ngapType.ProcedureCodeDownlinkNASTransport,
+		"No ConfigurationUpdateCommand received.")
 
 	// send PduSessionEstablishmentRequest Msg
 	sNssai := models.Snssai{
@@ -2149,6 +2217,15 @@ func TestN2Handover(t *testing.T) {
 	_, err = conn.Write(sendMsg)
 	assert.Nil(t, err)
 
+	// receive UE Configuration Update Command Msg
+	n, err = conn.Read(recvMsg)
+	assert.Nil(t, err)
+	ngapPdu, err = ngap.Decoder(recvMsg[:n])
+	assert.Nil(t, err)
+	assert.True(t, ngapPdu.Present == ngapType.NGAPPDUPresentInitiatingMessage &&
+		ngapPdu.InitiatingMessage.ProcedureCode.Value == ngapType.ProcedureCodeDownlinkNASTransport,
+		"No ConfigurationUpdateCommand received.")
+
 	// send PduSessionEstablishmentRequest Msg
 	sNssai := models.Snssai{
 		Sst: 1,
@@ -2312,6 +2389,15 @@ func TestN2Handover(t *testing.T) {
 	assert.Nil(t, err)
 	_, err = conn2.Write(sendMsg)
 	assert.Nil(t, err)
+
+	// receive UE Configuration Update Command Msg
+	n, err = conn.Read(recvMsg)
+	assert.Nil(t, err)
+	ngapPdu, err = ngap.Decoder(recvMsg[:n])
+	assert.Nil(t, err)
+	assert.True(t, ngapPdu.Present == ngapType.NGAPPDUPresentInitiatingMessage &&
+		ngapPdu.InitiatingMessage.ProcedureCode.Value == ngapType.ProcedureCodeDownlinkNASTransport,
+		"No ConfigurationUpdateCommand received.")
 
 	// wait 1000 ms
 	time.Sleep(1000 * time.Millisecond)
@@ -2485,9 +2571,18 @@ func TestDuplicateRegistration(t *testing.T) {
 	_, err = conn.Write(sendMsg)
 	assert.Nil(t, err)
 
-	time.Sleep(100 * time.Millisecond)
-	// send GetPduSessionEstablishmentRequest Msg
+	// receive UE Configuration Update Command Msg
+	n, err = conn.Read(recvMsg)
+	assert.Nil(t, err)
+	ngapPdu, err = ngap.Decoder(recvMsg[:n])
+	assert.Nil(t, err)
+	assert.True(t, ngapPdu.Present == ngapType.NGAPPDUPresentInitiatingMessage &&
+		ngapPdu.InitiatingMessage.ProcedureCode.Value == ngapType.ProcedureCodeDownlinkNASTransport,
+		"No ConfigurationUpdateCommand received.")
 
+	time.Sleep(100 * time.Millisecond)
+
+	// send GetPduSessionEstablishmentRequest Msg
 	sNssai := models.Snssai{
 		Sst: 1,
 		Sd:  "fedcba",
@@ -2756,9 +2851,18 @@ func TestAFInfluenceOnTrafficRouting(t *testing.T) {
 	_, err = conn.Write(sendMsg)
 	assert.Nil(t, err)
 
-	time.Sleep(100 * time.Millisecond)
-	// send GetPduSessionEstablishmentRequest Msg
+	// receive UE Configuration Update Command Msg
+	n, err = conn.Read(recvMsg)
+	assert.Nil(t, err)
+	ngapPdu, err = ngap.Decoder(recvMsg[:n])
+	assert.Nil(t, err)
+	assert.True(t, ngapPdu.Present == ngapType.NGAPPDUPresentInitiatingMessage &&
+		ngapPdu.InitiatingMessage.ProcedureCode.Value == ngapType.ProcedureCodeDownlinkNASTransport,
+		"No ConfigurationUpdateCommand received.")
 
+	time.Sleep(100 * time.Millisecond)
+
+	// send GetPduSessionEstablishmentRequest Msg
 	pdu = nasTestpacket.GetUlNasTransport_PduSessionEstablishmentRequest(10, nasMessage.ULNASTransportRequestTypeInitialRequest, "internet",
 		&models.Snssai{Sst: 1, Sd: "fedcba"})
 	pdu, err = test.EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCiphered, true, false)
@@ -3041,9 +3145,18 @@ func TestReSynchronization(t *testing.T) {
 	_, err = conn.Write(sendMsg)
 	assert.Nil(t, err)
 
-	time.Sleep(100 * time.Millisecond)
-	// send GetPduSessionEstablishmentRequest Msg
+	// receive UE Configuration Update Command Msg
+	n, err = conn.Read(recvMsg)
+	assert.Nil(t, err)
+	ngapPdu, err = ngap.Decoder(recvMsg[:n])
+	assert.Nil(t, err)
+	assert.True(t, ngapPdu.Present == ngapType.NGAPPDUPresentInitiatingMessage &&
+		ngapPdu.InitiatingMessage.ProcedureCode.Value == ngapType.ProcedureCodeDownlinkNASTransport,
+		"No ConfigurationUpdateCommand received.")
 
+	time.Sleep(100 * time.Millisecond)
+
+	// send GetPduSessionEstablishmentRequest Msg
 	sNssai := models.Snssai{
 		Sst: 1,
 		Sd:  "fedcba",
@@ -3281,8 +3394,17 @@ func TestRequestTwoPDUSessions(t *testing.T) {
 	assert.Nil(t, err)
 
 	time.Sleep(100 * time.Millisecond)
-	// send GetPduSessionEstablishmentRequest Msg
 
+	// receive UE Configuration Update Command Msg
+	n, err = conn.Read(recvMsg)
+	assert.Nil(t, err)
+	ngapPdu, err = ngap.Decoder(recvMsg[:n])
+	assert.Nil(t, err)
+	assert.True(t, ngapPdu.Present == ngapType.NGAPPDUPresentInitiatingMessage &&
+		ngapPdu.InitiatingMessage.ProcedureCode.Value == ngapType.ProcedureCodeDownlinkNASTransport,
+		"No ConfigurationUpdateCommand received.")
+
+	// send GetPduSessionEstablishmentRequest Msg
 	sNssai := models.Snssai{
 		Sst: 1,
 		Sd:  "fedcba",
@@ -3617,8 +3739,17 @@ func TestEAPAKAPrimeAuthentication(t *testing.T) {
 	assert.Nil(t, err)
 
 	time.Sleep(100 * time.Millisecond)
-	// send GetPduSessionEstablishmentRequest Msg
 
+	// receive UE Configuration Update Command Msg
+	n, err = conn.Read(recvMsg)
+	assert.Nil(t, err)
+	ngapPdu, err = ngap.Decoder(recvMsg[:n])
+	assert.Nil(t, err)
+	assert.True(t, ngapPdu.Present == ngapType.NGAPPDUPresentInitiatingMessage &&
+		ngapPdu.InitiatingMessage.ProcedureCode.Value == ngapType.ProcedureCodeDownlinkNASTransport,
+		"No ConfigurationUpdateCommand received.")
+
+	// send GetPduSessionEstablishmentRequest Msg
 	sNssai := models.Snssai{
 		Sst: 1,
 		Sd:  "fedcba",
