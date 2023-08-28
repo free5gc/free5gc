@@ -313,6 +313,16 @@ func ueRanEmulator() error {
 	if err != nil {
 		return err
 	}
+
+	// receive UE Configuration Update Command Msg
+	n, err = conn.Read(recvMsg)
+	if err != nil {
+		return nil
+	}
+	_, err = ngap.Decoder(recvMsg[:n])
+	if err != nil {
+		return nil
+	}
 	fmt.Printf("[UERANEM] Initial-Registration completed\n")
 
 	time.Sleep(100 * time.Millisecond)
