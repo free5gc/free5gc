@@ -43,6 +43,10 @@ on:
         description: 'NF patch'
         required: false
         type: string
+      chf_patch:
+        description: 'NF patch'
+        required: false
+        type: string
 jobs:
   build:
     runs-on: [self-hosted, linux, x64]
@@ -82,6 +86,7 @@ jobs:
         AUSF_PATCH: ${{ inputs.ausf_patch }}
         N3IWF_PATCH: ${{ inputs.n3iwf_patch }}
         PCF_PATCH: ${{ inputs.pcf_patch }}
+        CHF_PATCH: ${{ inputs.chf_patch }}
 
     - name: Basic Test
       run: |
