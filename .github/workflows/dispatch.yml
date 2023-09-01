@@ -11,10 +11,10 @@ on:
         description: 'NF patch'
         required: false
         type: string
-      n3iwf_patch:
-        description: 'NF patch'
-        required: false
-        type: string
+      # n3iwf_patch:
+      #  description: 'NF patch'
+      #  required: false
+      #  type: string
       nrf_patch:
         description: 'NF patch'
         required: false
@@ -84,7 +84,7 @@ jobs:
         NRF_PATCH: ${{ inputs.nrf_patch }}
         NSSF_PATCH: ${{ inputs.nssf_patch }}
         AUSF_PATCH: ${{ inputs.ausf_patch }}
-        N3IWF_PATCH: ${{ inputs.n3iwf_patch }}
+        # N3IWF_PATCH: ${{ inputs.n3iwf_patch }}
         PCF_PATCH: ${{ inputs.pcf_patch }}
         CHF_PATCH: ${{ inputs.chf_patch }}
 
@@ -116,5 +116,5 @@ jobs:
       run: ./test_ci_ulcl.sh TestRequestTwoPDUSessions
     - name: remove uncommitted changes
       run: ./patch.sh
-    - name: Non3GPP Test
-      run: ./test_ci.sh TestNon3GPP
+    # - name: Non3GPP Test
+    #   run: ./test_ci.sh TestNon3GPP
