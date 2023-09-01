@@ -108,7 +108,13 @@ jobs:
         ./test_ci.sh TestN2Handover
         sleep 1
         ./test_ci.sh TestReSynchronization
+        sleep 1
+        ./test_ci.sh TestDuplicateRegistration
+        sleep 1
+        ./test_ci.sh TestEAPAKAPrimeAuthentication
     - name: ULCL Test
       run: ./test_ci_ulcl.sh TestRequestTwoPDUSessions
     - name: remove uncommitted changes
       run: ./patch.sh
+    - name: Non3GPP Test
+      run: ./test_ci.sh TestNon3GPP
