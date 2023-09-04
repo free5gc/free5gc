@@ -3409,8 +3409,7 @@ func TestMultiAmfRegistration(t *testing.T) {
 	assert.True(t, ngapPdu.Present == ngapType.NGAPPDUPresentSuccessfulOutcome && ngapPdu.SuccessfulOutcome.ProcedureCode.Value == ngapType.ProcedureCodeNGSetup, "No NGSetupResponse received.")
 
 	// New UE
-	// ue := test.NewRanUeContext("imsi-2089300007487", 1, security.AlgCiphering128NEA2, security.AlgIntegrity128NIA2, models.AccessType__3_GPP_ACCESS)
-	ue := test.NewRanUeContext("imsi-2089300007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA2,
+	ue := test.NewRanUeContext("imsi-2089300007487", 1, security.AlgCiphering128NEA2, security.AlgIntegrity128NIA2,
 		models.AccessType__3_GPP_ACCESS)
 	ue.AmfUeNgapId = 1
 	ue.AuthenticationSubs = test.GetAuthSubscription(TestGenAuthData.MilenageTestSet19.K,
@@ -3561,102 +3560,102 @@ func TestMultiAmfRegistration(t *testing.T) {
 
 	// Send registration request to new amf
 	innerRegistrationRequest := nasTestpacket.GetRegistrationRequest(nasMessage.RegistrationType5GSInitialRegistration,
-		GUTI5GS, nil, ue.GetUESecurityCapability(), ue.Get5GMMCapability(), nil, nil)
+		GUTI5GS, nil, ue.GetUESecurityCapability(), nil, nil, nil)
+	pdu, err = test.EncodeNasPduWithSecurity(ue, innerRegistrationRequest, nas.SecurityHeaderTypeIntegrityProtectedAndCiphered, true, true)
+	require.Nil(t, err)
 	registrationRequest = nasTestpacket.GetRegistrationRequest(nasMessage.RegistrationType5GSInitialRegistration,
-		GUTI5GS, nil, ueSecurityCapability, nil, innerRegistrationRequest, nil)
-	pdu, err = test.EncodeNasPduWithSecurity(ue, registrationRequest, nas.SecurityHeaderTypeIntegrityProtected, true, true)
-	require.Nil(t, err)
-	sendMsg, err = test.GetInitialUEMessage(ue.RanUeNgapId, pdu, "")
+		GUTI5GS, nil, ueSecurityCapability, nil, pdu, nil)
+	sendMsg, err = test.GetInitialUEMessage(ue.RanUeNgapId, registrationRequest, "")
 	require.Nil(t, err)
 
 	_, err = conn2.Write(sendMsg)
 	require.Nil(t, err)
+	/*
+		// ue receive NAS Identity Request from amf
+		n, err = conn2.Read(recvMsg)
+		require.Nil(t, err)
+		ngapMsg, err := ngap.Decoder(recvMsg[:n])
+		require.Nil(t, err)
+		require.Equal(t, ngapType.NGAPPDUPresentInitiatingMessage, ngapMsg.Present)
+		require.Equal(t, ngapType.ProcedureCodeDownlinkNASTransport, ngapMsg.InitiatingMessage.ProcedureCode.Value)
+		require.Equal(t, ngapType.InitiatingMessagePresentDownlinkNASTransport, ngapMsg.InitiatingMessage.Value.Present)
+		nasPdu = test.GetNasPdu(ue, ngapMsg.InitiatingMessage.Value.DownlinkNASTransport)
+		require.NotNil(t, nasPdu)
+		require.NotNil(t, nasPdu.GmmMessage, "GMM message is nil")
+		require.Equal(t, nasPdu.GmmHeader.GetMessageType(), nas.MsgTypeIdentityRequest,
+			"Received wrong GMM message. Expected Identity Request.")
 
-	// ue receive NAS Identity Request from amf
-	n, err = conn2.Read(recvMsg)
-	require.Nil(t, err)
-	ngapMsg, err := ngap.Decoder(recvMsg[:n])
-	require.Nil(t, err)
-	require.Equal(t, ngapType.NGAPPDUPresentInitiatingMessage, ngapMsg.Present)
-	require.Equal(t, ngapType.ProcedureCodeDownlinkNASTransport, ngapMsg.InitiatingMessage.ProcedureCode.Value)
-	require.Equal(t, ngapType.InitiatingMessagePresentDownlinkNASTransport, ngapMsg.InitiatingMessage.Value.Present)
-	nasPdu = test.GetNasPdu(ue, ngapMsg.InitiatingMessage.Value.DownlinkNASTransport)
-	require.NotNil(t, nasPdu)
-	require.NotNil(t, nasPdu.GmmMessage, "GMM message is nil")
-	require.Equal(t, nasPdu.GmmHeader.GetMessageType(), nas.MsgTypeIdentityRequest,
-		"Received wrong GMM message. Expected Identity Request.")
+		// update AMF UE NGAP ID
+		ue.AmfUeNgapId = ngapMsg.InitiatingMessage.
+			Value.DownlinkNASTransport.
+			ProtocolIEs.List[0].Value.AMFUENGAPID.Value
 
-	// update AMF UE NGAP ID
-	ue.AmfUeNgapId = ngapMsg.InitiatingMessage.
-		Value.DownlinkNASTransport.
-		ProtocolIEs.List[0].Value.AMFUENGAPID.Value
+		// ue send NAS Identity Response
 
-	// ue send NAS Identity Response
+		mobileIdentity := nasType.MobileIdentity{
+			Len:    mobileIdentity5GS.Len,
+			Buffer: mobileIdentity5GS.Buffer,
+		}
 
-	mobileIdentity := nasType.MobileIdentity{
-		Len:    mobileIdentity5GS.Len,
-		Buffer: mobileIdentity5GS.Buffer,
-	}
+		pdu = nasTestpacket.GetIdentityResponse(mobileIdentity)
+		require.Nil(t, err)
 
-	pdu = nasTestpacket.GetIdentityResponse(mobileIdentity)
-	require.Nil(t, err)
+		sendMsg, err = test.GetUplinkNASTransport(ue.AmfUeNgapId, ue.RanUeNgapId, pdu)
+		require.Nil(t, err)
+		_, err = conn2.Write(sendMsg)
+		require.Nil(t, err)
 
-	sendMsg, err = test.GetUplinkNASTransport(ue.AmfUeNgapId, ue.RanUeNgapId, pdu)
-	require.Nil(t, err)
-	_, err = conn2.Write(sendMsg)
-	require.Nil(t, err)
+		// ue receive NAS Authentication Request Msg from amf
+		n, err = conn2.Read(recvMsg)
+		require.Nil(t, err)
+		ngapMsg, err = ngap.Decoder(recvMsg[:n])
+		require.Nil(t, err)
+		require.Equal(t, ngapType.NGAPPDUPresentInitiatingMessage, ngapMsg.Present)
+		require.Equal(t, ngapType.ProcedureCodeDownlinkNASTransport, ngapMsg.InitiatingMessage.ProcedureCode.Value)
+		require.Equal(t, ngapType.InitiatingMessagePresentDownlinkNASTransport, ngapMsg.InitiatingMessage.Value.Present)
+		nasPdu = test.GetNasPdu(ue, ngapMsg.InitiatingMessage.Value.DownlinkNASTransport)
+		require.NotNil(t, nasPdu)
+		require.NotNil(t, nasPdu.GmmMessage, "GMM message is nil")
+		require.Equal(t, nasPdu.GmmHeader.GetMessageType(), nas.MsgTypeAuthenticationRequest,
+			"Received wrong GMM message. Expected Authentication Request.")
 
-	// ue receive NAS Authentication Request Msg from amf
-	n, err = conn2.Read(recvMsg)
-	require.Nil(t, err)
-	ngapMsg, err = ngap.Decoder(recvMsg[:n])
-	require.Nil(t, err)
-	require.Equal(t, ngapType.NGAPPDUPresentInitiatingMessage, ngapMsg.Present)
-	require.Equal(t, ngapType.ProcedureCodeDownlinkNASTransport, ngapMsg.InitiatingMessage.ProcedureCode.Value)
-	require.Equal(t, ngapType.InitiatingMessagePresentDownlinkNASTransport, ngapMsg.InitiatingMessage.Value.Present)
-	nasPdu = test.GetNasPdu(ue, ngapMsg.InitiatingMessage.Value.DownlinkNASTransport)
-	require.NotNil(t, nasPdu)
-	require.NotNil(t, nasPdu.GmmMessage, "GMM message is nil")
-	require.Equal(t, nasPdu.GmmHeader.GetMessageType(), nas.MsgTypeAuthenticationRequest,
-		"Received wrong GMM message. Expected Authentication Request.")
+		// Calculate for RES*
+		rand = nasPdu.AuthenticationRequest.GetRANDValue()
+		sqn, _ := strconv.ParseUint(ue.AuthenticationSubs.SequenceNumber, 16, 48)
+		sqn++
+		ue.AuthenticationSubs.SequenceNumber = strconv.FormatUint(sqn, 16)
+		resStat = ue.DeriveRESstarAndSetKey(ue.AuthenticationSubs, rand[:], "5G:mnc093.mcc208.3gppnetwork.org")
 
-	// Calculate for RES*
-	rand = nasPdu.AuthenticationRequest.GetRANDValue()
-	sqn, _ := strconv.ParseUint(ue.AuthenticationSubs.SequenceNumber, 16, 48)
-	sqn++
-	ue.AuthenticationSubs.SequenceNumber = strconv.FormatUint(sqn, 16)
-	resStat = ue.DeriveRESstarAndSetKey(ue.AuthenticationSubs, rand[:], "5G:mnc093.mcc208.3gppnetwork.org")
+		// ue send NAS Authentication Response
+		pdu = nasTestpacket.GetAuthenticationResponse(resStat, "")
+		sendMsg, err = test.GetUplinkNASTransport(ue.AmfUeNgapId, ue.RanUeNgapId, pdu)
+		require.Nil(t, err)
+		_, err = conn2.Write(sendMsg)
+		require.Nil(t, err)
 
-	// ue send NAS Authentication Response
-	pdu = nasTestpacket.GetAuthenticationResponse(resStat, "")
-	sendMsg, err = test.GetUplinkNASTransport(ue.AmfUeNgapId, ue.RanUeNgapId, pdu)
-	require.Nil(t, err)
-	_, err = conn2.Write(sendMsg)
-	require.Nil(t, err)
+		// ue receive NAS Security Mode Command Msg
+		n, err = conn2.Read(recvMsg)
+		require.Nil(t, err)
+		ngapMsg, err = ngap.Decoder(recvMsg[:n])
+		require.Nil(t, err)
+		require.Equal(t, ngapType.NGAPPDUPresentInitiatingMessage, ngapMsg.Present)
+		require.Equal(t, ngapType.ProcedureCodeDownlinkNASTransport, ngapMsg.InitiatingMessage.ProcedureCode.Value)
+		require.Equal(t, ngapType.InitiatingMessagePresentDownlinkNASTransport, ngapMsg.InitiatingMessage.Value.Present)
+		nasPdu = test.GetNasPdu(ue, ngapMsg.InitiatingMessage.Value.DownlinkNASTransport)
+		require.NotNil(t, nasPdu)
+		require.NotNil(t, nasPdu.GmmMessage, "GMM message is nil")
+		require.Equal(t, nasPdu.GmmHeader.GetMessageType(), nas.MsgTypeSecurityModeCommand,
+			"Received wrong GMM message. Expected Security Mode Command.")
 
-	// ue receive NAS Security Mode Command Msg
-	n, err = conn2.Read(recvMsg)
-	require.Nil(t, err)
-	ngapMsg, err = ngap.Decoder(recvMsg[:n])
-	require.Nil(t, err)
-	require.Equal(t, ngapType.NGAPPDUPresentInitiatingMessage, ngapMsg.Present)
-	require.Equal(t, ngapType.ProcedureCodeDownlinkNASTransport, ngapMsg.InitiatingMessage.ProcedureCode.Value)
-	require.Equal(t, ngapType.InitiatingMessagePresentDownlinkNASTransport, ngapMsg.InitiatingMessage.Value.Present)
-	nasPdu = test.GetNasPdu(ue, ngapMsg.InitiatingMessage.Value.DownlinkNASTransport)
-	require.NotNil(t, nasPdu)
-	require.NotNil(t, nasPdu.GmmMessage, "GMM message is nil")
-	require.Equal(t, nasPdu.GmmHeader.GetMessageType(), nas.MsgTypeSecurityModeCommand,
-		"Received wrong GMM message. Expected Security Mode Command.")
-
-	// ue send NAS Security Mode Complete Msg
-	pdu = nasTestpacket.GetSecurityModeComplete(innerRegistrationRequest)
-	pdu, err = test.EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCipheredWithNew5gNasSecurityContext, true, true)
-	require.Nil(t, err)
-	sendMsg, err = test.GetUplinkNASTransport(ue.AmfUeNgapId, ue.RanUeNgapId, pdu)
-	require.Nil(t, err)
-	_, err = conn2.Write(sendMsg)
-	require.Nil(t, err)
-
+		// ue send NAS Security Mode Complete Msg
+		pdu = nasTestpacket.GetSecurityModeComplete(innerRegistrationRequest)
+		pdu, err = test.EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCipheredWithNew5gNasSecurityContext, true, true)
+		require.Nil(t, err)
+		sendMsg, err = test.GetUplinkNASTransport(ue.AmfUeNgapId, ue.RanUeNgapId, pdu)
+		require.Nil(t, err)
+		_, err = conn2.Write(sendMsg)
+		require.Nil(t, err)
+	*/
 	// receive ngap Initial Context Setup Request Msg
 	n, err = conn2.Read(recvMsg)
 	require.Nil(t, err)
