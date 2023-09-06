@@ -49,8 +49,8 @@ configuration:
       - NIA2
       # - NIA0
     cipheringOrder: # the priority of ciphering algorithms
-      # - NEA0
-      - NEA2
+      - NEA0
+      # - NEA2
   networkName:  # the name of this core network
     full: free5GC
     short: free
