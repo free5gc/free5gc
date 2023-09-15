@@ -50,7 +50,7 @@ configuration:
       # - NIA0
     cipheringOrder: # the priority of ciphering algorithms
       - NEA0
-      # - NEA2
+      - NEA2
   networkName:  # the name of this core network
     full: free5GC
     short: free
@@ -87,6 +87,11 @@ configuration:
     maxRetryTimes: 4 # the max number of retransmission
   # retransmission timer for NAS Registration Accept message
   t3550:
+    enable: true     # true or false
+    expireTime: 6s   # default is 6 seconds
+    maxRetryTimes: 4 # the max number of retransmission
+  # retransmission timer for Configuration Update Command message
+  t3555:
     enable: true     # true or false
     expireTime: 6s   # default is 6 seconds
     maxRetryTimes: 4 # the max number of retransmission
