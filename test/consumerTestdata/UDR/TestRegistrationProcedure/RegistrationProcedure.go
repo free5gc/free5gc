@@ -23,7 +23,7 @@ func init() {
 			DefaultSingleNssais: []models.Snssai{
 				{
 					Sst: 1,
-					Sd:  "010203",
+					Sd:  "FEDCBA",
 				},
 				{
 					Sst: 1,
@@ -33,7 +33,7 @@ func init() {
 			SingleNssais: []models.Snssai{
 				{
 					Sst: 1,
-					Sd:  "010203",
+					Sd:  "FEDCBA",
 				},
 				{
 					Sst: 1,
@@ -49,7 +49,7 @@ func init() {
 
 	TestSmfSelDataTable[FREE5GC_CASE] = models.SmfSelectionSubscriptionData{
 		SubscribedSnssaiInfos: map[string]models.SnssaiInfo{
-			"01010203": { // sst:1, sd:010203
+			"01FEDCBA": { // sst:1, sd:FEDCBA
 				DnnInfos: []models.DnnInfo{
 					{
 						Dnn: "internet",
@@ -74,9 +74,9 @@ func init() {
 
 	TestSmPolicyDataTable[FREE5GC_CASE] = models.SmPolicyData{
 		SmPolicySnssaiData: map[string]models.SmPolicySnssaiData{
-			"01010203": {
+			"01FEDCBA": {
 				Snssai: &models.Snssai{
-					Sd:  "010203",
+					Sd:  "FEDCBA",
 					Sst: 1,
 				},
 				SmPolicyDnnData: map[string]models.SmPolicyDnnData{
@@ -103,7 +103,7 @@ func init() {
 		{
 			SingleNssai: &models.Snssai{
 				Sst: 1,
-				Sd:  "010203",
+				Sd:  "FEDCBA",
 			},
 			DnnConfigurations: map[string]models.DnnConfiguration{
 				"internet": {

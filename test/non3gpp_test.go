@@ -36,7 +36,7 @@ var (
 	n3iwfInfo_IPSecIfaceAddr     = "192.168.127.1"
 	n3ueInfo_IPSecIfaceAddr      = "192.168.127.2"
 	n3ueInfo_SmPolicy_SNSSAI_SST = "1"
-	n3ueInfo_SmPolicy_SNSSAI_SD  = "010203"
+	n3ueInfo_SmPolicy_SNSSAI_SD  = "fedcba"
 	n3ueInfo_IPSecIfaceName      = "veth3"
 	n3ueInfo_XfrmiName           = "ipsec"
 	n3ueInfo_XfrmiId             = uint32(1)
@@ -1581,7 +1581,7 @@ func TestNon3GPPUE(t *testing.T) {
 	// UE request PDU session setup
 	sNssai := models.Snssai{
 		Sst: 1,
-		Sd:  "010203",
+		Sd:  "fedcba",
 	}
 
 	var pduSessionId uint8 = 1
