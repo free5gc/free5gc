@@ -65,7 +65,7 @@ func testULCLSessionBase(t *testing.T, ueCount int, upfNum int) {
 	servingPlmnId := "20893"
 	sNssai := models.Snssai{
 		Sst: 1,
-		Sd:  "010203",
+		Sd:  "112233",
 	}
 
 	for i := 0; i < ueCount; i++ {
