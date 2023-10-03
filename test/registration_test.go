@@ -46,7 +46,7 @@ const amfN2Ipv4Addr string = "127.0.0.1"
 const ranN3Ipv4Addr string = "10.200.200.1"
 const upfN3Ipv4Addr string = "10.200.200.102"
 
-func recvUeConfigUpdateCmd(recvMsg []byte, conn *sctp.SCTPConn, t *testing.T) {
+func recvUeConfigUpdateCmd(t *testing.T, recvMsg []byte, conn *sctp.SCTPConn) {
 	n, err := conn.Read(recvMsg)
 	assert.Nil(t, err)
 	ngapPdu, err := ngap.Decoder(recvMsg[:n])
@@ -54,6 +54,42 @@ func recvUeConfigUpdateCmd(recvMsg []byte, conn *sctp.SCTPConn, t *testing.T) {
 	assert.Equal(t, ngapPdu.Present, ngapType.NGAPPDUPresentInitiatingMessage, "Not NGAPPDUPresentInitiatingMessage")
 	assert.Equal(t, ngapPdu.InitiatingMessage.ProcedureCode.Value, ngapType.ProcedureCodeDownlinkNASTransport,
 		"Not ProcedureCodeDownlinkNASTransport")
+}
+
+func insertUeToMongoDB(t *testing.T, ue *test.RanUeContext, servingPlmnId string) {
+	test.InsertAuthSubscriptionToMongoDB(ue.Supi, ue.AuthenticationSubs)
+	getData := test.GetAuthSubscriptionFromMongoDB(ue.Supi)
+	assert.NotNil(t, getData)
+	{
+		amData := test.GetAccessAndMobilitySubscriptionData()
+		test.InsertAccessAndMobilitySubscriptionDataToMongoDB(ue.Supi, amData, servingPlmnId)
+		getData := test.GetAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
+		assert.NotNil(t, getData)
+	}
+	{
+		smfSelData := test.GetSmfSelectionSubscriptionData()
+		test.InsertSmfSelectionSubscriptionDataToMongoDB(ue.Supi, smfSelData, servingPlmnId)
+		getData := test.GetSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
+		assert.NotNil(t, getData)
+	}
+	{
+		smSelData := test.GetSessionManagementSubscriptionData()
+		test.InsertSessionManagementSubscriptionDataToMongoDB(ue.Supi, servingPlmnId, smSelData)
+		getData := test.GetSessionManagementDataFromMongoDB(ue.Supi, servingPlmnId)
+		assert.NotNil(t, getData)
+	}
+	{
+		amPolicyData := test.GetAmPolicyData()
+		test.InsertAmPolicyDataToMongoDB(ue.Supi, amPolicyData)
+		getData := test.GetAmPolicyDataFromMongoDB(ue.Supi)
+		assert.NotNil(t, getData)
+	}
+	{
+		smPolicyData := test.GetSmPolicyData()
+		test.InsertSmPolicyDataToMongoDB(ue.Supi, smPolicyData)
+		getData := test.GetSmPolicyDataFromMongoDB(ue.Supi)
+		assert.NotNil(t, getData)
+	}
 }
 
 // Registration
@@ -91,42 +127,10 @@ func TestRegistration(t *testing.T) {
 	ue.AuthenticationSubs = test.GetAuthSubscription(TestGenAuthData.MilenageTestSet19.K,
 		TestGenAuthData.MilenageTestSet19.OPC,
 		TestGenAuthData.MilenageTestSet19.OP)
-	// insert UE data to MongoDB
 
+	// insert UE data to MongoDB
 	servingPlmnId := "20893"
-	test.InsertAuthSubscriptionToMongoDB(ue.Supi, ue.AuthenticationSubs)
-	getData := test.GetAuthSubscriptionFromMongoDB(ue.Supi)
-	assert.NotNil(t, getData)
-	{
-		amData := test.GetAccessAndMobilitySubscriptionData()
-		test.InsertAccessAndMobilitySubscriptionDataToMongoDB(ue.Supi, amData, servingPlmnId)
-		getData := test.GetAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-		assert.NotNil(t, getData)
-	}
-	{
-		smfSelData := test.GetSmfSelectionSubscriptionData()
-		test.InsertSmfSelectionSubscriptionDataToMongoDB(ue.Supi, smfSelData, servingPlmnId)
-		getData := test.GetSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-		assert.NotNil(t, getData)
-	}
-	{
-		smSelData := test.GetSessionManagementSubscriptionData()
-		test.InsertSessionManagementSubscriptionDataToMongoDB(ue.Supi, servingPlmnId, smSelData)
-		getData := test.GetSessionManagementDataFromMongoDB(ue.Supi, servingPlmnId)
-		assert.NotNil(t, getData)
-	}
-	{
-		amPolicyData := test.GetAmPolicyData()
-		test.InsertAmPolicyDataToMongoDB(ue.Supi, amPolicyData)
-		getData := test.GetAmPolicyDataFromMongoDB(ue.Supi)
-		assert.NotNil(t, getData)
-	}
-	{
-		smPolicyData := test.GetSmPolicyData()
-		test.InsertSmPolicyDataToMongoDB(ue.Supi, smPolicyData)
-		getData := test.GetSmPolicyDataFromMongoDB(ue.Supi)
-		assert.NotNil(t, getData)
-	}
+	insertUeToMongoDB(t, ue, servingPlmnId)
 
 	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
@@ -213,7 +217,7 @@ func TestRegistration(t *testing.T) {
 	assert.Nil(t, err)
 
 	// receive UE Configuration Update Command Msg
-	recvUeConfigUpdateCmd(recvMsg, conn, t)
+	recvUeConfigUpdateCmd(t, recvMsg, conn)
 
 	time.Sleep(100 * time.Millisecond)
 
@@ -333,39 +337,7 @@ func TestDeregistration(t *testing.T) {
 	// insert UE data to MongoDB
 
 	servingPlmnId := "20893"
-	test.InsertAuthSubscriptionToMongoDB(ue.Supi, ue.AuthenticationSubs)
-	getData := test.GetAuthSubscriptionFromMongoDB(ue.Supi)
-	assert.NotNil(t, getData)
-	{
-		amData := test.GetAccessAndMobilitySubscriptionData()
-		test.InsertAccessAndMobilitySubscriptionDataToMongoDB(ue.Supi, amData, servingPlmnId)
-		getData := test.GetAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-		assert.NotNil(t, getData)
-	}
-	{
-		smfSelData := test.GetSmfSelectionSubscriptionData()
-		test.InsertSmfSelectionSubscriptionDataToMongoDB(ue.Supi, smfSelData, servingPlmnId)
-		getData := test.GetSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-		assert.NotNil(t, getData)
-	}
-	{
-		smSelData := test.GetSessionManagementSubscriptionData()
-		test.InsertSessionManagementSubscriptionDataToMongoDB(ue.Supi, servingPlmnId, smSelData)
-		getData := test.GetSessionManagementDataFromMongoDB(ue.Supi, servingPlmnId)
-		assert.NotNil(t, getData)
-	}
-	{
-		amPolicyData := test.GetAmPolicyData()
-		test.InsertAmPolicyDataToMongoDB(ue.Supi, amPolicyData)
-		getData := test.GetAmPolicyDataFromMongoDB(ue.Supi)
-		assert.NotNil(t, getData)
-	}
-	{
-		smPolicyData := test.GetSmPolicyData()
-		test.InsertSmPolicyDataToMongoDB(ue.Supi, smPolicyData)
-		getData := test.GetSmPolicyDataFromMongoDB(ue.Supi)
-		assert.NotNil(t, getData)
-	}
+	insertUeToMongoDB(t, ue, servingPlmnId)
 
 	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
@@ -447,7 +419,7 @@ func TestDeregistration(t *testing.T) {
 	require.Nil(t, err)
 
 	// receive UE Configuration Update Command Msg
-	recvUeConfigUpdateCmd(recvMsg, conn, t)
+	recvUeConfigUpdateCmd(t, recvMsg, conn)
 
 	time.Sleep(500 * time.Millisecond)
 
@@ -541,39 +513,7 @@ func TestServiceRequest(t *testing.T) {
 	// insert UE data to MongoDB
 
 	servingPlmnId := "20893"
-	test.InsertAuthSubscriptionToMongoDB(ue.Supi, ue.AuthenticationSubs)
-	getData := test.GetAuthSubscriptionFromMongoDB(ue.Supi)
-	assert.NotNil(t, getData)
-	{
-		amData := test.GetAccessAndMobilitySubscriptionData()
-		test.InsertAccessAndMobilitySubscriptionDataToMongoDB(ue.Supi, amData, servingPlmnId)
-		getData := test.GetAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-		assert.NotNil(t, getData)
-	}
-	{
-		smfSelData := test.GetSmfSelectionSubscriptionData()
-		test.InsertSmfSelectionSubscriptionDataToMongoDB(ue.Supi, smfSelData, servingPlmnId)
-		getData := test.GetSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-		assert.NotNil(t, getData)
-	}
-	{
-		smSelData := test.GetSessionManagementSubscriptionData()
-		test.InsertSessionManagementSubscriptionDataToMongoDB(ue.Supi, servingPlmnId, smSelData)
-		getData := test.GetSessionManagementDataFromMongoDB(ue.Supi, servingPlmnId)
-		assert.NotNil(t, getData)
-	}
-	{
-		amPolicyData := test.GetAmPolicyData()
-		test.InsertAmPolicyDataToMongoDB(ue.Supi, amPolicyData)
-		getData := test.GetAmPolicyDataFromMongoDB(ue.Supi)
-		assert.NotNil(t, getData)
-	}
-	{
-		smPolicyData := test.GetSmPolicyData()
-		test.InsertSmPolicyDataToMongoDB(ue.Supi, smPolicyData)
-		getData := test.GetSmPolicyDataFromMongoDB(ue.Supi)
-		assert.NotNil(t, getData)
-	}
+	insertUeToMongoDB(t, ue, servingPlmnId)
 
 	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
@@ -655,7 +595,7 @@ func TestServiceRequest(t *testing.T) {
 	assert.Nil(t, err)
 
 	// receive UE Configuration Update Command Msg
-	recvUeConfigUpdateCmd(recvMsg, conn, t)
+	recvUeConfigUpdateCmd(t, recvMsg, conn)
 
 	// send PduSessionEstablishmentRequest Msg
 	sNssai := models.Snssai{
@@ -777,39 +717,7 @@ func TestGUTIRegistration(t *testing.T) {
 	// insert UE data to MongoDB
 
 	servingPlmnId := "20893"
-	test.InsertAuthSubscriptionToMongoDB(ue.Supi, ue.AuthenticationSubs)
-	getData := test.GetAuthSubscriptionFromMongoDB(ue.Supi)
-	require.NotNil(t, getData)
-	{
-		amData := test.GetAccessAndMobilitySubscriptionData()
-		test.InsertAccessAndMobilitySubscriptionDataToMongoDB(ue.Supi, amData, servingPlmnId)
-		getData := test.GetAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-		require.NotNil(t, getData)
-	}
-	{
-		smfSelData := test.GetSmfSelectionSubscriptionData()
-		test.InsertSmfSelectionSubscriptionDataToMongoDB(ue.Supi, smfSelData, servingPlmnId)
-		getData := test.GetSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-		require.NotNil(t, getData)
-	}
-	{
-		smSelData := test.GetSessionManagementSubscriptionData()
-		test.InsertSessionManagementSubscriptionDataToMongoDB(ue.Supi, servingPlmnId, smSelData)
-		getData := test.GetSessionManagementDataFromMongoDB(ue.Supi, servingPlmnId)
-		require.NotNil(t, getData)
-	}
-	{
-		amPolicyData := test.GetAmPolicyData()
-		test.InsertAmPolicyDataToMongoDB(ue.Supi, amPolicyData)
-		getData := test.GetAmPolicyDataFromMongoDB(ue.Supi)
-		require.NotNil(t, getData)
-	}
-	{
-		smPolicyData := test.GetSmPolicyData()
-		test.InsertSmPolicyDataToMongoDB(ue.Supi, smPolicyData)
-		getData := test.GetSmPolicyDataFromMongoDB(ue.Supi)
-		require.NotNil(t, getData)
-	}
+	insertUeToMongoDB(t, ue, servingPlmnId)
 
 	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
 	SUCI5GS := nasType.MobileIdentity5GS{
@@ -891,7 +799,7 @@ func TestGUTIRegistration(t *testing.T) {
 	require.Nil(t, err)
 
 	// receive UE Configuration Update Command Msg
-	recvUeConfigUpdateCmd(recvMsg, conn, t)
+	recvUeConfigUpdateCmd(t, recvMsg, conn)
 
 	time.Sleep(500 * time.Millisecond)
 
@@ -1059,7 +967,7 @@ func TestGUTIRegistration(t *testing.T) {
 	assert.Nil(t, err)
 
 	// receive UE Configuration Update Command Msg
-	recvUeConfigUpdateCmd(recvMsg, conn, t)
+	recvUeConfigUpdateCmd(t, recvMsg, conn)
 
 	time.Sleep(1000 * time.Millisecond)
 
@@ -1107,39 +1015,7 @@ func TestPDUSessionReleaseRequest(t *testing.T) {
 	// insert UE data to MongoDB
 
 	servingPlmnId := "20893"
-	test.InsertAuthSubscriptionToMongoDB(ue.Supi, ue.AuthenticationSubs)
-	getData := test.GetAuthSubscriptionFromMongoDB(ue.Supi)
-	assert.NotNil(t, getData)
-	{
-		amData := test.GetAccessAndMobilitySubscriptionData()
-		test.InsertAccessAndMobilitySubscriptionDataToMongoDB(ue.Supi, amData, servingPlmnId)
-		getData := test.GetAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-		assert.NotNil(t, getData)
-	}
-	{
-		smfSelData := test.GetSmfSelectionSubscriptionData()
-		test.InsertSmfSelectionSubscriptionDataToMongoDB(ue.Supi, smfSelData, servingPlmnId)
-		getData := test.GetSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-		assert.NotNil(t, getData)
-	}
-	{
-		smSelData := test.GetSessionManagementSubscriptionData()
-		test.InsertSessionManagementSubscriptionDataToMongoDB(ue.Supi, servingPlmnId, smSelData)
-		getData := test.GetSessionManagementDataFromMongoDB(ue.Supi, servingPlmnId)
-		assert.NotNil(t, getData)
-	}
-	{
-		amPolicyData := test.GetAmPolicyData()
-		test.InsertAmPolicyDataToMongoDB(ue.Supi, amPolicyData)
-		getData := test.GetAmPolicyDataFromMongoDB(ue.Supi)
-		assert.NotNil(t, getData)
-	}
-	{
-		smPolicyData := test.GetSmPolicyData()
-		test.InsertSmPolicyDataToMongoDB(ue.Supi, smPolicyData)
-		getData := test.GetSmPolicyDataFromMongoDB(ue.Supi)
-		assert.NotNil(t, getData)
-	}
+	insertUeToMongoDB(t, ue, servingPlmnId)
 
 	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
@@ -1221,7 +1097,7 @@ func TestPDUSessionReleaseRequest(t *testing.T) {
 	assert.Nil(t, err)
 
 	// receive UE Configuration Update Command Msg
-	recvUeConfigUpdateCmd(recvMsg, conn, t)
+	recvUeConfigUpdateCmd(t, recvMsg, conn)
 
 	// send PduSessionEstablishmentRequest Msg
 	sNssai := models.Snssai{
@@ -1436,7 +1312,7 @@ func TestPDUSessionReleaseAbnormal(t *testing.T) {
 	assert.Nil(t, err)
 
 	// receive UE Configuration Update Command Msg
-	recvUeConfigUpdateCmd(recvMsg, conn, t)
+	recvUeConfigUpdateCmd(t, recvMsg, conn)
 
 	// send PduSessionEstablishmentRequest Msg
 	sNssai := models.Snssai{
@@ -1575,39 +1451,7 @@ func TestXnHandover(t *testing.T) {
 	// insert UE data to MongoDB
 
 	servingPlmnId := "20893"
-	test.InsertAuthSubscriptionToMongoDB(ue.Supi, ue.AuthenticationSubs)
-	getData := test.GetAuthSubscriptionFromMongoDB(ue.Supi)
-	assert.NotNil(t, getData)
-	{
-		amData := test.GetAccessAndMobilitySubscriptionData()
-		test.InsertAccessAndMobilitySubscriptionDataToMongoDB(ue.Supi, amData, servingPlmnId)
-		getData := test.GetAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-		assert.NotNil(t, getData)
-	}
-	{
-		smfSelData := test.GetSmfSelectionSubscriptionData()
-		test.InsertSmfSelectionSubscriptionDataToMongoDB(ue.Supi, smfSelData, servingPlmnId)
-		getData := test.GetSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-		assert.NotNil(t, getData)
-	}
-	{
-		smSelData := test.GetSessionManagementSubscriptionData()
-		test.InsertSessionManagementSubscriptionDataToMongoDB(ue.Supi, servingPlmnId, smSelData)
-		getData := test.GetSessionManagementDataFromMongoDB(ue.Supi, servingPlmnId)
-		assert.NotNil(t, getData)
-	}
-	{
-		amPolicyData := test.GetAmPolicyData()
-		test.InsertAmPolicyDataToMongoDB(ue.Supi, amPolicyData)
-		getData := test.GetAmPolicyDataFromMongoDB(ue.Supi)
-		assert.NotNil(t, getData)
-	}
-	{
-		smPolicyData := test.GetSmPolicyData()
-		test.InsertSmPolicyDataToMongoDB(ue.Supi, smPolicyData)
-		getData := test.GetSmPolicyDataFromMongoDB(ue.Supi)
-		assert.NotNil(t, getData)
-	}
+	insertUeToMongoDB(t, ue, servingPlmnId)
 
 	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
@@ -1689,7 +1533,7 @@ func TestXnHandover(t *testing.T) {
 	assert.Nil(t, err)
 
 	// receive UE Configuration Update Command Msg
-	recvUeConfigUpdateCmd(recvMsg, conn, t)
+	recvUeConfigUpdateCmd(t, recvMsg, conn)
 
 	// send PduSessionEstablishmentRequest Msg
 	sNssai := models.Snssai{
@@ -1776,39 +1620,7 @@ func TestPaging(t *testing.T) {
 	// insert UE data to MongoDB
 
 	servingPlmnId := "20893"
-	test.InsertAuthSubscriptionToMongoDB(ue.Supi, ue.AuthenticationSubs)
-	getData := test.GetAuthSubscriptionFromMongoDB(ue.Supi)
-	assert.NotNil(t, getData)
-	{
-		amData := test.GetAccessAndMobilitySubscriptionData()
-		test.InsertAccessAndMobilitySubscriptionDataToMongoDB(ue.Supi, amData, servingPlmnId)
-		getData := test.GetAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-		assert.NotNil(t, getData)
-	}
-	{
-		smfSelData := test.GetSmfSelectionSubscriptionData()
-		test.InsertSmfSelectionSubscriptionDataToMongoDB(ue.Supi, smfSelData, servingPlmnId)
-		getData := test.GetSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-		assert.NotNil(t, getData)
-	}
-	{
-		smSelData := test.GetSessionManagementSubscriptionData()
-		test.InsertSessionManagementSubscriptionDataToMongoDB(ue.Supi, servingPlmnId, smSelData)
-		getData := test.GetSessionManagementDataFromMongoDB(ue.Supi, servingPlmnId)
-		assert.NotNil(t, getData)
-	}
-	{
-		amPolicyData := test.GetAmPolicyData()
-		test.InsertAmPolicyDataToMongoDB(ue.Supi, amPolicyData)
-		getData := test.GetAmPolicyDataFromMongoDB(ue.Supi)
-		assert.NotNil(t, getData)
-	}
-	{
-		smPolicyData := test.GetSmPolicyData()
-		test.InsertSmPolicyDataToMongoDB(ue.Supi, smPolicyData)
-		getData := test.GetSmPolicyDataFromMongoDB(ue.Supi)
-		assert.NotNil(t, getData)
-	}
+	insertUeToMongoDB(t, ue, servingPlmnId)
 
 	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
@@ -1890,7 +1702,7 @@ func TestPaging(t *testing.T) {
 	assert.Nil(t, err)
 
 	// receive UE Configuration Update Command Msg
-	recvUeConfigUpdateCmd(recvMsg, conn, t)
+	recvUeConfigUpdateCmd(t, recvMsg, conn)
 
 	// send PduSessionEstablishmentRequest Msg
 	sNssai := models.Snssai{
@@ -2061,39 +1873,7 @@ func TestN2Handover(t *testing.T) {
 	// insert UE data to MongoDB
 
 	servingPlmnId := "20893"
-	test.InsertAuthSubscriptionToMongoDB(ue.Supi, ue.AuthenticationSubs)
-	getData := test.GetAuthSubscriptionFromMongoDB(ue.Supi)
-	assert.NotNil(t, getData)
-	{
-		amData := test.GetAccessAndMobilitySubscriptionData()
-		test.InsertAccessAndMobilitySubscriptionDataToMongoDB(ue.Supi, amData, servingPlmnId)
-		getData := test.GetAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-		assert.NotNil(t, getData)
-	}
-	{
-		smfSelData := test.GetSmfSelectionSubscriptionData()
-		test.InsertSmfSelectionSubscriptionDataToMongoDB(ue.Supi, smfSelData, servingPlmnId)
-		getData := test.GetSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-		assert.NotNil(t, getData)
-	}
-	{
-		smSelData := test.GetSessionManagementSubscriptionData()
-		test.InsertSessionManagementSubscriptionDataToMongoDB(ue.Supi, servingPlmnId, smSelData)
-		getData := test.GetSessionManagementDataFromMongoDB(ue.Supi, servingPlmnId)
-		assert.NotNil(t, getData)
-	}
-	{
-		amPolicyData := test.GetAmPolicyData()
-		test.InsertAmPolicyDataToMongoDB(ue.Supi, amPolicyData)
-		getData := test.GetAmPolicyDataFromMongoDB(ue.Supi)
-		assert.NotNil(t, getData)
-	}
-	{
-		smPolicyData := test.GetSmPolicyData()
-		test.InsertSmPolicyDataToMongoDB(ue.Supi, smPolicyData)
-		getData := test.GetSmPolicyDataFromMongoDB(ue.Supi)
-		assert.NotNil(t, getData)
-	}
+	insertUeToMongoDB(t, ue, servingPlmnId)
 
 	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
@@ -2175,7 +1955,7 @@ func TestN2Handover(t *testing.T) {
 	assert.Nil(t, err)
 
 	// receive UE Configuration Update Command Msg
-	recvUeConfigUpdateCmd(recvMsg, conn, t)
+	recvUeConfigUpdateCmd(t, recvMsg, conn)
 
 	// send PduSessionEstablishmentRequest Msg
 	sNssai := models.Snssai{
@@ -2342,7 +2122,7 @@ func TestN2Handover(t *testing.T) {
 	assert.Nil(t, err)
 
 	// receive UE Configuration Update Command Msg
-	recvUeConfigUpdateCmd(recvMsg, conn2, t)
+	recvUeConfigUpdateCmd(t, recvMsg, conn2)
 
 	// wait 1000 ms
 	time.Sleep(1000 * time.Millisecond)
@@ -2403,39 +2183,7 @@ func TestDuplicateRegistration(t *testing.T) {
 	// insert UE data to MongoDB
 
 	servingPlmnId := "20893"
-	test.InsertAuthSubscriptionToMongoDB(ue.Supi, ue.AuthenticationSubs)
-	getData := test.GetAuthSubscriptionFromMongoDB(ue.Supi)
-	assert.NotNil(t, getData)
-	{
-		amData := test.GetAccessAndMobilitySubscriptionData()
-		test.InsertAccessAndMobilitySubscriptionDataToMongoDB(ue.Supi, amData, servingPlmnId)
-		getData := test.GetAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-		assert.NotNil(t, getData)
-	}
-	{
-		smfSelData := test.GetSmfSelectionSubscriptionData()
-		test.InsertSmfSelectionSubscriptionDataToMongoDB(ue.Supi, smfSelData, servingPlmnId)
-		getData := test.GetSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-		assert.NotNil(t, getData)
-	}
-	{
-		smSelData := test.GetSessionManagementSubscriptionData()
-		test.InsertSessionManagementSubscriptionDataToMongoDB(ue.Supi, servingPlmnId, smSelData)
-		getData := test.GetSessionManagementDataFromMongoDB(ue.Supi, servingPlmnId)
-		assert.NotNil(t, getData)
-	}
-	{
-		amPolicyData := test.GetAmPolicyData()
-		test.InsertAmPolicyDataToMongoDB(ue.Supi, amPolicyData)
-		getData := test.GetAmPolicyDataFromMongoDB(ue.Supi)
-		assert.NotNil(t, getData)
-	}
-	{
-		smPolicyData := test.GetSmPolicyData()
-		test.InsertSmPolicyDataToMongoDB(ue.Supi, smPolicyData)
-		getData := test.GetSmPolicyDataFromMongoDB(ue.Supi)
-		assert.NotNil(t, getData)
-	}
+	insertUeToMongoDB(t, ue, servingPlmnId)
 
 	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
@@ -2517,7 +2265,7 @@ func TestDuplicateRegistration(t *testing.T) {
 	assert.Nil(t, err)
 
 	// receive UE Configuration Update Command Msg
-	recvUeConfigUpdateCmd(recvMsg, conn, t)
+	recvUeConfigUpdateCmd(t, recvMsg, conn)
 
 	time.Sleep(100 * time.Millisecond)
 
@@ -2677,39 +2425,7 @@ func TestAFInfluenceOnTrafficRouting(t *testing.T) {
 	// insert UE data to MongoDB
 
 	servingPlmnId := "20893"
-	test.InsertAuthSubscriptionToMongoDB(ue.Supi, ue.AuthenticationSubs)
-	getData := test.GetAuthSubscriptionFromMongoDB(ue.Supi)
-	assert.NotNil(t, getData)
-	{
-		amData := test.GetAccessAndMobilitySubscriptionData()
-		test.InsertAccessAndMobilitySubscriptionDataToMongoDB(ue.Supi, amData, servingPlmnId)
-		getData := test.GetAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-		assert.NotNil(t, getData)
-	}
-	{
-		smfSelData := test.GetSmfSelectionSubscriptionData()
-		test.InsertSmfSelectionSubscriptionDataToMongoDB(ue.Supi, smfSelData, servingPlmnId)
-		getData := test.GetSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-		assert.NotNil(t, getData)
-	}
-	{
-		smSelData := test.GetSessionManagementSubscriptionData()
-		test.InsertSessionManagementSubscriptionDataToMongoDB(ue.Supi, servingPlmnId, smSelData)
-		getData := test.GetSessionManagementDataFromMongoDB(ue.Supi, servingPlmnId)
-		assert.NotNil(t, getData)
-	}
-	{
-		amPolicyData := test.GetAmPolicyData()
-		test.InsertAmPolicyDataToMongoDB(ue.Supi, amPolicyData)
-		getData := test.GetAmPolicyDataFromMongoDB(ue.Supi)
-		assert.NotNil(t, getData)
-	}
-	{
-		smPolicyData := test.GetSmPolicyData()
-		test.InsertSmPolicyDataToMongoDB(ue.Supi, smPolicyData)
-		getData := test.GetSmPolicyDataFromMongoDB(ue.Supi)
-		assert.NotNil(t, getData)
-	}
+	insertUeToMongoDB(t, ue, servingPlmnId)
 
 	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
@@ -2791,7 +2507,7 @@ func TestAFInfluenceOnTrafficRouting(t *testing.T) {
 	assert.Nil(t, err)
 
 	// receive UE Configuration Update Command Msg
-	recvUeConfigUpdateCmd(recvMsg, conn, t)
+	recvUeConfigUpdateCmd(t, recvMsg, conn)
 
 	time.Sleep(100 * time.Millisecond)
 
@@ -2881,39 +2597,7 @@ func TestReSynchronization(t *testing.T) {
 	// insert UE data to MongoDB
 
 	servingPlmnId := "20893"
-	test.InsertAuthSubscriptionToMongoDB(ue.Supi, ue.AuthenticationSubs)
-	getData := test.GetAuthSubscriptionFromMongoDB(ue.Supi)
-	assert.NotNil(t, getData)
-	{
-		amData := test.GetAccessAndMobilitySubscriptionData()
-		test.InsertAccessAndMobilitySubscriptionDataToMongoDB(ue.Supi, amData, servingPlmnId)
-		getData := test.GetAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-		assert.NotNil(t, getData)
-	}
-	{
-		smfSelData := test.GetSmfSelectionSubscriptionData()
-		test.InsertSmfSelectionSubscriptionDataToMongoDB(ue.Supi, smfSelData, servingPlmnId)
-		getData := test.GetSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-		assert.NotNil(t, getData)
-	}
-	{
-		smSelData := test.GetSessionManagementSubscriptionData()
-		test.InsertSessionManagementSubscriptionDataToMongoDB(ue.Supi, servingPlmnId, smSelData)
-		getData := test.GetSessionManagementDataFromMongoDB(ue.Supi, servingPlmnId)
-		assert.NotNil(t, getData)
-	}
-	{
-		amPolicyData := test.GetAmPolicyData()
-		test.InsertAmPolicyDataToMongoDB(ue.Supi, amPolicyData)
-		getData := test.GetAmPolicyDataFromMongoDB(ue.Supi)
-		assert.NotNil(t, getData)
-	}
-	{
-		smPolicyData := test.GetSmPolicyData()
-		test.InsertSmPolicyDataToMongoDB(ue.Supi, smPolicyData)
-		getData := test.GetSmPolicyDataFromMongoDB(ue.Supi)
-		assert.NotNil(t, getData)
-	}
+	insertUeToMongoDB(t, ue, servingPlmnId)
 
 	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
@@ -3079,7 +2763,7 @@ func TestReSynchronization(t *testing.T) {
 	assert.Nil(t, err)
 
 	// receive UE Configuration Update Command Msg
-	recvUeConfigUpdateCmd(recvMsg, conn, t)
+	recvUeConfigUpdateCmd(t, recvMsg, conn)
 
 	time.Sleep(100 * time.Millisecond)
 
@@ -3202,39 +2886,7 @@ func TestRequestTwoPDUSessions(t *testing.T) {
 	// insert UE data to MongoDB
 
 	servingPlmnId := "20893"
-	test.InsertAuthSubscriptionToMongoDB(ue.Supi, ue.AuthenticationSubs)
-	getData := test.GetAuthSubscriptionFromMongoDB(ue.Supi)
-	assert.NotNil(t, getData)
-	{
-		amData := test.GetAccessAndMobilitySubscriptionData()
-		test.InsertAccessAndMobilitySubscriptionDataToMongoDB(ue.Supi, amData, servingPlmnId)
-		getData := test.GetAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-		assert.NotNil(t, getData)
-	}
-	{
-		smfSelData := test.GetSmfSelectionSubscriptionData()
-		test.InsertSmfSelectionSubscriptionDataToMongoDB(ue.Supi, smfSelData, servingPlmnId)
-		getData := test.GetSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-		assert.NotNil(t, getData)
-	}
-	{
-		smSelData := test.GetSessionManagementSubscriptionData()
-		test.InsertSessionManagementSubscriptionDataToMongoDB(ue.Supi, servingPlmnId, smSelData)
-		getData := test.GetSessionManagementDataFromMongoDB(ue.Supi, servingPlmnId)
-		assert.NotNil(t, getData)
-	}
-	{
-		amPolicyData := test.GetAmPolicyData()
-		test.InsertAmPolicyDataToMongoDB(ue.Supi, amPolicyData)
-		getData := test.GetAmPolicyDataFromMongoDB(ue.Supi)
-		assert.NotNil(t, getData)
-	}
-	{
-		smPolicyData := test.GetSmPolicyData()
-		test.InsertSmPolicyDataToMongoDB(ue.Supi, smPolicyData)
-		getData := test.GetSmPolicyDataFromMongoDB(ue.Supi)
-		assert.NotNil(t, getData)
-	}
+	insertUeToMongoDB(t, ue, servingPlmnId)
 
 	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
@@ -3323,7 +2975,7 @@ func TestRequestTwoPDUSessions(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	// receive UE Configuration Update Command Msg
-	recvUeConfigUpdateCmd(recvMsg, conn, t)
+	recvUeConfigUpdateCmd(t, recvMsg, conn)
 
 	// send GetPduSessionEstablishmentRequest Msg
 	sNssai := models.Snssai{
@@ -3541,39 +3193,7 @@ func TestEAPAKAPrimeAuthentication(t *testing.T) {
 	// insert UE data to MongoDB
 
 	servingPlmnId := "20893"
-	test.InsertAuthSubscriptionToMongoDB(ue.Supi, ue.AuthenticationSubs)
-	getData := test.GetAuthSubscriptionFromMongoDB(ue.Supi)
-	assert.NotNil(t, getData)
-	{
-		amData := test.GetAccessAndMobilitySubscriptionData()
-		test.InsertAccessAndMobilitySubscriptionDataToMongoDB(ue.Supi, amData, servingPlmnId)
-		getData := test.GetAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-		assert.NotNil(t, getData)
-	}
-	{
-		smfSelData := test.GetSmfSelectionSubscriptionData()
-		test.InsertSmfSelectionSubscriptionDataToMongoDB(ue.Supi, smfSelData, servingPlmnId)
-		getData := test.GetSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-		assert.NotNil(t, getData)
-	}
-	{
-		smSelData := test.GetSessionManagementSubscriptionData()
-		test.InsertSessionManagementSubscriptionDataToMongoDB(ue.Supi, servingPlmnId, smSelData)
-		getData := test.GetSessionManagementDataFromMongoDB(ue.Supi, servingPlmnId)
-		assert.NotNil(t, getData)
-	}
-	{
-		amPolicyData := test.GetAmPolicyData()
-		test.InsertAmPolicyDataToMongoDB(ue.Supi, amPolicyData)
-		getData := test.GetAmPolicyDataFromMongoDB(ue.Supi)
-		assert.NotNil(t, getData)
-	}
-	{
-		smPolicyData := test.GetSmPolicyData()
-		test.InsertSmPolicyDataToMongoDB(ue.Supi, smPolicyData)
-		getData := test.GetSmPolicyDataFromMongoDB(ue.Supi)
-		assert.NotNil(t, getData)
-	}
+	insertUeToMongoDB(t, ue, servingPlmnId)
 
 	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
@@ -3662,7 +3282,7 @@ func TestEAPAKAPrimeAuthentication(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	// receive UE Configuration Update Command Msg
-	recvUeConfigUpdateCmd(recvMsg, conn, t)
+	recvUeConfigUpdateCmd(t, recvMsg, conn)
 
 	// send GetPduSessionEstablishmentRequest Msg
 	sNssai := models.Snssai{
