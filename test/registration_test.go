@@ -20,6 +20,7 @@ import (
 	"test/consumerTestdata/UDM/TestGenAuthData"
 	"test/nasTestpacket"
 
+	"git.cs.nctu.edu.tw/calee/sctp"
 	"github.com/gin-gonic/gin"
 	"github.com/mohae/deepcopy"
 	"github.com/stretchr/testify/assert"
@@ -44,6 +45,16 @@ const ranN2Ipv4Addr string = "127.0.0.1"
 const amfN2Ipv4Addr string = "127.0.0.1"
 const ranN3Ipv4Addr string = "10.200.200.1"
 const upfN3Ipv4Addr string = "10.200.200.102"
+
+func recvUeConfigUpdateCmd(recvMsg []byte, conn *sctp.SCTPConn, t *testing.T) {
+	n, err := conn.Read(recvMsg)
+	assert.Nil(t, err)
+	ngapPdu, err := ngap.Decoder(recvMsg[:n])
+	assert.Nil(t, err)
+	assert.Equal(t, ngapPdu.Present, ngapType.NGAPPDUPresentInitiatingMessage, "Not NGAPPDUPresentInitiatingMessage")
+	assert.Equal(t, ngapPdu.InitiatingMessage.ProcedureCode.Value, ngapType.ProcedureCodeDownlinkNASTransport,
+		"Not ProcedureCodeDownlinkNASTransport")
+}
 
 // Registration
 func TestRegistration(t *testing.T) {
@@ -202,13 +213,7 @@ func TestRegistration(t *testing.T) {
 	assert.Nil(t, err)
 
 	// receive UE Configuration Update Command Msg
-	n, err = conn.Read(recvMsg)
-	assert.Nil(t, err)
-	ngapPdu, err = ngap.Decoder(recvMsg[:n])
-	assert.Nil(t, err)
-	assert.True(t, ngapPdu.Present == ngapType.NGAPPDUPresentInitiatingMessage &&
-		ngapPdu.InitiatingMessage.ProcedureCode.Value == ngapType.ProcedureCodeDownlinkNASTransport,
-		"No ConfigurationUpdateCommand received.")
+	recvUeConfigUpdateCmd(recvMsg, conn, t)
 
 	time.Sleep(100 * time.Millisecond)
 
@@ -442,13 +447,7 @@ func TestDeregistration(t *testing.T) {
 	require.Nil(t, err)
 
 	// receive UE Configuration Update Command Msg
-	n, err = conn.Read(recvMsg)
-	assert.Nil(t, err)
-	ngapPdu, err = ngap.Decoder(recvMsg[:n])
-	assert.Nil(t, err)
-	assert.True(t, ngapPdu.Present == ngapType.NGAPPDUPresentInitiatingMessage &&
-		ngapPdu.InitiatingMessage.ProcedureCode.Value == ngapType.ProcedureCodeDownlinkNASTransport,
-		"No ConfigurationUpdateCommand received.")
+	recvUeConfigUpdateCmd(recvMsg, conn, t)
 
 	time.Sleep(500 * time.Millisecond)
 
@@ -656,13 +655,7 @@ func TestServiceRequest(t *testing.T) {
 	assert.Nil(t, err)
 
 	// receive UE Configuration Update Command Msg
-	n, err = conn.Read(recvMsg)
-	assert.Nil(t, err)
-	ngapPdu, err = ngap.Decoder(recvMsg[:n])
-	assert.Nil(t, err)
-	assert.True(t, ngapPdu.Present == ngapType.NGAPPDUPresentInitiatingMessage &&
-		ngapPdu.InitiatingMessage.ProcedureCode.Value == ngapType.ProcedureCodeDownlinkNASTransport,
-		"No ConfigurationUpdateCommand received.")
+	recvUeConfigUpdateCmd(recvMsg, conn, t)
 
 	// send PduSessionEstablishmentRequest Msg
 	sNssai := models.Snssai{
@@ -898,13 +891,7 @@ func TestGUTIRegistration(t *testing.T) {
 	require.Nil(t, err)
 
 	// receive UE Configuration Update Command Msg
-	n, err = conn.Read(recvMsg)
-	assert.Nil(t, err)
-	ngapPdu, err = ngap.Decoder(recvMsg[:n])
-	assert.Nil(t, err)
-	assert.True(t, ngapPdu.Present == ngapType.NGAPPDUPresentInitiatingMessage &&
-		ngapPdu.InitiatingMessage.ProcedureCode.Value == ngapType.ProcedureCodeDownlinkNASTransport,
-		"No ConfigurationUpdateCommand received.")
+	recvUeConfigUpdateCmd(recvMsg, conn, t)
 
 	time.Sleep(500 * time.Millisecond)
 
@@ -1072,13 +1059,7 @@ func TestGUTIRegistration(t *testing.T) {
 	assert.Nil(t, err)
 
 	// receive UE Configuration Update Command Msg
-	n, err = conn.Read(recvMsg)
-	assert.Nil(t, err)
-	ngapPdu, err = ngap.Decoder(recvMsg[:n])
-	assert.Nil(t, err)
-	assert.True(t, ngapPdu.Present == ngapType.NGAPPDUPresentInitiatingMessage &&
-		ngapPdu.InitiatingMessage.ProcedureCode.Value == ngapType.ProcedureCodeDownlinkNASTransport,
-		"No ConfigurationUpdateCommand received.")
+	recvUeConfigUpdateCmd(recvMsg, conn, t)
 
 	time.Sleep(1000 * time.Millisecond)
 
@@ -1240,13 +1221,7 @@ func TestPDUSessionReleaseRequest(t *testing.T) {
 	assert.Nil(t, err)
 
 	// receive UE Configuration Update Command Msg
-	n, err = conn.Read(recvMsg)
-	assert.Nil(t, err)
-	ngapPdu, err = ngap.Decoder(recvMsg[:n])
-	assert.Nil(t, err)
-	assert.True(t, ngapPdu.Present == ngapType.NGAPPDUPresentInitiatingMessage &&
-		ngapPdu.InitiatingMessage.ProcedureCode.Value == ngapType.ProcedureCodeDownlinkNASTransport,
-		"No ConfigurationUpdateCommand received.")
+	recvUeConfigUpdateCmd(recvMsg, conn, t)
 
 	// send PduSessionEstablishmentRequest Msg
 	sNssai := models.Snssai{
@@ -1461,13 +1436,7 @@ func TestPDUSessionReleaseAbnormal(t *testing.T) {
 	assert.Nil(t, err)
 
 	// receive UE Configuration Update Command Msg
-	n, err = conn.Read(recvMsg)
-	assert.Nil(t, err)
-	ngapPdu, err = ngap.Decoder(recvMsg[:n])
-	assert.Nil(t, err)
-	assert.True(t, ngapPdu.Present == ngapType.NGAPPDUPresentInitiatingMessage &&
-		ngapPdu.InitiatingMessage.ProcedureCode.Value == ngapType.ProcedureCodeDownlinkNASTransport,
-		"No ConfigurationUpdateCommand received.")
+	recvUeConfigUpdateCmd(recvMsg, conn, t)
 
 	// send PduSessionEstablishmentRequest Msg
 	sNssai := models.Snssai{
@@ -1720,13 +1689,7 @@ func TestXnHandover(t *testing.T) {
 	assert.Nil(t, err)
 
 	// receive UE Configuration Update Command Msg
-	n, err = conn.Read(recvMsg)
-	assert.Nil(t, err)
-	ngapPdu, err = ngap.Decoder(recvMsg[:n])
-	assert.Nil(t, err)
-	assert.True(t, ngapPdu.Present == ngapType.NGAPPDUPresentInitiatingMessage &&
-		ngapPdu.InitiatingMessage.ProcedureCode.Value == ngapType.ProcedureCodeDownlinkNASTransport,
-		"No ConfigurationUpdateCommand received.")
+	recvUeConfigUpdateCmd(recvMsg, conn, t)
 
 	// send PduSessionEstablishmentRequest Msg
 	sNssai := models.Snssai{
@@ -1927,13 +1890,7 @@ func TestPaging(t *testing.T) {
 	assert.Nil(t, err)
 
 	// receive UE Configuration Update Command Msg
-	n, err = conn.Read(recvMsg)
-	assert.Nil(t, err)
-	ngapPdu, err = ngap.Decoder(recvMsg[:n])
-	assert.Nil(t, err)
-	assert.True(t, ngapPdu.Present == ngapType.NGAPPDUPresentInitiatingMessage &&
-		ngapPdu.InitiatingMessage.ProcedureCode.Value == ngapType.ProcedureCodeDownlinkNASTransport,
-		"No ConfigurationUpdateCommand received.")
+	recvUeConfigUpdateCmd(recvMsg, conn, t)
 
 	// send PduSessionEstablishmentRequest Msg
 	sNssai := models.Snssai{
@@ -2218,13 +2175,7 @@ func TestN2Handover(t *testing.T) {
 	assert.Nil(t, err)
 
 	// receive UE Configuration Update Command Msg
-	n, err = conn.Read(recvMsg)
-	assert.Nil(t, err)
-	ngapPdu, err = ngap.Decoder(recvMsg[:n])
-	assert.Nil(t, err)
-	assert.True(t, ngapPdu.Present == ngapType.NGAPPDUPresentInitiatingMessage &&
-		ngapPdu.InitiatingMessage.ProcedureCode.Value == ngapType.ProcedureCodeDownlinkNASTransport,
-		"No ConfigurationUpdateCommand received.")
+	recvUeConfigUpdateCmd(recvMsg, conn, t)
 
 	// send PduSessionEstablishmentRequest Msg
 	sNssai := models.Snssai{
@@ -2391,13 +2342,7 @@ func TestN2Handover(t *testing.T) {
 	assert.Nil(t, err)
 
 	// receive UE Configuration Update Command Msg
-	n, err = conn.Read(recvMsg)
-	assert.Nil(t, err)
-	ngapPdu, err = ngap.Decoder(recvMsg[:n])
-	assert.Nil(t, err)
-	assert.True(t, ngapPdu.Present == ngapType.NGAPPDUPresentInitiatingMessage &&
-		ngapPdu.InitiatingMessage.ProcedureCode.Value == ngapType.ProcedureCodeDownlinkNASTransport,
-		"No ConfigurationUpdateCommand received.")
+	recvUeConfigUpdateCmd(recvMsg, conn2, t)
 
 	// wait 1000 ms
 	time.Sleep(1000 * time.Millisecond)
@@ -2572,13 +2517,7 @@ func TestDuplicateRegistration(t *testing.T) {
 	assert.Nil(t, err)
 
 	// receive UE Configuration Update Command Msg
-	n, err = conn.Read(recvMsg)
-	assert.Nil(t, err)
-	ngapPdu, err = ngap.Decoder(recvMsg[:n])
-	assert.Nil(t, err)
-	assert.True(t, ngapPdu.Present == ngapType.NGAPPDUPresentInitiatingMessage &&
-		ngapPdu.InitiatingMessage.ProcedureCode.Value == ngapType.ProcedureCodeDownlinkNASTransport,
-		"No ConfigurationUpdateCommand received.")
+	recvUeConfigUpdateCmd(recvMsg, conn, t)
 
 	time.Sleep(100 * time.Millisecond)
 
@@ -2852,13 +2791,7 @@ func TestAFInfluenceOnTrafficRouting(t *testing.T) {
 	assert.Nil(t, err)
 
 	// receive UE Configuration Update Command Msg
-	n, err = conn.Read(recvMsg)
-	assert.Nil(t, err)
-	ngapPdu, err = ngap.Decoder(recvMsg[:n])
-	assert.Nil(t, err)
-	assert.True(t, ngapPdu.Present == ngapType.NGAPPDUPresentInitiatingMessage &&
-		ngapPdu.InitiatingMessage.ProcedureCode.Value == ngapType.ProcedureCodeDownlinkNASTransport,
-		"No ConfigurationUpdateCommand received.")
+	recvUeConfigUpdateCmd(recvMsg, conn, t)
 
 	time.Sleep(100 * time.Millisecond)
 
@@ -3146,13 +3079,7 @@ func TestReSynchronization(t *testing.T) {
 	assert.Nil(t, err)
 
 	// receive UE Configuration Update Command Msg
-	n, err = conn.Read(recvMsg)
-	assert.Nil(t, err)
-	ngapPdu, err = ngap.Decoder(recvMsg[:n])
-	assert.Nil(t, err)
-	assert.True(t, ngapPdu.Present == ngapType.NGAPPDUPresentInitiatingMessage &&
-		ngapPdu.InitiatingMessage.ProcedureCode.Value == ngapType.ProcedureCodeDownlinkNASTransport,
-		"No ConfigurationUpdateCommand received.")
+	recvUeConfigUpdateCmd(recvMsg, conn, t)
 
 	time.Sleep(100 * time.Millisecond)
 
@@ -3396,13 +3323,7 @@ func TestRequestTwoPDUSessions(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	// receive UE Configuration Update Command Msg
-	n, err = conn.Read(recvMsg)
-	assert.Nil(t, err)
-	ngapPdu, err = ngap.Decoder(recvMsg[:n])
-	assert.Nil(t, err)
-	assert.True(t, ngapPdu.Present == ngapType.NGAPPDUPresentInitiatingMessage &&
-		ngapPdu.InitiatingMessage.ProcedureCode.Value == ngapType.ProcedureCodeDownlinkNASTransport,
-		"No ConfigurationUpdateCommand received.")
+	recvUeConfigUpdateCmd(recvMsg, conn, t)
 
 	// send GetPduSessionEstablishmentRequest Msg
 	sNssai := models.Snssai{
@@ -3741,13 +3662,7 @@ func TestEAPAKAPrimeAuthentication(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	// receive UE Configuration Update Command Msg
-	n, err = conn.Read(recvMsg)
-	assert.Nil(t, err)
-	ngapPdu, err = ngap.Decoder(recvMsg[:n])
-	assert.Nil(t, err)
-	assert.True(t, ngapPdu.Present == ngapType.NGAPPDUPresentInitiatingMessage &&
-		ngapPdu.InitiatingMessage.ProcedureCode.Value == ngapType.ProcedureCodeDownlinkNASTransport,
-		"No ConfigurationUpdateCommand received.")
+	recvUeConfigUpdateCmd(recvMsg, conn, t)
 
 	// send GetPduSessionEstablishmentRequest Msg
 	sNssai := models.Snssai{
