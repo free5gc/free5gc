@@ -345,7 +345,7 @@ func NFDeregisterProcedure(nfInstanceID string) *models.ProblemDetails {
 	Notification_event := models.NotificationEventType_DEREGISTERED
 
 	for _, uri := range uriList {
-		problemDetails := SendNFStatusNotify(Notification_event, nfInstanceUri, uri)
+		problemDetails := SendNFStatusNotify(Notification_event, nfInstanceUri, uri, nil)
 		if problemDetails != nil {
 			return problemDetails
 		}
@@ -404,7 +404,7 @@ func UpdateNFInstanceProcedure(nfInstanceID string, patchJSON []byte) map[string
 	nfInstanceUri := nrf_context.GetNfInstanceURI(nfInstanceID)
 
 	for _, uri := range uriList {
-		SendNFStatusNotify(Notification_event, nfInstanceUri, uri)
+		SendNFStatusNotify(Notification_event, nfInstanceUri, uri, &nfProfiles[0])
 	}
 
 	return nf
@@ -495,7 +495,7 @@ func NFRegisterProcedure(
 
 		// receive the rsp from handler
 		for _, uri := range uriList {
-			problemDetails := SendNFStatusNotify(Notification_event, nfInstanceUri, uri)
+			problemDetails := SendNFStatusNotify(Notification_event, nfInstanceUri, uri, &nfProfile)
 			if problemDetails != nil {
 				return nil, nil, true, problemDetails
 			}
@@ -512,7 +512,7 @@ func NFRegisterProcedure(
 		nfInstanceUri := locationHeaderValue
 
 		for _, uri := range uriList {
-			problemDetails := SendNFStatusNotify(Notification_event, nfInstanceUri, uri)
+			problemDetails := SendNFStatusNotify(Notification_event, nfInstanceUri, uri, &nfProfile)
 			if problemDetails != nil {
 				return nil, nil, false, problemDetails
 			}
@@ -533,8 +533,48 @@ func NFRegisterProcedure(
 	}
 }
 
+func copyNotificationNfProfile(notifProfile *models.NfProfileNotificationData, nfProfile *models.NfProfile) {
+	notifProfile.NfInstanceId = nfProfile.NfInstanceId
+	notifProfile.NfType = nfProfile.NfType
+	notifProfile.NfStatus = nfProfile.NfStatus
+	notifProfile.HeartBeatTimer = nfProfile.HeartBeatTimer
+	notifProfile.PlmnList = *nfProfile.PlmnList
+	notifProfile.SNssais = *nfProfile.SNssais
+	notifProfile.PerPlmnSnssaiList = nfProfile.PerPlmnSnssaiList
+	notifProfile.NsiList = nfProfile.NsiList
+	notifProfile.Fqdn = nfProfile.Fqdn
+	notifProfile.InterPlmnFqdn = nfProfile.InterPlmnFqdn
+	notifProfile.Ipv4Addresses = nfProfile.Ipv4Addresses
+	notifProfile.Ipv6Addresses = nfProfile.Ipv6Addresses
+	notifProfile.AllowedPlmns = *nfProfile.AllowedPlmns
+	notifProfile.AllowedNfTypes = nfProfile.AllowedNfTypes
+	notifProfile.AllowedNfDomains = nfProfile.AllowedNfDomains
+	notifProfile.AllowedNssais = *nfProfile.AllowedNssais
+	notifProfile.Priority = nfProfile.Priority
+	notifProfile.Capacity = nfProfile.Capacity
+	notifProfile.Load = nfProfile.Load
+	notifProfile.Locality = nfProfile.Locality
+	notifProfile.UdrInfo = nfProfile.UdrInfo
+	notifProfile.UdmInfo = nfProfile.UdmInfo
+	notifProfile.AusfInfo = nfProfile.AusfInfo
+	notifProfile.AmfInfo = nfProfile.AmfInfo
+	notifProfile.SmfInfo = nfProfile.SmfInfo
+	notifProfile.UpfInfo = nfProfile.UpfInfo
+	notifProfile.PcfInfo = nfProfile.PcfInfo
+	notifProfile.BsfInfo = nfProfile.BsfInfo
+	notifProfile.ChfInfo = nfProfile.ChfInfo
+	notifProfile.NrfInfo = nfProfile.NrfInfo
+	notifProfile.CustomInfo = nfProfile.CustomInfo
+	notifProfile.RecoveryTime = nfProfile.RecoveryTime
+	notifProfile.NfServicePersistence = nfProfile.NfServicePersistence
+	notifProfile.NfServices = *nfProfile.NfServices
+	notifProfile.NfProfileChangesSupportInd = nfProfile.NfProfileChangesSupportInd
+	notifProfile.NfProfileChangesInd = nfProfile.NfProfileChangesInd
+	notifProfile.DefaultNotificationSubscriptions = nfProfile.DefaultNotificationSubscriptions
+}
+
 func SendNFStatusNotify(Notification_event models.NotificationEventType, nfInstanceUri string,
-	url string,
+	url string, nfProfile *models.NfProfile,
 ) *models.ProblemDetails {
 	// Set client and set url
 	configuration := Nnrf_NFManagement.NewConfiguration()
@@ -545,6 +585,10 @@ func SendNFStatusNotify(Notification_event models.NotificationEventType, nfInsta
 		Event:         Notification_event,
 		NfInstanceUri: nfInstanceUri,
 	}
+	if nfProfile != nil {
+		copyNotificationNfProfile(notifcationData.NfProfile, nfProfile)
+	}
+
 	client := Nnrf_NFManagement.NewAPIClient(configuration)
 
 	res, err := client.NotificationApi.NotificationPost(context.TODO(), notifcationData)
