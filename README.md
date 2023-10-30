@@ -19,7 +19,7 @@ For more information, please refer to [free5GC official site](https://free5gc.or
 
 ## Documentation
 
-For document, please reference to [free5gc.org/guide/](https://free5gc.org/guide/).
+For document, please refer to [free5gc.org/guide/](https://free5gc.org/guide/).
 
 ## Discussion
 
@@ -27,11 +27,11 @@ For questions and support please use the [official forum](https://forum.free5gc.
 
 ## Contributing
 
-We're welcome for contribution via [GitHub Pull Request](https://github.com/free5gc/free5gc/pulls).
+We welcome you for contribution via [GitHub Pull Request](https://github.com/free5gc/free5gc/pulls).
 
 ## Release Note
 
-Detailed changes for each release are documented in the release notes.Detailed changes for each release are documented in the [release notes](https://github.com/free5gc/free5gc/releases).
+Detailed changes for each release are documented in the release notes. Detailed changes for each release are documented in the [release notes](https://github.com/free5gc/free5gc/releases).
 
 ## License
 
