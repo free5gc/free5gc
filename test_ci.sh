@@ -201,15 +201,6 @@ then
     fi
 elif [[ "$1" == "TestMultiAmfRegistration" ]]
 then
-    make -j
-
-    NF_LIST="nrf smf udr pcf udm nssf ausf"
-
-    for NF in ${NF_LIST}; do
-        ./bin/${NF} -c ./config/${NF}cfg.yaml &
-        sleep 0.1
-    done
-
     ./bin/amf -c ./config/multiAMF/amfcfg.yaml &
     sleep 0.1
 
