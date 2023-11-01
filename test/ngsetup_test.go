@@ -38,8 +38,13 @@ import (
 	"github.com/free5gc/util/mongoapi"
 )
 
-var initFlag bool = true
 var NFs = []app.NetworkFunction{}
+
+const noInit = 0
+const initNF = 1
+const multiAMF = 2
+
+var initFlag int = initNF
 
 func init() {
 	var testID string = ""
@@ -54,12 +59,74 @@ func init() {
 		}
 
 		if arg == "noinit" {
-			initFlag = false
+			initFlag = noInit
+			break
+		}
+
+		if arg == "multiAmf" {
+			initFlag = multiAMF
 			break
 		}
 	}
+	switch initFlag {
+	case multiAMF:
+		// default key log path
+		if err := os.MkdirAll("./log/", 0775); err != nil {
+			fmt.Printf("Make directory %s failed: %+v", "./log/", err)
+		}
 
-	if initFlag {
+		if err := nrfConfig(); err != nil {
+			fmt.Printf("NRF Config failed: %v\n", err)
+		}
+		nrfApp, _ := nrf_service.NewApp(nrf_factory.NrfConfig)
+		NFs = append(NFs, nrfApp)
+
+		if err := smfConfig(testID); err != nil {
+			fmt.Printf("SMF Config failed: %v\n", err)
+		}
+		smfApp, _ := smf_service.NewApp(smf_factory.SmfConfig)
+		NFs = append(NFs, smfApp)
+
+		if err := udrConfig(); err != nil {
+			fmt.Printf("UDR Config failed: %v\n", err)
+		}
+		udrApp, _ := udr_service.NewApp(udr_factory.UdrConfig)
+		NFs = append(NFs, udrApp)
+
+		if err := pcfConfig(); err != nil {
+			fmt.Printf("PCF Config failed: %v\n", err)
+		}
+		pcfApp, _ := pcf_service.NewApp(pcf_factory.PcfConfig)
+		NFs = append(NFs, pcfApp)
+
+		if err := udmConfig(); err != nil {
+			fmt.Printf("UDM Config failed: %v\n", err)
+		}
+		udmApp, _ := udm_service.NewApp(udm_factory.UdmConfig)
+		NFs = append(NFs, udmApp)
+
+		if err := nssfConfig(); err != nil {
+			fmt.Printf("NSSF Config failed: %v\n", err)
+		}
+		nssfApp, _ := nssf_service.NewApp(nssf_factory.NssfConfig)
+		NFs = append(NFs, nssfApp)
+
+		if err := ausfConfig(); err != nil {
+			fmt.Printf("AUSF Config failed: %v\n", err)
+		}
+		ausfApp, _ := ausf_service.NewApp(ausf_factory.AusfConfig)
+		NFs = append(NFs, ausfApp)
+
+		for _, app := range NFs {
+			go app.Start("")
+			time.Sleep(200 * time.Millisecond)
+		}
+		if err := mongoapi.SetMongoDB("free5gc", "mongodb://127.0.0.1:27017"); err != nil {
+			fmt.Printf("SetMongoDB failed: %v\n", err)
+			return
+		}
+		fmt.Println("MongoDB Set")
+	case initNF:
 		// default key log path
 		if err := os.MkdirAll("./log/", 0775); err != nil {
 			fmt.Printf("Make directory %s failed: %+v", "./log/", err)
@@ -117,7 +184,7 @@ func init() {
 			go app.Start("")
 			time.Sleep(200 * time.Millisecond)
 		}
-	} else {
+	default:
 		if err := mongoapi.SetMongoDB("free5gc", "mongodb://127.0.0.1:27017"); err != nil {
 			fmt.Printf("SetMongoDB failed: %v\n", err)
 			return
@@ -128,7 +195,7 @@ func init() {
 }
 
 func NfTerminate() {
-	if initFlag {
+	if initFlag != noInit {
 		nfNums := len(NFs)
 		for i := nfNums - 1; i >= 0; i-- {
 			NFs[i].Terminate()
@@ -482,6 +549,7 @@ func smfConfig(testID string) error {
 				ExternalAddr: "10.200.200.1",
 				ListenAddr:   "10.200.200.1",
 			},
+			Locality: "area1",
 			UserPlaneInformation: smf_factory.UserPlaneInformation{
 				UPNodes: map[string]*smf_factory.UPNode{
 					"gNB1": {
@@ -740,6 +808,7 @@ func pcfConfig() error {
 				Name: "free5gc",
 				Url:  "mongodb://localhost:27017",
 			},
+			Locality: "area1",
 		},
 		Logger: &pcf_factory.Logger{
 			Enable:       true,
