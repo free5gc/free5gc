@@ -40,9 +40,11 @@ import (
 
 var NFs = []app.NetworkFunction{}
 
-const noInit = 0
-const initNF = 1
-const multiAMF = 2
+const (
+	noInit = iota
+	initNF
+	multiAMF
+)
 
 var initFlag int = initNF
 
@@ -68,6 +70,7 @@ func init() {
 			break
 		}
 	}
+
 	switch initFlag {
 	case multiAMF:
 		// default key log path

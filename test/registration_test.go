@@ -3370,6 +3370,8 @@ func TestEAPAKAPrimeAuthentication(t *testing.T) {
 }
 
 func TestMultiAmfRegistration(t *testing.T) {
+	time.Sleep(3 * time.Second)
+
 	var n int
 	var sendMsg []byte
 	var recvMsg = make([]byte, 2048)
@@ -3515,7 +3517,7 @@ func TestMultiAmfRegistration(t *testing.T) {
 	_, err = conn.Write(sendMsg)
 	assert.Nil(t, err)
 
-	time.Sleep(1000 * time.Millisecond)
+	time.Sleep(1 * time.Second)
 
 	conn.Close()
 
@@ -3545,8 +3547,11 @@ func TestMultiAmfRegistration(t *testing.T) {
 	// receive ngap Initial Context Setup Request Msg
 	n, err = conn2.Read(recvMsg)
 	require.Nil(t, err)
-	_, err = ngap.Decoder(recvMsg[:n])
+	ngapPdu, err = ngap.Decoder(recvMsg[:n])
 	require.Nil(t, err)
+	assert.True(t, ngapPdu.Present == ngapType.NGAPPDUPresentInitiatingMessage &&
+		ngapPdu.InitiatingMessage.ProcedureCode.Value == ngapType.ProcedureCodeInitialContextSetup,
+		"No InitialContextSetup received.")
 
 	// send ngap Initial Context Setup Response Msg
 	sendMsg, err = test.GetInitialContextSetupResponse(ue.AmfUeNgapId, ue.RanUeNgapId)
@@ -3563,7 +3568,7 @@ func TestMultiAmfRegistration(t *testing.T) {
 	_, err = conn2.Write(sendMsg)
 	assert.Nil(t, err)
 
-	time.Sleep(5 * time.Second)
+	time.Sleep(1 * time.Second)
 
 	// delete test data
 	test.DelAuthSubscriptionToMongoDB(ue.Supi)

@@ -194,14 +194,7 @@ then
     ${EXEC_UENS} $GOROOT/bin/go test -v -vet=off -timeout 0 -run TestNon3GPPUE -args noinit
 elif [[ "$1" == "TestMultiAmfRegistration" ]]
 then
-    # make -j
-    
-    # NF_LIST="nrf smf udr pcf udm nssf ausf"
-
-    # for NF in ${NF_LIST}; do
-    #     ./bin/${NF} -c ./config/${NF}cfg.yaml &
-    #     sleep 0.1
-    # done
+    make amf
 
     ./bin/amf -c ./config/multiAMF/amfcfg.yaml &
     sleep 0.1
