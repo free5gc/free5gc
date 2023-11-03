@@ -61,10 +61,12 @@ func NASEncode(ue *RanUeContext, msg *nas.Message, securityContextAvailable bool
 		if err != nil {
 			return
 		}
-
-		if err = security.NASEncrypt(ue.CipheringAlg, ue.KnasEnc, ue.ULCount.Get(), ue.GetBearerType(),
-			security.DirectionUplink, payload); err != nil {
-			return
+		if msg.SecurityHeader.SecurityHeaderType != nas.SecurityHeaderTypeIntegrityProtected &&
+			msg.SecurityHeader.SecurityHeaderType != nas.SecurityHeaderTypePlainNas {
+			if err = security.NASEncrypt(ue.CipheringAlg, ue.KnasEnc, ue.ULCount.Get(), ue.GetBearerType(),
+				security.DirectionUplink, payload); err != nil {
+				return
+			}
 		}
 		// add sequece number
 		payload = append([]byte{sequenceNumber}, payload[:]...)

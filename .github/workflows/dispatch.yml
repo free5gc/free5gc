@@ -112,6 +112,8 @@ jobs:
         ./test_ci.sh TestDuplicateRegistration
         sleep 1
         ./test_ci.sh TestEAPAKAPrimeAuthentication
+        sleep 1
+        ./test_ci.sh TestMultiAmfRegistration
     - name: ULCL Test
       run: ./test_ci_ulcl.sh TestRequestTwoPDUSessions
     - name: remove uncommitted changes

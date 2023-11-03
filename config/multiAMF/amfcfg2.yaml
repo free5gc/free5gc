@@ -3,14 +3,14 @@ info:
   description: AMF initial local configuration
 
 configuration:
-  amfName: AMF # the name of this AMF
+  amfName: AMF2 # the name of this AMF
   ngapIpList:  # the IP list of N2 interfaces on this AMF
-    - 127.0.0.18
-  ngapPort: 38412 # the SCTP port listened by NGAP
+    - 127.0.0.50
+  ngapPort: 38413 # the SCTP port listened by NGAP
   sbi: # Service-based interface information
     scheme: http # the protocol for sbi (http or https)
-    registerIPv4: 127.0.0.18 # IP used to register to NRF
-    bindingIPv4: 127.0.0.18  # IP used to bind the service
+    registerIPv4: 127.0.0.19 # IP used to register to NRF
+    bindingIPv4: 127.0.0.19  # IP used to bind the service
     port: 8000 # port used to bind the service
     tls: # the local path of TLS key
       pem: cert/amf.pem # AMF TLS Certificate
@@ -26,7 +26,7 @@ configuration:
     - plmnId: # Public Land Mobile Network ID, <PLMN ID> = <MCC><MNC>
         mcc: 208 # Mobile Country Code (3 digits string, digit: 0~9)
         mnc: 93 # Mobile Network Code (2 or 3 digits string, digit: 0~9)
-      amfId: cafe00 # AMF identifier (3 bytes hex string, range: 000000~FFFFFF)
+      amfId: cafe01 # AMF identifier (3 bytes hex string, range: 000000~FFFFFF)
   supportTaiList:  # the TAI (Tracking Area Identifier) list supported by this AMF
     - plmnId: # Public Land Mobile Network ID, <PLMN ID> = <MCC><MNC>
         mcc: 208 # Mobile Country Code (3 digits string, digit: 0~9)

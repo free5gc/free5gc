@@ -29,7 +29,7 @@ do
 done
 shift $(($OPTIND - 1))
 
-TEST_POOL="TestRegistration|TestGUTIRegistration|TestServiceRequest|TestXnHandover|TestN2Handover|TestDeregistration|TestPDUSessionReleaseRequest|TestPaging|TestNon3GPP|TestReSynchronization|TestDuplicateRegistration|TestEAPAKAPrimeAuthentication"
+TEST_POOL="TestRegistration|TestGUTIRegistration|TestServiceRequest|TestXnHandover|TestN2Handover|TestDeregistration|TestPDUSessionReleaseRequest|TestPaging|TestNon3GPP|TestReSynchronization|TestDuplicateRegistration|TestEAPAKAPrimeAuthentication|TestMultiAmfRegistration"
 if [[ ! "$1" =~ $TEST_POOL ]]
 then
     echo "Usage: $0 [ ${TEST_POOL//|/ | } ]"
@@ -78,6 +78,11 @@ function terminate()
         sudo ip link del veth2
         sudo killall n3iwf
         ps aux | grep test.test | awk '{print $2}' | xargs sudo kill -SIGUSR1
+    fi
+
+    if [[ "$1" == "TestMultiAmfRegistration" ]]
+    then
+        cd .. && ./force_kill.sh
     fi
 
     sleep 5
@@ -187,6 +192,18 @@ then
     # Run Test UE
     cd test
     ${EXEC_UENS} $GOROOT/bin/go test -v -vet=off -timeout 0 -run TestNon3GPPUE -args noinit
+elif [[ "$1" == "TestMultiAmfRegistration" ]]
+then
+    make amf
+
+    ./bin/amf -c ./config/multiAMF/amfcfg.yaml &
+    sleep 0.1
+
+    ./bin/amf -c ./config/multiAMF/amfcfg2.yaml &
+    sleep 0.1
+
+    cd test
+    $GOROOT/bin/go test -v -vet=off -run TestMultiAmfRegistration -args multiAmf
 else
     cd test
     $GOROOT/bin/go test -v -vet=off -run $1

@@ -29,7 +29,7 @@ do
 done
 shift $(($OPTIND - 1))
 
-TEST_POOL="TestRegistration|TestGUTIRegistration|TestServiceRequest|TestXnHandover|TestN2Handover|TestDeregistration|TestPDUSessionReleaseRequest|TestPaging|TestNon3GPP|TestReSynchronization|TestDuplicateRegistration|TestEAPAKAPrimeAuthentication"
+TEST_POOL="TestRegistration|TestGUTIRegistration|TestServiceRequest|TestXnHandover|TestN2Handover|TestDeregistration|TestPDUSessionReleaseRequest|TestPaging|TestNon3GPP|TestReSynchronization|TestDuplicateRegistration|TestEAPAKAPrimeAuthentication|TestMultiAmfRegistration"
 if [[ ! "$1" =~ $TEST_POOL ]]
 then
     echo "Usage: $0 [ ${TEST_POOL//|/ | } ]"
@@ -78,6 +78,11 @@ function terminate()
         sudo ip link del veth2
         sudo killall n3iwf
         killall test.test
+    fi
+
+    if [[ "$1" == "TestMultiAmfRegistration" ]]
+    then
+        cd .. && ./force_kill.sh
     fi
 
     sleep 5
@@ -194,6 +199,16 @@ then
     else
         echo "Test result: Succeeded"
     fi
+elif [[ "$1" == "TestMultiAmfRegistration" ]]
+then
+    ./bin/amf -c ./config/multiAMF/amfcfg.yaml &
+    sleep 0.1
+
+    ./bin/amf -c ./config/multiAMF/amfcfg2.yaml &
+    sleep 0.1
+
+    cd test
+    $GOROOT/bin/go test -v -vet=off -run TestMultiAmfRegistration -args multiAmf
 else
     cd test
     if ! go test -v -vet=off -run $1; then
