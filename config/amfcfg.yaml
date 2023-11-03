@@ -90,7 +90,7 @@ configuration:
     enable: true     # true or false
     expireTime: 6s   # default is 6 seconds
     maxRetryTimes: 4 # the max number of retransmission
-  # retransmission timer for Configuration Update Command message
+  # retransmission timer for NAS Configuration Update Command message
   t3555:
     enable: true     # true or false
     expireTime: 6s   # default is 6 seconds
@@ -107,11 +107,6 @@ configuration:
     maxRetryTimes: 4 # the max number of retransmission
   # retransmission timer for NAS Identity Request message
   t3570:
-    enable: true     # true or false
-    expireTime: 6s   # default is 6 seconds
-    maxRetryTimes: 4 # the max number of retransmission
-  # retransmission timer for Configuration Update Command message
-  t3555:
     enable: true     # true or false
     expireTime: 6s   # default is 6 seconds
     maxRetryTimes: 4 # the max number of retransmission
