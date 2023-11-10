@@ -35,7 +35,7 @@ func init() {
 	for _, arg := range os.Args {
 		values := strings.Split(arg, "=")
 		for k, v := range values {
-			if v == "-run" {
+			if v == "-test.run" {
 				testID = values[k+1]
 				fmt.Printf("Run %s\n", testID)
 			}
@@ -462,6 +462,7 @@ func smfConfig(testID string) error {
 	}
 
 	if testID == "TestRequestTwoPDUSessions" {
+		smf_factory.SmfConfig.Info.Description = "SMF initial single test configuration (ULCL)"
 		smf_factory.SmfConfig.Configuration.UserPlaneInformation.Links =
 			append(smf_factory.SmfConfig.Configuration.UserPlaneInformation.Links, &smf_factory.UPLink{
 				A: "gNB1",
