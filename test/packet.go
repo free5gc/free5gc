@@ -7,7 +7,8 @@ import (
 	"encoding/binary"
 	"fmt"
 	"net"
-	"test/ngapTestpacket"
+
+	"github.com/free5gc/test/ngapTestpacket"
 
 	"github.com/free5gc/nas"
 	"github.com/free5gc/nas/nasMessage"

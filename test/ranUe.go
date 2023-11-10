@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"regexp"
 
-	"test/consumerTestdata/UDM/TestGenAuthData"
-	"test/consumerTestdata/UDR/TestRegistrationProcedure"
+	"github.com/free5gc/test/consumerTestdata/UDM/TestGenAuthData"
+	"github.com/free5gc/test/consumerTestdata/UDR/TestRegistrationProcedure"
 
 	"github.com/calee0219/fatal"
 	"golang.org/x/net/ipv4"

@@ -1,4 +1,4 @@
-module test
+module github.com/free5gc/test
 
 go 1.17
 

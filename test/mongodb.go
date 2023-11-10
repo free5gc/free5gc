@@ -2,8 +2,10 @@ package test
 
 import (
 	"encoding/json"
+	"testing"
 
 	"github.com/calee0219/fatal"
+	"github.com/stretchr/testify/assert"
 	"go.mongodb.org/mongo-driver/bson"
 
 	"github.com/free5gc/openapi/models"
@@ -273,5 +275,41 @@ func DelSmPolicyDataFromMongoDB(ueId string) {
 	filter := bson.M{"ueId": ueId}
 	if err := mongoapi.RestfulAPIDeleteMany(collName, filter); err != nil {
 		fatal.Fatalf("DelSmPolicyDataFromMongoDB err: %+v", err)
+	}
+}
+
+func insertUeToMongoDB(t *testing.T, ue *RanUeContext, servingPlmnId string) {
+	InsertAuthSubscriptionToMongoDB(ue.Supi, ue.AuthenticationSubs)
+	getData := GetAuthSubscriptionFromMongoDB(ue.Supi)
+	assert.NotNil(t, getData)
+	{
+		amData := GetAccessAndMobilitySubscriptionData()
+		InsertAccessAndMobilitySubscriptionDataToMongoDB(ue.Supi, amData, servingPlmnId)
+		getData := GetAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
+		assert.NotNil(t, getData)
+	}
+	{
+		smfSelData := GetSmfSelectionSubscriptionData()
+		InsertSmfSelectionSubscriptionDataToMongoDB(ue.Supi, smfSelData, servingPlmnId)
+		getData := GetSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
+		assert.NotNil(t, getData)
+	}
+	{
+		smSelData := GetSessionManagementSubscriptionData()
+		InsertSessionManagementSubscriptionDataToMongoDB(ue.Supi, servingPlmnId, smSelData)
+		getData := GetSessionManagementDataFromMongoDB(ue.Supi, servingPlmnId)
+		assert.NotNil(t, getData)
+	}
+	{
+		amPolicyData := GetAmPolicyData()
+		InsertAmPolicyDataToMongoDB(ue.Supi, amPolicyData)
+		getData := GetAmPolicyDataFromMongoDB(ue.Supi)
+		assert.NotNil(t, getData)
+	}
+	{
+		smPolicyData := GetSmPolicyData()
+		InsertSmPolicyDataToMongoDB(ue.Supi, smPolicyData)
+		getData := GetSmPolicyDataFromMongoDB(ue.Supi)
+		assert.NotNil(t, getData)
 	}
 }

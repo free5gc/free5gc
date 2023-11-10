@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	"test/consumerTestdata/UDM/TestGenAuthData"
-	"test/nasTestpacket"
+	"github.com/free5gc/test/consumerTestdata/UDM/TestGenAuthData"
+	"github.com/free5gc/test/nasTestpacket"
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/go-ping/ping"

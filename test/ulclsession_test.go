@@ -1,4 +1,4 @@
-package test_test
+package test
 
 import (
 	"flag"
@@ -9,9 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"test"
-	"test/consumerTestdata/UDM/TestGenAuthData"
-	"test/nasTestpacket"
+	"github.com/free5gc/test/consumerTestdata/UDM/TestGenAuthData"
+	"github.com/free5gc/test/nasTestpacket"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -43,11 +42,11 @@ func testULCLSessionBase(t *testing.T, ueCount int, upfNum int) {
 	var recvMsg = make([]byte, 2048)
 
 	// RAN connect to AMF
-	conn, err := test.ConnectToAmf(amfN2Ipv4Addr, ranN2Ipv4Addr, 38412, 9487)
+	conn, err := ConnectToAmf(amfN2Ipv4Addr, ranN2Ipv4Addr, 38412, 9487)
 	assert.Nil(t, err)
 
 	// send NGSetupRequest Msg
-	sendMsg, err = test.GetNGSetupRequest([]byte("\x00\x01\x02"), 24, "free5gc")
+	sendMsg, err = GetNGSetupRequest([]byte("\x00\x01\x02"), 24, "free5gc")
 	assert.Nil(t, err)
 	_, err = conn.Write(sendMsg)
 	assert.Nil(t, err)
@@ -59,7 +58,7 @@ func testULCLSessionBase(t *testing.T, ueCount int, upfNum int) {
 	assert.Nil(t, err)
 	assert.True(t, ngapPdu.Present == ngapType.NGAPPDUPresentSuccessfulOutcome && ngapPdu.SuccessfulOutcome.ProcedureCode.Value == ngapType.ProcedureCodeNGSetup, "No NGSetupResponse received.")
 
-	ueList := []*test.RanUeContext{}
+	ueList := []*RanUeContext{}
 	mobileIdentity5GSList := map[string]nasType.MobileIdentity5GS{}
 
 	servingPlmnId := "20893"
@@ -73,44 +72,44 @@ func testULCLSessionBase(t *testing.T, ueCount int, upfNum int) {
 		imsi_e := fmt.Sprintf("%04d", i)
 		imsi_all := "imsi-208930000" + imsi_e
 		fmt.Println(imsi_all)
-		ue := test.NewRanUeContext(imsi_all, int64(i+1), security.AlgCiphering128NEA0, security.AlgIntegrity128NIA2,
+		ue := NewRanUeContext(imsi_all, int64(i+1), security.AlgCiphering128NEA0, security.AlgIntegrity128NIA2,
 			models.AccessType__3_GPP_ACCESS)
 		ue.AmfUeNgapId = int64(i + 1)
-		ue.AuthenticationSubs = test.GetAuthSubscription(TestGenAuthData.MilenageTestSet19.K,
+		ue.AuthenticationSubs = GetAuthSubscription(TestGenAuthData.MilenageTestSet19.K,
 			TestGenAuthData.MilenageTestSet19.OPC,
 			TestGenAuthData.MilenageTestSet19.OP)
 		// insert UE data to MongoDB
-		test.InsertAuthSubscriptionToMongoDB(ue.Supi, ue.AuthenticationSubs)
-		getData := test.GetAuthSubscriptionFromMongoDB(ue.Supi)
+		InsertAuthSubscriptionToMongoDB(ue.Supi, ue.AuthenticationSubs)
+		getData := GetAuthSubscriptionFromMongoDB(ue.Supi)
 		assert.NotNil(t, getData)
 		{
-			amData := test.GetAccessAndMobilitySubscriptionData()
-			test.InsertAccessAndMobilitySubscriptionDataToMongoDB(ue.Supi, amData, servingPlmnId)
-			getData := test.GetAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
+			amData := GetAccessAndMobilitySubscriptionData()
+			InsertAccessAndMobilitySubscriptionDataToMongoDB(ue.Supi, amData, servingPlmnId)
+			getData := GetAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
 			assert.NotNil(t, getData)
 		}
 		{
-			smfSelData := test.GetSmfSelectionSubscriptionData()
-			test.InsertSmfSelectionSubscriptionDataToMongoDB(ue.Supi, smfSelData, servingPlmnId)
-			getData := test.GetSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
+			smfSelData := GetSmfSelectionSubscriptionData()
+			InsertSmfSelectionSubscriptionDataToMongoDB(ue.Supi, smfSelData, servingPlmnId)
+			getData := GetSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
 			assert.NotNil(t, getData)
 		}
 		{
-			smSelData := test.GetSessionManagementSubscriptionData()
-			test.InsertSessionManagementSubscriptionDataToMongoDB(ue.Supi, servingPlmnId, smSelData)
-			getData := test.GetSessionManagementDataFromMongoDB(ue.Supi, servingPlmnId)
+			smSelData := GetSessionManagementSubscriptionData()
+			InsertSessionManagementSubscriptionDataToMongoDB(ue.Supi, servingPlmnId, smSelData)
+			getData := GetSessionManagementDataFromMongoDB(ue.Supi, servingPlmnId)
 			assert.NotNil(t, getData)
 		}
 		{
-			amPolicyData := test.GetAmPolicyData()
-			test.InsertAmPolicyDataToMongoDB(ue.Supi, amPolicyData)
-			getData := test.GetAmPolicyDataFromMongoDB(ue.Supi)
+			amPolicyData := GetAmPolicyData()
+			InsertAmPolicyDataToMongoDB(ue.Supi, amPolicyData)
+			getData := GetAmPolicyDataFromMongoDB(ue.Supi)
 			assert.NotNil(t, getData)
 		}
 		{
-			smPolicyData := test.GetSmPolicyData()
-			test.InsertSmPolicyDataToMongoDB(ue.Supi, smPolicyData)
-			getData := test.GetSmPolicyDataFromMongoDB(ue.Supi)
+			smPolicyData := GetSmPolicyData()
+			InsertSmPolicyDataToMongoDB(ue.Supi, smPolicyData)
+			getData := GetSmPolicyDataFromMongoDB(ue.Supi)
 			assert.NotNil(t, getData)
 		}
 
@@ -128,7 +127,7 @@ func testULCLSessionBase(t *testing.T, ueCount int, upfNum int) {
 		ueSecurityCapability := ue.GetUESecurityCapability()
 		registrationRequest := nasTestpacket.GetRegistrationRequest(
 			nasMessage.RegistrationType5GSInitialRegistration, mobileIdentity5GS, nil, ueSecurityCapability, nil, nil, nil)
-		sendMsg, err = test.GetInitialUEMessage(ue.RanUeNgapId, registrationRequest, "")
+		sendMsg, err = GetInitialUEMessage(ue.RanUeNgapId, registrationRequest, "")
 		assert.Nil(t, err)
 		_, err = conn.Write(sendMsg)
 		assert.Nil(t, err)
@@ -141,7 +140,7 @@ func testULCLSessionBase(t *testing.T, ueCount int, upfNum int) {
 		assert.True(t, ngapPdu.Present == ngapType.NGAPPDUPresentInitiatingMessage, "No NGAP Initiating Message received.")
 
 		// Calculate for RES*
-		nasPdu := test.GetNasPdu(ue, ngapPdu.InitiatingMessage.Value.DownlinkNASTransport)
+		nasPdu := GetNasPdu(ue, ngapPdu.InitiatingMessage.Value.DownlinkNASTransport)
 		require.NotNil(t, nasPdu)
 		require.NotNil(t, nasPdu.GmmMessage, "GMM message is nil")
 		require.Equal(t, nasPdu.GmmHeader.GetMessageType(), nas.MsgTypeAuthenticationRequest,
@@ -151,7 +150,7 @@ func testULCLSessionBase(t *testing.T, ueCount int, upfNum int) {
 
 		// send NAS Authentication Response
 		pdu := nasTestpacket.GetAuthenticationResponse(resStat, "")
-		sendMsg, err = test.GetUplinkNASTransport(ue.AmfUeNgapId, ue.RanUeNgapId, pdu)
+		sendMsg, err = GetUplinkNASTransport(ue.AmfUeNgapId, ue.RanUeNgapId, pdu)
 		assert.Nil(t, err)
 		_, err = conn.Write(sendMsg)
 		assert.Nil(t, err)
@@ -162,7 +161,7 @@ func testULCLSessionBase(t *testing.T, ueCount int, upfNum int) {
 		ngapPdu, err = ngap.Decoder(recvMsg[:n])
 		assert.Nil(t, err)
 		assert.NotNil(t, ngapPdu)
-		nasPdu = test.GetNasPdu(ue, ngapPdu.InitiatingMessage.Value.DownlinkNASTransport)
+		nasPdu = GetNasPdu(ue, ngapPdu.InitiatingMessage.Value.DownlinkNASTransport)
 		require.NotNil(t, nasPdu)
 		require.NotNil(t, nasPdu.GmmMessage, "GMM message is nil")
 		require.Equal(t, nasPdu.GmmHeader.GetMessageType(), nas.MsgTypeSecurityModeCommand,
@@ -172,9 +171,9 @@ func testULCLSessionBase(t *testing.T, ueCount int, upfNum int) {
 		registrationRequestWith5GMM := nasTestpacket.GetRegistrationRequest(nasMessage.RegistrationType5GSInitialRegistration,
 			mobileIdentity5GS, nil, ueSecurityCapability, ue.Get5GMMCapability(), nil, nil)
 		pdu = nasTestpacket.GetSecurityModeComplete(registrationRequestWith5GMM)
-		pdu, err = test.EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCipheredWithNew5gNasSecurityContext, true, true)
+		pdu, err = EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCipheredWithNew5gNasSecurityContext, true, true)
 		assert.Nil(t, err)
-		sendMsg, err = test.GetUplinkNASTransport(ue.AmfUeNgapId, ue.RanUeNgapId, pdu)
+		sendMsg, err = GetUplinkNASTransport(ue.AmfUeNgapId, ue.RanUeNgapId, pdu)
 		assert.Nil(t, err)
 		_, err = conn.Write(sendMsg)
 		assert.Nil(t, err)
@@ -189,16 +188,16 @@ func testULCLSessionBase(t *testing.T, ueCount int, upfNum int) {
 			"No InitialContextSetup received.")
 
 		// send ngap Initial Context Setup Response Msg
-		sendMsg, err = test.GetInitialContextSetupResponse(ue.AmfUeNgapId, ue.RanUeNgapId)
+		sendMsg, err = GetInitialContextSetupResponse(ue.AmfUeNgapId, ue.RanUeNgapId)
 		assert.Nil(t, err)
 		_, err = conn.Write(sendMsg)
 		assert.Nil(t, err)
 
 		// send NAS Registration Complete Msg
 		pdu = nasTestpacket.GetRegistrationComplete(nil)
-		pdu, err = test.EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCiphered, true, false)
+		pdu, err = EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCiphered, true, false)
 		assert.Nil(t, err)
-		sendMsg, err = test.GetUplinkNASTransport(ue.AmfUeNgapId, ue.RanUeNgapId, pdu)
+		sendMsg, err = GetUplinkNASTransport(ue.AmfUeNgapId, ue.RanUeNgapId, pdu)
 		assert.Nil(t, err)
 		_, err = conn.Write(sendMsg)
 		assert.Nil(t, err)
@@ -216,9 +215,9 @@ func testULCLSessionBase(t *testing.T, ueCount int, upfNum int) {
 		// send GetPduSessionEstablishmentRequest Msg
 
 		pdu = nasTestpacket.GetUlNasTransport_PduSessionEstablishmentRequest(10, nasMessage.ULNASTransportRequestTypeInitialRequest, "internet", &sNssai)
-		pdu, err = test.EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCiphered, true, false)
+		pdu, err = EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCiphered, true, false)
 		assert.Nil(t, err)
-		sendMsg, err = test.GetUplinkNASTransport(ue.AmfUeNgapId, ue.RanUeNgapId, pdu)
+		sendMsg, err = GetUplinkNASTransport(ue.AmfUeNgapId, ue.RanUeNgapId, pdu)
 		assert.Nil(t, err)
 		_, err = conn.Write(sendMsg)
 		assert.Nil(t, err)
@@ -233,7 +232,7 @@ func testULCLSessionBase(t *testing.T, ueCount int, upfNum int) {
 			"No PDUSessionResourceSetup received.")
 
 		// send 14. NGAP-PDU Session Resource Setup Response
-		sendMsg, err = test.GetPDUSessionResourceSetupResponse(10, ue.AmfUeNgapId, ue.RanUeNgapId, ranN3Ipv4Addr)
+		sendMsg, err = GetPDUSessionResourceSetupResponse(10, ue.AmfUeNgapId, ue.RanUeNgapId, ranN3Ipv4Addr)
 		assert.Nil(t, err)
 		_, err = conn.Write(sendMsg)
 		assert.Nil(t, err)
@@ -275,9 +274,9 @@ func testULCLSessionBase(t *testing.T, ueCount int, upfNum int) {
 	for _, ue := range ueList {
 		// Send Pdu Session Establishment Release Request
 		pdu := nasTestpacket.GetUlNasTransport_PduSessionReleaseRequest(10)
-		pdu, err = test.EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCiphered, true, false)
+		pdu, err = EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCiphered, true, false)
 		assert.Nil(t, err)
-		sendMsg, err = test.GetUplinkNASTransport(ue.AmfUeNgapId, ue.RanUeNgapId, pdu)
+		sendMsg, err = GetUplinkNASTransport(ue.AmfUeNgapId, ue.RanUeNgapId, pdu)
 		assert.Nil(t, err)
 		_, err = conn.Write(sendMsg)
 		assert.Nil(t, err)
@@ -294,7 +293,7 @@ func testULCLSessionBase(t *testing.T, ueCount int, upfNum int) {
 			"No PDUSessionResourceRelease received.")
 
 		// send N2 Resource Release Ack(PDUSession Resource Release Response)
-		sendMsg, err = test.GetPDUSessionResourceReleaseResponse(ue.AmfUeNgapId, ue.RanUeNgapId)
+		sendMsg, err = GetPDUSessionResourceReleaseResponse(ue.AmfUeNgapId, ue.RanUeNgapId)
 		assert.Nil(t, err)
 		_, err = conn.Write(sendMsg)
 		assert.Nil(t, err)
@@ -304,9 +303,9 @@ func testULCLSessionBase(t *testing.T, ueCount int, upfNum int) {
 
 		//send N1 PDU Session Release Ack PDU session release complete
 		pdu = nasTestpacket.GetUlNasTransport_PduSessionReleaseComplete(10, nasMessage.ULNASTransportRequestTypeExistingPduSession, "internet", &sNssai)
-		pdu, err = test.EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCiphered, true, false)
+		pdu, err = EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCiphered, true, false)
 		assert.Nil(t, err)
-		sendMsg, err = test.GetUplinkNASTransport(ue.AmfUeNgapId, ue.RanUeNgapId, pdu)
+		sendMsg, err = GetUplinkNASTransport(ue.AmfUeNgapId, ue.RanUeNgapId, pdu)
 		assert.Nil(t, err)
 		_, err = conn.Write(sendMsg)
 		assert.Nil(t, err)
@@ -316,9 +315,9 @@ func testULCLSessionBase(t *testing.T, ueCount int, upfNum int) {
 
 		// send NAS Deregistration Request (UE Originating)
 		pdu = nasTestpacket.GetDeregistrationRequest(nasMessage.AccessType3GPP, 0, 0x04, mobileIdentity5GSList[ue.Supi])
-		pdu, err = test.EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCiphered, true, false)
+		pdu, err = EncodeNasPduWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCiphered, true, false)
 		require.Nil(t, err)
-		sendMsg, err = test.GetUplinkNASTransport(ue.AmfUeNgapId, ue.RanUeNgapId, pdu)
+		sendMsg, err = GetUplinkNASTransport(ue.AmfUeNgapId, ue.RanUeNgapId, pdu)
 		require.Nil(t, err)
 		_, err = conn.Write(sendMsg)
 		require.Nil(t, err)
@@ -333,7 +332,7 @@ func testULCLSessionBase(t *testing.T, ueCount int, upfNum int) {
 		require.True(t, ngapPdu.Present == ngapType.NGAPPDUPresentInitiatingMessage &&
 			ngapPdu.InitiatingMessage.ProcedureCode.Value == ngapType.ProcedureCodeDownlinkNASTransport,
 			"No DownlinkNASTransport received.")
-		nasPdu := test.GetNasPdu(ue, ngapPdu.InitiatingMessage.Value.DownlinkNASTransport)
+		nasPdu := GetNasPdu(ue, ngapPdu.InitiatingMessage.Value.DownlinkNASTransport)
 		require.NotNil(t, nasPdu, "NAS PDU is nil")
 		require.NotNil(t, nasPdu.GmmMessage, "GMM message is nil")
 		require.Equal(t, nasPdu.GmmHeader.GetMessageType(), nas.MsgTypeDeregistrationAcceptUEOriginatingDeregistration,
@@ -349,7 +348,7 @@ func testULCLSessionBase(t *testing.T, ueCount int, upfNum int) {
 			"No UEContextReleaseCommand received.")
 
 		// send ngap UE Context Release Complete
-		sendMsg, err = test.GetUEContextReleaseComplete(ue.AmfUeNgapId, ue.RanUeNgapId, nil)
+		sendMsg, err = GetUEContextReleaseComplete(ue.AmfUeNgapId, ue.RanUeNgapId, nil)
 		require.Nil(t, err)
 		_, err = conn.Write(sendMsg)
 		require.Nil(t, err)
@@ -359,9 +358,9 @@ func testULCLSessionBase(t *testing.T, ueCount int, upfNum int) {
 
 	for _, ue := range ueList {
 		// delete test data
-		test.DelAuthSubscriptionToMongoDB(ue.Supi)
-		test.DelAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-		test.DelSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
+		DelAuthSubscriptionToMongoDB(ue.Supi)
+		DelAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
+		DelSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
 	}
 
 	// close Connection
