@@ -31,116 +31,15 @@ const (
 var initFlag int = initNF
 
 const (
+	ranNgapPort    int    = 9487
+	amfNgapPort    int    = 38412
+	ngapPPID       uint32 = 0x3c000000
 	ranN2Ipv4Addr  string = "127.0.0.1"
 	amfN2Ipv4Addr  string = "127.0.0.1"
 	amfN2Ipv4Addr2 string = "127.0.0.50"
 	ranN3Ipv4Addr  string = "10.200.200.1"
 	upfN3Ipv4Addr  string = "10.200.200.102"
 )
-
-/*
-func init() {
-	var testID string = ""
-
-	for _, arg := range os.Args {
-		values := strings.Split(arg, "=")
-		for k, v := range values {
-			if v == "-run" {
-				testID = values[k+1]
-				fmt.Printf("Run %s\n", testID)
-			}
-		}
-
-		if arg == "noinit" {
-			initFlag = noInit
-			break
-		}
-
-		if arg == "multiAmf" {
-			initFlag = multiAMF
-			break
-		}
-	}
-
-	if initFlag != noInit { // initialize all NFs
-		// default key log path
-		if err := os.MkdirAll("./log/", 0775); err != nil {
-			fmt.Printf("Make directory %s failed: %+v", "./log/", err)
-		}
-
-		if err := nrfConfig(); err != nil {
-			fmt.Printf("NRF Config failed: %v\n", err)
-		}
-		nrfApp, _ := nrf_service.NewApp(nrf_factory.NrfConfig)
-		NFs = append(NFs, nrfApp)
-
-		// If initFlag == multiAMF, it means AMFs have been launched in sh
-		if initFlag != multiAMF {
-			if err := amfConfig(testID); err != nil {
-				fmt.Printf("AMF Config failed: %v\n", err)
-			}
-			amfApp, _ := amf_service.NewApp(amf_factory.AmfConfig)
-			NFs = append(NFs, amfApp)
-		}
-
-		if err := smfConfig(testID); err != nil {
-			fmt.Printf("SMF Config failed: %v\n", err)
-		}
-		smfApp, _ := smf_service.NewApp(smf_factory.SmfConfig)
-		NFs = append(NFs, smfApp)
-
-		if err := udrConfig(); err != nil {
-			fmt.Printf("UDR Config failed: %v\n", err)
-		}
-		udrApp, _ := udr_service.NewApp(udr_factory.UdrConfig)
-		NFs = append(NFs, udrApp)
-
-		if err := pcfConfig(); err != nil {
-			fmt.Printf("PCF Config failed: %v\n", err)
-		}
-		pcfApp, _ := pcf_service.NewApp(pcf_factory.PcfConfig)
-		NFs = append(NFs, pcfApp)
-
-		if err := udmConfig(); err != nil {
-			fmt.Printf("UDM Config failed: %v\n", err)
-		}
-		udmApp, _ := udm_service.NewApp(udm_factory.UdmConfig)
-		NFs = append(NFs, udmApp)
-
-		if err := nssfConfig(); err != nil {
-			fmt.Printf("NSSF Config failed: %v\n", err)
-		}
-		nssfApp, _ := nssf_service.NewApp(nssf_factory.NssfConfig)
-		NFs = append(NFs, nssfApp)
-
-		if err := ausfConfig(); err != nil {
-			fmt.Printf("AUSF Config failed: %v\n", err)
-		}
-		ausfApp, _ := ausf_service.NewApp(ausf_factory.AusfConfig)
-		NFs = append(NFs, ausfApp)
-
-		if err := chfConfig(); err != nil {
-			fmt.Printf("CHF Config failed: %v\n", err)
-		}
-		chfApp, _ := chf_service.NewApp(chf_factory.ChfConfig)
-		NFs = append(NFs, chfApp)
-
-		os.Chdir("../")
-		for _, app := range NFs {
-			go app.Start("")
-			time.Sleep(200 * time.Millisecond)
-		}
-	}
-
-	// Set Mongo DB
-	if err := mongoapi.SetMongoDB("free5gc", "mongodb://127.0.0.1:27017"); err != nil {
-		fmt.Printf("SetMongoDB failed: %v\n", err)
-		return
-	}
-	fmt.Println("MongoDB Set")
-
-}
-*/
 
 func NfTerminate() {
 	if initFlag != noInit {
@@ -150,14 +49,6 @@ func NfTerminate() {
 		}
 	}
 }
-
-var (
-	amfIP       string = "127.0.0.1"
-	ranIP       string = "127.0.0.1"
-	amfNgapPort int    = 38412
-	ranNgapPort int    = 9487
-	ngapPPID    uint32 = 0x3c000000
-)
 
 func getNgapIp(amfIP, ranIP string, amfPort, ranPort int) (amfAddr, ranAddr *sctp.SCTPAddr, err error) {
 	ips := []net.IPAddr{}
@@ -186,7 +77,7 @@ func getNgapIp(amfIP, ranIP string, amfPort, ranPort int) (amfAddr, ranAddr *sct
 }
 
 func ConnectToAmf(amfIP, ranIP string, amfPort, ranPort int) (*sctp.SCTPConn, error) {
-	amfAddr, ranAddr, err := getNgapIp(amfIP, ranIP, amfPort, ranPort)
+	amfAddr, ranAddr, err := getNgapIp(amfN2Ipv4Addr, ranN2Ipv4Addr, amfPort, ranPort)
 	if err != nil {
 		return nil, err
 	}
@@ -212,7 +103,7 @@ func TestNGSetup(t *testing.T) {
 	var recvMsg = make([]byte, 2048)
 
 	// RAN connect to AMF
-	conn, err := ConnectToAmf(amfIP, ranIP, amfNgapPort, ranNgapPort)
+	conn, err := ConnectToAmf(amfN2Ipv4Addr, ranN2Ipv4Addr, amfNgapPort, ranNgapPort)
 	assert.Nil(t, err)
 
 	// send NGSetupRequest Msg

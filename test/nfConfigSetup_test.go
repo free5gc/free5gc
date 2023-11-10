@@ -128,7 +128,7 @@ func init() {
 		return
 	}
 	fmt.Println("MongoDB Set")
-	time.Sleep(5 * time.Second)
+	// time.Sleep(5 * time.Second)
 }
 
 func nrfConfig() error {
