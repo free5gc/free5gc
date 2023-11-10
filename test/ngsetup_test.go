@@ -123,6 +123,12 @@ func init() {
 		ausfApp, _ := ausf_service.NewApp(ausf_factory.AusfConfig)
 		NFs = append(NFs, ausfApp)
 
+		if err := chfConfig(); err != nil {
+			fmt.Printf("CHF Config failed: %v\n", err)
+		}
+		chfApp, _ := chf_service.NewApp(chf_factory.ChfConfig)
+		NFs = append(NFs, chfApp)
+
 		for _, app := range NFs {
 			go app.Start("")
 			time.Sleep(200 * time.Millisecond)
