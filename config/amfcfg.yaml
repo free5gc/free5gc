@@ -111,10 +111,6 @@ configuration:
     expireTime: 6s   # default is 6 seconds
     maxRetryTimes: 4 # the max number of retransmission
   # retransmission timer for Configuration Update Command message
-  t3555:
-    enable: true     # true or false
-    expireTime: 6s   # default is 6 seconds
-    maxRetryTimes: 4 # the max number of retransmission
   locality: area1 # Name of the location where a set of AMF, SMF, PCF and UPFs are located
   sctp: # set the sctp server setting <optinal>, once this field is set, please also add maxInputStream, maxOsStream, maxAttempts, maxInitTimeOut
     numOstreams: 3 # the maximum out streams of each sctp connection
