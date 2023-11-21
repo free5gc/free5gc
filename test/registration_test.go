@@ -20,7 +20,7 @@ import (
 	"test/consumerTestdata/UDM/TestGenAuthData"
 	"test/nasTestpacket"
 
-	"git.cs.nctu.edu.tw/calee/sctp"
+	"github.com/free5gc/sctp"
 	"github.com/gin-gonic/gin"
 	"github.com/mohae/deepcopy"
 	"github.com/stretchr/testify/assert"
