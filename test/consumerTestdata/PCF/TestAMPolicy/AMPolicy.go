@@ -66,7 +66,7 @@ func GetAMreqdata() models.PolicyAssociationRequest {
 					Tacs: []string{
 						"000001",
 					},
-					AreaCodes: "+886",
+					AreaCode: "+886",
 				},
 			},
 			MaxNumOfTAs: 999,
@@ -142,7 +142,7 @@ func GetAMUpdateReqData() models.PolicyAssociationUpdateRequest {
 					Tacs: []string{
 						"000002",
 					},
-					AreaCodes: "+886",
+					AreaCode: "+886",
 				},
 			},
 			MaxNumOfTAs: 123,

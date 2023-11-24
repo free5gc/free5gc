@@ -1718,6 +1718,12 @@ func TestNon3GPPUE(t *testing.T) {
 		t.Fatalf("Applying XFRM rules failed: %+v", err)
 	}
 
+	// TODO
+	// We don't check any of message in UeConfigUpdate Message
+	if _, err := tcpConnWithN3IWF.Read(buffer); err != nil {
+		t.Fatalf("No UeConfigUpdate Message: %+v", err)
+	}
+
 	var pduAddress net.IP
 
 	// Read NAS from N3IWF
