@@ -141,5 +141,5 @@ replace (
 	github.com/free5gc/smf => ../NFs/smf
 	github.com/free5gc/udm => ../NFs/udm
 	github.com/free5gc/udr => ../NFs/udr
-	github.com/free5gc/webconsole => ../../webconsole-charging
+	github.com/free5gc/webconsole => ../webconsole
 )
