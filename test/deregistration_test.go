@@ -182,9 +182,7 @@ func TestDeregistration(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	// delete test data
-	DelAuthSubscriptionToMongoDB(ue.Supi)
-	DelAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-	DelSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
+	delUeFromMongoDB(t, ue, servingPlmnId)
 
 	// close Connection
 	conn.Close()

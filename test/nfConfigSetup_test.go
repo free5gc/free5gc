@@ -131,6 +131,15 @@ func init() {
 	// time.Sleep(5 * time.Second)
 }
 
+func NfTerminate() {
+	if initFlag != noInit {
+		nfNums := len(NFs)
+		for i := nfNums - 1; i >= 0; i-- {
+			NFs[i].Terminate()
+		}
+	}
+}
+
 func nrfConfig() error {
 	nrf_factory.NrfConfig = &nrf_factory.Config{
 		Info: &nrf_factory.Info{

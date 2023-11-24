@@ -196,9 +196,7 @@ func TestAFInfluenceOnTrafficRouting(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	// delete test data
-	DelAuthSubscriptionToMongoDB(ue.Supi)
-	DelAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-	DelSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
+	delUeFromMongoDB(t, ue, servingPlmnId)
 
 	// close Connection
 	conn.Close()

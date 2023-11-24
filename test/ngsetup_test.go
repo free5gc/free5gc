@@ -41,15 +41,6 @@ const (
 	upfN3Ipv4Addr  string = "10.200.200.102"
 )
 
-func NfTerminate() {
-	if initFlag != noInit {
-		nfNums := len(NFs)
-		for i := nfNums - 1; i >= 0; i-- {
-			NFs[i].Terminate()
-		}
-	}
-}
-
 func getNgapIp(amfIP, ranIP string, amfPort, ranPort int) (amfAddr, ranAddr *sctp.SCTPAddr, err error) {
 	ips := []net.IPAddr{}
 	if ip, err1 := net.ResolveIPAddr("ip", amfIP); err1 != nil {

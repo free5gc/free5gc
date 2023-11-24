@@ -72,7 +72,7 @@ configuration:
         interfaces: # Interface list for this UPF
           - interfaceType: N3 # the type of the interface (N3 or N9)
             endpoints: # the IP address of this N3/N9 interface on this UPF
-              - 127.0.0.8
+              - 10.10.0.83
             networkInstances:  # Data Network Name (DNN)
               - internet
     links: # the topology graph of userplane, A and B represent the two nodes of each link
@@ -89,10 +89,9 @@ configuration:
     expireTime: 16s   # default is 6 seconds
     maxRetryTimes: 3 # the max number of retransmission
   nrfUri: http://127.0.0.10:8000 # a valid URI of NRF
-  # urrPeriod: 10 # default usage report period in seconds
-  # urrThreshold: 1000 # default usage report threshold in bytes
+  #urrPeriod: 10 # default usage report period in seconds
+  #urrThreshold: 1000 # default usage report threshold in bytes
   requestedUnit: 1000
-
 logger: # log output setting
   enable: true # true or false
   level: info # how detailed to output, value: trace, debug, info, warn, error, fatal, panic

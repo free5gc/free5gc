@@ -305,9 +305,7 @@ func TestGUTIRegistration(t *testing.T) {
 	time.Sleep(1000 * time.Millisecond)
 
 	// delete test data
-	DelAuthSubscriptionToMongoDB(ue.Supi)
-	DelAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-	DelSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
+	delUeFromMongoDB(t, ue, servingPlmnId)
 
 	// close Connection
 	conn.Close()

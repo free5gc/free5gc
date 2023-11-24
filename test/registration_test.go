@@ -237,9 +237,7 @@ func TestRegistration(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	// delete test data
-	DelAuthSubscriptionToMongoDB(ue.Supi)
-	DelAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-	DelSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
+	delUeFromMongoDB(t, ue, servingPlmnId)
 
 	// close Connection
 	conn.Close()
@@ -466,9 +464,8 @@ func TestDuplicateRegistration(t *testing.T) {
 	assert.Nil(t, err)
 
 	// delete test data
-	DelAuthSubscriptionToMongoDB(ue.Supi)
-	DelAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-	DelSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
+	delUeFromMongoDB(t, ue, servingPlmnId)
+
 	time.Sleep(1 * time.Second)
 	// close Connection
 	conn.Close()
@@ -679,9 +676,7 @@ func TestMultiAmfRegistration(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	// delete test data
-	DelAuthSubscriptionToMongoDB(ue.Supi)
-	DelAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-	DelSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
+	delUeFromMongoDB(t, ue, servingPlmnId)
 
 	// close Connections
 	conn2.Close()

@@ -9,6 +9,7 @@ import (
 
 	"github.com/free5gc/test/consumerTestdata/UDM/TestGenAuthData"
 	"github.com/free5gc/test/consumerTestdata/UDR/TestRegistrationProcedure"
+	"github.com/free5gc/webconsole/backend/WebUI"
 
 	"github.com/calee0219/fatal"
 	"golang.org/x/net/ipv4"
@@ -111,6 +112,18 @@ func GetAmPolicyData() (amPolicyData models.AmPolicyData) {
 
 func GetSmPolicyData() (smPolicyData models.SmPolicyData) {
 	return TestRegistrationProcedure.TestSmPolicyDataTable[TestRegistrationProcedure.FREE5GC_CASE]
+}
+
+func GetChargingData() (chargingDatas []WebUI.ChargingData) {
+	return TestRegistrationProcedure.TestChargingDataTable[TestRegistrationProcedure.FREE5GC_CASE]
+}
+
+func GetFlowRuleData() (flowRules []WebUI.FlowRule) {
+	return TestRegistrationProcedure.TestFlowRuleTable[TestRegistrationProcedure.FREE5GC_CASE]
+}
+
+func GetQosFlowData() (qosFlows []WebUI.QosFlow) {
+	return TestRegistrationProcedure.TestQoSFlowTable[TestRegistrationProcedure.FREE5GC_CASE]
 }
 
 func NewRanUeContext(supi string, ranUeNgapId int64, cipheringAlg, integrityAlg uint8,
