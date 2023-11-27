@@ -461,7 +461,8 @@ func smfConfig(testID string) error {
 				ExpireTime:    5 * time.Second,
 				MaxRetryTimes: 2,
 			},
-			NrfUri: "http://127.0.0.10:8000",
+			NrfUri:        "http://127.0.0.10:8000",
+			RequestedUnit: 1000,
 		},
 		Logger: &smf_factory.Logger{
 			Enable:       true,
