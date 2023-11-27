@@ -28,6 +28,7 @@ import (
 	"github.com/free5gc/nas/nasMessage"
 	"github.com/free5gc/nas/nasType"
 	"github.com/free5gc/nas/security"
+	"github.com/free5gc/ngap"
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/util/ueauth"
 )
@@ -1720,8 +1721,12 @@ func TestNon3GPPUE(t *testing.T) {
 
 	// TODO
 	// We don't check any of message in UeConfigUpdate Message
-	if _, err := tcpConnWithN3IWF.Read(buffer); err != nil {
+	if n, err := tcpConnWithN3IWF.Read(buffer); err != nil {
 		t.Fatalf("No UeConfigUpdate Message: %+v", err)
+		_, err := ngap.Decoder(buffer[2:n])
+		if err != nil {
+			t.Fatalf("UeConfigUpdate Decode Error: %+v", err)
+		}
 	}
 
 	var pduAddress net.IP
