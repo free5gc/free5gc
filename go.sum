@@ -62,8 +62,8 @@ github.com/evanphx/json-patch v0.5.2 h1:xVCHIVMUu1wtM/VkR9jVZ45N3FhZfYMMYGorLCR8
 github.com/evanphx/json-patch v0.5.2/go.mod h1:ZWS5hhDbVDyob71nXKNL0+PWn6ToqBHMikGIFbs31qQ=
 github.com/free5gc/openapi v1.0.7-0.20230802173229-2b3ded4db293 h1:BSIvKCYu7646sE8J9R1L8v2R435otUik3wOFN33csfs=
 github.com/free5gc/openapi v1.0.7-0.20230802173229-2b3ded4db293/go.mod h1:iw/N0E+FlX44EEx24IBi2EdZW8v+bkj3ETWPGnlK9DI=
-github.com/free5gc/util v1.0.5-0.20231001095115-433858e5be94 h1:tNylIqH/m5Kq+3KuC+jjXGl06Y6EmM8yq61ZUgNrPBY=
-github.com/free5gc/util v1.0.5-0.20231001095115-433858e5be94/go.mod h1:aMszJZbCkcg5xaGgzya+55jz+OPMsJqPLq5Z3fWDFPE=
+github.com/free5gc/util v1.0.5-0.20231012123940-85f4557167be h1:SglM1KIL+bR50hPzbvxVwNW44+yHR2tq9nTpLra75UE=
+github.com/free5gc/util v1.0.5-0.20231012123940-85f4557167be/go.mod h1:d+79g84a3YHhzvjJ2IhurrBOavOA8xWIQ/GCywPXqQk=
 github.com/gabriel-vasile/mimetype v1.4.2 h1:w5qFW6JKBz9Y393Y4q372O9A7cUSequkh1Q7OhCmWKU=
 github.com/gabriel-vasile/mimetype v1.4.2/go.mod h1:zApsH/mKG4w07erKIaJPFiX0Tsq9BFQgN3qGY5GnNgA=
 github.com/gin-contrib/sse v0.1.0 h1:Y/yl/+YNO8GZSjAhjMsSuLt29uWRFHdHYUb5lYOV9qE=
@@ -338,7 +338,6 @@ golang.org/x/sync v0.0.0-20190423024810-112230192c58/go.mod h1:RxMgew5VJxzue5/jJ
 golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
-golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4 h1:uVc8UZUe6tr40fFVnUP5Oj+veunVezqYl9z7DYw9xzw=
 golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sync v0.1.0 h1:wsuoTGHzEhffawBOhz5CYhcrV4IdKZbEyZjBMuTp12o=
 golang.org/x/sync v0.1.0/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
