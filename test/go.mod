@@ -11,16 +11,16 @@ require (
 	github.com/free5gc/aper v1.0.5-0.20230614030933-c73735898582
 	github.com/free5gc/ausf v0.0.0
 	github.com/free5gc/n3iwf v0.0.0
-	github.com/free5gc/nas v1.1.2-0.20230828074825-175b09665828
+	github.com/free5gc/nas v1.1.2-0.20231030080110-1cac52d710ca
 	github.com/free5gc/ngap v1.0.7-0.20230614061954-9c128114ab1f
 	github.com/free5gc/nrf v0.0.0
 	github.com/free5gc/nssf v0.0.0
-	github.com/free5gc/openapi v1.0.7-0.20230802173229-2b3ded4db293
+	github.com/free5gc/openapi v1.0.7-0.20231201151944-c3306de07dfb
 	github.com/free5gc/pcf v0.0.0
 	github.com/free5gc/smf v0.0.0
 	github.com/free5gc/udm v0.0.0
 	github.com/free5gc/udr v0.0.0
-	github.com/free5gc/util v1.0.5-0.20231001095115-433858e5be94
+	github.com/free5gc/util v1.0.5-0.20231012123940-85f4557167be
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-ping/ping v0.0.0-20210506233800-ff8be3320020
 	github.com/google/uuid v1.3.0
@@ -45,6 +45,7 @@ require (
 	github.com/cydev/zero v0.0.0-20160322155811-4a4535dd56e7 // indirect
 	github.com/evanphx/json-patch v0.5.2 // indirect
 	github.com/free5gc/pfcp v1.0.6 // indirect
+	github.com/free5gc/sctp v0.0.0-20231121085449-400a702ea7f9 // indirect
 	github.com/free5gc/tlv v1.0.2-0.20230131124215-8b6ebd69bf93 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
 	github.com/gin-contrib/cors v1.3.1 // indirect
