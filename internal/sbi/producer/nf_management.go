@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
@@ -16,6 +17,7 @@ import (
 	"github.com/free5gc/nrf/pkg/factory"
 	"github.com/free5gc/openapi/Nnrf_NFManagement"
 	"github.com/free5gc/openapi/models"
+	"github.com/free5gc/openapi/oauth"
 	"github.com/free5gc/util/httpwrapper"
 	timedecode "github.com/free5gc/util/mapstruct"
 	"github.com/free5gc/util/mongoapi"
@@ -339,7 +341,7 @@ func NFDeregisterProcedure(nfInstanceID string) *models.ProblemDetails {
 	}
 
 	uriList := nrf_context.GetNofificationUri(nfProfiles[0])
-
+	nfInstanceType := nfProfiles[0].NfType
 	nfInstanceUri := nrf_context.GetNfInstanceURI(nfInstanceID)
 	// set info for NotificationData
 	Notification_event := models.NotificationEventType_DEREGISTERED
@@ -364,7 +366,13 @@ func NFDeregisterProcedure(nfInstanceID string) *models.ProblemDetails {
 		}
 		return problemDetail
 	}
-
+	if factory.NrfConfig.GetOAuth() {
+		nfCertPath := oauth.GetNFCertPath(factory.NrfConfig.GetCertBasePath(), string(nfInstanceType), nfInstanceID)
+		err := os.Remove(nfCertPath)
+		if err != nil {
+			logger.NfmLog.Warningf("Can not delete NFCertPem file: %v: %v", nfCertPath, err)
+		}
+	}
 	return nil
 }
 

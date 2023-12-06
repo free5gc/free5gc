@@ -380,7 +380,13 @@ func nnrfNFManagementOption(nf *models.NfProfile, nfprofile models.NfProfile) {
 		copy(a, *nfprofile.NfServices)
 		nf.NfServices = &a
 	}
-	//
+	// CustomerInfo
+	if nfprofile.CustomInfo != nil {
+		nf.CustomInfo = nfprofile.CustomInfo
+	} else {
+		nf.CustomInfo = make(map[string]interface{})
+	}
+	nf.CustomInfo["oauth2"] = factory.NrfConfig.GetOAuth()
 }
 
 func GetNfInstanceURI(nfInstID string) string {

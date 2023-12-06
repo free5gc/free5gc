@@ -23,7 +23,10 @@ import (
 
 // DeregisterNFInstance - Deregisters a given NF Instance
 func HTTPDeregisterNFInstance(c *gin.Context) {
-	// parse nfInstanceId
+	auth_err := authorizationCheck(c)
+	if auth_err != nil {
+		return
+	}
 
 	req := httpwrapper.NewRequest(c.Request, nil)
 	req.Params["nfInstanceID"] = c.Params.ByName("nfInstanceID")
@@ -67,9 +70,14 @@ func HTTPGetNFInstance(c *gin.Context) {
 
 // RegisterNFInstance - Register a new NF Instance
 func HTTPRegisterNFInstance(c *gin.Context) {
+	// auth_err := authorizationCheck(c)
+	// if auth_err != nil {
+	// 	return
+	// }
+
+	// // step 1: retrieve http request body
 	var nfprofile models.NfProfile
 
-	// step 1: retrieve http request body
 	requestBody, err := c.GetRawData()
 	if err != nil {
 		problemDetail := models.ProblemDetails{

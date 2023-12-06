@@ -23,12 +23,10 @@ import (
 
 // SearchNFInstances - Search a collection of NF Instances
 func HTTPSearchNFInstances(c *gin.Context) {
-	// var searchNFInstance context.SearchNFInstances
-	// c.BindQuery(&searchNFInstance)
-	// logger.DiscLog.Infoln("searchNFInstance: ", searchNFInstance)
-	// logger.DiscLog.Infoln("targetNFType: ", searchNFInstance.TargetNFType)
-	// logger.DiscLog.Infoln("requesterNFType: ", searchNFInstance.RequesterNFType)
-	// logger.DiscLog.Infoln("ChfSupportedPlmn: ", searchNFInstance.ChfSupportedPlmn)
+	auth_err := authorizationCheck(c)
+	if auth_err != nil {
+		return
+	}
 
 	req := httpwrapper.NewRequest(c.Request, nil)
 	req.Query = c.Request.URL.Query()

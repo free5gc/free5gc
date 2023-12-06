@@ -18,6 +18,7 @@ import (
 
 	"github.com/free5gc/nrf/internal/logger"
 	"github.com/free5gc/nrf/internal/sbi/producer"
+	"github.com/free5gc/nrf/pkg/factory"
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/util/httpwrapper"
 )
@@ -25,6 +26,16 @@ import (
 // AccessTokenRequest - Access Token Request
 func HTTPAccessTokenRequest(c *gin.Context) {
 	logger.AccTokenLog.Infoln("In HTTPAccessTokenRequest")
+
+	if !factory.NrfConfig.GetOAuth() {
+		rsp := models.ProblemDetails{
+			Title:  "OAuth2 not enable",
+			Status: http.StatusBadRequest,
+		}
+		c.JSON(http.StatusBadRequest, rsp)
+		return
+	}
+
 	var accessTokenReq models.AccessTokenReq
 	var r *http.Request = c.Request
 
