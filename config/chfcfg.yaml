@@ -29,6 +29,7 @@ configuration:
     tls:
       pem: cert/chf.pem
       key: cert/chf.key
+    cdrFilePath: /tmp
   abmfDiameter:
     protocol: tcp 
     hostIPv4: 127.0.0.113

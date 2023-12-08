@@ -10,6 +10,7 @@ require (
 	github.com/free5gc/amf v0.0.0
 	github.com/free5gc/aper v1.0.5-0.20230614030933-c73735898582
 	github.com/free5gc/ausf v0.0.0
+	github.com/free5gc/chf v0.0.0-20231201140347-4f4ac76a63d7
 	github.com/free5gc/n3iwf v0.0.0
 	github.com/free5gc/nas v1.1.2-0.20230828074825-175b09665828
 	github.com/free5gc/ngap v1.0.7-0.20230614061954-9c128114ab1f
@@ -30,12 +31,10 @@ require (
 	github.com/urfave/cli v1.22.5
 	github.com/vishvananda/netlink v1.1.0
 	go.mongodb.org/mongo-driver v1.11.3
-	golang.org/x/net v0.17.0
-	golang.org/x/sys v0.13.0
+	golang.org/x/net v0.19.0
+	golang.org/x/sys v0.15.0
 	gopkg.in/yaml.v2 v2.4.0
 )
-
-require github.com/google/s2a-go v0.1.3 // indirect
 
 require (
 	cloud.google.com/go/compute v1.19.2 // indirect
@@ -59,7 +58,6 @@ require (
 	github.com/fclairamb/ftpserverlib v0.21.0 // indirect
 	github.com/fclairamb/go-log v0.4.1 // indirect
 	github.com/fiorix/go-diameter v3.0.2+incompatible // indirect
-	github.com/free5gc/chf v0.0.0-20231001100944-f3762fe58d34
 	github.com/free5gc/pfcp v1.0.7-0.20230629010245-1c089bfc34f7 // indirect
 	github.com/free5gc/tlv v1.0.2-0.20230131124215-8b6ebd69bf93 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
@@ -75,6 +73,7 @@ require (
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/gopacket v1.1.19 // indirect
+	github.com/google/s2a-go v0.1.3 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.2.3 // indirect
 	github.com/googleapis/gax-go/v2 v2.8.0 // indirect
 	github.com/h2non/parth v0.0.0-20190131123155-b4df798d6542 // indirect
@@ -98,6 +97,7 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pkg/sftp v1.13.5 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/rogpeppe/go-internal v1.9.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
 	github.com/spf13/afero v1.9.5 // indirect
@@ -116,10 +116,11 @@ require (
 	github.com/youmark/pkcs8 v0.0.0-20181117223130-1be2e3e5546d // indirect
 	go.opencensus.io v0.24.0 // indirect
 	golang.org/x/arch v0.3.0 // indirect
-	golang.org/x/crypto v0.14.0 // indirect
+	golang.org/x/crypto v0.16.0 // indirect
+	golang.org/x/exp v0.0.0-20231127185646-65229373498e // indirect
 	golang.org/x/oauth2 v0.8.0 // indirect
-	golang.org/x/sync v0.1.0 // indirect
-	golang.org/x/text v0.13.0 // indirect
+	golang.org/x/sync v0.5.0 // indirect
+	golang.org/x/text v0.14.0 // indirect
 	google.golang.org/api v0.122.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1 // indirect
@@ -141,5 +142,6 @@ replace (
 	github.com/free5gc/smf => ../NFs/smf
 	github.com/free5gc/udm => ../NFs/udm
 	github.com/free5gc/udr => ../NFs/udr
+	// github.com/free5gc/util => ../../util
 	github.com/free5gc/webconsole => ../webconsole
 )

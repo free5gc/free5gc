@@ -466,7 +466,7 @@ func smfConfig(testID string) error {
 		},
 		Logger: &smf_factory.Logger{
 			Enable:       true,
-			Level:        "info",
+			Level:        "trace",
 			ReportCaller: false,
 		},
 	}
@@ -665,7 +665,7 @@ func pcfConfig() error {
 		},
 		Logger: &pcf_factory.Logger{
 			Enable:       true,
-			Level:        "info",
+			Level:        "trace",
 			ReportCaller: false,
 		},
 	}
