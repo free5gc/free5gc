@@ -14,6 +14,9 @@ else
     echo -n "[INFO] Setting kernel net.ipv4.ip_forward flag... "
     sudo sysctl -w net.ipv4.ip_forward=1 >/dev/null
     echo "[OK]"
+    echo "[INFO] Disabling ufw firewall... "
+    sudo systemctl stop ufw
+    echo "[OK]"
 
     echo "[INFO] Configuration applied successfully"
 fi
