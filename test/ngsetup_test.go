@@ -404,8 +404,8 @@ func amfConfig(testID string) error {
 			SupportDnnList: []string{
 				"internet",
 			},
-			NrfUri:    "http://127.0.0.10:8000",
-			NrfCerPem: "cert/nrf.pem",
+			NrfUri:     "http://127.0.0.10:8000",
+			NrfCertPem: "cert/nrf.pem",
 			Security: &amf_factory.Security{
 				IntegrityOrder: integrityOrder,
 				CipheringOrder: cipheringOrder,
@@ -615,8 +615,8 @@ func smfConfig(testID string) error {
 				ExpireTime:    5 * time.Second,
 				MaxRetryTimes: 2,
 			},
-			NrfUri:    "http://127.0.0.10:8000",
-			NrfCerPem: "cert/nrf.pem",
+			NrfUri:     "http://127.0.0.10:8000",
+			NrfCertPem: "cert/nrf.pem",
 		},
 		Logger: &smf_factory.Logger{
 			Enable:       true,
@@ -758,7 +758,8 @@ func udrConfig() error {
 				Name: "free5gc",
 				Url:  "mongodb://localhost:27017",
 			},
-			NrfUri: "http://127.0.0.10:8000",
+			NrfUri:     "http://127.0.0.10:8000",
+			NrfCertPem: "cert/nrf.pem",
 		},
 		Logger: &udr_factory.Logger{
 			Enable:       true,
@@ -795,7 +796,7 @@ func pcfConfig() error {
 			TimeFormat:      "2019-01-02 15:04:05",
 			DefaultBdtRefId: "BdtPolicyId-",
 			NrfUri:          "http://127.0.0.10:8000",
-			NrfCerPem:       "cert/nrf.pem",
+			NrfCertPem:      "cert/nrf.pem",
 			ServiceList: []pcf_factory.Service{{
 				ServiceName: "npcf-am-policy-control",
 			}, {
@@ -855,8 +856,8 @@ func udmConfig() error {
 					Key: "cert/udm.key",
 				},
 			},
-			NrfUri:    "http://127.0.0.10:8000",
-			NrfCerPem: "cert/nrf.pem",
+			NrfUri:     "http://127.0.0.10:8000",
+			NrfCertPem: "cert/nrf.pem",
 			SuciProfiles: []suci.SuciProfile{
 				{
 					ProtectionScheme: "1", // Protect Scheme: Profile A
@@ -908,8 +909,8 @@ func nssfConfig() error {
 				"nnssf-nsselection",
 				"nnssf-nssaiavailability",
 			},
-			NrfUri:    "http://127.0.0.10:8000",
-			NrfCerPem: "cert/nrf.pem",
+			NrfUri:     "http://127.0.0.10:8000",
+			NrfCertPem: "cert/nrf.pem",
 			SupportedPlmnList: []models.PlmnId{{
 				Mcc: "208",
 				Mnc: "93",
@@ -1393,8 +1394,8 @@ func ausfConfig() error {
 			ServiceNameList: []string{
 				"nausf-auth",
 			},
-			NrfUri:    "http://127.0.0.10:8000",
-			NrfCerPem: "cert/nrf.pem",
+			NrfUri:     "http://127.0.0.10:8000",
+			NrfCertPem: "cert/nrf.pem",
 			PlmnSupportList: []models.PlmnId{{
 				Mcc: "208",
 				Mnc: "93",
