@@ -20,7 +20,7 @@ require (
 	github.com/free5gc/smf v0.0.0
 	github.com/free5gc/udm v0.0.0
 	github.com/free5gc/udr v0.0.0
-	github.com/free5gc/util v1.0.5-0.20231012123940-85f4557167be
+	github.com/free5gc/util v1.0.5-0.20231205080047-308f623d6808
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-ping/ping v0.0.0-20210506233800-ff8be3320020
 	github.com/google/uuid v1.3.0
