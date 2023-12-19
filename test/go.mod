@@ -15,7 +15,7 @@ require (
 	github.com/free5gc/ngap v1.0.7-0.20230614061954-9c128114ab1f
 	github.com/free5gc/nrf v0.0.0
 	github.com/free5gc/nssf v0.0.0
-	github.com/free5gc/openapi v1.0.7-0.20231201151944-c3306de07dfb
+	github.com/free5gc/openapi v1.0.7-0.20231216094313-e15a4ff046f6
 	github.com/free5gc/pcf v0.0.0
 	github.com/free5gc/smf v0.0.0
 	github.com/free5gc/udm v0.0.0
