@@ -307,10 +307,14 @@ func nrfConfig() error {
 				BindingIPv4:  "127.0.0.10",
 				Port:         8000,
 				Cert: &nrf_factory.Cert{
-					Pem: "cert/nrf.pem",
-					Key: "cert/nrf.key",
+					Pem: "../cert/nrf.pem",
+					Key: "../cert/nrf.key",
 				},
-				OAuth: true,
+				RootCert: &nrf_factory.Cert{
+					Pem: "../cert/root.pem",
+					Key: "../cert/root.key",
+				},
+				OAuth: false,
 			},
 			DefaultPlmnId: models.PlmnId{
 				Mcc: "208",
@@ -405,7 +409,7 @@ func amfConfig(testID string) error {
 				"internet",
 			},
 			NrfUri:     "http://127.0.0.10:8000",
-			NrfCertPem: "cert/nrf.pem",
+			NrfCertPem: "../cert/nrf.pem",
 			Security: &amf_factory.Security{
 				IntegrityOrder: integrityOrder,
 				CipheringOrder: cipheringOrder,
@@ -616,7 +620,7 @@ func smfConfig(testID string) error {
 				MaxRetryTimes: 2,
 			},
 			NrfUri:     "http://127.0.0.10:8000",
-			NrfCertPem: "cert/nrf.pem",
+			NrfCertPem: "../cert/nrf.pem",
 		},
 		Logger: &smf_factory.Logger{
 			Enable:       true,
@@ -759,7 +763,7 @@ func udrConfig() error {
 				Url:  "mongodb://localhost:27017",
 			},
 			NrfUri:     "http://127.0.0.10:8000",
-			NrfCertPem: "cert/nrf.pem",
+			NrfCertPem: "../cert/nrf.pem",
 		},
 		Logger: &udr_factory.Logger{
 			Enable:       true,
@@ -796,7 +800,7 @@ func pcfConfig() error {
 			TimeFormat:      "2019-01-02 15:04:05",
 			DefaultBdtRefId: "BdtPolicyId-",
 			NrfUri:          "http://127.0.0.10:8000",
-			NrfCertPem:      "cert/nrf.pem",
+			NrfCertPem:      "../cert/nrf.pem",
 			ServiceList: []pcf_factory.Service{{
 				ServiceName: "npcf-am-policy-control",
 			}, {
@@ -857,7 +861,7 @@ func udmConfig() error {
 				},
 			},
 			NrfUri:     "http://127.0.0.10:8000",
-			NrfCertPem: "cert/nrf.pem",
+			NrfCertPem: "../cert/nrf.pem",
 			SuciProfiles: []suci.SuciProfile{
 				{
 					ProtectionScheme: "1", // Protect Scheme: Profile A
@@ -910,7 +914,7 @@ func nssfConfig() error {
 				"nnssf-nssaiavailability",
 			},
 			NrfUri:     "http://127.0.0.10:8000",
-			NrfCertPem: "cert/nrf.pem",
+			NrfCertPem: "../cert/nrf.pem",
 			SupportedPlmnList: []models.PlmnId{{
 				Mcc: "208",
 				Mnc: "93",
@@ -1395,7 +1399,7 @@ func ausfConfig() error {
 				"nausf-auth",
 			},
 			NrfUri:     "http://127.0.0.10:8000",
-			NrfCertPem: "cert/nrf.pem",
+			NrfCertPem: "../cert/nrf.pem",
 			PlmnSupportList: []models.PlmnId{{
 				Mcc: "208",
 				Mnc: "93",
