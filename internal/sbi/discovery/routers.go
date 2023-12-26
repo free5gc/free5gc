@@ -15,8 +15,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	nrf_context "github.com/free5gc/nrf/internal/context"
 	"github.com/free5gc/nrf/internal/logger"
-	"github.com/free5gc/nrf/internal/util"
 	"github.com/free5gc/nrf/pkg/factory"
 	logger_util "github.com/free5gc/util/logger"
 )
@@ -44,7 +44,8 @@ func NewRouter() *gin.Engine {
 }
 
 func authorizationCheck(c *gin.Context) error {
-	return util.AuthorizationCheck(c, "nnrf-disc")
+	token := c.Request.Header.Get("Authorization")
+	return nrf_context.GetSelf().AuthorizationCheck(token, "nnrf-disc")
 }
 
 func AddService(engine *gin.Engine) *gin.RouterGroup {

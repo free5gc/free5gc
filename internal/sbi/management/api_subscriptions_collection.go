@@ -25,6 +25,12 @@ import (
 
 // CreateSubscription - Create a new subscription
 func HTTPCreateSubscription(c *gin.Context) {
+	auth_err := authorizationCheck(c)
+	if auth_err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": auth_err.Error()})
+		return
+	}
+
 	var subscription models.NrfSubscriptionData
 
 	// step 1: retrieve http request body
