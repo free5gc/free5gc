@@ -23,6 +23,12 @@ import (
 
 // RemoveSubscription - Deletes a subscription
 func HTTPRemoveSubscription(c *gin.Context) {
+	auth_err := authorizationCheck(c)
+	if auth_err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": auth_err.Error()})
+		return
+	}
+
 	req := httpwrapper.NewRequest(c.Request, nil)
 	req.Params["subscriptionID"] = c.Params.ByName("subscriptionID")
 
@@ -44,6 +50,12 @@ func HTTPRemoveSubscription(c *gin.Context) {
 
 // UpdateSubscription - Updates a subscription
 func HTTPUpdateSubscription(c *gin.Context) {
+	auth_err := authorizationCheck(c)
+	if auth_err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": auth_err.Error()})
+		return
+	}
+
 	requestBody, err := c.GetRawData()
 	if err != nil {
 		problemDetail := models.ProblemDetails{

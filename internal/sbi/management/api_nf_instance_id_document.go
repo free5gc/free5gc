@@ -25,6 +25,7 @@ import (
 func HTTPDeregisterNFInstance(c *gin.Context) {
 	auth_err := authorizationCheck(c)
 	if auth_err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": auth_err.Error()})
 		return
 	}
 
@@ -49,6 +50,12 @@ func HTTPDeregisterNFInstance(c *gin.Context) {
 
 // GetNFInstance - Read the profile of a given NF Instance
 func HTTPGetNFInstance(c *gin.Context) {
+	auth_err := authorizationCheck(c)
+	if auth_err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": auth_err.Error()})
+		return
+	}
+
 	req := httpwrapper.NewRequest(c.Request, nil)
 	req.Params["nfInstanceID"] = c.Params.ByName("nfInstanceID")
 
@@ -72,6 +79,7 @@ func HTTPGetNFInstance(c *gin.Context) {
 func HTTPRegisterNFInstance(c *gin.Context) {
 	// auth_err := authorizationCheck(c)
 	// if auth_err != nil {
+	// 	c.JSON(http.StatusUnauthorized, gin.H{"error": auth_err.Error()})
 	// 	return
 	// }
 
@@ -131,6 +139,12 @@ func HTTPRegisterNFInstance(c *gin.Context) {
 
 // UpdateNFInstance - Update NF Instance profile
 func HTTPUpdateNFInstance(c *gin.Context) {
+	auth_err := authorizationCheck(c)
+	if auth_err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": auth_err.Error()})
+		return
+	}
+
 	// step 1: retrieve http request body
 	requestBody, err := c.GetRawData()
 	if err != nil {

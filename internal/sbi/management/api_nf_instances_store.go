@@ -23,6 +23,12 @@ import (
 
 // GetNFInstances - Retrieves a collection of NF Instances
 func HTTPGetNFInstances(c *gin.Context) {
+	auth_err := authorizationCheck(c)
+	if auth_err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": auth_err.Error()})
+		return
+	}
+
 	req := httpwrapper.NewRequest(c.Request, nil)
 	req.Query = c.Request.URL.Query()
 

@@ -184,3 +184,14 @@ func SignNFCert(nfType, nfId string) error {
 func GetSelf() *NRFContext {
 	return &nrfContext
 }
+
+func (context *NRFContext) AuthorizationCheck(token, serviceName string) error {
+	if !factory.NrfConfig.GetOAuth() {
+		return nil
+	}
+	err := oauth.VerifyOAuth(token, serviceName, factory.NrfConfig.GetNrfCertPemPath())
+	if err != nil {
+		return err
+	}
+	return nil
+}
