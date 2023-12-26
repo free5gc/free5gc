@@ -35,3 +35,6 @@ webconsole/public
 
 packages/
 free5gc.zip
+
+# cert
+cert/*_*.pem

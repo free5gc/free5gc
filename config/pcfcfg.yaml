@@ -15,6 +15,7 @@ configuration:
   timeFormat: 2019-01-02 15:04:05 # time format of this PCF
   defaultBdtRefId: BdtPolicyId-   # BDT Reference ID, indicating transfer policies of background data transfer.
   nrfUri: http://127.0.0.10:8000  # a valid URI of NRF
+  nrfCertPem: cert/nrf.pem # NRF Certificate
   serviceList:   # the SBI services provided by this PCF, refer to TS 29.507
     - serviceName: npcf-am-policy-control # Npcf_AMPolicyControl service
     - serviceName: npcf-smpolicycontrol   # Npcf_SMPolicyControl service

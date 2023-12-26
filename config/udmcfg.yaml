@@ -18,6 +18,7 @@ configuration:
       pem: cert/udm.pem # UDM TLS Certificate
       key: cert/udm.key # UDM TLS Private key
   nrfUri: http://127.0.0.10:8000 # a valid URI of NRF
+  nrfCertPem: cert/nrf.pem # NRF Certificate
 
   # test data set from TS33501-f60 Annex C.4
   SuciProfile: # Home Network Public Key ID = slice index +1
