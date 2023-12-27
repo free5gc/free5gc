@@ -36,6 +36,8 @@ jobs:
     - name: Basic Test
       run: |
         ls bin/ -al
+        ./test_ci.sh TestNasReroute
+        sleep 1
         ./test_ci.sh TestRegistration
         sleep 1
         ./test_ci.sh TestGUTIRegistration
