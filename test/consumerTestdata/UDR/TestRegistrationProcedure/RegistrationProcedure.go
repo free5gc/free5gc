@@ -29,6 +29,10 @@ func init() {
 					Sst: 1,
 					Sd:  "112233",
 				},
+				{
+					Sst: 1,
+					Sd:  "010203",
+				},
 			},
 			SingleNssais: []models.Snssai{
 				{
@@ -38,6 +42,10 @@ func init() {
 				{
 					Sst: 1,
 					Sd:  "112233",
+				},
+				{
+					Sst: 1,
+					Sd:  "010203",
 				},
 			},
 		},
@@ -60,6 +68,13 @@ func init() {
 				DnnInfos: []models.DnnInfo{
 					{
 						Dnn: "internet2",
+					},
+				},
+			},
+			"01010203": { // sst:1, sd:010203
+				DnnInfos: []models.DnnInfo{
+					{
+						Dnn: "internet",
 					},
 				},
 			},
@@ -93,6 +108,17 @@ func init() {
 				SmPolicyDnnData: map[string]models.SmPolicyDnnData{
 					"internet2": {
 						Dnn: "internet2",
+					},
+				},
+			},
+			"01010203": {
+				Snssai: &models.Snssai{
+					Sd:  "010203",
+					Sst: 1,
+				},
+				SmPolicyDnnData: map[string]models.SmPolicyDnnData{
+					"internet": {
+						Dnn: "internet",
 					},
 				},
 			},
@@ -135,6 +161,34 @@ func init() {
 			},
 			DnnConfigurations: map[string]models.DnnConfiguration{
 				"internet2": {
+					SscModes: &models.SscModes{
+						DefaultSscMode:  models.SscMode__1,
+						AllowedSscModes: []models.SscMode{models.SscMode__1, models.SscMode__2, models.SscMode__3},
+					},
+					PduSessionTypes: &models.PduSessionTypes{DefaultSessionType: models.PduSessionType_IPV4,
+						AllowedSessionTypes: []models.PduSessionType{models.PduSessionType_IPV4},
+					},
+					SessionAmbr: &models.Ambr{
+						Uplink:   "1000 Kbps",
+						Downlink: "1000 Kbps",
+					},
+					Var5gQosProfile: &models.SubscribedDefaultQos{
+						Var5qi: 9,
+						Arp: &models.Arp{
+							PriorityLevel: 8,
+						},
+						PriorityLevel: 8,
+					},
+				},
+			},
+		},
+		{
+			SingleNssai: &models.Snssai{
+				Sst: 1,
+				Sd:  "010203",
+			},
+			DnnConfigurations: map[string]models.DnnConfiguration{
+				"internet": {
 					SscModes: &models.SscModes{
 						DefaultSscMode:  models.SscMode__1,
 						AllowedSscModes: []models.SscMode{models.SscMode__1, models.SscMode__2, models.SscMode__3},
