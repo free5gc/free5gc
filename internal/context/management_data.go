@@ -90,6 +90,13 @@ func nnrfNFManagementCondition(nf *models.NfProfile, nfprofile models.NfProfile)
 		copy(a, nfprofile.Ipv4Addresses)
 		nf.Ipv6Addresses = a
 	}
+	// DefaultNotificationSubscription
+	if nfprofile.DefaultNotificationSubscriptions != nil {
+		nf.DefaultNotificationSubscriptions = make([]models.DefaultNotificationSubscription, 0)
+		for _, defaultNotificationSubscription := range nfprofile.DefaultNotificationSubscriptions {
+			nf.DefaultNotificationSubscriptions = append(nf.DefaultNotificationSubscriptions, defaultNotificationSubscription)
+		}
+	}
 }
 
 func nnrfNFManagementOption(nf *models.NfProfile, nfprofile models.NfProfile) {
