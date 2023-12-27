@@ -92,10 +92,8 @@ func nnrfNFManagementCondition(nf *models.NfProfile, nfprofile models.NfProfile)
 	}
 	// DefaultNotificationSubscription
 	if nfprofile.DefaultNotificationSubscriptions != nil {
-		nf.DefaultNotificationSubscriptions = make([]models.DefaultNotificationSubscription, 0)
-		for _, defaultNotificationSubscription := range nfprofile.DefaultNotificationSubscriptions {
-			nf.DefaultNotificationSubscriptions = append(nf.DefaultNotificationSubscriptions, defaultNotificationSubscription)
-		}
+		nf.DefaultNotificationSubscriptions = append(nf.DefaultNotificationSubscriptions,
+			nfprofile.DefaultNotificationSubscriptions...)
 	}
 }
 
