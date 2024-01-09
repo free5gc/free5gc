@@ -29,7 +29,7 @@ do
 done
 shift $(($OPTIND - 1))
 
-TEST_POOL="TestRegistration|TestGUTIRegistration|TestServiceRequest|TestXnHandover|TestN2Handover|TestDeregistration|TestPDUSessionReleaseRequest|TestPaging|TestNon3GPP|TestReSynchronization|TestDuplicateRegistration|TestEAPAKAPrimeAuthentication|TestMultiAmfRegistration"
+TEST_POOL="TestRegistration|TestGUTIRegistration|TestServiceRequest|TestXnHandover|TestN2Handover|TestDeregistration|TestPDUSessionReleaseRequest|TestPaging|TestNon3GPP|TestReSynchronization|TestDuplicateRegistration|TestEAPAKAPrimeAuthentication|TestMultiAmfRegistration|TestNasReroute"
 if [[ ! "$1" =~ $TEST_POOL ]]
 then
     echo "Usage: $0 [ ${TEST_POOL//|/ | } ]"
@@ -81,6 +81,11 @@ function terminate()
     fi
 
     if [[ "$1" == "TestMultiAmfRegistration" ]]
+    then
+        cd .. && ./force_kill.sh
+    fi
+
+    if [[ "$1" == "TestNasReroute" ]]
     then
         cd .. && ./force_kill.sh
     fi
@@ -209,6 +214,16 @@ then
 
     cd test
     $GOROOT/bin/go test -v -vet=off -run TestMultiAmfRegistration -args multiAmf
+elif [[ "$1" == "TestNasReroute" ]]
+then
+    ./bin/amf -c ./config/multiAMF/amfcfg.yaml &
+    sleep 0.1
+
+    ./bin/amf -c ./config/multiAMF/amfcfg2.yaml &
+    sleep 0.1
+
+    cd test
+    $GOROOT/bin/go test -v -vet=off -run TestNasReroute -args multiAmf
 else
     cd test
     if ! go test -v -vet=off -run $1; then
