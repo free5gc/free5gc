@@ -3,7 +3,6 @@ module test
 go 1.17
 
 require (
-	git.cs.nctu.edu.tw/calee/sctp v1.1.0
 	github.com/antihax/optional v1.0.0
 	github.com/calee0219/fatal v0.0.1
 	github.com/davecgh/go-spew v1.1.1
@@ -17,6 +16,7 @@ require (
 	github.com/free5gc/nssf v0.0.0
 	github.com/free5gc/openapi v1.0.7-0.20231216094313-e15a4ff046f6
 	github.com/free5gc/pcf v0.0.0
+	github.com/free5gc/sctp v0.0.0-20231121085449-400a702ea7f9
 	github.com/free5gc/smf v0.0.0
 	github.com/free5gc/udm v0.0.0
 	github.com/free5gc/udr v0.0.0
