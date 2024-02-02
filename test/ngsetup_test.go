@@ -314,7 +314,7 @@ func nrfConfig() error {
 					Pem: "../cert/root.pem",
 					Key: "../cert/root.key",
 				},
-				OAuth: false,
+				OAuth: true,
 			},
 			DefaultPlmnId: models.PlmnId{
 				Mcc: "208",
