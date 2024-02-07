@@ -1,6 +1,6 @@
 module test
 
-go 1.17
+go 1.18
 
 require (
 	github.com/antihax/optional v1.0.0
@@ -14,7 +14,7 @@ require (
 	github.com/free5gc/ngap v1.0.7-0.20230614061954-9c128114ab1f
 	github.com/free5gc/nrf v0.0.0
 	github.com/free5gc/nssf v0.0.0
-	github.com/free5gc/openapi v1.0.7-0.20240117084712-52ad99299693
+	github.com/free5gc/openapi v1.0.7-0.20240207073137-2f335d104547
 	github.com/free5gc/pcf v0.0.0
 	github.com/free5gc/sctp v0.0.0-20231121085449-400a702ea7f9
 	github.com/free5gc/smf v0.0.0
