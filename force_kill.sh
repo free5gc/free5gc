@@ -1,6 +1,6 @@
 #!/bin/bash
 
-NF_LIST="nrf amf smf udr pcf udm nssf ausf n3iwf upf"
+NF_LIST="nrf amf smf udr pcf udm nssf ausf n3iwf tngf upf"
 
 for NF in ${NF_LIST}; do
     sudo killall -9 ${NF}
