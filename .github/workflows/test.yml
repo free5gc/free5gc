@@ -63,5 +63,35 @@ jobs:
         ./test_ci.sh TestMultiAmfRegistration
     - name: ULCL Test
       run: ./test_ci_ulcl.sh TestRequestTwoPDUSessions
+    - name: Basic Test (OAuth)
+      run: |
+        ls bin/ -al
+        ./test_ci.sh TestNasReroute oauth
+        sleep 1
+        ./test_ci.sh TestRegistration oauth
+        sleep 1
+        ./test_ci.sh TestGUTIRegistration oauth
+        sleep 1
+        ./test_ci.sh TestServiceRequest oauth
+        sleep 1
+        ./test_ci.sh TestXnHandover oauth
+        sleep 1
+        ./test_ci.sh TestDeregistration oauth
+        sleep 1
+        ./test_ci.sh TestPDUSessionReleaseRequest oauth
+        sleep 1
+        ./test_ci.sh TestPaging oauth
+        sleep 1
+        ./test_ci.sh TestN2Handover oauth
+        sleep 1
+        ./test_ci.sh TestReSynchronization oauth
+        sleep 1
+        ./test_ci.sh TestDuplicateRegistration oauth
+        sleep 1
+        ./test_ci.sh TestEAPAKAPrimeAuthentication oauth
+        sleep 1
+        ./test_ci.sh TestMultiAmfRegistration oauth
+    - name: ULCL Test (OAuth)
+      run: ./test_ci_ulcl.sh TestRequestTwoPDUSessions oauth
     # - name: Non3GPP Test
     #  run: ./test_ci.sh TestNon3GPP

@@ -197,7 +197,7 @@ then
 
     # Run Test UE
     cd test
-    if ! go test -v -vet=off -timeout 0 -run TestNon3GPPUE -args noinit; then
+    if ! go test -v -vet=off -timeout 0 -run TestNon3GPPUE -args noinit $2; then
         echo "Test result: Failed"
         terminate $1
         exit 1
@@ -213,7 +213,7 @@ then
     sleep 0.1
 
     cd test
-    $GOROOT/bin/go test -v -vet=off -run TestMultiAmfRegistration -args multiAmf
+    $GOROOT/bin/go test -v -vet=off -run TestMultiAmfRegistration -args multiAmf $2
 elif [[ "$1" == "TestNasReroute" ]]
 then
     ./bin/amf -c ./config/multiAMF/amfcfg.yaml &
@@ -223,10 +223,10 @@ then
     sleep 0.1
 
     cd test
-    $GOROOT/bin/go test -v -vet=off -run TestNasReroute -args multiAmf
+    $GOROOT/bin/go test -v -vet=off -run TestNasReroute -args multiAmf $2
 else
     cd test
-    if ! go test -v -vet=off -run $1; then
+    if ! go test -v -vet=off -run $1 -args $2; then
         echo "Test result: Failed"
         terminate $1
         exit 1
