@@ -50,6 +50,7 @@ var initFlag int = initNF
 
 func init() {
 	var testID string = ""
+	var oauth bool
 
 	for _, arg := range os.Args {
 		values := strings.Split(arg, "=")
@@ -62,12 +63,14 @@ func init() {
 
 		if arg == "noinit" {
 			initFlag = noInit
-			break
 		}
 
 		if arg == "multiAmf" {
 			initFlag = multiAMF
-			break
+		}
+
+		if arg == "oauth" {
+			oauth = true
 		}
 	}
 
@@ -78,7 +81,7 @@ func init() {
 			fmt.Printf("Make directory %s failed: %+v", "./log/", err)
 		}
 
-		if err := nrfConfig(); err != nil {
+		if err := nrfConfig(oauth); err != nil {
 			fmt.Printf("NRF Config failed: %v\n", err)
 		}
 		nrfApp, _ := nrf_service.NewApp(nrf_factory.NrfConfig)
@@ -135,7 +138,7 @@ func init() {
 			fmt.Printf("Make directory %s failed: %+v", "./log/", err)
 		}
 
-		if err := nrfConfig(); err != nil {
+		if err := nrfConfig(oauth); err != nil {
 			fmt.Printf("NRF Config failed: %v\n", err)
 		}
 		nrfApp, _ := nrf_service.NewApp(nrf_factory.NrfConfig)
@@ -292,7 +295,7 @@ func beforeClose(ue *test.RanUeContext) {
 	test.DelSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, "20893")
 }
 
-func nrfConfig() error {
+func nrfConfig(oauth bool) error {
 	nrf_factory.NrfConfig = &nrf_factory.Config{
 		Info: &nrf_factory.Info{
 			Version:     "1.0.2",
@@ -314,7 +317,7 @@ func nrfConfig() error {
 					Pem: "../cert/root.pem",
 					Key: "../cert/root.key",
 				},
-				OAuth: true,
+				OAuth: oauth,
 			},
 			DefaultPlmnId: models.PlmnId{
 				Mcc: "208",

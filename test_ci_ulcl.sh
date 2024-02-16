@@ -110,7 +110,7 @@ for i in $(seq -f "%02g" 1 $UPF_NUM); do
 done
 
 cd test
-if ! go test -v -vet=off -run $1; then
+if ! go test -v -vet=off -run $1 -args $2; then
     echo "Test result: Failed"
     terminate
     exit 1
