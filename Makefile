@@ -63,6 +63,7 @@ $(WEBCONSOLE): $(WEBCONSOLE)/$(GO_BIN_PATH)/$(WEBCONSOLE)
 $(WEBCONSOLE)/$(GO_BIN_PATH)/$(WEBCONSOLE): $(WEBCONSOLE)/server.go $(WEBCONSOLE_GO_FILES) $(WEBCONSOLE_JS_FILES)
 	@echo "Start building $(@F)...."
 	cd $(WEBCONSOLE)/frontend && \
+	corepack enable && \
 	yarn install && \
 	yarn build && \
 	rm -rf ../public && \
