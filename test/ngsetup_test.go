@@ -131,7 +131,6 @@ func init() {
 		chfApp, _ := chf_service.NewApp(chf_factory.ChfConfig)
 		NFs = append(NFs, chfApp)
 
-		os.Chdir("../")
 		for _, app := range NFs {
 			go app.Start("")
 			time.Sleep(200 * time.Millisecond)
@@ -201,7 +200,6 @@ func init() {
 		chfApp, _ := chf_service.NewApp(chf_factory.ChfConfig)
 		NFs = append(NFs, chfApp)
 
-		os.Chdir("../")
 		for _, app := range NFs {
 			go app.Start("")
 			time.Sleep(200 * time.Millisecond)
@@ -1456,11 +1454,12 @@ func chfConfig() error {
 				BindingIPv4:  "127.0.0.113",
 				Port:         8000,
 				Tls: &chf_factory.Tls{
-					Pem: "cert/chf.pem",
-					Key: "cert/chf.key",
+					Pem: "../cert/chf.pem",
+					Key: "../cert/chf.key",
 				},
 			},
-			NrfUri: "http://127.0.0.10:8000",
+			NrfUri:     "http://127.0.0.10:8000",
+			NrfCertPem: "../cert/nrf.pem",
 			ServiceNameList: []string{
 				"nchf-convergedcharging",
 			},
@@ -1477,8 +1476,8 @@ func chfConfig() error {
 				Port:       2122,
 				ListenPort: 2121,
 				Tls: &chf_factory.Tls{
-					Pem: "cert/chf.pem",
-					Key: "cert/chf.key",
+					Pem: "../cert/chf.pem",
+					Key: "../cert/chf.key",
 				},
 			},
 			AbmfDiameter: &chf_factory.Diameter{
@@ -1495,8 +1494,8 @@ func chfConfig() error {
 				HostIPv4: "127.0.0.113",
 				Port:     3869,
 				Tls: &chf_factory.Tls{
-					Pem: "cert/chf.pem",
-					Key: "cert/chf.key",
+					Pem: "../cert/chf.pem",
+					Key: "../cert/chf.key",
 				},
 			},
 		},
