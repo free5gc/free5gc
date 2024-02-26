@@ -40,6 +40,7 @@ fi
 function terminate()
 {
     rm run.pid
+    sudo rm -f /tmp/config.json # CHF ChargingGatway FTP config
     echo "Receive SIGINT, terminating..."
     if [ $N3IWF_ENABLE -ne 0 ]; then
         sudo ip xfrm state > ${LOG_PATH}NWu_SA_state.log
