@@ -21,12 +21,11 @@ import (
 
 func HandleAccessTokenRequest(request *httpwrapper.Request) *httpwrapper.Response {
 	// Param of AccessTokenRsp
-	logger.AccTokenLog.Infoln("Handle AccessTokenRequest")
+	logger.AccTokenLog.Debugln("Handle AccessTokenRequest")
 
 	accessTokenReq := request.Body.(models.AccessTokenReq)
 
 	response, errResponse := AccessTokenProcedure(accessTokenReq)
-
 	if errResponse != nil {
 		return httpwrapper.NewResponse(http.StatusBadRequest, nil, errResponse)
 	} else if response != nil {
@@ -45,7 +44,7 @@ func HandleAccessTokenRequest(request *httpwrapper.Request) *httpwrapper.Respons
 func AccessTokenProcedure(request models.AccessTokenReq) (
 	*models.AccessTokenRsp, *models.AccessTokenErr,
 ) {
-	logger.AccTokenLog.Infoln("In AccessTokenProcedure")
+	logger.AccTokenLog.Debugln("In AccessTokenProcedure")
 
 	var expiration int32 = 1000
 	scope := request.Scope
