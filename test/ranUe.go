@@ -19,6 +19,7 @@ import (
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/util/milenage"
 	"github.com/free5gc/util/ueauth"
+	"github.com/free5gc/webconsole/backend/WebUI"
 )
 
 type RanUeContext struct {
@@ -111,6 +112,18 @@ func GetAmPolicyData() (amPolicyData models.AmPolicyData) {
 
 func GetSmPolicyData() (smPolicyData models.SmPolicyData) {
 	return TestRegistrationProcedure.TestSmPolicyDataTable[TestRegistrationProcedure.FREE5GC_CASE]
+}
+
+func GetChargingData() (chargingDatas []WebUI.ChargingData) {
+	return TestRegistrationProcedure.TestChargingDataTable[TestRegistrationProcedure.FREE5GC_CASE]
+}
+
+func GetFlowRuleData() (flowRules []WebUI.FlowRule) {
+	return TestRegistrationProcedure.TestFlowRuleTable[TestRegistrationProcedure.FREE5GC_CASE]
+}
+
+func GetQosFlowData() (qosFlows []WebUI.QosFlow) {
+	return TestRegistrationProcedure.TestQoSFlowTable[TestRegistrationProcedure.FREE5GC_CASE]
 }
 
 func NewRanUeContext(supi string, ranUeNgapId int64, cipheringAlg, integrityAlg uint8,
@@ -306,8 +319,8 @@ func (ue *RanUeContext) DeriveResEAPMessageAndSetKey(
 		s := append(prev, ap...)
 
 		// Write Data to it
-		if _, err := h.Write(s); err != nil {
-			fatal.Fatalf("EAP-AKA' prf error: %+v", err)
+		if _, err1 := h.Write(s); err1 != nil {
+			fatal.Fatalf("EAP-AKA' prf error: %+v", err1)
 		}
 
 		// Get result
@@ -338,8 +351,8 @@ func (ue *RanUeContext) DeriveResEAPMessageAndSetKey(
 
 	// calculate MAC
 	h := hmac.New(sha256.New, Kaut)
-	if _, err := h.Write(resEAPMessage); err != nil {
-		fatal.Fatalf("MAC calculate error: %+v", err)
+	if _, err2 := h.Write(resEAPMessage); err2 != nil {
+		fatal.Fatalf("MAC calculate error: %+v", err2)
 	}
 	sum := h.Sum(nil)
 	copy(resEAPMessage[24:], sum[:16])

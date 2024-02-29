@@ -2,6 +2,7 @@ package TestRegistrationProcedure
 
 import (
 	"github.com/free5gc/openapi/models"
+	webui "github.com/free5gc/webconsole/backend/WebUI"
 )
 
 const (
@@ -13,6 +14,10 @@ var TestSmfSelDataTable = make(map[string]models.SmfSelectionSubscriptionData)
 var TestSmSelDataTable = make(map[string][]models.SessionManagementSubscriptionData)
 var TestAmPolicyDataTable = make(map[string]models.AmPolicyData)
 var TestSmPolicyDataTable = make(map[string]models.SmPolicyData)
+
+var TestChargingDataTable = make(map[string][]webui.ChargingData)
+var TestFlowRuleTable = make(map[string][]webui.FlowRule)
+var TestQoSFlowTable = make(map[string][]webui.QosFlow)
 
 func init() {
 	TestAmDataTable[FREE5GC_CASE] = models.AccessAndMobilitySubscriptionData{
@@ -209,6 +214,119 @@ func init() {
 					},
 				},
 			},
+		},
+	}
+	TestChargingDataTable[FREE5GC_CASE] = []webui.ChargingData{
+		{
+			Snssai:         "01FEDCBA",
+			Dnn:            "",
+			Filter:         "",
+			QosRef:         4,
+			ChargingMethod: "Online",
+			Quota:          "100000",
+			UnitCost:       "1",
+		},
+		{
+			Snssai:         "01FEDCBA",
+			Dnn:            "internet",
+			Filter:         "9.9.9.9/32",
+			QosRef:         1,
+			ChargingMethod: "Online",
+			Quota:          "100000",
+			UnitCost:       "2",
+		},
+		{
+			Snssai:         "01112233",
+			Dnn:            "",
+			Filter:         "",
+			QosRef:         5,
+			ChargingMethod: "Online",
+			Quota:          "100000",
+			UnitCost:       "2",
+		},
+		{
+			Snssai:         "01112233",
+			Dnn:            "internet2",
+			Filter:         "9.9.9.9/32",
+			QosRef:         2,
+			ChargingMethod: "Online",
+			Quota:          "100000",
+			UnitCost:       "4",
+		},
+		{
+			Snssai:         "01010203",
+			Dnn:            "",
+			Filter:         "",
+			QosRef:         6,
+			ChargingMethod: "Offline",
+			Quota:          "0",
+			UnitCost:       "1",
+		},
+		{
+			Snssai:         "01010203",
+			Dnn:            "internet",
+			Filter:         "9.9.9.9/32",
+			QosRef:         3,
+			ChargingMethod: "Offline",
+			Quota:          "0",
+			UnitCost:       "3",
+		},
+	}
+
+	TestFlowRuleTable[FREE5GC_CASE] = []webui.FlowRule{
+		{
+			Filter:     "9.9.9.9/32",
+			Precedence: 128,
+			Snssai:     "01FEDCBA",
+			Dnn:        "internet",
+			QosRef:     1,
+		},
+		{
+			Filter:     "9.9.9.9/32",
+			Precedence: 128,
+			Snssai:     "01112233",
+			Dnn:        "internet2",
+			QosRef:     2,
+		},
+		{
+			Filter:     "9.9.9.9/32",
+			Precedence: 128,
+			Snssai:     "01010203",
+			Dnn:        "internet",
+			QosRef:     3,
+		},
+	}
+
+	TestQoSFlowTable[FREE5GC_CASE] = []webui.QosFlow{
+		{
+			Snssai: "01FEDCBA",
+			Dnn:    "internet",
+			MBRUL:  "208 Mbps",
+			MBRDL:  "208 Mbps",
+			GBRUL:  "108 Mbps",
+			GBRDL:  "108 Mbps",
+			QosRef: 1,
+			Var5QI: 8,
+		},
+		{
+			Snssai: "01112233",
+			Dnn:    "internet2",
+			MBRUL:  "208 Mbps",
+			MBRDL:  "208 Mbps",
+			GBRUL:  "108 Mbps",
+			GBRDL:  "108 Mbps",
+			QosRef: 2,
+			Var5QI: 7,
+		},
+		{
+			Snssai: "01010203",
+			Dnn:    "internet",
+			MBRUL:  "208 Mbps",
+			MBRDL:  "208 Mbps",
+			GBRUL:  "108 Mbps",
+			GBRDL:  "108 Mbps",
+			QosRef: 3,
+			Var5QI: 6,
 		},
 	}
 }

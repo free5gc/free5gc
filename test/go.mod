@@ -22,6 +22,7 @@ require (
 	github.com/free5gc/udm v0.0.0
 	github.com/free5gc/udr v0.0.0
 	github.com/free5gc/util v1.0.5
+	github.com/free5gc/webconsole v1.3.0
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-ping/ping v0.0.0-20210506233800-ff8be3320020
 	github.com/google/uuid v1.4.0
@@ -48,7 +49,7 @@ require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/cydev/zero v0.0.0-20160322155811-4a4535dd56e7 // indirect
 	github.com/dropbox/dropbox-sdk-go-unofficial v5.6.0+incompatible // indirect
-	github.com/evanphx/json-patch v0.5.2 // indirect
+	github.com/evanphx/json-patch v4.9.0+incompatible // indirect
 	github.com/fclairamb/afero-dropbox v0.1.0 // indirect
 	github.com/fclairamb/afero-gdrive v0.3.0 // indirect
 	github.com/fclairamb/afero-s3 v0.3.1 // indirect
@@ -57,6 +58,10 @@ require (
 	github.com/fclairamb/ftpserverlib v0.21.0 // indirect
 	github.com/fclairamb/go-log v0.4.1 // indirect
 	github.com/fiorix/go-diameter v3.0.2+incompatible // indirect
+	github.com/free5gc/MongoDBLibrary v1.0.0 // indirect
+	github.com/free5gc/logger_conf v1.0.0 // indirect
+	github.com/free5gc/logger_util v1.0.0 // indirect
+	github.com/free5gc/path_util v1.0.0 // indirect
 	github.com/free5gc/pfcp v1.0.7 // indirect
 	github.com/free5gc/tlv v1.0.2 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect

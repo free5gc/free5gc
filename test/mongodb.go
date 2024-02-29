@@ -8,6 +8,7 @@ import (
 
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/util/mongoapi"
+	webui "github.com/free5gc/webconsole/backend/WebUI"
 )
 
 func toBsonM(data interface{}) bson.M {
@@ -274,4 +275,156 @@ func DelSmPolicyDataFromMongoDB(ueId string) {
 	if err := mongoapi.RestfulAPIDeleteMany(collName, filter); err != nil {
 		fatal.Fatalf("DelSmPolicyDataFromMongoDB err: %+v", err)
 	}
+}
+
+func InsertChargingDataToMongoDB(ueId string, servingPlmnId string, chargingDatas []webui.ChargingData) {
+	var putDatas = make([]interface{}, 0, len(chargingDatas))
+
+	collName := "policyData.ues.chargingData"
+
+	filter := bson.M{"ueId": ueId, "servingPlmnId": servingPlmnId}
+	for _, chargingData := range chargingDatas {
+		putData := toBsonM(chargingData)
+		putData["ueId"] = ueId
+		putData["servingPlmnId"] = servingPlmnId
+		putDatas = append(putDatas, putData)
+	}
+	if err := mongoapi.RestfulAPIPostMany(collName, filter, putDatas); err != nil {
+		fatal.Fatalf("InsertChargingDataToMongoDB err: %+v", err)
+	}
+}
+
+func GetChargingDataFromMongoDB(ueId string, servingPlmnId string) (chargingData *webui.ChargingData) {
+	collName := "policyData.ues.chargingData"
+
+	filter := bson.M{"ueId": ueId, "servingPlmnId": servingPlmnId}
+	getData, err := mongoapi.RestfulAPIGetOne(collName, filter)
+	if err != nil {
+		fatal.Fatalf("GetSessionManagementDataFromMongoDB err: %+v", err)
+	}
+	if getData == nil {
+		return nil
+	}
+	tmp, err := json.Marshal(getData)
+	if err != nil {
+		return nil
+	}
+	chargingData = new(webui.ChargingData)
+	err = json.Unmarshal(tmp, chargingData)
+	if err != nil {
+		fatal.Fatalf("Unmarshal error in GetChargingDataFromMongoDB: %+v", err)
+	}
+	return chargingData
+}
+
+func DelChargingDataFromMongoDB(ueId string, servingPlmnId string) error {
+	collName := "policyData.ues.chargingData"
+
+	filter := bson.M{"ueId": ueId, "servingPlmnId": servingPlmnId}
+	if err := mongoapi.RestfulAPIDeleteMany(collName, filter); err != nil {
+		fatal.Fatalf("DelChargingDataFromMongoDB err: %+v", err)
+		return err
+	}
+	return nil
+}
+
+func InsertFlowRuleToMongoDB(ueId string, servingPlmnId string, flowRules []webui.FlowRule) {
+	var putDatas = make([]interface{}, 0, len(flowRules))
+
+	collName := "policyData.ues.flowRule"
+
+	filter := bson.M{"ueId": ueId, "servingPlmnId": servingPlmnId}
+	for _, flowRule := range flowRules {
+		putData := toBsonM(flowRule)
+		putData["ueId"] = ueId
+		putData["servingPlmnId"] = servingPlmnId
+		putDatas = append(putDatas, putData)
+	}
+	if err := mongoapi.RestfulAPIPostMany(collName, filter, putDatas); err != nil {
+		fatal.Fatalf("InsertFlowRuleToMongoDB err: %+v", err)
+	}
+}
+
+func GetFlowRuleFromMongoDB(ueId string, servingPlmnId string) (flowRule *webui.FlowRule) {
+	collName := "policyData.ues.flowRule"
+
+	filter := bson.M{"ueId": ueId, "servingPlmnId": servingPlmnId}
+	getData, err := mongoapi.RestfulAPIGetOne(collName, filter)
+	if err != nil {
+		fatal.Fatalf("GetFlowRuleFromMongoDB err: %+v", err)
+	}
+	if getData == nil {
+		return nil
+	}
+	tmp, err := json.Marshal(getData)
+	if err != nil {
+		return nil
+	}
+	flowRule = new(webui.FlowRule)
+	err = json.Unmarshal(tmp, flowRule)
+	if err != nil {
+		fatal.Fatalf("Unmarshal error in GetFlowRuleFromMongoDB: %+v", err)
+	}
+	return flowRule
+}
+
+func DelFlowRuleFromMongoDB(ueId string, servingPlmnId string) error {
+	collName := "policyData.ues.flowRule"
+
+	filter := bson.M{"ueId": ueId, "servingPlmnId": servingPlmnId}
+	if err := mongoapi.RestfulAPIDeleteMany(collName, filter); err != nil {
+		fatal.Fatalf("DelFlowRuleFromMongoDB err: %+v", err)
+		return err
+	}
+	return nil
+}
+
+func InsertQoSFlowToMongoDB(ueId string, servingPlmnId string, qosFlows []webui.QosFlow) {
+	var putDatas = make([]interface{}, 0, len(qosFlows))
+
+	collName := "policyData.ues.qosFlow"
+
+	filter := bson.M{"ueId": ueId, "servingPlmnId": servingPlmnId}
+	for _, qosFlow := range qosFlows {
+		putData := toBsonM(qosFlow)
+		putData["ueId"] = ueId
+		putData["servingPlmnId"] = servingPlmnId
+		putDatas = append(putDatas, putData)
+	}
+	if err := mongoapi.RestfulAPIPostMany(collName, filter, putDatas); err != nil {
+		fatal.Fatalf("InsertQoSFlowToMongoDB err: %+v", err)
+	}
+}
+
+func GetQoSFlowFromMongoDB(ueId string, servingPlmnId string) (qosFlow *webui.QosFlow) {
+	collName := "policyData.ues.qosFlow"
+
+	filter := bson.M{"ueId": ueId, "servingPlmnId": servingPlmnId}
+	getData, err := mongoapi.RestfulAPIGetOne(collName, filter)
+	if err != nil {
+		fatal.Fatalf("GetQoSFlowFromMongoDB err: %+v", err)
+	}
+	if getData == nil {
+		return nil
+	}
+	tmp, err := json.Marshal(getData)
+	if err != nil {
+		return nil
+	}
+	qosFlow = new(webui.QosFlow)
+	err = json.Unmarshal(tmp, qosFlow)
+	if err != nil {
+		fatal.Fatalf("Unmarshal error in GetQoSFlowFromMongoDB: %+v", err)
+	}
+	return qosFlow
+}
+
+func DelQosFlowFromMongoDB(ueId string, servingPlmnId string) error {
+	collName := "policyData.ues.qosFlow"
+	filter := bson.M{"ueId": ueId, "servingPlmnId": servingPlmnId}
+	if err := mongoapi.RestfulAPIDeleteMany(collName, filter); err != nil {
+		fatal.Fatalf("DelQoSFlowFromMongoDB err: %+v", err)
+		return err
+	}
+	return nil
 }
