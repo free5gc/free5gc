@@ -19,6 +19,8 @@ import (
 	amf_service "github.com/free5gc/amf/pkg/service"
 	ausf_factory "github.com/free5gc/ausf/pkg/factory"
 	ausf_service "github.com/free5gc/ausf/pkg/service"
+	chf_factory "github.com/free5gc/chf/pkg/factory"
+	chf_service "github.com/free5gc/chf/pkg/service"
 	"github.com/free5gc/nas/security"
 	"github.com/free5gc/ngap"
 	nrf_factory "github.com/free5gc/nrf/pkg/factory"
@@ -123,6 +125,12 @@ func init() {
 		ausfApp, _ := ausf_service.NewApp(ausf_factory.AusfConfig)
 		NFs = append(NFs, ausfApp)
 
+		if err := chfConfig(); err != nil {
+			fmt.Printf("CHF Config failed: %v\n", err)
+		}
+		chfApp, _ := chf_service.NewApp(chf_factory.ChfConfig)
+		NFs = append(NFs, chfApp)
+
 		for _, app := range NFs {
 			go app.Start("")
 			time.Sleep(200 * time.Millisecond)
@@ -185,6 +193,12 @@ func init() {
 		}
 		ausfApp, _ := ausf_service.NewApp(ausf_factory.AusfConfig)
 		NFs = append(NFs, ausfApp)
+
+		if err := chfConfig(); err != nil {
+			fmt.Printf("CHF Config failed: %v\n", err)
+		}
+		chfApp, _ := chf_service.NewApp(chf_factory.ChfConfig)
+		NFs = append(NFs, chfApp)
 
 		for _, app := range NFs {
 			go app.Start("")
@@ -1420,6 +1434,79 @@ func ausfConfig() error {
 	}
 
 	if _, err := ausf_factory.AusfConfig.Validate(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func chfConfig() error {
+	chf_factory.ChfConfig = &chf_factory.Config{
+		Info: &chf_factory.Info{
+			Version:     "1.0.3",
+			Description: "CHF initial test configuration",
+		},
+		Configuration: &chf_factory.Configuration{
+			ChfName: "CHF",
+			Sbi: &chf_factory.Sbi{
+				Scheme:       "http",
+				RegisterIPv4: "127.0.0.113",
+				BindingIPv4:  "127.0.0.113",
+				Port:         8000,
+				Tls: &chf_factory.Tls{
+					Pem: "../cert/chf.pem",
+					Key: "../cert/chf.key",
+				},
+			},
+			NrfUri:     "http://127.0.0.10:8000",
+			NrfCertPem: "../cert/nrf.pem",
+			ServiceNameList: []string{
+				"nchf-convergedcharging",
+			},
+			Mongodb: &chf_factory.Mongodb{
+				Name: "free5gc",
+				Url:  "mongodb://localhost:27017",
+			},
+			QuotaValidityTime:   10000,
+			VolumeLimit:         50000,
+			VolumeLimitPDU:      10000,
+			VolumeThresholdRate: 0.8,
+			Cgf: &chf_factory.Cgf{
+				HostIPv4:   "127.0.0.1",
+				Port:       2122,
+				ListenPort: 2121,
+				Tls: &chf_factory.Tls{
+					Pem: "../cert/chf.pem",
+					Key: "../cert/chf.key",
+				},
+			},
+			AbmfDiameter: &chf_factory.Diameter{
+				Protocol: "tcp",
+				HostIPv4: "127.0.0.113",
+				Port:     3868,
+				Tls: &chf_factory.Tls{
+					Pem: "cert/chf.pem",
+					Key: "cert/chf.key",
+				},
+			},
+			RfDiameter: &chf_factory.Diameter{
+				Protocol: "tcp",
+				HostIPv4: "127.0.0.113",
+				Port:     3869,
+				Tls: &chf_factory.Tls{
+					Pem: "../cert/chf.pem",
+					Key: "../cert/chf.key",
+				},
+			},
+		},
+		Logger: &chf_factory.Logger{
+			Enable:       true,
+			Level:        "info",
+			ReportCaller: false,
+		},
+	}
+
+	if _, err := chf_factory.ChfConfig.Validate(); err != nil {
 		return err
 	}
 
