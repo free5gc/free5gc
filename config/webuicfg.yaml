@@ -1,11 +1,23 @@
 info:
-  version: 1.0.1
+  version: 1.0.2
   description: WebUI initial local configuration
 
 configuration:
   mongodb: # the mongodb connected by this webui
     name: free5gc # name of the mongodb
     url: mongodb://localhost:27017 # a valid URL of the mongodb
+  nrfUri: http://127.0.0.10:8000 # a valid URI of NRF
+  webServer:
+    scheme: http
+    ipv4Address: 0.0.0.0
+    port: 5000
+  billingServer:
+    hostIPv4: 127.0.0.1
+    listenPort: 2122
+    port: 2121
+    tls:
+      pem: cert/chf.pem
+      key: cert/chf.key
 
 logger: # log output setting
   enable: true # true or false
