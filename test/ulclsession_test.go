@@ -79,8 +79,11 @@ func testULCLSessionBase(t *testing.T, ueCount int, upfNum int) {
 		ue.AuthenticationSubs = test.GetAuthSubscription(TestGenAuthData.MilenageTestSet19.K,
 			TestGenAuthData.MilenageTestSet19.OPC,
 			TestGenAuthData.MilenageTestSet19.OP)
+
 		// insert UE data to MongoDB
-		test.InsertAuthSubscriptionToMongoDB(ue.Supi, ue.AuthenticationSubs)
+		test.InsertUeToMongoDB(t, ue, servingPlmnId)
+		// test.InsertAuthSubscriptionToMongoDB(ue.Supi, ue.AuthenticationSubs)
+
 		getData := test.GetAuthSubscriptionFromMongoDB(ue.Supi)
 		assert.NotNil(t, getData)
 		{
@@ -359,9 +362,10 @@ func testULCLSessionBase(t *testing.T, ueCount int, upfNum int) {
 
 	for _, ue := range ueList {
 		// delete test data
-		test.DelAuthSubscriptionToMongoDB(ue.Supi)
-		test.DelAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-		test.DelSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
+		// test.DelAuthSubscriptionToMongoDB(ue.Supi)
+		// test.DelAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
+		// test.DelSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
+		test.DelUeFromMongoDB(t, ue, servingPlmnId)
 	}
 
 	// close Connection
