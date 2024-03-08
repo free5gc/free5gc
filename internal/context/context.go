@@ -156,6 +156,10 @@ func SignNFCert(nfType, nfId string) error {
 			if err != nil {
 				return errors.Wrapf(err, "Generate Error")
 			}
+			nfPubKey, err = oauth.ParsePublicKeyFromPEM(nfCertPath)
+			if err != nil {
+				return errors.Wrapf(err, "Generated but can't parse public key")
+			}
 		}
 
 		// Generate new NF's Certificate to new file
@@ -191,6 +195,7 @@ func (context *NRFContext) AuthorizationCheck(token, serviceName string) error {
 	}
 	err := oauth.VerifyOAuth(token, serviceName, factory.NrfConfig.GetNrfCertPemPath())
 	if err != nil {
+		logger.AccTokenLog.Warningln("AuthorizationCheck:", err)
 		return err
 	}
 	return nil
