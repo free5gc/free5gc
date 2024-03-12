@@ -2,8 +2,10 @@ package test
 
 import (
 	"encoding/json"
+	"testing"
 
 	"github.com/calee0219/fatal"
+	"github.com/stretchr/testify/assert"
 	"go.mongodb.org/mongo-driver/bson"
 
 	"github.com/free5gc/openapi/models"
@@ -56,12 +58,14 @@ func GetAuthSubscriptionFromMongoDB(ueId string) (authSubs *models.Authenticatio
 	return
 }
 
-func DelAuthSubscriptionToMongoDB(ueId string) {
+func DelAuthSubscriptionToMongoDB(ueId string) error {
 	collName := "subscriptionData.authenticationData.authenticationSubscription"
 	filter := bson.M{"ueId": ueId}
 	if err := mongoapi.RestfulAPIDeleteMany(collName, filter); err != nil {
 		fatal.Fatalf("DelAuthSubscriptionToMongoDB err: %+v", err)
+		return err
 	}
+	return nil
 }
 
 func InsertAccessAndMobilitySubscriptionDataToMongoDB(
@@ -99,12 +103,14 @@ func GetAccessAndMobilitySubscriptionDataFromMongoDB(
 	return
 }
 
-func DelAccessAndMobilitySubscriptionDataFromMongoDB(ueId string, servingPlmnId string) {
+func DelAccessAndMobilitySubscriptionDataFromMongoDB(ueId string, servingPlmnId string) error {
 	collName := "subscriptionData.provisionedData.amData"
 	filter := bson.M{"ueId": ueId, "servingPlmnId": servingPlmnId}
 	if err := mongoapi.RestfulAPIDeleteMany(collName, filter); err != nil {
 		fatal.Fatalf("DelAccessAndMobilitySubscriptionDataFromMongoDB err: %+v", err)
+		return err
 	}
+	return nil
 }
 
 func InsertSessionManagementSubscriptionDataToMongoDB(
@@ -124,7 +130,7 @@ func InsertSessionManagementSubscriptionDataToMongoDB(
 }
 
 func GetSessionManagementDataFromMongoDB(
-	ueId string, servingPlmnId string) (amData *models.SessionManagementSubscriptionData) {
+	ueId string, servingPlmnId string) (smData *models.SessionManagementSubscriptionData) {
 	collName := "subscriptionData.provisionedData.smData"
 	filter := bson.M{"ueId": ueId, "servingPlmnId": servingPlmnId}
 	getData, err := mongoapi.RestfulAPIGetOne(collName, filter)
@@ -138,20 +144,22 @@ func GetSessionManagementDataFromMongoDB(
 	if err != nil {
 		return
 	}
-	amData = new(models.SessionManagementSubscriptionData)
-	err = json.Unmarshal(tmp, amData)
+	smData = new(models.SessionManagementSubscriptionData)
+	err = json.Unmarshal(tmp, smData)
 	if err != nil {
 		fatal.Fatalf("Unmarshal error in GetSessionManagementDataFromMongoDB: %+v", err)
 	}
 	return
 }
 
-func DelSessionManagementSubscriptionDataFromMongoDB(ueId string, servingPlmnId string) {
+func DelSessionManagementSubscriptionDataFromMongoDB(ueId string, servingPlmnId string) error {
 	collName := "subscriptionData.provisionedData.smData"
 	filter := bson.M{"ueId": ueId, "servingPlmnId": servingPlmnId}
 	if err := mongoapi.RestfulAPIDeleteMany(collName, filter); err != nil {
 		fatal.Fatalf("DelSessionManagementSubscriptionDataFromMongoDB err: %+v", err)
+		return err
 	}
+	return nil
 }
 
 func InsertSmfSelectionSubscriptionDataToMongoDB(
@@ -189,12 +197,14 @@ func GetSmfSelectionSubscriptionDataFromMongoDB(
 	return
 }
 
-func DelSmfSelectionSubscriptionDataFromMongoDB(ueId string, servingPlmnId string) {
+func DelSmfSelectionSubscriptionDataFromMongoDB(ueId string, servingPlmnId string) error {
 	collName := "subscriptionData.provisionedData.smfSelectionSubscriptionData"
 	filter := bson.M{"ueId": ueId, "servingPlmnId": servingPlmnId}
 	if err := mongoapi.RestfulAPIDeleteMany(collName, filter); err != nil {
 		fatal.Fatalf("DelSmfSelectionSubscriptionDataFromMongoDB err: %+v", err)
+		return err
 	}
+	return nil
 }
 
 func InsertAmPolicyDataToMongoDB(ueId string, amPolicyData models.AmPolicyData) {
@@ -229,12 +239,14 @@ func GetAmPolicyDataFromMongoDB(ueId string) (amPolicyData *models.AmPolicyData)
 	return
 }
 
-func DelAmPolicyDataFromMongoDB(ueId string) {
+func DelAmPolicyDataFromMongoDB(ueId string) error {
 	collName := "policyData.ues.amData"
 	filter := bson.M{"ueId": ueId}
 	if err := mongoapi.RestfulAPIDeleteMany(collName, filter); err != nil {
 		fatal.Fatalf("DelAmPolicyDataFromMongoDB err: %+v", err)
+		return err
 	}
+	return nil
 }
 
 func InsertSmPolicyDataToMongoDB(ueId string, smPolicyData models.SmPolicyData) {
@@ -269,12 +281,14 @@ func GetSmPolicyDataFromMongoDB(ueId string) (smPolicyData *models.SmPolicyData)
 	return
 }
 
-func DelSmPolicyDataFromMongoDB(ueId string) {
+func DelSmPolicyDataFromMongoDB(ueId string) error {
 	collName := "policyData.ues.smData"
 	filter := bson.M{"ueId": ueId}
 	if err := mongoapi.RestfulAPIDeleteMany(collName, filter); err != nil {
 		fatal.Fatalf("DelSmPolicyDataFromMongoDB err: %+v", err)
+		return err
 	}
+	return nil
 }
 
 func InsertChargingDataToMongoDB(ueId string, servingPlmnId string, chargingDatas []webui.ChargingData) {
@@ -427,4 +441,79 @@ func DelQosFlowFromMongoDB(ueId string, servingPlmnId string) error {
 		return err
 	}
 	return nil
+}
+
+func InsertUeToMongoDB(t *testing.T, ue *RanUeContext, servingPlmnId string) {
+	InsertAuthSubscriptionToMongoDB(ue.Supi, ue.AuthenticationSubs)
+	getData := GetAuthSubscriptionFromMongoDB(ue.Supi)
+	assert.NotNil(t, getData)
+	{
+		amData := GetAccessAndMobilitySubscriptionData()
+		InsertAccessAndMobilitySubscriptionDataToMongoDB(ue.Supi, amData, servingPlmnId)
+		getData := GetAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
+		assert.NotNil(t, getData)
+	}
+	{
+		smfSelData := GetSmfSelectionSubscriptionData()
+		InsertSmfSelectionSubscriptionDataToMongoDB(ue.Supi, smfSelData, servingPlmnId)
+		getData := GetSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
+		assert.NotNil(t, getData)
+	}
+	{
+		smSelData := GetSessionManagementSubscriptionData()
+		InsertSessionManagementSubscriptionDataToMongoDB(ue.Supi, servingPlmnId, smSelData)
+		getData := GetSessionManagementDataFromMongoDB(ue.Supi, servingPlmnId)
+		assert.NotNil(t, getData)
+	}
+	{
+		amPolicyData := GetAmPolicyData()
+		InsertAmPolicyDataToMongoDB(ue.Supi, amPolicyData)
+		getData := GetAmPolicyDataFromMongoDB(ue.Supi)
+		assert.NotNil(t, getData)
+	}
+	{
+		smPolicyData := GetSmPolicyData()
+		InsertSmPolicyDataToMongoDB(ue.Supi, smPolicyData)
+		getData := GetSmPolicyDataFromMongoDB(ue.Supi)
+		assert.NotNil(t, getData)
+	}
+	{
+		chargingDatas := GetChargingData()
+		InsertChargingDataToMongoDB(ue.Supi, servingPlmnId, chargingDatas)
+		getData := GetSmPolicyDataFromMongoDB(ue.Supi)
+		assert.NotNil(t, getData)
+	}
+	{
+		flowRules := GetFlowRuleData()
+		InsertFlowRuleToMongoDB(ue.Supi, servingPlmnId, flowRules)
+		getData := GetSmPolicyDataFromMongoDB(ue.Supi)
+		assert.NotNil(t, getData)
+	}
+	{
+		qosFlows := GetQosFlowData()
+		InsertQoSFlowToMongoDB(ue.Supi, servingPlmnId, qosFlows)
+		getData := GetSmPolicyDataFromMongoDB(ue.Supi)
+		assert.NotNil(t, getData)
+	}
+}
+
+func DelUeFromMongoDB(t *testing.T, ue *RanUeContext, servingPlmnId string) {
+	err := DelAuthSubscriptionToMongoDB(ue.Supi)
+	assert.Nil(t, err)
+	err = DelAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
+	assert.Nil(t, err)
+	err = DelSessionManagementSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
+	assert.Nil(t, err)
+	err = DelSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
+	assert.Nil(t, err)
+	err = DelAmPolicyDataFromMongoDB(ue.Supi)
+	assert.Nil(t, err)
+	err = DelSmPolicyDataFromMongoDB(ue.Supi)
+	assert.Nil(t, err)
+	err = DelChargingDataFromMongoDB(ue.Supi, servingPlmnId)
+	assert.Nil(t, err)
+	err = DelFlowRuleFromMongoDB(ue.Supi, servingPlmnId)
+	assert.Nil(t, err)
+	err = DelQosFlowFromMongoDB(ue.Supi, servingPlmnId)
+	assert.Nil(t, err)
 }

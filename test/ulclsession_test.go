@@ -57,7 +57,9 @@ func testULCLSessionBase(t *testing.T, ueCount int, upfNum int) {
 	assert.Nil(t, err)
 	ngapPdu, err := ngap.Decoder(recvMsg[:n])
 	assert.Nil(t, err)
-	assert.True(t, ngapPdu.Present == ngapType.NGAPPDUPresentSuccessfulOutcome && ngapPdu.SuccessfulOutcome.ProcedureCode.Value == ngapType.ProcedureCodeNGSetup, "No NGSetupResponse received.")
+	assert.True(t,
+		ngapPdu.Present == ngapType.NGAPPDUPresentSuccessfulOutcome &&
+			ngapPdu.SuccessfulOutcome.ProcedureCode.Value == ngapType.ProcedureCodeNGSetup, "No NGSetupResponse received.")
 
 	ueList := []*test.RanUeContext{}
 	mobileIdentity5GSList := map[string]nasType.MobileIdentity5GS{}
@@ -79,8 +81,10 @@ func testULCLSessionBase(t *testing.T, ueCount int, upfNum int) {
 		ue.AuthenticationSubs = test.GetAuthSubscription(TestGenAuthData.MilenageTestSet19.K,
 			TestGenAuthData.MilenageTestSet19.OPC,
 			TestGenAuthData.MilenageTestSet19.OP)
+
 		// insert UE data to MongoDB
-		test.InsertAuthSubscriptionToMongoDB(ue.Supi, ue.AuthenticationSubs)
+		test.InsertUeToMongoDB(t, ue, servingPlmnId)
+
 		getData := test.GetAuthSubscriptionFromMongoDB(ue.Supi)
 		assert.NotNil(t, getData)
 		{
@@ -359,9 +363,7 @@ func testULCLSessionBase(t *testing.T, ueCount int, upfNum int) {
 
 	for _, ue := range ueList {
 		// delete test data
-		test.DelAuthSubscriptionToMongoDB(ue.Supi)
-		test.DelAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-		test.DelSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
+		test.DelUeFromMongoDB(t, ue, servingPlmnId)
 	}
 
 	// close Connection

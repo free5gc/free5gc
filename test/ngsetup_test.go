@@ -260,7 +260,10 @@ func TestCN(t *testing.T) {
 	// insert UE data to MongoDB
 
 	servingPlmnId := "20893"
-	test.InsertAuthSubscriptionToMongoDB(ue.Supi, ue.AuthenticationSubs)
+	// test.InsertAuthSubscriptionToMongoDB(ue.Supi, ue.AuthenticationSubs)
+
+	test.InsertUeToMongoDB(t, ue, servingPlmnId)
+
 	getData := test.GetAuthSubscriptionFromMongoDB(ue.Supi)
 	assert.NotNil(t, getData)
 	{
@@ -294,7 +297,7 @@ func TestCN(t *testing.T) {
 		assert.NotNil(t, getData)
 	}
 
-	defer beforeClose(ue)
+	defer beforeClose(t, ue, servingPlmnId)
 
 	// subscribe os signal
 	c := make(chan os.Signal, 1)
@@ -302,11 +305,13 @@ func TestCN(t *testing.T) {
 	<-c
 }
 
-func beforeClose(ue *test.RanUeContext) {
+func beforeClose(t *testing.T, ue *test.RanUeContext, servingPlmnId string) {
 	// delete test data
-	test.DelAuthSubscriptionToMongoDB(ue.Supi)
-	test.DelAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, "20893")
-	test.DelSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, "20893")
+	// test.DelAuthSubscriptionToMongoDB(ue.Supi)
+	// test.DelAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, "20893")
+	// test.DelSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, "20893")
+
+	test.DelUeFromMongoDB(t, ue, servingPlmnId)
 }
 
 func nrfConfig(oauth bool) error {

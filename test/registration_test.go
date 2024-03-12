@@ -57,42 +57,6 @@ func recvUeConfigUpdateCmd(t *testing.T, recvMsg []byte, conn *sctp.SCTPConn) {
 		"Not ProcedureCodeDownlinkNASTransport")
 }
 
-func insertUeToMongoDB(t *testing.T, ue *test.RanUeContext, servingPlmnId string) {
-	test.InsertAuthSubscriptionToMongoDB(ue.Supi, ue.AuthenticationSubs)
-	getData := test.GetAuthSubscriptionFromMongoDB(ue.Supi)
-	assert.NotNil(t, getData)
-	{
-		amData := test.GetAccessAndMobilitySubscriptionData()
-		test.InsertAccessAndMobilitySubscriptionDataToMongoDB(ue.Supi, amData, servingPlmnId)
-		getData := test.GetAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-		assert.NotNil(t, getData)
-	}
-	{
-		smfSelData := test.GetSmfSelectionSubscriptionData()
-		test.InsertSmfSelectionSubscriptionDataToMongoDB(ue.Supi, smfSelData, servingPlmnId)
-		getData := test.GetSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-		assert.NotNil(t, getData)
-	}
-	{
-		smSelData := test.GetSessionManagementSubscriptionData()
-		test.InsertSessionManagementSubscriptionDataToMongoDB(ue.Supi, servingPlmnId, smSelData)
-		getData := test.GetSessionManagementDataFromMongoDB(ue.Supi, servingPlmnId)
-		assert.NotNil(t, getData)
-	}
-	{
-		amPolicyData := test.GetAmPolicyData()
-		test.InsertAmPolicyDataToMongoDB(ue.Supi, amPolicyData)
-		getData := test.GetAmPolicyDataFromMongoDB(ue.Supi)
-		assert.NotNil(t, getData)
-	}
-	{
-		smPolicyData := test.GetSmPolicyData()
-		test.InsertSmPolicyDataToMongoDB(ue.Supi, smPolicyData)
-		getData := test.GetSmPolicyDataFromMongoDB(ue.Supi)
-		assert.NotNil(t, getData)
-	}
-}
-
 // Registration
 func TestRegistration(t *testing.T) {
 	var n int
@@ -128,10 +92,10 @@ func TestRegistration(t *testing.T) {
 	ue.AuthenticationSubs = test.GetAuthSubscription(TestGenAuthData.MilenageTestSet19.K,
 		TestGenAuthData.MilenageTestSet19.OPC,
 		TestGenAuthData.MilenageTestSet19.OP)
+	servingPlmnId := "20893"
 
 	// insert UE data to MongoDB
-	servingPlmnId := "20893"
-	insertUeToMongoDB(t, ue, servingPlmnId)
+	test.InsertUeToMongoDB(t, ue, servingPlmnId)
 
 	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
@@ -295,9 +259,7 @@ func TestRegistration(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	// delete test data
-	test.DelAuthSubscriptionToMongoDB(ue.Supi)
-	test.DelAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-	test.DelSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
+	test.DelUeFromMongoDB(t, ue, servingPlmnId)
 
 	// close Connection
 	conn.Close()
@@ -335,10 +297,10 @@ func TestDeregistration(t *testing.T) {
 	ue.AuthenticationSubs = test.GetAuthSubscription(TestGenAuthData.MilenageTestSet19.K,
 		TestGenAuthData.MilenageTestSet19.OPC,
 		TestGenAuthData.MilenageTestSet19.OP)
-	// insert UE data to MongoDB
-
 	servingPlmnId := "20893"
-	insertUeToMongoDB(t, ue, servingPlmnId)
+
+	// insert UE data to MongoDB
+	test.InsertUeToMongoDB(t, ue, servingPlmnId)
 
 	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
@@ -471,9 +433,7 @@ func TestDeregistration(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	// delete test data
-	test.DelAuthSubscriptionToMongoDB(ue.Supi)
-	test.DelAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-	test.DelSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
+	test.DelUeFromMongoDB(t, ue, servingPlmnId)
 
 	// close Connection
 	conn.Close()
@@ -511,10 +471,10 @@ func TestServiceRequest(t *testing.T) {
 	ue.AuthenticationSubs = test.GetAuthSubscription(TestGenAuthData.MilenageTestSet19.K,
 		TestGenAuthData.MilenageTestSet19.OPC,
 		TestGenAuthData.MilenageTestSet19.OP)
-	// insert UE data to MongoDB
-
 	servingPlmnId := "20893"
-	insertUeToMongoDB(t, ue, servingPlmnId)
+
+	// insert UE data to MongoDB
+	test.InsertUeToMongoDB(t, ue, servingPlmnId)
 
 	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
@@ -675,9 +635,7 @@ func TestServiceRequest(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	// delete test data
-	test.DelAuthSubscriptionToMongoDB(ue.Supi)
-	test.DelAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-	test.DelSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
+	test.DelUeFromMongoDB(t, ue, servingPlmnId)
 
 	// close Connection
 	conn.Close()
@@ -715,10 +673,10 @@ func TestGUTIRegistration(t *testing.T) {
 	ue.AuthenticationSubs = test.GetAuthSubscription(TestGenAuthData.MilenageTestSet19.K,
 		TestGenAuthData.MilenageTestSet19.OPC,
 		TestGenAuthData.MilenageTestSet19.OP)
-	// insert UE data to MongoDB
-
 	servingPlmnId := "20893"
-	insertUeToMongoDB(t, ue, servingPlmnId)
+
+	// insert UE data to MongoDB
+	test.InsertUeToMongoDB(t, ue, servingPlmnId)
 
 	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
 	SUCI5GS := nasType.MobileIdentity5GS{
@@ -973,9 +931,7 @@ func TestGUTIRegistration(t *testing.T) {
 	time.Sleep(1000 * time.Millisecond)
 
 	// delete test data
-	test.DelAuthSubscriptionToMongoDB(ue.Supi)
-	test.DelAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-	test.DelSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
+	test.DelUeFromMongoDB(t, ue, servingPlmnId)
 
 	// close Connection
 	conn.Close()
@@ -1013,10 +969,10 @@ func TestPDUSessionReleaseRequest(t *testing.T) {
 	ue.AuthenticationSubs = test.GetAuthSubscription(TestGenAuthData.MilenageTestSet19.K,
 		TestGenAuthData.MilenageTestSet19.OPC,
 		TestGenAuthData.MilenageTestSet19.OP)
-	// insert UE data to MongoDB
-
 	servingPlmnId := "20893"
-	insertUeToMongoDB(t, ue, servingPlmnId)
+
+	// insert UE data to MongoDB
+	test.InsertUeToMongoDB(t, ue, servingPlmnId)
 
 	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
@@ -1157,9 +1113,7 @@ func TestPDUSessionReleaseRequest(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	// delete test data
-	test.DelAuthSubscriptionToMongoDB(ue.Supi)
-	test.DelAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-	test.DelSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
+	test.DelUeFromMongoDB(t, ue, servingPlmnId)
 
 	// close Connection
 	conn.Close()
@@ -1196,10 +1150,11 @@ func TestPDUSessionReleaseAbnormal(t *testing.T) {
 	ue.AuthenticationSubs = test.GetAuthSubscription(TestGenAuthData.MilenageTestSet19.K,
 		TestGenAuthData.MilenageTestSet19.OPC,
 		TestGenAuthData.MilenageTestSet19.OP)
-	// insert UE data to MongoDB
 
+	// insert UE data to MongoDB
 	servingPlmnId := "20893"
-	test.InsertAuthSubscriptionToMongoDB(ue.Supi, ue.AuthenticationSubs)
+	test.InsertUeToMongoDB(t, ue, servingPlmnId)
+
 	getData := test.GetAuthSubscriptionFromMongoDB(ue.Supi)
 	assert.NotNil(t, getData)
 	{
@@ -1392,9 +1347,7 @@ func TestPDUSessionReleaseAbnormal(t *testing.T) {
 	time.Sleep(2 * time.Second)
 
 	// delete test data
-	test.DelAuthSubscriptionToMongoDB(ue.Supi)
-	test.DelAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-	test.DelSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
+	test.DelUeFromMongoDB(t, ue, servingPlmnId)
 
 	// close Connection
 	conn.Close()
@@ -1449,10 +1402,10 @@ func TestXnHandover(t *testing.T) {
 	ue.AuthenticationSubs = test.GetAuthSubscription(TestGenAuthData.MilenageTestSet19.K,
 		TestGenAuthData.MilenageTestSet19.OPC,
 		TestGenAuthData.MilenageTestSet19.OP)
-	// insert UE data to MongoDB
 
+	// insert UE data to MongoDB
 	servingPlmnId := "20893"
-	insertUeToMongoDB(t, ue, servingPlmnId)
+	test.InsertUeToMongoDB(t, ue, servingPlmnId)
 
 	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
@@ -1577,9 +1530,7 @@ func TestXnHandover(t *testing.T) {
 	time.Sleep(10 * time.Millisecond)
 
 	// delete test data
-	test.DelAuthSubscriptionToMongoDB(ue.Supi)
-	test.DelAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-	test.DelSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
+	test.DelUeFromMongoDB(t, ue, servingPlmnId)
 
 	// close Connection
 	conn.Close()
@@ -1618,10 +1569,10 @@ func TestPaging(t *testing.T) {
 	ue.AuthenticationSubs = test.GetAuthSubscription(TestGenAuthData.MilenageTestSet19.K,
 		TestGenAuthData.MilenageTestSet19.OPC,
 		TestGenAuthData.MilenageTestSet19.OP)
-	// insert UE data to MongoDB
 
+	// insert UE data to MongoDB
 	servingPlmnId := "20893"
-	insertUeToMongoDB(t, ue, servingPlmnId)
+	test.InsertUeToMongoDB(t, ue, servingPlmnId)
 
 	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
@@ -1804,10 +1755,9 @@ func TestPaging(t *testing.T) {
 	assert.Nil(t, err)
 
 	time.Sleep(1 * time.Second)
+
 	// delete test data
-	test.DelAuthSubscriptionToMongoDB(ue.Supi)
-	test.DelAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-	test.DelSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
+	test.DelUeFromMongoDB(t, ue, servingPlmnId)
 
 	// close Connection
 	conn.Close()
@@ -1871,10 +1821,10 @@ func TestN2Handover(t *testing.T) {
 	ue.AuthenticationSubs = test.GetAuthSubscription(TestGenAuthData.MilenageTestSet19.K,
 		TestGenAuthData.MilenageTestSet19.OPC,
 		TestGenAuthData.MilenageTestSet19.OP)
-	// insert UE data to MongoDB
 
+	// insert UE data to MongoDB
 	servingPlmnId := "20893"
-	insertUeToMongoDB(t, ue, servingPlmnId)
+	test.InsertUeToMongoDB(t, ue, servingPlmnId)
 
 	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
@@ -2136,9 +2086,7 @@ func TestN2Handover(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	// delete test data
-	test.DelAuthSubscriptionToMongoDB(ue.Supi)
-	test.DelAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-	test.DelSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
+	test.DelUeFromMongoDB(t, ue, servingPlmnId)
 
 	// close Connection
 	conn.Close()
@@ -2181,10 +2129,10 @@ func TestDuplicateRegistration(t *testing.T) {
 	ue.AuthenticationSubs = test.GetAuthSubscription(TestGenAuthData.MilenageTestSet19.K,
 		TestGenAuthData.MilenageTestSet19.OPC,
 		TestGenAuthData.MilenageTestSet19.OP)
-	// insert UE data to MongoDB
 
+	// insert UE data to MongoDB
 	servingPlmnId := "20893"
-	insertUeToMongoDB(t, ue, servingPlmnId)
+	test.InsertUeToMongoDB(t, ue, servingPlmnId)
 
 	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
@@ -2365,11 +2313,11 @@ func TestDuplicateRegistration(t *testing.T) {
 	_, err = upfConn.Write(append(tt, b...))
 	assert.Nil(t, err)
 
-	// delete test data
-	test.DelAuthSubscriptionToMongoDB(ue.Supi)
-	test.DelAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-	test.DelSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
 	time.Sleep(1 * time.Second)
+
+	// delete test data
+	test.DelUeFromMongoDB(t, ue, servingPlmnId)
+
 	// close Connection
 	conn.Close()
 
@@ -2423,10 +2371,10 @@ func TestAFInfluenceOnTrafficRouting(t *testing.T) {
 	ue.AuthenticationSubs = test.GetAuthSubscription(TestGenAuthData.MilenageTestSet19.K,
 		TestGenAuthData.MilenageTestSet19.OPC,
 		TestGenAuthData.MilenageTestSet19.OP)
-	// insert UE data to MongoDB
 
+	// insert UE data to MongoDB
 	servingPlmnId := "20893"
-	insertUeToMongoDB(t, ue, servingPlmnId)
+	test.InsertUeToMongoDB(t, ue, servingPlmnId)
 
 	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
@@ -2551,9 +2499,7 @@ func TestAFInfluenceOnTrafficRouting(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	// delete test data
-	test.DelAuthSubscriptionToMongoDB(ue.Supi)
-	test.DelAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-	test.DelSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
+	test.DelUeFromMongoDB(t, ue, servingPlmnId)
 
 	// close Connection
 	conn.Close()
@@ -2595,10 +2541,10 @@ func TestReSynchronization(t *testing.T) {
 	ue.AuthenticationSubs = test.GetAuthSubscription(TestGenAuthData.MilenageTestSet19.K,
 		TestGenAuthData.MilenageTestSet19.OPC,
 		TestGenAuthData.MilenageTestSet19.OP)
-	// insert UE data to MongoDB
 
+	// insert UE data to MongoDB
 	servingPlmnId := "20893"
-	insertUeToMongoDB(t, ue, servingPlmnId)
+	test.InsertUeToMongoDB(t, ue, servingPlmnId)
 
 	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
@@ -2839,9 +2785,7 @@ func TestReSynchronization(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	// delete test data
-	test.DelAuthSubscriptionToMongoDB(ue.Supi)
-	test.DelAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-	test.DelSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
+	test.DelUeFromMongoDB(t, ue, servingPlmnId)
 
 	// close Connection
 	conn.Close()
@@ -2884,10 +2828,10 @@ func TestRequestTwoPDUSessions(t *testing.T) {
 	ue.AuthenticationSubs = test.GetAuthSubscription(TestGenAuthData.MilenageTestSet19.K,
 		TestGenAuthData.MilenageTestSet19.OPC,
 		TestGenAuthData.MilenageTestSet19.OP)
-	// insert UE data to MongoDB
 
+	// insert UE data to MongoDB
 	servingPlmnId := "20893"
-	insertUeToMongoDB(t, ue, servingPlmnId)
+	test.InsertUeToMongoDB(t, ue, servingPlmnId)
 
 	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
@@ -3145,9 +3089,7 @@ func TestRequestTwoPDUSessions(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	// delete test data
-	test.DelAuthSubscriptionToMongoDB(ue.Supi)
-	test.DelAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-	test.DelSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
+	test.DelUeFromMongoDB(t, ue, servingPlmnId)
 
 	// close Connection
 	conn.Close()
@@ -3191,10 +3133,10 @@ func TestEAPAKAPrimeAuthentication(t *testing.T) {
 		TestGenAuthData.MilenageTestSet19.K,
 		TestGenAuthData.MilenageTestSet19.OPC,
 		TestGenAuthData.MilenageTestSet19.OP)
-	// insert UE data to MongoDB
 
+	// insert UE data to MongoDB
 	servingPlmnId := "20893"
-	insertUeToMongoDB(t, ue, servingPlmnId)
+	test.InsertUeToMongoDB(t, ue, servingPlmnId)
 
 	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
@@ -3358,9 +3300,7 @@ func TestEAPAKAPrimeAuthentication(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	// delete test data
-	test.DelAuthSubscriptionToMongoDB(ue.Supi)
-	test.DelAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-	test.DelSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
+	test.DelUeFromMongoDB(t, ue, servingPlmnId)
 
 	// close Connection
 	conn.Close()
@@ -3421,7 +3361,7 @@ func TestMultiAmfRegistration(t *testing.T) {
 
 	// insert UE data to MongoDB
 	servingPlmnId := "20893"
-	insertUeToMongoDB(t, ue, servingPlmnId)
+	test.InsertUeToMongoDB(t, ue, servingPlmnId)
 
 	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
@@ -3571,9 +3511,7 @@ func TestMultiAmfRegistration(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	// delete test data
-	test.DelAuthSubscriptionToMongoDB(ue.Supi)
-	test.DelAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-	test.DelSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
+	test.DelUeFromMongoDB(t, ue, servingPlmnId)
 
 	// close Connections
 	conn2.Close()
@@ -3633,7 +3571,7 @@ func TestNasReroute(t *testing.T) {
 
 	// insert UE data to MongoDB
 	servingPlmnId := "20893"
-	insertUeToMongoDB(t, ue, servingPlmnId)
+	test.InsertUeToMongoDB(t, ue, servingPlmnId)
 
 	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
@@ -3771,9 +3709,7 @@ func TestNasReroute(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	// delete test data
-	test.DelAuthSubscriptionToMongoDB(ue.Supi)
-	test.DelAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-	test.DelSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
+	test.DelUeFromMongoDB(t, ue, servingPlmnId)
 
 	// close Connections
 	conn2.Close()
