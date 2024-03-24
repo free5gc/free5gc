@@ -1490,8 +1490,8 @@ func chfConfig() error {
 				HostIPv4: "127.0.0.113",
 				Port:     3868,
 				Tls: &chf_factory.Tls{
-					Pem: "cert/chf.pem",
-					Key: "cert/chf.key",
+					Pem: "../cert/chf.pem",
+					Key: "../cert/chf.key",
 				},
 			},
 			RfDiameter: &chf_factory.Diameter{
