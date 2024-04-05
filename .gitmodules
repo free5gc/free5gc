@@ -1,6 +1,6 @@
 [submodule "amf"]
 	path = NFs/amf
-	url = https://github.com/free5gc/amf.git
+	url = https://github.com/nathalie21005/amf.git
 [submodule "ausf"]
 	path = NFs/ausf
 	url = https://github.com/free5gc/ausf.git
@@ -15,7 +15,7 @@
 	url = https://github.com/free5gc/nssf.git
 [submodule "pcf"]
 	path = NFs/pcf
-	url = https://github.com/free5gc/pcf.git
+	url = https://github.com/nathalie21005/pcf.git
 [submodule "smf"]
 	path = NFs/smf
 	url = https://github.com/free5gc/smf.git
