@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+# checks if no parameter was given as input
 if [ -z "$1" ]
 then
     echo "[ERRO] No parameter was given!"
@@ -9,8 +10,28 @@ then
     echo "Example:"
     echo "$0 enp0s4"
 else
+    # if the parameter is present, cache root credentials
+    sudo -v
+    if [ $? == 1 ]
+    then
+        echo "[ERRO] Without root permission, you cannot change iptables configuration"
+        exit 1
+    fi
+    # if user has root permissions, then start to modify the rules
     echo "[INFO] Using $1 as interface name"
 
+    # first, delete any previous applied rules
+    echo -n "[INFO] Removing all old iptables rules, if any... "
+    sudo iptables -P INPUT ACCEPT
+    sudo iptables -P FORWARD ACCEPT
+    sudo iptables -P OUTPUT ACCEPT
+    sudo iptables -t nat -F
+    sudo iptables -t mangle -F
+    sudo iptables -F
+    sudo iptables -X
+    echo "[OK]"
+
+    # then apply the new ones
     echo -n "[INFO] Applying iptables rules... "
     sudo iptables -t nat -A POSTROUTING -o $1 -j MASQUERADE
     sudo iptables -I FORWARD 1 -j ACCEPT
