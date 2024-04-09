@@ -18,7 +18,7 @@ require (
 	github.com/free5gc/openapi v1.0.8
 	github.com/free5gc/pcf v0.0.0
 	github.com/free5gc/sctp v1.0.0
-	github.com/free5gc/smf v0.0.0
+	github.com/free5gc/smf v1.2.3
 	github.com/free5gc/udm v0.0.0
 	github.com/free5gc/udr v0.0.0
 	github.com/free5gc/util v1.0.6
@@ -71,7 +71,7 @@ require (
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
-	github.com/golang/snappy v0.0.3 // indirect
+	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/gopacket v1.1.19 // indirect
 	github.com/google/s2a-go v0.1.4 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.2.3 // indirect
@@ -118,7 +118,7 @@ require (
 	golang.org/x/crypto v0.17.0 // indirect
 	golang.org/x/exp v0.0.0-20231127185646-65229373498e // indirect
 	golang.org/x/oauth2 v0.15.0 // indirect
-	golang.org/x/sync v0.2.0 // indirect
+	golang.org/x/sync v0.5.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	google.golang.org/api v0.126.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
