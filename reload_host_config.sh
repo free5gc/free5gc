@@ -11,8 +11,17 @@ then
     echo "$0 <dn_interface>"
     echo "Example:"
     echo "$0 enp0s4"
+# then check if more than two parameters were input
+elif [ $# -gt 2 ]
+then
+    echo "[ERRO] Too many parameters!"
+    echo "Usage:"
+    echo "$0 <dn_interface> [-reset-firewall]"
+    echo "Examples:"
+    echo "$0 enp0s4"
+    echo "$0 enp0s4 -reset-firewall"
 else
-    # if any parameter is present, cache root credentials
+    # if any two parameters are present, cache root credentials
     sudo -v
     if [ $? == 1 ]
     then
