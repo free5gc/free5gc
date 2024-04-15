@@ -44,7 +44,7 @@ run:
 # output configuration options
 output:
   # colored-line-number|line-number|json|tab|checkstyle|code-climate, default is "colored-line-number"
-  format: colored-line-number
+  formats: colored-line-number
   # print lines of code with issue, default is true
   print-issued-lines: true
   # print linter name in the end of issue text, default is true
@@ -150,6 +150,7 @@ linters-settings:
   govet:
     # report about shadowed variables
     check-shadowing: true
+    # check-shadowing: true
     # settings per analyzer
     settings:
       printf: # analyzer name, run `go tool vet help` to see all analyzers
@@ -161,9 +162,8 @@ linters-settings:
     # enable or disable analyzers by name
     enable:
       - atomicalign
-    enable-all: false
-    disable:
       - shadow
+    enable-all: false
     disable-all: false
   depguard:
     list-type: blacklist
