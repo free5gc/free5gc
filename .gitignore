@@ -27,6 +27,3 @@ cscope.*
 # Debug
 *.log
 *.pcap
-
-# R17
-openapi
