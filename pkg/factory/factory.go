@@ -6,7 +6,7 @@ package factory
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	"github.com/asaskevich/govalidator"
 	"gopkg.in/yaml.v2"
@@ -23,7 +23,7 @@ func InitConfigFactory(f string, cfg *Config) error {
 		f = NrfDefaultConfigPath
 	}
 
-	if content, err := ioutil.ReadFile(f); err != nil {
+	if content, err := os.ReadFile(f); err != nil {
 		return fmt.Errorf("[Factory] %+v", err)
 	} else {
 		logger.CfgLog.Infof("Read config from [%s]", f)
