@@ -9,6 +9,13 @@ N3IWF_ENABLE=0
 PID_LIST=()
 echo $$ > run.pid
 
+sudo -v # cache credentials
+if [ $? == 1 ] # check if credentials were successfully cached
+then
+    echo "[ERRO] Without root permission, you cannot run free5GC"
+    exit 1
+fi
+
 if [ $# -ne 0 ]; then
     while [ $# -gt 0 ]; do
         case $1 in
