@@ -179,6 +179,7 @@ configuration:
       - A: gNB1
         B: UPF6
   nrfUri: http://127.0.0.10:8000
+  nrfCertPem: cert/nrf.pem # NRF Certificate
   ulcl: true
 
   # retransmission timer for pdu session modification command

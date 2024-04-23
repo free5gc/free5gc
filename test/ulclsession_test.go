@@ -67,7 +67,7 @@ func testULCLSessionBase(t *testing.T, ueCount int, upfNum int) {
 	servingPlmnId := "20893"
 	sNssai := models.Snssai{
 		Sst: 1,
-		Sd:  "112233",
+		Sd:  "010203",
 	}
 
 	for i := 0; i < ueCount; i++ {
@@ -84,39 +84,6 @@ func testULCLSessionBase(t *testing.T, ueCount int, upfNum int) {
 
 		// insert UE data to MongoDB
 		test.InsertUeToMongoDB(t, ue, servingPlmnId)
-
-		getData := test.GetAuthSubscriptionFromMongoDB(ue.Supi)
-		assert.NotNil(t, getData)
-		{
-			amData := test.GetAccessAndMobilitySubscriptionData()
-			test.InsertAccessAndMobilitySubscriptionDataToMongoDB(ue.Supi, amData, servingPlmnId)
-			getData := test.GetAccessAndMobilitySubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-			assert.NotNil(t, getData)
-		}
-		{
-			smfSelData := test.GetSmfSelectionSubscriptionData()
-			test.InsertSmfSelectionSubscriptionDataToMongoDB(ue.Supi, smfSelData, servingPlmnId)
-			getData := test.GetSmfSelectionSubscriptionDataFromMongoDB(ue.Supi, servingPlmnId)
-			assert.NotNil(t, getData)
-		}
-		{
-			smSelData := test.GetSessionManagementSubscriptionData()
-			test.InsertSessionManagementSubscriptionDataToMongoDB(ue.Supi, servingPlmnId, smSelData)
-			getData := test.GetSessionManagementDataFromMongoDB(ue.Supi, servingPlmnId)
-			assert.NotNil(t, getData)
-		}
-		{
-			amPolicyData := test.GetAmPolicyData()
-			test.InsertAmPolicyDataToMongoDB(ue.Supi, amPolicyData)
-			getData := test.GetAmPolicyDataFromMongoDB(ue.Supi)
-			assert.NotNil(t, getData)
-		}
-		{
-			smPolicyData := test.GetSmPolicyData()
-			test.InsertSmPolicyDataToMongoDB(ue.Supi, smPolicyData)
-			getData := test.GetSmPolicyDataFromMongoDB(ue.Supi)
-			assert.NotNil(t, getData)
-		}
 
 		// send InitialUeMessage(Registration Request)
 		//i%100
