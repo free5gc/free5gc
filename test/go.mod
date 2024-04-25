@@ -18,7 +18,7 @@ require (
 	github.com/free5gc/openapi v1.0.8
 	github.com/free5gc/pcf v0.0.0
 	github.com/free5gc/sctp v1.0.0
-	github.com/free5gc/smf v1.2.3
+	github.com/free5gc/smf v0.0.0
 	github.com/free5gc/udm v0.0.0
 	github.com/free5gc/udr v0.0.0
 	github.com/free5gc/util v1.0.6
@@ -141,5 +141,6 @@ replace (
 	github.com/free5gc/smf => ../NFs/smf
 	github.com/free5gc/udm => ../NFs/udm
 	github.com/free5gc/udr => ../NFs/udr
+	github.com/free5gc/upf => ../NFs/upf
 	github.com/free5gc/webconsole => ../webconsole
 )
