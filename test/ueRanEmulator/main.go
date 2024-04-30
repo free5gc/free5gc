@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net"
 	"os"
@@ -422,7 +421,7 @@ func main() {
 }
 
 func initConfigFactory(f string) error {
-	content, err := ioutil.ReadFile(f)
+	content, err := os.ReadFile(f)
 	if err != nil {
 		err = fmt.Errorf("ReadFile: %v", err)
 		return err
