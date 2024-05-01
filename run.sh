@@ -5,6 +5,7 @@ LOG_NAME="free5gc.log"
 TODAY=$(date +"%Y%m%d_%H%M%S")
 PCAP_MODE=0
 N3IWF_ENABLE=0
+TNGF_ENABLE=0
 
 PID_LIST=()
 echo $$ > run.pid
@@ -32,6 +33,9 @@ if [ $# -ne 0 ]; then
             -n3iwf)
                 N3IWF_ENABLE=1
                 ;;
+            -tngf)
+                TNGF_ENABLE=1
+                ;;
         esac
         shift
     done
@@ -42,7 +46,7 @@ function terminate()
     rm run.pid
     sudo rm -f /tmp/config.json # CHF ChargingGatway FTP config
     echo "Receive SIGINT, terminating..."
-    if [ $N3IWF_ENABLE -ne 0 ]; then
+    if [ $N3IWF_ENABLE -ne 0 ] || [ $TNGF_ENABLE -ne 0 ]; then
         sudo ip xfrm state > ${LOG_PATH}NWu_SA_state.log
         sudo ip xfrm state flush
         sudo ip xfrm policy flush
@@ -129,6 +133,14 @@ if [ $N3IWF_ENABLE -ne 0 ]; then
     sleep 1
     N3IWF_PID=$(pgrep -P $SUDO_N3IWF_PID)
     PID_LIST+=($SUDO_N3IWF_PID $N3IWF_PID)
+fi
+
+if [ $TNGF_ENABLE -ne 0 ]; then
+    sudo ./bin/tngf -c ./config/tngfcfg.yaml -l ${LOG_PATH}tngf.log -lc ${LOG_PATH}${LOG_NAME} &
+    SUDO_TNGF_PID=$!
+    sleep 1
+    TNGF_PID=$(pgrep -P $SUDO_TNGF_PID)
+    PID_LIST+=($SUDO_TNGF_PID $TNGF_PID)
 fi
 
 wait ${PID_LIST}
