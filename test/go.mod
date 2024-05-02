@@ -22,7 +22,7 @@ require (
 	github.com/free5gc/udm v0.0.0
 	github.com/free5gc/udr v0.0.0
 	github.com/free5gc/util v1.0.6
-	github.com/free5gc/webconsole v1.3.0
+	github.com/free5gc/webconsole v0.0.0
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-ping/ping v0.0.0-20210506233800-ff8be3320020
 	github.com/google/uuid v1.4.0
