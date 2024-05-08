@@ -34,3 +34,6 @@
 [submodule "chf"]
 	path = NFs/chf
 	url = https://github.com/free5gc/chf.git
+[submodule "NFs/tngf"]
+	path = NFs/tngf
+	url = https://github.com/free5gc/tngf.git
