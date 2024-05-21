@@ -104,7 +104,7 @@ if [ ${DUMP_NS} ]; then
     sudo tcpdump -i any 'sctp port 38412 || tcp port 8000 || udp port 8805' -w 'control_plane.pcap' &
 fi
 
-NF_LIST="nrf udr udm ausf nssf amf pcf"
+NF_LIST="nrf udr udm ausf chf nssf amf pcf"
 F5GC_DIR="$(cd "$( dirname "$0" )" && pwd -P)"
 for NF in ${NF_LIST}; do
     "${F5GC_DIR}/bin/${NF}" -c "${CONF_DIR}/${NF}cfg.yaml"&
