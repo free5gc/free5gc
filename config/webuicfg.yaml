@@ -14,8 +14,8 @@ configuration:
   billingServer:
     enable: true
     hostIPv4: 127.0.0.1
-    listenPort: 2122
-    port: 2121
+    listenPort: 2121
+    port: 2122 # CGF ftp server listen port
     tls:
       pem: cert/chf.pem
       key: cert/chf.key

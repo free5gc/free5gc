@@ -1500,8 +1500,8 @@ func chfConfig() error {
 			VolumeThresholdRate: 0.8,
 			Cgf: &chf_factory.Cgf{
 				HostIPv4:   "127.0.0.1",
-				Port:       2122,
-				ListenPort: 2121,
+				Port:       2121,
+				ListenPort: 2122,
 				Tls: &chf_factory.Tls{
 					Pem: "../cert/chf.pem",
 					Key: "../cert/chf.key",
