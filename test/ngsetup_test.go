@@ -1,6 +1,7 @@
 package test_test
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/signal"
@@ -41,6 +42,14 @@ import (
 )
 
 var NFs = []app.NetworkFunction{}
+
+type NFstruct struct {
+	nf     app.NetworkFunction
+	ctx    *context.Context
+	cancel *context.CancelFunc
+}
+
+var NFstructs = []NFstruct{}
 
 const (
 	noInit = iota
@@ -128,8 +137,10 @@ func init() {
 		if err := chfConfig(); err != nil {
 			fmt.Printf("CHF Config failed: %v\n", err)
 		}
-		chfApp, _ := chf_service.NewApp(chf_factory.ChfConfig)
+		chf_ctx, chf_cancel := context.WithCancel(context.Background())
+		chfApp, _ := chf_service.NewApp(chf_ctx, chf_factory.ChfConfig, "")
 		NFs = append(NFs, chfApp)
+		NFstructs = append(NFstructs, NFstruct{nf: chfApp, ctx: &chf_ctx, cancel: &chf_cancel})
 
 		for _, app := range NFs {
 			go app.Start("")
@@ -197,8 +208,10 @@ func init() {
 		if err := chfConfig(); err != nil {
 			fmt.Printf("CHF Config failed: %v\n", err)
 		}
-		chfApp, _ := chf_service.NewApp(chf_factory.ChfConfig)
+		chf_ctx, chf_cancel := context.WithCancel(context.Background())
+		chfApp, _ := chf_service.NewApp(chf_ctx, chf_factory.ChfConfig, "")
 		NFs = append(NFs, chfApp)
+		NFstructs = append(NFstructs, NFstruct{nf: chfApp, ctx: &chf_ctx, cancel: &chf_cancel})
 
 		for _, app := range NFs {
 			go app.Start("")
@@ -220,6 +233,15 @@ func NfTerminate() {
 		for i := nfNums - 1; i >= 0; i-- {
 			NFs[i].Terminate()
 		}
+
+		// TODO: Wait for all NFs been refactor
+		// nfNums = len(NFstructs)
+		// for i := nfNums - 1; i >= 0; i-- {
+		// 	// NFstructs[i].nf.Terminate()
+		// 	if NFstructs[i].ctx != nil {
+		// 		(*NFstructs[i].cancel)()
+		// 	}
+		// }
 	}
 }
 
@@ -1478,8 +1500,8 @@ func chfConfig() error {
 			VolumeThresholdRate: 0.8,
 			Cgf: &chf_factory.Cgf{
 				HostIPv4:   "127.0.0.1",
-				Port:       2122,
-				ListenPort: 2121,
+				Port:       2121,
+				ListenPort: 2122,
 				Tls: &chf_factory.Tls{
 					Pem: "../cert/chf.pem",
 					Key: "../cert/chf.key",

@@ -10,7 +10,8 @@ WEBCONSOLE = webconsole
 
 NF_GO_FILES = $(shell find $(GO_SRC_PATH)/$(%) -name "*.go" ! -name "*_test.go")
 WEBCONSOLE_GO_FILES = $(shell find $(WEBCONSOLE) -name "*.go" ! -name "*_test.go")
-WEBCONSOLE_JS_FILES = $(shell find $(WEBCONSOLE)/frontend -name '*.js' ! -path "*/node_modules/*")
+WEBCONSOLE_JS_FILES = $(shell find $(WEBCONSOLE)/frontend -name '*.tsx' ! -path "*/node_modules/*")
+WEBCONSOLE_FRONTEND = $(WEBCONSOLE)/public
 
 VERSION = $(shell git describe --tags)
 BUILD_TIME = $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
@@ -58,18 +59,21 @@ $(C_NF): % :
 	cmake .. && \
 	make -j$(nproc)
 
-$(WEBCONSOLE): $(WEBCONSOLE)/$(GO_BIN_PATH)/$(WEBCONSOLE)
+$(WEBCONSOLE): $(WEBCONSOLE)/$(GO_BIN_PATH)/$(WEBCONSOLE) $(WEBCONSOLE_FRONTEND)
 
-$(WEBCONSOLE)/$(GO_BIN_PATH)/$(WEBCONSOLE): $(WEBCONSOLE)/server.go $(WEBCONSOLE_GO_FILES) $(WEBCONSOLE_JS_FILES)
+$(WEBCONSOLE)/$(GO_BIN_PATH)/$(WEBCONSOLE): $(WEBCONSOLE)/server.go $(WEBCONSOLE_GO_FILES)
 	@echo "Start building $(@F)...."
+	cd $(WEBCONSOLE) && \
+	CGO_ENABLED=0 go build -ldflags "$(WEBCONSOLE_LDFLAGS)" -o $(ROOT_PATH)/$@ ./server.go
+
+$(WEBCONSOLE_FRONTEND): $(WEBCONSOLE_JS_FILES)
+	@echo "Start building $(@F) frontend...."
 	cd $(WEBCONSOLE)/frontend && \
 	sudo corepack enable && \
 	yarn install && \
 	yarn build && \
 	rm -rf ../public && \
 	cp -R build ../public
-	cd $(WEBCONSOLE) && \
-	CGO_ENABLED=0 go build -ldflags "$(WEBCONSOLE_LDFLAGS)" -o $(ROOT_PATH)/$@ ./server.go
 
 clean:
 	rm -rf $(addprefix $(GO_BIN_PATH)/, $(GO_NF))
