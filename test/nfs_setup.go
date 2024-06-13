@@ -52,44 +52,49 @@ type StartNFsConfig struct {
 	TestId TestId `yaml:"testId,omitempty"`
 }
 
+var NfCtx context.Context
+var NfCancel context.CancelFunc
+
 func CreateNFs(cfg StartNFsConfig) []app.NFstruct {
 	var nfs []app.NFstruct
 
+	NfCtx, NfCancel = context.WithCancel(context.Background())
+
 	if cfg.Nrf {
-		nfs = append(nfs, NewNrfStruct(cfg.OAuth))
+		nfs = append(nfs, NewNrfStruct(NfCtx, cfg.OAuth))
 	}
 	if cfg.Amf {
-		nfs = append(nfs, NewAmfStruct(cfg.TestId))
+		nfs = append(nfs, NewAmfStruct(NfCtx, cfg.TestId))
 	}
 	if cfg.Smf {
-		nfs = append(nfs, NewSmfStruct(cfg.TestId))
+		nfs = append(nfs, NewSmfStruct(NfCtx, cfg.TestId))
 	}
 	if cfg.Udr {
-		nfs = append(nfs, NewUdrStruct())
+		nfs = append(nfs, NewUdrStruct(NfCtx))
 	}
 	if cfg.Pcf {
-		nfs = append(nfs, NewPcfStruct())
+		nfs = append(nfs, NewPcfStruct(NfCtx))
 	}
 	if cfg.Udm {
-		nfs = append(nfs, NewUdmStruct())
+		nfs = append(nfs, NewUdmStruct(NfCtx))
 	}
 	if cfg.Nssf {
-		nfs = append(nfs, NewNssfStruct())
+		nfs = append(nfs, NewNssfStruct(NfCtx))
 	}
 	if cfg.Ausf {
-		nfs = append(nfs, NewAusfStruct())
+		nfs = append(nfs, NewAusfStruct(NfCtx))
 	}
 	if cfg.Chf {
-		nfs = append(nfs, NewChfStruct())
+		nfs = append(nfs, NewChfStruct(NfCtx))
 	}
 	return nfs
 }
 
-func NewNrfStruct(oauth bool) app.NFstruct {
+func NewNrfStruct(ctx context.Context, oauth bool) app.NFstruct {
 	if err := nrfConfig(oauth); err != nil {
 		fmt.Printf("NRF Config failed: %v\n", err)
 	}
-	nrf_ctx, nrf_cancel := context.WithCancel(context.Background())
+	nrf_ctx, nrf_cancel := context.WithCancel(ctx)
 	nrfApp, errApp := nrf_service.NewApp(nrf_factory.NrfConfig)
 	if errApp != nil {
 		fmt.Printf("NRF NewApp failed: %v\n", errApp)
@@ -102,11 +107,11 @@ func NewNrfStruct(oauth bool) app.NFstruct {
 	}
 }
 
-func NewAmfStruct(testId TestId) app.NFstruct {
+func NewAmfStruct(ctx context.Context, testId TestId) app.NFstruct {
 	if err := amfConfig(testId); err != nil {
 		fmt.Printf("AMF Config failed: %v\n", err)
 	}
-	amf_ctx, amf_cancel := context.WithCancel(context.Background())
+	amf_ctx, amf_cancel := context.WithCancel(ctx)
 	amfApp, errApp := amf_service.NewApp(amf_factory.AmfConfig)
 	if errApp != nil {
 		fmt.Printf("AMF NewApp failed: %v\n", errApp)
@@ -119,11 +124,11 @@ func NewAmfStruct(testId TestId) app.NFstruct {
 	}
 }
 
-func NewSmfStruct(testId TestId) app.NFstruct {
+func NewSmfStruct(ctx context.Context, testId TestId) app.NFstruct {
 	if err := smfConfig(testId); err != nil {
 		fmt.Printf("SMF Config failed: %v\n", err)
 	}
-	smf_ctx, smf_cancel := context.WithCancel(context.Background())
+	smf_ctx, smf_cancel := context.WithCancel(ctx)
 	smfApp, errApp := smf_service.NewApp(smf_factory.SmfConfig)
 	if errApp != nil {
 		fmt.Printf("SMF NewApp failed: %v\n", errApp)
@@ -136,11 +141,11 @@ func NewSmfStruct(testId TestId) app.NFstruct {
 	}
 }
 
-func NewUdmStruct() app.NFstruct {
+func NewUdmStruct(ctx context.Context) app.NFstruct {
 	if err := udmConfig(); err != nil {
 		fmt.Printf("UDM Config failed: %v\n", err)
 	}
-	udm_ctx, udm_cancel := context.WithCancel(context.Background())
+	udm_ctx, udm_cancel := context.WithCancel(ctx)
 	udmApp, errApp := udm_service.NewApp(udm_factory.UdmConfig)
 	if errApp != nil {
 		fmt.Printf("UDM NewApp failed: %v\n", errApp)
@@ -153,11 +158,11 @@ func NewUdmStruct() app.NFstruct {
 	}
 }
 
-func NewPcfStruct() app.NFstruct {
+func NewPcfStruct(ctx context.Context) app.NFstruct {
 	if err := pcfConfig(); err != nil {
 		fmt.Printf("PCF Config failed: %v\n", err)
 	}
-	pcf_ctx, pcf_cancel := context.WithCancel(context.Background())
+	pcf_ctx, pcf_cancel := context.WithCancel(ctx)
 	pcfApp, errApp := pcf_service.NewApp(pcf_factory.PcfConfig)
 	if errApp != nil {
 		fmt.Printf("PCF NewApp failed: %v\n", errApp)
@@ -170,11 +175,11 @@ func NewPcfStruct() app.NFstruct {
 	}
 }
 
-func NewUdrStruct() app.NFstruct {
+func NewUdrStruct(ctx context.Context) app.NFstruct {
 	if err := udrConfig(); err != nil {
 		fmt.Printf("UDR Config failed: %v\n", err)
 	}
-	udr_ctx, udr_cancel := context.WithCancel(context.Background())
+	udr_ctx, udr_cancel := context.WithCancel(ctx)
 	udrApp, errApp := udr_service.NewApp(udr_factory.UdrConfig)
 	if errApp != nil {
 		fmt.Printf("UDR NewApp failed: %v\n", errApp)
@@ -187,11 +192,11 @@ func NewUdrStruct() app.NFstruct {
 	}
 }
 
-func NewNssfStruct() app.NFstruct {
+func NewNssfStruct(ctx context.Context) app.NFstruct {
 	if err := nssfConfig(); err != nil {
 		fmt.Printf("NSSF Config failed: %v\n", err)
 	}
-	nssf_ctx, nssf_cancel := context.WithCancel(context.Background())
+	nssf_ctx, nssf_cancel := context.WithCancel(ctx)
 	nssfApp, errApp := nssf_service.NewApp(nssf_factory.NssfConfig)
 	if errApp != nil {
 		fmt.Printf("NSSF NewApp failed: %v\n", errApp)
@@ -204,12 +209,12 @@ func NewNssfStruct() app.NFstruct {
 	}
 }
 
-func NewAusfStruct() app.NFstruct {
+func NewAusfStruct(ctx context.Context) app.NFstruct {
 	if err := ausfConfig(); err != nil {
 		fmt.Printf("AUSF Config failed: %v\n", err)
 	}
 
-	ausf_ctx, ausf_cancel := context.WithCancel(context.Background())
+	ausf_ctx, ausf_cancel := context.WithCancel(ctx)
 	ausfApp, errApp := ausf_service.NewApp(ausf_factory.AusfConfig)
 	if errApp != nil {
 		fmt.Printf("AUSF NewApp failed: %v\n", errApp)
@@ -222,11 +227,11 @@ func NewAusfStruct() app.NFstruct {
 	}
 }
 
-func NewChfStruct() app.NFstruct {
+func NewChfStruct(ctx context.Context) app.NFstruct {
 	if err := chfConfig(); err != nil {
 		fmt.Printf("CHF Config failed: %v\n", err)
 	}
-	chf_ctx, chf_cancel := context.WithCancel(context.Background())
+	chf_ctx, chf_cancel := context.WithCancel(ctx)
 	chfApp, errApp := chf_service.NewApp(chf_ctx, chf_factory.ChfConfig, "")
 	if errApp != nil {
 		fmt.Printf("CHF NewApp failed: %v\n", errApp)
@@ -575,7 +580,7 @@ func smfConfig(testID TestId) error {
 		},
 	}
 
-	if testID == "TestRequestTwoPDUSessions" {
+	if testID == TestRequestTwoPDUSessions {
 		smf_factory.SmfConfig.Configuration.UserPlaneInformation.Links =
 			append(smf_factory.SmfConfig.Configuration.UserPlaneInformation.Links, &smf_factory.UPLink{
 				A: "gNB1",
