@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"io"
-	"net/http"
 	"os"
 	"runtime/debug"
 	"sync"
@@ -13,13 +12,9 @@ import (
 
 	nrf_context "github.com/free5gc/nrf/internal/context"
 	"github.com/free5gc/nrf/internal/logger"
-	"github.com/free5gc/nrf/internal/sbi/accesstoken"
-	"github.com/free5gc/nrf/internal/sbi/discovery"
-	"github.com/free5gc/nrf/internal/sbi/management"
+	"github.com/free5gc/nrf/internal/sbi"
 	"github.com/free5gc/nrf/pkg/app"
 	"github.com/free5gc/nrf/pkg/factory"
-	"github.com/free5gc/util/httpwrapper"
-	logger_util "github.com/free5gc/util/logger"
 	"github.com/free5gc/util/mongoapi"
 )
 
@@ -28,7 +23,7 @@ var NRF *NrfApp
 var _ app.App = &NrfApp{}
 
 type NrfApp struct {
-	app.App
+	// app.App
 
 	cfg    *factory.Config
 	nrfCtx *nrf_context.NRFContext
@@ -37,7 +32,7 @@ type NrfApp struct {
 	cancel context.CancelFunc
 	wg     sync.WaitGroup
 
-	server *http.Server
+	sbiServer *sbi.Server
 }
 
 func NewApp(ctx context.Context, cfg *factory.Config, tlsKeyLogPath string) (*NrfApp, error) {
@@ -58,7 +53,20 @@ func NewApp(ctx context.Context, cfg *factory.Config, tlsKeyLogPath string) (*Nr
 	nrf.nrfCtx = nrf_context.GetSelf()
 	nrf.ctx, nrf.cancel = context.WithCancel(ctx)
 
+	if nrf.sbiServer, err = sbi.NewServer(nrf, tlsKeyLogPath); err != nil {
+		return nil, err
+	}
+	NRF = nrf
+
 	return nrf, nil
+}
+
+func (a *NrfApp) Context() *nrf_context.NRFContext {
+	return a.nrfCtx
+}
+
+func (a *NrfApp) Config() *factory.Config {
+	return a.cfg
 }
 
 func (a *NrfApp) SetLogEnable(enable bool) {
@@ -109,41 +117,15 @@ func (a *NrfApp) Start() {
 		logger.InitLog.Errorf("SetMongoDB failed: %+v", err)
 		return
 	}
+
 	logger.InitLog.Infoln("Server starting")
-
-	router := logger_util.NewGinWithLogrus(logger.GinLog)
-
-	accesstoken.AddService(router)
-	discovery.AddService(router)
-	management.AddService(router)
-
-	tlsKeyLogPath := ""
-	bindAddr := factory.NrfConfig.GetSbiBindingAddr()
-	logger.InitLog.Infof("Binding addr: [%s]", bindAddr)
-	server, err := httpwrapper.NewHttp2Server(bindAddr, tlsKeyLogPath, router)
-	if err != nil {
-		logger.InitLog.Warnf("Initialize HTTP server: +%v", err)
-		return
-	}
-	a.server = server
 
 	a.wg.Add(1)
 	go a.listenShutdownEvent()
 
-	serverScheme := factory.NrfConfig.GetSbiScheme()
-	if serverScheme == "http" {
-		err = server.ListenAndServe()
-	} else if serverScheme == "https" {
-		// TODO: support TLS mutual authentication for OAuth
-		err = server.ListenAndServeTLS(
-			factory.NrfConfig.GetNrfCertPemPath(),
-			factory.NrfConfig.GetNrfPrivKeyPath())
+	if err := a.sbiServer.Run(&a.wg); err != nil {
+		logger.MainLog.Fatalf("Run SBI server failed: %+v", err)
 	}
-
-	if err != nil && err != http.ErrServerClosed {
-		logger.MainLog.Errorf("SBI server error: %v", err)
-	}
-	logger.MainLog.Warnf("SBI server (listen on %s) stopped", server.Addr)
 }
 
 func (a *NrfApp) listenShutdownEvent() {
@@ -173,14 +155,7 @@ func (a *NrfApp) Terminate() {
 		logger.InitLog.Errorf("Drop NfProfile collection failed: %+v", err)
 	}
 
-	// server stop
-	const defaultShutdownTimeout time.Duration = 2 * time.Second
-
-	toCtx, cancel := context.WithTimeout(context.Background(), defaultShutdownTimeout)
-	defer cancel()
-	if err := a.server.Shutdown(toCtx); err != nil {
-		logger.MainLog.Errorf("Could not close SBI server: %#v", err)
-	}
+	a.sbiServer.Stop()
 }
 
 func (a *NrfApp) WaitRoutineStopped() {
