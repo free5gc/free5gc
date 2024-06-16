@@ -12,12 +12,9 @@ import (
 
 	"github.com/free5gc/nrf/internal/logger"
 	"github.com/free5gc/nrf/pkg/app"
+	"github.com/free5gc/nrf/pkg/factory"
 	"github.com/free5gc/util/httpwrapper"
 	logger_util "github.com/free5gc/util/logger"
-
-	"github.com/free5gc/nrf/internal/sbi/accesstoken"
-	"github.com/free5gc/nrf/internal/sbi/discovery"
-	"github.com/free5gc/nrf/internal/sbi/management"
 )
 
 type ServerNrf interface {
@@ -43,9 +40,7 @@ func NewServer(nrf ServerNrf, tlsKeyLogPath string) (*Server, error) {
 	bindAddr := cfg.GetSbiBindingAddr()
 	logger.SBILog.Infof("Binding addr: [%s]", bindAddr)
 
-	accesstoken.AddService(s.router)
-	discovery.AddService(s.router)
-	management.AddService(s.router)
+	s.applyService()
 
 	var err error
 	if s.httpServer, err = httpwrapper.NewHttp2Server(bindAddr, tlsKeyLogPath, s.router); err != nil {
@@ -53,6 +48,20 @@ func NewServer(nrf ServerNrf, tlsKeyLogPath string) (*Server, error) {
 		return nil, err
 	}
 	return s, nil
+}
+
+func (s *Server) applyService() {
+	accesstokenRoutes := s.getAccesstokenRoutes()
+	accesstokenGroup := s.router.Group("") // accesstoken service didn't have api prefix
+	applyRoutes(accesstokenGroup, accesstokenRoutes)
+
+	discoveryRoutes := s.getNfDiscoveryRoutes()
+	discoveryGroup := s.router.Group(factory.NrfDiscResUriPrefix)
+	applyRoutes(discoveryGroup, discoveryRoutes)
+
+	managementRoutes := s.getNfManagementRoute()
+	managementGroup := s.router.Group(factory.NrfNfmResUriPrefix)
+	applyRoutes(managementGroup, managementRoutes)
 }
 
 func (s *Server) Run(wg *sync.WaitGroup) error {

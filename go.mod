@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d
-	github.com/free5gc/openapi v1.0.8
+	github.com/free5gc/openapi v1.0.9-0.20240503143645-eac9f06c2f6b
 	github.com/free5gc/util v1.0.6
 	github.com/gin-gonic/gin v1.9.1
 	github.com/golang-jwt/jwt v3.2.1+incompatible
