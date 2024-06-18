@@ -11,9 +11,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/free5gc/nrf/internal/sbi/processor"
-
 	"github.com/free5gc/nrf/internal/logger"
+	"github.com/free5gc/nrf/internal/sbi/processor"
 	"github.com/free5gc/nrf/internal/util"
 	"github.com/free5gc/nrf/pkg/app"
 	"github.com/free5gc/nrf/pkg/factory"
@@ -101,6 +100,7 @@ func (s *Server) Run(wg *sync.WaitGroup) error {
 	wg.Add(1)
 	go s.startServer(wg)
 
+	logger.SBILog.Infoln("SBI server started")
 	return nil
 }
 

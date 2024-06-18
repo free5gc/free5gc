@@ -1,7 +1,6 @@
 package processor
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -15,7 +14,6 @@ import (
 	nrf_context "github.com/free5gc/nrf/internal/context"
 	"github.com/free5gc/nrf/internal/logger"
 	"github.com/free5gc/nrf/pkg/factory"
-	"github.com/free5gc/openapi/Nnrf_NFManagement"
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/openapi/oauth"
 	"github.com/free5gc/util/httpwrapper"
@@ -179,7 +177,9 @@ func (p *Processor) HandleCreateSubscriptionRequest(request *httpwrapper.Request
 	return httpwrapper.NewResponse(http.StatusForbidden, nil, problemDetails)
 }
 
-func (p *Processor) CreateSubscriptionProcedure(subscription models.NrfSubscriptionData) (bson.M, *models.ProblemDetails) {
+func (p *Processor) CreateSubscriptionProcedure(
+	subscription models.NrfSubscriptionData,
+) (bson.M, *models.ProblemDetails) {
 	subscriptionID, err := nrf_context.SetsubscriptionId()
 	if err != nil {
 		logger.NfmLog.Errorf("Unable to create subscription ID in CreateSubscriptionProcedure: %+v", err)
@@ -347,7 +347,7 @@ func (p *Processor) NFDeregisterProcedure(nfInstanceID string) *models.ProblemDe
 	Notification_event := models.NotificationEventType_DEREGISTERED
 
 	for _, uri := range uriList {
-		problemDetails := SendNFStatusNotify(Notification_event, nfInstanceUri, uri, nil)
+		problemDetails := p.Consumer().SendNFStatusNotify(Notification_event, nfInstanceUri, uri, nil)
 		if problemDetails != nil {
 			return problemDetails
 		}
@@ -412,7 +412,7 @@ func (p *Processor) UpdateNFInstanceProcedure(nfInstanceID string, patchJSON []b
 	nfInstanceUri := nrf_context.GetNfInstanceURI(nfInstanceID)
 
 	for _, uri := range uriList {
-		SendNFStatusNotify(Notification_event, nfInstanceUri, uri, &nfProfiles[0])
+		p.Consumer().SendNFStatusNotify(Notification_event, nfInstanceUri, uri, &nfProfiles[0])
 	}
 
 	return nf
@@ -503,7 +503,7 @@ func (p *Processor) NFRegisterProcedure(
 
 		// receive the rsp from handler
 		for _, uri := range uriList {
-			problemDetails := SendNFStatusNotify(Notification_event, nfInstanceUri, uri, &nfProfile)
+			problemDetails := p.Consumer().SendNFStatusNotify(Notification_event, nfInstanceUri, uri, &nfProfile)
 			if problemDetails != nil {
 				return nil, nil, true, problemDetails
 			}
@@ -520,7 +520,7 @@ func (p *Processor) NFRegisterProcedure(
 		nfInstanceUri := locationHeaderValue
 
 		for _, uri := range uriList {
-			problemDetails := SendNFStatusNotify(Notification_event, nfInstanceUri, uri, &nfProfile)
+			problemDetails := p.Consumer().SendNFStatusNotify(Notification_event, nfInstanceUri, uri, &nfProfile)
 			if problemDetails != nil {
 				return nil, nil, false, problemDetails
 			}
@@ -539,90 +539,4 @@ func (p *Processor) NFRegisterProcedure(
 		}
 		return header, putData, false, nil
 	}
-}
-
-func copyNotificationNfProfile(notifProfile *models.NfProfileNotificationData, nfProfile *models.NfProfile) {
-	notifProfile.NfInstanceId = nfProfile.NfInstanceId
-	notifProfile.NfType = nfProfile.NfType
-	notifProfile.NfStatus = nfProfile.NfStatus
-	notifProfile.HeartBeatTimer = nfProfile.HeartBeatTimer
-	notifProfile.PlmnList = *nfProfile.PlmnList
-	notifProfile.SNssais = *nfProfile.SNssais
-	notifProfile.PerPlmnSnssaiList = nfProfile.PerPlmnSnssaiList
-	notifProfile.NsiList = nfProfile.NsiList
-	notifProfile.Fqdn = nfProfile.Fqdn
-	notifProfile.InterPlmnFqdn = nfProfile.InterPlmnFqdn
-	notifProfile.Ipv4Addresses = nfProfile.Ipv4Addresses
-	notifProfile.Ipv6Addresses = nfProfile.Ipv6Addresses
-	notifProfile.AllowedPlmns = *nfProfile.AllowedPlmns
-	notifProfile.AllowedNfTypes = nfProfile.AllowedNfTypes
-	notifProfile.AllowedNfDomains = nfProfile.AllowedNfDomains
-	notifProfile.AllowedNssais = *nfProfile.AllowedNssais
-	notifProfile.Priority = nfProfile.Priority
-	notifProfile.Capacity = nfProfile.Capacity
-	notifProfile.Load = nfProfile.Load
-	notifProfile.Locality = nfProfile.Locality
-	notifProfile.UdrInfo = nfProfile.UdrInfo
-	notifProfile.UdmInfo = nfProfile.UdmInfo
-	notifProfile.AusfInfo = nfProfile.AusfInfo
-	notifProfile.AmfInfo = nfProfile.AmfInfo
-	notifProfile.SmfInfo = nfProfile.SmfInfo
-	notifProfile.UpfInfo = nfProfile.UpfInfo
-	notifProfile.PcfInfo = nfProfile.PcfInfo
-	notifProfile.BsfInfo = nfProfile.BsfInfo
-	notifProfile.ChfInfo = nfProfile.ChfInfo
-	notifProfile.NrfInfo = nfProfile.NrfInfo
-	notifProfile.CustomInfo = nfProfile.CustomInfo
-	notifProfile.RecoveryTime = nfProfile.RecoveryTime
-	notifProfile.NfServicePersistence = nfProfile.NfServicePersistence
-	notifProfile.NfServices = *nfProfile.NfServices
-	notifProfile.NfProfileChangesSupportInd = nfProfile.NfProfileChangesSupportInd
-	notifProfile.NfProfileChangesInd = nfProfile.NfProfileChangesInd
-	notifProfile.DefaultNotificationSubscriptions = nfProfile.DefaultNotificationSubscriptions
-}
-
-func SendNFStatusNotify(Notification_event models.NotificationEventType, nfInstanceUri string,
-	url string, nfProfile *models.NfProfile,
-) *models.ProblemDetails {
-	// Set client and set url
-	configuration := Nnrf_NFManagement.NewConfiguration()
-	// url = fmt.Sprintf("%s%s", url, "/notification")
-
-	configuration.SetBasePathNoGroup(url)
-	notifcationData := models.NotificationData{
-		Event:         Notification_event,
-		NfInstanceUri: nfInstanceUri,
-	}
-	if nfProfile != nil {
-		copyNotificationNfProfile(notifcationData.NfProfile, nfProfile)
-	}
-
-	client := Nnrf_NFManagement.NewAPIClient(configuration)
-
-	res, err := client.NotificationApi.NotificationPost(context.TODO(), notifcationData)
-	if err != nil {
-		logger.NfmLog.Infof("Notify fail: %v", err)
-		problemDetails := &models.ProblemDetails{
-			Status: http.StatusInternalServerError,
-			Cause:  "NOTIFICATION_ERROR",
-			Detail: err.Error(),
-		}
-		return problemDetails
-	}
-	if res != nil {
-		defer func() {
-			if resCloseErr := res.Body.Close(); resCloseErr != nil {
-				logger.NfmLog.Errorf("NotificationApi response body cannot close: %+v", resCloseErr)
-			}
-		}()
-		if status := res.StatusCode; status != http.StatusNoContent {
-			logger.NfmLog.Warnln("Error status in NotificationPost: ", status)
-			problemDetails := &models.ProblemDetails{
-				Status: int32(status),
-				Cause:  "NOTIFICATION_ERROR",
-			}
-			return problemDetails
-		}
-	}
-	return nil
 }

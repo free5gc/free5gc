@@ -1,9 +1,13 @@
 package processor
 
-import "github.com/free5gc/nrf/pkg/app"
+import (
+	"github.com/free5gc/nrf/internal/sbi/consumer"
+	"github.com/free5gc/nrf/pkg/app"
+)
 
 type ProcessorNrf interface {
 	app.App
+	Consumer() *consumer.Consumer
 }
 
 type Processor struct {

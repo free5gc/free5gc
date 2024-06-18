@@ -13,6 +13,7 @@ import (
 	nrf_context "github.com/free5gc/nrf/internal/context"
 	"github.com/free5gc/nrf/internal/logger"
 	"github.com/free5gc/nrf/internal/sbi"
+	"github.com/free5gc/nrf/internal/sbi/consumer"
 	"github.com/free5gc/nrf/internal/sbi/processor"
 	"github.com/free5gc/nrf/pkg/app"
 	"github.com/free5gc/nrf/pkg/factory"
@@ -33,6 +34,7 @@ type NrfApp struct {
 
 	sbiServer *sbi.Server
 	processor *processor.Processor
+	consumer  *consumer.Consumer
 }
 
 func NewApp(ctx context.Context, cfg *factory.Config, tlsKeyLogPath string) (*NrfApp, error) {
@@ -59,6 +61,12 @@ func NewApp(ctx context.Context, cfg *factory.Config, tlsKeyLogPath string) (*Nr
 	}
 	nrf.processor = processor
 
+	consumer, err_c := consumer.NewConsumer(nrf)
+	if err_c != nil {
+		return nrf, err_c
+	}
+	nrf.consumer = consumer
+
 	if nrf.sbiServer, err = sbi.NewServer(nrf, tlsKeyLogPath); err != nil {
 		return nil, err
 	}
@@ -77,6 +85,10 @@ func (a *NrfApp) Config() *factory.Config {
 
 func (a *NrfApp) Processor() *processor.Processor {
 	return a.processor
+}
+
+func (a *NrfApp) Consumer() *consumer.Consumer {
+	return a.consumer
 }
 
 func (a *NrfApp) SetLogEnable(enable bool) {
