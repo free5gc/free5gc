@@ -29,10 +29,34 @@ do
 done
 shift $(($OPTIND - 1))
 
-TEST_POOL="TestRegistration|TestGUTIRegistration|TestServiceRequest|TestXnHandover|TestN2Handover|TestDeregistration|TestPDUSessionReleaseRequest|TestPaging|TestNon3GPP|TestReSynchronization|TestDuplicateRegistration|TestEAPAKAPrimeAuthentication|TestMultiAmfRegistration|TestNasReroute"
+TEST_POOL="All|TestRegistration|TestGUTIRegistration|TestServiceRequest|TestXnHandover|TestN2Handover|TestDeregistration|TestPDUSessionReleaseRequest|TestPaging|TestNon3GPP|TestReSynchronization|TestDuplicateRegistration|TestEAPAKAPrimeAuthentication|TestMultiAmfRegistration|TestNasReroute"
 if [[ ! "$1" =~ $TEST_POOL ]]
 then
     echo "Usage: $0 [ ${TEST_POOL//|/ | } ]"
+    exit 1
+fi
+
+if [ $1 == "All" ]; then
+    echo "Running All Tests"
+    echo
+    mkdir -p testing_output
+    IFS='|' read -ra ADDR <<< "$TEST_POOL"
+        for i in "${ADDR[@]}"; do
+            if [ $i == "All" ]; then
+                continue
+            fi
+            echo "$i"
+            echo "    Output saved to testing_output/$i.log"
+            exec $(realpath $0) $i &> testing_output/$i.log &
+            wait
+            STATUS=$(grep -E "\-\-\-.*:" testing_output/$i.log)
+            if [ ! -z "$STATUS" ]; then
+                echo "$STATUS" | while read -r a; do echo "    ${a:4}"; done
+            else
+                echo "    Failed"
+            fi
+            echo
+        done
     exit 1
 fi
 
