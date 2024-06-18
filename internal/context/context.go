@@ -27,6 +27,12 @@ type NRFContext struct {
 	NrfCert          *x509.Certificate
 }
 
+type NFContext interface {
+	AuthorizationCheck(token string, serviceName models.ServiceName) error
+}
+
+var _ NFContext = &NRFContext{}
+
 var nrfContext NRFContext
 
 func InitNrfContext() error {
@@ -189,11 +195,11 @@ func GetSelf() *NRFContext {
 	return &nrfContext
 }
 
-func (context *NRFContext) AuthorizationCheck(token, serviceName string) error {
+func (context *NRFContext) AuthorizationCheck(token string, serviceName models.ServiceName) error {
 	if !factory.NrfConfig.GetOAuth() {
 		return nil
 	}
-	err := oauth.VerifyOAuth(token, serviceName, factory.NrfConfig.GetNrfCertPemPath())
+	err := oauth.VerifyOAuth(token, string(serviceName), factory.NrfConfig.GetNrfCertPemPath())
 	if err != nil {
 		logger.AccTokenLog.Warningln("AuthorizationCheck:", err)
 		return err

@@ -28,6 +28,18 @@ import (
 	"github.com/free5gc/util/mongoapi"
 )
 
+func (s *Server) getNfRegisterRoute() []Route {
+	// Since OAuth now have to use NFProfile to issue token, so we have to let NF to register without token
+	return []Route{
+		{
+			"RegisterNFInstance",
+			http.MethodPut,
+			"/nf-instances/:nfInstanceID",
+			s.HTTPRegisterNFInstance,
+		},
+	}
+}
+
 func (s *Server) getNfManagementRoute() []Route {
 	return []Route{
 		{
@@ -50,12 +62,12 @@ func (s *Server) getNfManagementRoute() []Route {
 			"/nf-instances/:nfInstanceID",
 			s.HTTPGetNFInstance,
 		},
-		{
-			"RegisterNFInstance",
-			http.MethodPut,
-			"/nf-instances/:nfInstanceID",
-			s.HTTPRegisterNFInstance,
-		},
+		// {
+		// 	"RegisterNFInstance",
+		// 	http.MethodPut,
+		// 	"/nf-instances/:nfInstanceID",
+		// 	s.HTTPRegisterNFInstance,
+		// },
 		{
 			"UpdateNFInstance",
 			http.MethodPatch,

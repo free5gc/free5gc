@@ -12,8 +12,10 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/free5gc/nrf/internal/logger"
+	"github.com/free5gc/nrf/internal/util"
 	"github.com/free5gc/nrf/pkg/app"
 	"github.com/free5gc/nrf/pkg/factory"
+	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/util/httpwrapper"
 	logger_util "github.com/free5gc/util/logger"
 )
@@ -73,16 +75,22 @@ func (s *Server) applyService() {
 
 	discoveryRoutes := s.getNfDiscoveryRoutes()
 	discoveryGroup := s.router.Group(factory.NrfDiscResUriPrefix)
+	discAuthCheck := util.NewRouterAuthorizationCheck(models.ServiceName_NNRF_DISC)
 	discoveryGroup.Use(func(c *gin.Context) {
-		// TODO: OAuth
+		discAuthCheck.Check(c, s.Context())
 	})
 	applyRoutes(discoveryGroup, discoveryRoutes)
 
+	// OAuth2 must exclude NfRegister
+	nfRegisterRoute := s.getNfRegisterRoute()
+	nfRegisterGroup := s.router.Group(factory.NrfNfmResUriPrefix)
+	applyRoutes(nfRegisterGroup, nfRegisterRoute)
+
 	managementRoutes := s.getNfManagementRoute()
 	managementGroup := s.router.Group(factory.NrfNfmResUriPrefix)
+	managementAuthCheck := util.NewRouterAuthorizationCheck(models.ServiceName_NNRF_NFM)
 	managementGroup.Use(func(c *gin.Context) {
-		// TODO: OAuth
-		// Should exclude NfRegister
+		managementAuthCheck.Check(c, s.Context())
 	})
 	applyRoutes(managementGroup, managementRoutes)
 }

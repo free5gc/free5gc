@@ -23,8 +23,6 @@ var NRF *NrfApp
 var _ app.App = &NrfApp{}
 
 type NrfApp struct {
-	// app.App
-
 	cfg    *factory.Config
 	nrfCtx *nrf_context.NRFContext
 
