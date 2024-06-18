@@ -1,4 +1,4 @@
-package producer
+package processor
 
 import (
 	"crypto/x509"
@@ -19,13 +19,13 @@ import (
 	"github.com/free5gc/util/mongoapi"
 )
 
-func HandleAccessTokenRequest(request *httpwrapper.Request) *httpwrapper.Response {
+func (p *Processor) HandleAccessTokenRequest(request *httpwrapper.Request) *httpwrapper.Response {
 	// Param of AccessTokenRsp
 	logger.AccTokenLog.Debugln("Handle AccessTokenRequest")
 
 	accessTokenReq := request.Body.(models.AccessTokenReq)
 
-	response, errResponse := AccessTokenProcedure(accessTokenReq)
+	response, errResponse := p.AccessTokenProcedure(accessTokenReq)
 	if errResponse != nil {
 		return httpwrapper.NewResponse(http.StatusBadRequest, nil, errResponse)
 	} else if response != nil {
@@ -41,7 +41,7 @@ func HandleAccessTokenRequest(request *httpwrapper.Request) *httpwrapper.Respons
 	return httpwrapper.NewResponse(int(problemDetails.Status), nil, problemDetails)
 }
 
-func AccessTokenProcedure(request models.AccessTokenReq) (
+func (p *Processor) AccessTokenProcedure(request models.AccessTokenReq) (
 	*models.AccessTokenRsp, *models.AccessTokenErr,
 ) {
 	logger.AccTokenLog.Debugln("In AccessTokenProcedure")
@@ -51,7 +51,7 @@ func AccessTokenProcedure(request models.AccessTokenReq) (
 	tokenType := "Bearer"
 	now := int32(time.Now().Unix())
 
-	errResponse := AccessTokenScopeCheck(request)
+	errResponse := p.AccessTokenScopeCheck(request)
 	if errResponse != nil {
 		logger.AccTokenLog.Errorf("AccessTokenScopeCheck error: %v", errResponse.Error)
 		return nil, errResponse
@@ -88,7 +88,7 @@ func AccessTokenProcedure(request models.AccessTokenReq) (
 	return response, nil
 }
 
-func AccessTokenScopeCheck(req models.AccessTokenReq) *models.AccessTokenErr {
+func (p *Processor) AccessTokenScopeCheck(req models.AccessTokenReq) *models.AccessTokenErr {
 	// Check with nf profile
 	collName := "NfProfile"
 	reqGrantType := req.GrantType

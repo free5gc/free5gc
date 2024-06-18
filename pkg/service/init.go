@@ -13,6 +13,7 @@ import (
 	nrf_context "github.com/free5gc/nrf/internal/context"
 	"github.com/free5gc/nrf/internal/logger"
 	"github.com/free5gc/nrf/internal/sbi"
+	"github.com/free5gc/nrf/internal/sbi/processor"
 	"github.com/free5gc/nrf/pkg/app"
 	"github.com/free5gc/nrf/pkg/factory"
 	"github.com/free5gc/util/mongoapi"
@@ -31,6 +32,7 @@ type NrfApp struct {
 	wg     sync.WaitGroup
 
 	sbiServer *sbi.Server
+	processor *processor.Processor
 }
 
 func NewApp(ctx context.Context, cfg *factory.Config, tlsKeyLogPath string) (*NrfApp, error) {
@@ -51,6 +53,12 @@ func NewApp(ctx context.Context, cfg *factory.Config, tlsKeyLogPath string) (*Nr
 	nrf.nrfCtx = nrf_context.GetSelf()
 	nrf.ctx, nrf.cancel = context.WithCancel(ctx)
 
+	processor, err_p := processor.NewProcessor(nrf)
+	if err_p != nil {
+		return nrf, err_p
+	}
+	nrf.processor = processor
+
 	if nrf.sbiServer, err = sbi.NewServer(nrf, tlsKeyLogPath); err != nil {
 		return nil, err
 	}
@@ -65,6 +73,10 @@ func (a *NrfApp) Context() *nrf_context.NRFContext {
 
 func (a *NrfApp) Config() *factory.Config {
 	return a.cfg
+}
+
+func (a *NrfApp) Processor() *processor.Processor {
+	return a.processor
 }
 
 func (a *NrfApp) SetLogEnable(enable bool) {

@@ -20,7 +20,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 
 	"github.com/free5gc/nrf/internal/logger"
-	"github.com/free5gc/nrf/internal/sbi/producer"
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/util/httpwrapper"
@@ -106,7 +105,7 @@ func (s *Server) HTTPDeregisterNFInstance(c *gin.Context) {
 	req := httpwrapper.NewRequest(c.Request, nil)
 	req.Params["nfInstanceID"] = c.Params.ByName("nfInstanceID")
 
-	httpResponse := producer.HandleNFDeregisterRequest(req)
+	httpResponse := s.Processor().HandleNFDeregisterRequest(req)
 
 	responseBody, err := openapi.Serialize(httpResponse.Body, "application/json")
 	if err != nil {
@@ -127,7 +126,7 @@ func (s *Server) HTTPGetNFInstance(c *gin.Context) {
 	req := httpwrapper.NewRequest(c.Request, nil)
 	req.Params["nfInstanceID"] = c.Params.ByName("nfInstanceID")
 
-	httpResponse := producer.HandleGetNFInstanceRequest(req)
+	httpResponse := s.Processor().HandleGetNFInstanceRequest(req)
 
 	responseBody, err := openapi.Serialize(httpResponse.Body, "application/json")
 	if err != nil {
@@ -179,7 +178,7 @@ func (s *Server) HTTPRegisterNFInstance(c *gin.Context) {
 	req := httpwrapper.NewRequest(c.Request, nfprofile)
 
 	// step 4: call producer
-	httpResponse := producer.HandleNFRegisterRequest(req)
+	httpResponse := s.Processor().HandleNFRegisterRequest(req)
 
 	for key, val := range httpResponse.Header {
 		c.Header(key, val[0])
@@ -219,7 +218,7 @@ func (s *Server) HTTPUpdateNFInstance(c *gin.Context) {
 	req.Params["nfInstanceID"] = c.Params.ByName("nfInstanceID")
 	req.Body = requestBody
 
-	httpResponse := producer.HandleUpdateNFInstanceRequest(req)
+	httpResponse := s.Processor().HandleUpdateNFInstanceRequest(req)
 
 	responseBody, err := openapi.Serialize(httpResponse.Body, "application/json")
 	if err != nil {
@@ -240,7 +239,7 @@ func (s *Server) HTTPGetNFInstances(c *gin.Context) {
 	req := httpwrapper.NewRequest(c.Request, nil)
 	req.Query = c.Request.URL.Query()
 
-	httpResponse := producer.HandleGetNFInstancesRequest(req)
+	httpResponse := s.Processor().HandleGetNFInstancesRequest(req)
 
 	responseBody, err := openapi.Serialize(httpResponse.Body, "application/json")
 	if err != nil {
@@ -261,7 +260,7 @@ func (s *Server) HTTPRemoveSubscription(c *gin.Context) {
 	req := httpwrapper.NewRequest(c.Request, nil)
 	req.Params["subscriptionID"] = c.Params.ByName("subscriptionID")
 
-	httpResponse := producer.HandleRemoveSubscriptionRequest(req)
+	httpResponse := s.Processor().HandleRemoveSubscriptionRequest(req)
 
 	responseBody, err := openapi.Serialize(httpResponse.Body, "application/json")
 	if err != nil {
@@ -296,7 +295,7 @@ func (s *Server) HTTPUpdateSubscription(c *gin.Context) {
 	req.Params["subscriptionID"] = c.Params.ByName("subscriptionID")
 	req.Body = requestBody
 
-	httpResponse := producer.HandleUpdateSubscriptionRequest(req)
+	httpResponse := s.Processor().HandleUpdateSubscriptionRequest(req)
 	responseBody, err := openapi.Serialize(httpResponse.Body, "application/json")
 	if err != nil {
 		logger.NfmLog.Warnln(err)
@@ -345,7 +344,7 @@ func (s *Server) HTTPCreateSubscription(c *gin.Context) {
 
 	req := httpwrapper.NewRequest(c.Request, subscription)
 
-	httpResponse := producer.HandleCreateSubscriptionRequest(req)
+	httpResponse := s.Processor().HandleCreateSubscriptionRequest(req)
 	responseBody, err := openapi.Serialize(httpResponse.Body, "application/json")
 	if err != nil {
 		logger.NfmLog.Errorln(err)

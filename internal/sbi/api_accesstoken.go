@@ -17,7 +17,6 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/free5gc/nrf/internal/logger"
-	"github.com/free5gc/nrf/internal/sbi/producer"
 	"github.com/free5gc/nrf/pkg/factory"
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/util/httpwrapper"
@@ -112,7 +111,7 @@ func (s *Server) HTTPAccessTokenRequest(c *gin.Context) {
 	req := httpwrapper.NewRequest(c.Request, accessTokenReq)
 	req.Params["paramName"] = c.Params.ByName("paramName")
 
-	httpResponse := producer.HandleAccessTokenRequest(req)
+	httpResponse := s.Processor().HandleAccessTokenRequest(req)
 
 	c.JSON(httpResponse.Status, httpResponse.Body)
 }

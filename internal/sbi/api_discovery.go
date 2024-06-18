@@ -15,7 +15,6 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/free5gc/nrf/internal/logger"
-	"github.com/free5gc/nrf/internal/sbi/producer"
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/util/httpwrapper"
@@ -44,7 +43,7 @@ func (s *Server) getNfDiscoveryRoutes() []Route {
 func (s *Server) HTTPSearchNFInstances(c *gin.Context) {
 	req := httpwrapper.NewRequest(c.Request, nil)
 	req.Query = c.Request.URL.Query()
-	httpResponse := producer.HandleNFDiscoveryRequest(req)
+	httpResponse := s.Processor().HandleNFDiscoveryRequest(req)
 
 	responseBody, err := openapi.Serialize(httpResponse.Body, "application/json")
 	if err != nil {

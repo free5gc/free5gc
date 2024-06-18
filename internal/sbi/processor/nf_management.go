@@ -1,4 +1,4 @@
-package producer
+package processor
 
 import (
 	"context"
@@ -23,11 +23,11 @@ import (
 	"github.com/free5gc/util/mongoapi"
 )
 
-func HandleNFDeregisterRequest(request *httpwrapper.Request) *httpwrapper.Response {
+func (p *Processor) HandleNFDeregisterRequest(request *httpwrapper.Request) *httpwrapper.Response {
 	logger.NfmLog.Infoln("Handle NFDeregisterRequest")
 	nfInstanceId := request.Params["nfInstanceID"]
 
-	problemDetails := NFDeregisterProcedure(nfInstanceId)
+	problemDetails := p.NFDeregisterProcedure(nfInstanceId)
 
 	if problemDetails != nil {
 		logger.NfmLog.Infoln("[NRF] Dergeister Success")
@@ -37,11 +37,11 @@ func HandleNFDeregisterRequest(request *httpwrapper.Request) *httpwrapper.Respon
 	}
 }
 
-func HandleGetNFInstanceRequest(request *httpwrapper.Request) *httpwrapper.Response {
+func (p *Processor) HandleGetNFInstanceRequest(request *httpwrapper.Request) *httpwrapper.Response {
 	logger.NfmLog.Infoln("Handle GetNFInstanceRequest")
 	nfInstanceId := request.Params["nfInstanceID"]
 
-	response := GetNFInstanceProcedure(nfInstanceId)
+	response := p.GetNFInstanceProcedure(nfInstanceId)
 
 	if response != nil {
 		return httpwrapper.NewResponse(http.StatusOK, nil, response)
@@ -54,11 +54,11 @@ func HandleGetNFInstanceRequest(request *httpwrapper.Request) *httpwrapper.Respo
 	}
 }
 
-func HandleNFRegisterRequest(request *httpwrapper.Request) *httpwrapper.Response {
+func (p *Processor) HandleNFRegisterRequest(request *httpwrapper.Request) *httpwrapper.Response {
 	logger.NfmLog.Infoln("Handle NFRegisterRequest")
 	nfProfile := request.Body.(models.NfProfile)
 
-	header, response, isUpdate, problemDetails := NFRegisterProcedure(nfProfile)
+	header, response, isUpdate, problemDetails := p.NFRegisterProcedure(nfProfile)
 
 	if response != nil {
 		if isUpdate {
@@ -79,12 +79,12 @@ func HandleNFRegisterRequest(request *httpwrapper.Request) *httpwrapper.Response
 	return httpwrapper.NewResponse(http.StatusForbidden, nil, problemDetails)
 }
 
-func HandleUpdateNFInstanceRequest(request *httpwrapper.Request) *httpwrapper.Response {
+func (p *Processor) HandleUpdateNFInstanceRequest(request *httpwrapper.Request) *httpwrapper.Response {
 	logger.NfmLog.Infoln("Handle UpdateNFInstanceRequest")
 	nfInstanceID := request.Params["nfInstanceID"]
 	patchJSON := request.Body.([]byte)
 
-	response := UpdateNFInstanceProcedure(nfInstanceID, patchJSON)
+	response := p.UpdateNFInstanceProcedure(nfInstanceID, patchJSON)
 	if response != nil {
 		return httpwrapper.NewResponse(http.StatusOK, nil, response)
 	} else {
@@ -92,7 +92,7 @@ func HandleUpdateNFInstanceRequest(request *httpwrapper.Request) *httpwrapper.Re
 	}
 }
 
-func HandleGetNFInstancesRequest(request *httpwrapper.Request) *httpwrapper.Response {
+func (p *Processor) HandleGetNFInstancesRequest(request *httpwrapper.Request) *httpwrapper.Response {
 	logger.NfmLog.Infoln("Handle GetNFInstancesRequest")
 	nfType := request.Query.Get("nf-type")
 	limit_param := request.Query.Get("limit")
@@ -120,7 +120,7 @@ func HandleGetNFInstancesRequest(request *httpwrapper.Request) *httpwrapper.Resp
 		}
 	}
 
-	response, problemDetails := GetNFInstancesProcedure(nfType, limit)
+	response, problemDetails := p.GetNFInstancesProcedure(nfType, limit)
 	if response != nil {
 		logger.NfmLog.Traceln("GetNFInstances success")
 		return httpwrapper.NewResponse(http.StatusOK, nil, response)
@@ -136,21 +136,21 @@ func HandleGetNFInstancesRequest(request *httpwrapper.Request) *httpwrapper.Resp
 	return httpwrapper.NewResponse(http.StatusForbidden, nil, problemDetails)
 }
 
-func HandleRemoveSubscriptionRequest(request *httpwrapper.Request) *httpwrapper.Response {
+func (p *Processor) HandleRemoveSubscriptionRequest(request *httpwrapper.Request) *httpwrapper.Response {
 	logger.NfmLog.Infoln("Handle RemoveSubscription")
 	subscriptionID := request.Params["subscriptionID"]
 
-	RemoveSubscriptionProcedure(subscriptionID)
+	p.RemoveSubscriptionProcedure(subscriptionID)
 
 	return httpwrapper.NewResponse(http.StatusNoContent, nil, nil)
 }
 
-func HandleUpdateSubscriptionRequest(request *httpwrapper.Request) *httpwrapper.Response {
+func (p *Processor) HandleUpdateSubscriptionRequest(request *httpwrapper.Request) *httpwrapper.Response {
 	logger.NfmLog.Infoln("Handle UpdateSubscription")
 	subscriptionID := request.Params["subscriptionID"]
 	patchJSON := request.Body.([]byte)
 
-	response := UpdateSubscriptionProcedure(subscriptionID, patchJSON)
+	response := p.UpdateSubscriptionProcedure(subscriptionID, patchJSON)
 
 	if response != nil {
 		return httpwrapper.NewResponse(http.StatusOK, nil, response)
@@ -159,11 +159,11 @@ func HandleUpdateSubscriptionRequest(request *httpwrapper.Request) *httpwrapper.
 	}
 }
 
-func HandleCreateSubscriptionRequest(request *httpwrapper.Request) *httpwrapper.Response {
+func (p *Processor) HandleCreateSubscriptionRequest(request *httpwrapper.Request) *httpwrapper.Response {
 	logger.NfmLog.Infoln("Handle CreateSubscriptionRequest")
 	subscription := request.Body.(models.NrfSubscriptionData)
 
-	response, problemDetails := CreateSubscriptionProcedure(subscription)
+	response, problemDetails := p.CreateSubscriptionProcedure(subscription)
 	if response != nil {
 		logger.NfmLog.Traceln("CreateSubscription success")
 		return httpwrapper.NewResponse(http.StatusCreated, nil, response)
@@ -179,7 +179,7 @@ func HandleCreateSubscriptionRequest(request *httpwrapper.Request) *httpwrapper.
 	return httpwrapper.NewResponse(http.StatusForbidden, nil, problemDetails)
 }
 
-func CreateSubscriptionProcedure(subscription models.NrfSubscriptionData) (bson.M, *models.ProblemDetails) {
+func (p *Processor) CreateSubscriptionProcedure(subscription models.NrfSubscriptionData) (bson.M, *models.ProblemDetails) {
 	subscriptionID, err := nrf_context.SetsubscriptionId()
 	if err != nil {
 		logger.NfmLog.Errorf("Unable to create subscription ID in CreateSubscriptionProcedure: %+v", err)
@@ -224,7 +224,7 @@ func CreateSubscriptionProcedure(subscription models.NrfSubscriptionData) (bson.
 	return putData, nil
 }
 
-func UpdateSubscriptionProcedure(subscriptionID string, patchJSON []byte) map[string]interface{} {
+func (p *Processor) UpdateSubscriptionProcedure(subscriptionID string, patchJSON []byte) map[string]interface{} {
 	collName := "Subscriptions"
 	filter := bson.M{"subscriptionId": subscriptionID}
 
@@ -238,7 +238,7 @@ func UpdateSubscriptionProcedure(subscriptionID string, patchJSON []byte) map[st
 	}
 }
 
-func RemoveSubscriptionProcedure(subscriptionID string) {
+func (p *Processor) RemoveSubscriptionProcedure(subscriptionID string) {
 	collName := "Subscriptions"
 	filter := bson.M{"subscriptionId": subscriptionID}
 
@@ -247,7 +247,7 @@ func RemoveSubscriptionProcedure(subscriptionID string) {
 	}
 }
 
-func GetNFInstancesProcedure(nfType string, limit int) (*nrf_context.UriList, *models.ProblemDetails) {
+func (p *Processor) GetNFInstancesProcedure(nfType string, limit int) (*nrf_context.UriList, *models.ProblemDetails) {
 	collName := "urilist"
 	filter := bson.M{"nfType": nfType}
 	if nfType == "" {
@@ -290,7 +290,7 @@ func GetNFInstancesProcedure(nfType string, limit int) (*nrf_context.UriList, *m
 	return rspUriList, nil
 }
 
-func NFDeregisterProcedure(nfInstanceID string) *models.ProblemDetails {
+func (p *Processor) NFDeregisterProcedure(nfInstanceID string) *models.ProblemDetails {
 	collName := "NfProfile"
 	filter := bson.M{"nfInstanceId": nfInstanceID}
 
@@ -376,7 +376,7 @@ func NFDeregisterProcedure(nfInstanceID string) *models.ProblemDetails {
 	return nil
 }
 
-func UpdateNFInstanceProcedure(nfInstanceID string, patchJSON []byte) map[string]interface{} {
+func (p *Processor) UpdateNFInstanceProcedure(nfInstanceID string, patchJSON []byte) map[string]interface{} {
 	collName := "NfProfile"
 	filter := bson.M{"nfInstanceId": nfInstanceID}
 
@@ -418,7 +418,7 @@ func UpdateNFInstanceProcedure(nfInstanceID string, patchJSON []byte) map[string
 	return nf
 }
 
-func GetNFInstanceProcedure(nfInstanceID string) map[string]interface{} {
+func (p *Processor) GetNFInstanceProcedure(nfInstanceID string) map[string]interface{} {
 	collName := "NfProfile"
 	filter := bson.M{"nfInstanceId": nfInstanceID}
 	response, err := mongoapi.RestfulAPIGetOne(collName, filter)
@@ -430,7 +430,7 @@ func GetNFInstanceProcedure(nfInstanceID string) map[string]interface{} {
 	return response
 }
 
-func NFRegisterProcedure(
+func (p *Processor) NFRegisterProcedure(
 	nfProfile models.NfProfile,
 ) (
 	header http.Header, response bson.M,

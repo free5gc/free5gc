@@ -1,4 +1,4 @@
-package producer
+package processor
 
 import (
 	"encoding/json"
@@ -18,11 +18,11 @@ import (
 	"github.com/free5gc/util/mongoapi"
 )
 
-func HandleNFDiscoveryRequest(request *httpwrapper.Request) *httpwrapper.Response {
+func (p *Processor) HandleNFDiscoveryRequest(request *httpwrapper.Request) *httpwrapper.Response {
 	// Get all query parameters
 	logger.DiscLog.Infoln("Handle NFDiscoveryRequest")
 
-	response, problemDetails := NFDiscoveryProcedure(request.Query)
+	response, problemDetails := p.NFDiscoveryProcedure(request.Query)
 	// Send Response
 	// step 4: process the return value from step 3
 	if response != nil {
@@ -83,7 +83,7 @@ func validateQueryParameters(queryParameters url.Values) bool {
 	return true
 }
 
-func NFDiscoveryProcedure(
+func (p *Processor) NFDiscoveryProcedure(
 	queryParameters url.Values,
 ) (response *models.SearchResult, problemDetails *models.ProblemDetails) {
 	if !validateQueryParameters(queryParameters) {
