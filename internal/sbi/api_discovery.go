@@ -14,7 +14,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/free5gc/nrf/internal/sbi/discovery"
+	"github.com/free5gc/nrf/internal/logger"
+	"github.com/free5gc/nrf/internal/sbi/producer"
+	"github.com/free5gc/openapi"
+	"github.com/free5gc/openapi/models"
+	"github.com/free5gc/util/httpwrapper"
 )
 
 func (s *Server) getNfDiscoveryRoutes() []Route {
@@ -31,7 +35,27 @@ func (s *Server) getNfDiscoveryRoutes() []Route {
 			"SearchNFInstances",
 			http.MethodGet,
 			"/nf-instances",
-			discovery.HTTPSearchNFInstances,
+			s.HTTPSearchNFInstances,
 		},
+	}
+}
+
+// SearchNFInstances - Search a collection of NF Instances
+func (s *Server) HTTPSearchNFInstances(c *gin.Context) {
+	req := httpwrapper.NewRequest(c.Request, nil)
+	req.Query = c.Request.URL.Query()
+	httpResponse := producer.HandleNFDiscoveryRequest(req)
+
+	responseBody, err := openapi.Serialize(httpResponse.Body, "application/json")
+	if err != nil {
+		logger.DiscLog.Warnln(err)
+		problemDetails := models.ProblemDetails{
+			Status: http.StatusInternalServerError,
+			Cause:  "SYSTEM_FAILURE",
+			Detail: err.Error(),
+		}
+		c.JSON(http.StatusInternalServerError, problemDetails)
+	} else {
+		c.Data(httpResponse.Status, "application/json", responseBody)
 	}
 }

@@ -3,6 +3,7 @@ package sbi
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"runtime/debug"
 	"sync"
@@ -50,6 +51,21 @@ func NewServer(nrf ServerNrf, tlsKeyLogPath string) (*Server, error) {
 	return s, nil
 }
 
+func (s *Server) GetLocalIp() string {
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		logger.NfmLog.Error(err)
+	}
+	for _, address := range addrs {
+		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+			if ipnet.IP.To4() != nil {
+				return ipnet.IP.String()
+			}
+		}
+	}
+	return ""
+}
+
 func (s *Server) applyService() {
 	accesstokenRoutes := s.getAccesstokenRoutes()
 	accesstokenGroup := s.router.Group("") // accesstoken service didn't have api prefix
@@ -57,10 +73,17 @@ func (s *Server) applyService() {
 
 	discoveryRoutes := s.getNfDiscoveryRoutes()
 	discoveryGroup := s.router.Group(factory.NrfDiscResUriPrefix)
+	discoveryGroup.Use(func(c *gin.Context) {
+		// TODO: OAuth
+	})
 	applyRoutes(discoveryGroup, discoveryRoutes)
 
 	managementRoutes := s.getNfManagementRoute()
 	managementGroup := s.router.Group(factory.NrfNfmResUriPrefix)
+	managementGroup.Use(func(c *gin.Context) {
+		// TODO: OAuth
+		// Should exclude NfRegister
+	})
 	applyRoutes(managementGroup, managementRoutes)
 }
 
