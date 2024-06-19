@@ -27,6 +27,8 @@ import (
 	udm_service "github.com/free5gc/udm/pkg/service"
 	udr_factory "github.com/free5gc/udr/pkg/factory"
 	udr_service "github.com/free5gc/udr/pkg/service"
+
+	smf_utils "github.com/free5gc/smf/pkg/utils"
 )
 
 type TestId string
@@ -95,7 +97,7 @@ func NewNrfStruct(ctx context.Context, oauth bool) app.NFstruct {
 		fmt.Printf("NRF Config failed: %v\n", err)
 	}
 	nrf_ctx, nrf_cancel := context.WithCancel(ctx)
-	nrfApp, errApp := nrf_service.NewApp(nrf_factory.NrfConfig)
+	nrfApp, errApp := nrf_service.NewApp(ctx, nrf_factory.NrfConfig, "")
 	if errApp != nil {
 		fmt.Printf("NRF NewApp failed: %v\n", errApp)
 	}
@@ -112,7 +114,7 @@ func NewAmfStruct(ctx context.Context, testId TestId) app.NFstruct {
 		fmt.Printf("AMF Config failed: %v\n", err)
 	}
 	amf_ctx, amf_cancel := context.WithCancel(ctx)
-	amfApp, errApp := amf_service.NewApp(amf_factory.AmfConfig)
+	amfApp, errApp := amf_service.NewApp(amf_ctx, amf_factory.AmfConfig, "")
 	if errApp != nil {
 		fmt.Printf("AMF NewApp failed: %v\n", errApp)
 	}
@@ -129,7 +131,8 @@ func NewSmfStruct(ctx context.Context, testId TestId) app.NFstruct {
 		fmt.Printf("SMF Config failed: %v\n", err)
 	}
 	smf_ctx, smf_cancel := context.WithCancel(ctx)
-	smfApp, errApp := smf_service.NewApp(smf_factory.SmfConfig)
+	pfcpStart, pfcpTerminate := smf_utils.InitPFCPFunc()
+	smfApp, errApp := smf_service.NewApp(smf_ctx, smf_factory.SmfConfig, "", pfcpStart, pfcpTerminate)
 	if errApp != nil {
 		fmt.Printf("SMF NewApp failed: %v\n", errApp)
 	}
@@ -146,7 +149,7 @@ func NewUdmStruct(ctx context.Context) app.NFstruct {
 		fmt.Printf("UDM Config failed: %v\n", err)
 	}
 	udm_ctx, udm_cancel := context.WithCancel(ctx)
-	udmApp, errApp := udm_service.NewApp(udm_factory.UdmConfig)
+	udmApp, errApp := udm_service.NewApp(udm_ctx, udm_factory.UdmConfig, "")
 	if errApp != nil {
 		fmt.Printf("UDM NewApp failed: %v\n", errApp)
 	}
@@ -163,7 +166,7 @@ func NewPcfStruct(ctx context.Context) app.NFstruct {
 		fmt.Printf("PCF Config failed: %v\n", err)
 	}
 	pcf_ctx, pcf_cancel := context.WithCancel(ctx)
-	pcfApp, errApp := pcf_service.NewApp(pcf_factory.PcfConfig)
+	pcfApp, errApp := pcf_service.NewApp(pcf_ctx, pcf_factory.PcfConfig, "")
 	if errApp != nil {
 		fmt.Printf("PCF NewApp failed: %v\n", errApp)
 	}
@@ -180,7 +183,7 @@ func NewUdrStruct(ctx context.Context) app.NFstruct {
 		fmt.Printf("UDR Config failed: %v\n", err)
 	}
 	udr_ctx, udr_cancel := context.WithCancel(ctx)
-	udrApp, errApp := udr_service.NewApp(udr_factory.UdrConfig)
+	udrApp, errApp := udr_service.NewApp(udr_ctx, udr_factory.UdrConfig, "")
 	if errApp != nil {
 		fmt.Printf("UDR NewApp failed: %v\n", errApp)
 	}
@@ -197,7 +200,7 @@ func NewNssfStruct(ctx context.Context) app.NFstruct {
 		fmt.Printf("NSSF Config failed: %v\n", err)
 	}
 	nssf_ctx, nssf_cancel := context.WithCancel(ctx)
-	nssfApp, errApp := nssf_service.NewApp(nssf_factory.NssfConfig)
+	nssfApp, errApp := nssf_service.NewApp(nssf_ctx, nssf_factory.NssfConfig, "")
 	if errApp != nil {
 		fmt.Printf("NSSF NewApp failed: %v\n", errApp)
 	}
@@ -215,7 +218,7 @@ func NewAusfStruct(ctx context.Context) app.NFstruct {
 	}
 
 	ausf_ctx, ausf_cancel := context.WithCancel(ctx)
-	ausfApp, errApp := ausf_service.NewApp(ausf_factory.AusfConfig)
+	ausfApp, errApp := ausf_service.NewApp(ausf_ctx, ausf_factory.AusfConfig, "")
 	if errApp != nil {
 		fmt.Printf("AUSF NewApp failed: %v\n", errApp)
 	}
@@ -695,7 +698,7 @@ func smfUeRoutingConfig() {
 func udrConfig() error {
 	udr_factory.UdrConfig = &udr_factory.Config{
 		Info: &udr_factory.Info{
-			Version:     "1.0.2",
+			Version:     "1.1.0",
 			Description: "UDR initial test configuration",
 		},
 		Configuration: &udr_factory.Configuration{
@@ -709,6 +712,7 @@ func udrConfig() error {
 					Key: "cert/udr.key",
 				},
 			},
+			DbConnectorType: "mongodb",
 			Mongodb: &udr_factory.Mongodb{
 				Name: "free5gc",
 				Url:  "mongodb://localhost:27017",

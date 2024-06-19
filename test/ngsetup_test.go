@@ -128,7 +128,7 @@ func NfStart() {
 	fmt.Println("NfStart", len(NFstructs))
 
 	for _, app := range NFstructs {
-		go app.Nf.Start("")
+		go app.Nf.Start()
 		time.Sleep(200 * time.Millisecond)
 	}
 }
