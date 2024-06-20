@@ -264,6 +264,7 @@ func buildFilter(queryParameters url.Values) bson.M {
 	// Mnc: Pattern: '^[0-9]{2,3}$'
 	if queryParameters["target-plmn-list"] != nil {
 		targetPlmnList := queryParameters["target-plmn-list"][0]
+		targetPlmnList = strings.Trim(targetPlmnList, "[]") // append trim
 		targetPlmnListSplit := strings.Split(targetPlmnList, ",")
 		var targetPlmnListBsonArray bson.A
 
@@ -1348,6 +1349,7 @@ func complexQueryFilterSubprocess(queryParameters map[string]*AtomElem, complexQ
 	// Mnc: Pattern: '^[0-9]{2,3}$'
 	if queryParameters["target-plmn-list"] != nil {
 		targetPlmnList := queryParameters["target-plmn-list"].value
+		targetPlmnList = strings.Trim(targetPlmnList, "[]") // append trim
 		targetPlmnListSplit := strings.Split(targetPlmnList, ",")
 		var targetPlmnListBsonArray bson.A
 
