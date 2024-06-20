@@ -8,34 +8,22 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 
 	"github.com/free5gc/nrf/internal/context"
 	"github.com/free5gc/nrf/internal/logger"
+	"github.com/free5gc/nrf/internal/util"
 	"github.com/free5gc/openapi/models"
-	"github.com/free5gc/util/httpwrapper"
 	timedecode "github.com/free5gc/util/mapstruct"
 	"github.com/free5gc/util/mongoapi"
 )
 
-func (p *Processor) HandleNFDiscoveryRequest(request *httpwrapper.Request) *httpwrapper.Response {
+func (p *Processor) HandleNFDiscoveryRequest(c *gin.Context, queryParameters url.Values) {
 	// Get all query parameters
 	logger.DiscLog.Infoln("Handle NFDiscoveryRequest")
 
-	response, problemDetails := p.NFDiscoveryProcedure(request.Query)
-	// Send Response
-	// step 4: process the return value from step 3
-	if response != nil {
-		// status code is based on SPEC, and option headers
-		return httpwrapper.NewResponse(http.StatusOK, nil, response)
-	} else if problemDetails != nil {
-		return httpwrapper.NewResponse(int(problemDetails.Status), nil, problemDetails)
-	}
-	problemDetails = &models.ProblemDetails{
-		Status: http.StatusForbidden,
-		Cause:  "UNSPECIFIED",
-	}
-	return httpwrapper.NewResponse(http.StatusForbidden, nil, problemDetails)
+	p.NFDiscoveryProcedure(c, queryParameters)
 }
 
 func validateQueryParameters(queryParameters url.Values) bool {
@@ -83,16 +71,15 @@ func validateQueryParameters(queryParameters url.Values) bool {
 	return true
 }
 
-func (p *Processor) NFDiscoveryProcedure(
-	queryParameters url.Values,
-) (response *models.SearchResult, problemDetails *models.ProblemDetails) {
+func (p *Processor) NFDiscoveryProcedure(c *gin.Context, queryParameters url.Values) {
 	if !validateQueryParameters(queryParameters) {
 		problemDetails := &models.ProblemDetails{
 			Title:  "Invalid Parameter",
 			Status: http.StatusBadRequest,
 			Cause:  "Loss mandatory parameter",
 		}
-		return nil, problemDetails
+		util.GinProblemJson(c, problemDetails)
+		return
 	}
 
 	if queryParameters["complexQuery"] != nil {
@@ -114,7 +101,8 @@ func (p *Processor) NFDiscoveryProcedure(
 					{Param: "complexQuery"},
 				},
 			}
-			return nil, problemDetails
+			util.GinProblemJson(c, problemDetails)
+			return
 		}
 	}
 
@@ -134,7 +122,8 @@ func (p *Processor) NFDiscoveryProcedure(
 			Detail: err.Error(),
 			Cause:  "SYSTEM_FAILURE",
 		}
-		return nil, problemDetails
+		util.GinProblemJson(c, problemDetails)
+		return
 	}
 
 	// nfProfile data for response
@@ -147,7 +136,8 @@ func (p *Processor) NFDiscoveryProcedure(
 			Detail: err.Error(),
 			Cause:  "SYSTEM_FAILURE",
 		}
-		return nil, problemDetails
+		util.GinProblemJson(c, problemDetails)
+		return
 	}
 
 	// handle ipv4 & ipv6
@@ -185,8 +175,7 @@ func (p *Processor) NFDiscoveryProcedure(
 		ValidityPeriod: 100,
 		NfInstances:    nfProfilesStruct,
 	}
-
-	return searchResult, nil
+	c.JSON(http.StatusOK, searchResult)
 }
 
 func buildFilter(queryParameters url.Values) bson.M {

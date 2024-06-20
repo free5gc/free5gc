@@ -67,7 +67,6 @@ func action(cliCtx *cli.Context) error {
 	NRF = nrf
 
 	nrf.Start()
-	nrf.WaitRoutineStopped()
 	return nil
 }
 

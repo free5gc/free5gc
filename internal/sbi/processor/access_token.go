@@ -6,31 +6,32 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
 	"go.mongodb.org/mongo-driver/bson"
 
 	nrf_context "github.com/free5gc/nrf/internal/context"
 	"github.com/free5gc/nrf/internal/logger"
+	"github.com/free5gc/nrf/internal/util"
 	"github.com/free5gc/nrf/pkg/factory"
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/openapi/oauth"
-	"github.com/free5gc/util/httpwrapper"
 	"github.com/free5gc/util/mapstruct"
 	"github.com/free5gc/util/mongoapi"
 )
 
-func (p *Processor) HandleAccessTokenRequest(request *httpwrapper.Request) *httpwrapper.Response {
+func (p *Processor) HandleAccessTokenRequest(c *gin.Context, accessTokenReq models.AccessTokenReq) {
 	// Param of AccessTokenRsp
 	logger.AccTokenLog.Debugln("Handle AccessTokenRequest")
 
-	accessTokenReq := request.Body.(models.AccessTokenReq)
-
 	response, errResponse := p.AccessTokenProcedure(accessTokenReq)
 	if errResponse != nil {
-		return httpwrapper.NewResponse(http.StatusBadRequest, nil, errResponse)
+		c.JSON(http.StatusBadRequest, errResponse)
+		return
 	} else if response != nil {
 		// status code is based on SPEC, and option headers
-		return httpwrapper.NewResponse(http.StatusOK, nil, response)
+		c.JSON(http.StatusOK, response)
+		return
 	}
 
 	logger.AccTokenLog.Errorln("AccessTokenProcedure returned neither an error nor a response")
@@ -38,7 +39,7 @@ func (p *Processor) HandleAccessTokenRequest(request *httpwrapper.Request) *http
 		Status: http.StatusInternalServerError,
 		Cause:  "UNSPECIFIED",
 	}
-	return httpwrapper.NewResponse(int(problemDetails.Status), nil, problemDetails)
+	util.GinProblemJson(c, problemDetails)
 }
 
 func (p *Processor) AccessTokenProcedure(request models.AccessTokenReq) (
@@ -46,9 +47,11 @@ func (p *Processor) AccessTokenProcedure(request models.AccessTokenReq) (
 ) {
 	logger.AccTokenLog.Debugln("In AccessTokenProcedure")
 
-	var expiration int32 = 1000
+	var (
+		expiration int32  = 1000
+		tokenType  string = "Bearer"
+	)
 	scope := request.Scope
-	tokenType := "Bearer"
 	now := int32(time.Now().Unix())
 
 	errResponse := p.AccessTokenScopeCheck(request)
@@ -233,6 +236,5 @@ func (p *Processor) AccessTokenScopeCheck(req models.AccessTokenReq) *models.Acc
 			}
 		}
 	}
-
 	return nil
 }

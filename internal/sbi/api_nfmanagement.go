@@ -10,6 +10,7 @@
 package sbi
 
 import (
+	"fmt"
 	"net/http"
 	"reflect"
 	"strconv"
@@ -20,9 +21,9 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 
 	"github.com/free5gc/nrf/internal/logger"
+	"github.com/free5gc/nrf/internal/util"
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
-	"github.com/free5gc/util/httpwrapper"
 	timedecode "github.com/free5gc/util/mapstruct"
 	"github.com/free5gc/util/mongoapi"
 )
@@ -61,6 +62,7 @@ func (s *Server) getNfManagementRoute() []Route {
 			"/nf-instances/:nfInstanceID",
 			s.HTTPGetNFInstance,
 		},
+		// Have another router group without Middlerware OAuth Check
 		// {
 		// 	"RegisterNFInstance",
 		// 	http.MethodPut,
@@ -102,44 +104,32 @@ func (s *Server) getNfManagementRoute() []Route {
 
 // DeregisterNFInstance - Deregisters a given NF Instance
 func (s *Server) HTTPDeregisterNFInstance(c *gin.Context) {
-	req := httpwrapper.NewRequest(c.Request, nil)
-	req.Params["nfInstanceID"] = c.Params.ByName("nfInstanceID")
-
-	httpResponse := s.Processor().HandleNFDeregisterRequest(req)
-
-	responseBody, err := openapi.Serialize(httpResponse.Body, "application/json")
-	if err != nil {
-		logger.NfmLog.Warnln(err)
-		problemDetails := models.ProblemDetails{
+	nfInstanceID := c.Params.ByName("nfInstanceID")
+	if nfInstanceID == "" {
+		problemDetails := &models.ProblemDetails{
 			Status: http.StatusInternalServerError,
 			Cause:  "SYSTEM_FAILURE",
-			Detail: err.Error(),
+			Detail: "",
 		}
-		c.JSON(http.StatusInternalServerError, problemDetails)
-	} else {
-		c.Data(httpResponse.Status, "application/json", responseBody)
+		util.GinProblemJson(c, problemDetails)
+		return
 	}
+	s.Processor().HandleNFDeregisterRequest(c, nfInstanceID)
 }
 
 // GetNFInstance - Read the profile of a given NF Instance
 func (s *Server) HTTPGetNFInstance(c *gin.Context) {
-	req := httpwrapper.NewRequest(c.Request, nil)
-	req.Params["nfInstanceID"] = c.Params.ByName("nfInstanceID")
-
-	httpResponse := s.Processor().HandleGetNFInstanceRequest(req)
-
-	responseBody, err := openapi.Serialize(httpResponse.Body, "application/json")
-	if err != nil {
-		logger.NfmLog.Warnln(err)
-		problemDetails := models.ProblemDetails{
+	nfInstanceID := c.Params.ByName("nfInstanceID")
+	if nfInstanceID == "" {
+		problemDetails := &models.ProblemDetails{
 			Status: http.StatusInternalServerError,
 			Cause:  "SYSTEM_FAILURE",
-			Detail: err.Error(),
+			Detail: "",
 		}
-		c.JSON(http.StatusInternalServerError, problemDetails)
-	} else {
-		c.Data(httpResponse.Status, "application/json", responseBody)
+		util.GinProblemJson(c, problemDetails)
+		return
 	}
+	s.Processor().HandleGetNFInstanceRequest(c, nfInstanceID)
 }
 
 // RegisterNFInstance - Register a new NF Instance
@@ -149,53 +139,32 @@ func (s *Server) HTTPRegisterNFInstance(c *gin.Context) {
 
 	requestBody, err := c.GetRawData()
 	if err != nil {
-		problemDetail := models.ProblemDetails{
+		problemDetail := &models.ProblemDetails{
 			Title:  "System failure",
 			Status: http.StatusInternalServerError,
 			Detail: err.Error(),
 			Cause:  "SYSTEM_FAILURE",
 		}
 		logger.NfmLog.Errorf("Get Request Body error: %+v", err)
-		c.JSON(http.StatusInternalServerError, problemDetail)
+		util.GinProblemJson(c, problemDetail)
 		return
 	}
 
 	// step 2: convert requestBody to openapi models
 	err = openapi.Deserialize(&nfprofile, requestBody, "application/json")
 	if err != nil {
-		problemDetail := "[Request Body] " + err.Error()
-		rsp := models.ProblemDetails{
+		details := "[Request Body] " + err.Error()
+		pd := &models.ProblemDetails{
 			Title:  "Malformed request syntax",
 			Status: http.StatusBadRequest,
-			Detail: problemDetail,
+			Detail: details,
 		}
-		logger.NfmLog.Errorln(problemDetail)
-		c.JSON(http.StatusBadRequest, rsp)
+		logger.NfmLog.Errorln(details)
+		util.GinProblemJson(c, pd)
 		return
 	}
 
-	// step 3: encapsulate the request by http_wrapper package
-	req := httpwrapper.NewRequest(c.Request, nfprofile)
-
-	// step 4: call producer
-	httpResponse := s.Processor().HandleNFRegisterRequest(req)
-
-	for key, val := range httpResponse.Header {
-		c.Header(key, val[0])
-	}
-
-	responseBody, err := openapi.Serialize(httpResponse.Body, "application/json")
-	if err != nil {
-		logger.NfmLog.Warnln(err)
-		problemDetails := models.ProblemDetails{
-			Status: http.StatusInternalServerError,
-			Cause:  "SYSTEM_FAILURE",
-			Detail: err.Error(),
-		}
-		c.JSON(http.StatusInternalServerError, problemDetails)
-	} else {
-		c.Data(httpResponse.Status, "application/json", responseBody)
-	}
+	s.Processor().HandleNFRegisterRequest(c, nfprofile)
 }
 
 // UpdateNFInstance - Update NF Instance profile
@@ -213,101 +182,99 @@ func (s *Server) HTTPUpdateNFInstance(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, problemDetail)
 		return
 	}
-
-	req := httpwrapper.NewRequest(c.Request, nil)
-	req.Params["nfInstanceID"] = c.Params.ByName("nfInstanceID")
-	req.Body = requestBody
-
-	httpResponse := s.Processor().HandleUpdateNFInstanceRequest(req)
-
-	responseBody, err := openapi.Serialize(httpResponse.Body, "application/json")
-	if err != nil {
-		logger.NfmLog.Warnln(err)
-		problemDetails := models.ProblemDetails{
-			Status: http.StatusInternalServerError,
-			Cause:  "SYSTEM_FAILURE",
-			Detail: err.Error(),
+	nfInstanceID := c.Params.ByName("nfInstanceID")
+	if nfInstanceID == "" {
+		problemDetail := &models.ProblemDetails{
+			Title:  "nfInstanceID Empty",
+			Status: http.StatusBadRequest,
+			Detail: "nfInstanceID not exist in request",
 		}
-		c.JSON(http.StatusInternalServerError, problemDetails)
-	} else {
-		c.Data(httpResponse.Status, "application/json", responseBody)
+		util.GinProblemJson(c, problemDetail)
+		return
 	}
+	s.Processor().HandleUpdateNFInstanceRequest(c, requestBody, nfInstanceID)
 }
 
 // GetNFInstances - Retrieves a collection of NF Instances
 func (s *Server) HTTPGetNFInstances(c *gin.Context) {
-	req := httpwrapper.NewRequest(c.Request, nil)
-	req.Query = c.Request.URL.Query()
+	nfType := c.Params.ByName("nf-type")
+	limitParam := c.Params.ByName("limit")
 
-	httpResponse := s.Processor().HandleGetNFInstancesRequest(req)
-
-	responseBody, err := openapi.Serialize(httpResponse.Body, "application/json")
+	if nfType == "" || limitParam == "" {
+		problemDetail := &models.ProblemDetails{
+			Title:  "nfType or limitParam empty",
+			Status: http.StatusBadRequest,
+			Detail: fmt.Sprintf("nfType: %v, limitParam: %v", nfType, limitParam),
+		}
+		util.GinProblemJson(c, problemDetail)
+		return
+	}
+	limit, err := strconv.Atoi(limitParam)
 	if err != nil {
-		logger.NfmLog.Warnln(err)
-		problemDetails := models.ProblemDetails{
-			Status: http.StatusInternalServerError,
-			Cause:  "SYSTEM_FAILURE",
+		logger.NfmLog.Errorln("Error in string conversion: ", limit)
+		problemDetails := &models.ProblemDetails{
+			Title:  "Invalid Parameter",
+			Status: http.StatusBadRequest,
 			Detail: err.Error(),
 		}
-		c.JSON(http.StatusInternalServerError, problemDetails)
-	} else {
-		c.Data(httpResponse.Status, "application/json", responseBody)
+		util.GinProblemJson(c, problemDetails)
+		return
 	}
+	if limit < 1 {
+		problemDetails := &models.ProblemDetails{
+			Title:  "Invalid Parameter",
+			Status: http.StatusBadRequest,
+			Detail: "limit must be greater than 0",
+		}
+		util.GinProblemJson(c, problemDetails)
+		return
+	}
+
+	s.Processor().HandleGetNFInstancesRequest(c, nfType, limit)
 }
 
 // RemoveSubscription - Deletes a subscription
 func (s *Server) HTTPRemoveSubscription(c *gin.Context) {
-	req := httpwrapper.NewRequest(c.Request, nil)
-	req.Params["subscriptionID"] = c.Params.ByName("subscriptionID")
-
-	httpResponse := s.Processor().HandleRemoveSubscriptionRequest(req)
-
-	responseBody, err := openapi.Serialize(httpResponse.Body, "application/json")
-	if err != nil {
-		logger.NfmLog.Warnln(err)
-		problemDetails := models.ProblemDetails{
-			Status: http.StatusInternalServerError,
-			Cause:  "SYSTEM_FAILURE",
-			Detail: err.Error(),
+	subscriptionID := c.Params.ByName("subscriptionID")
+	if subscriptionID == "" {
+		problemDetail := &models.ProblemDetails{
+			Title:  "subscriptionID Empty",
+			Status: http.StatusBadRequest,
+			Detail: "subscriptionID not exist in request",
 		}
-		c.JSON(http.StatusInternalServerError, problemDetails)
-	} else {
-		c.Data(httpResponse.Status, "application/json", responseBody)
+		util.GinProblemJson(c, problemDetail)
+		return
 	}
+	s.Processor().HandleRemoveSubscriptionRequest(c, subscriptionID)
 }
 
 // UpdateSubscription - Updates a subscription
 func (s *Server) HTTPUpdateSubscription(c *gin.Context) {
 	requestBody, err := c.GetRawData()
 	if err != nil {
-		problemDetail := models.ProblemDetails{
+		problemDetail := &models.ProblemDetails{
 			Title:  "System failure",
 			Status: http.StatusInternalServerError,
 			Detail: err.Error(),
 			Cause:  "SYSTEM_FAILURE",
 		}
 		logger.NfmLog.Errorf("Get Request Body error: %+v", err)
-		c.JSON(http.StatusInternalServerError, problemDetail)
+		util.GinProblemJson(c, problemDetail)
 		return
 	}
 
-	req := httpwrapper.NewRequest(c.Request, nil)
-	req.Params["subscriptionID"] = c.Params.ByName("subscriptionID")
-	req.Body = requestBody
-
-	httpResponse := s.Processor().HandleUpdateSubscriptionRequest(req)
-	responseBody, err := openapi.Serialize(httpResponse.Body, "application/json")
-	if err != nil {
-		logger.NfmLog.Warnln(err)
-		problemDetails := models.ProblemDetails{
+	subscriptionID := c.Params.ByName("subscriptionID")
+	if subscriptionID == "" {
+		problemDetail := &models.ProblemDetails{
+			Title:  "subscriptionID Empty",
 			Status: http.StatusInternalServerError,
-			Cause:  "SYSTEM_FAILURE",
-			Detail: err.Error(),
+			Detail: "subscriptionID not exist in request",
 		}
-		c.JSON(http.StatusInternalServerError, problemDetails)
-	} else {
-		c.Data(httpResponse.Status, "application/json", responseBody)
+		util.GinProblemJson(c, problemDetail)
+		return
 	}
+
+	s.Processor().HandleUpdateSubscriptionRequest(c, subscriptionID, requestBody)
 }
 
 // CreateSubscription - Create a new subscription
@@ -341,22 +308,7 @@ func (s *Server) HTTPCreateSubscription(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, rsp)
 		return
 	}
-
-	req := httpwrapper.NewRequest(c.Request, subscription)
-
-	httpResponse := s.Processor().HandleCreateSubscriptionRequest(req)
-	responseBody, err := openapi.Serialize(httpResponse.Body, "application/json")
-	if err != nil {
-		logger.NfmLog.Errorln(err)
-		problemDetails := models.ProblemDetails{
-			Status: http.StatusInternalServerError,
-			Cause:  "SYSTEM_FAILURE",
-			Detail: err.Error(),
-		}
-		c.JSON(http.StatusInternalServerError, problemDetails)
-	} else {
-		c.Data(httpResponse.Status, "application/json", responseBody)
-	}
+	s.Processor().HandleCreateSubscriptionRequest(c, subscription)
 }
 
 func (s *Server) GetNrfInfo() *models.NrfInfo {

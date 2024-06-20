@@ -17,9 +17,9 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/free5gc/nrf/internal/logger"
+	"github.com/free5gc/nrf/internal/util"
 	"github.com/free5gc/nrf/pkg/factory"
 	"github.com/free5gc/openapi/models"
-	"github.com/free5gc/util/httpwrapper"
 )
 
 func (s *Server) getAccesstokenRoutes() []Route {
@@ -46,25 +46,31 @@ func (s *Server) HTTPAccessTokenRequest(c *gin.Context) {
 	logger.AccTokenLog.Infoln("In HTTPAccessTokenRequest")
 
 	if !factory.NrfConfig.GetOAuth() {
-		rsp := models.ProblemDetails{
+		pd := &models.ProblemDetails{
 			Title:  "OAuth2 not enable",
 			Status: http.StatusBadRequest,
+			Detail: "OAuth2 not enable",
 		}
-		c.JSON(http.StatusBadRequest, rsp)
+		util.GinProblemJson(c, pd)
 		return
 	}
 
 	var accessTokenReq models.AccessTokenReq
-	var r *http.Request = c.Request
 
 	// Request parser
-	err := r.ParseForm()
+	err := c.Request.ParseForm()
 	if err != nil {
-		logger.AccTokenLog.Errorf(err.Error())
+		logger.AccTokenLog.Errorf("ParseForm err: %+v", err)
+		pd := &models.ProblemDetails{
+			Title:  "Request ParseForm Error",
+			Status: http.StatusBadRequest,
+			Detail: err.Error(),
+		}
+		util.GinProblemJson(c, pd)
 		return
 	}
 	rt := reflect.TypeOf(accessTokenReq)
-	for key, value := range r.PostForm {
+	for key, value := range c.Request.PostForm {
 		var name string
 		var vt reflect.Type
 		for i := 0; i < rt.NumField(); i++ {
@@ -81,37 +87,18 @@ func (s *Server) HTTPAccessTokenRequest(c *gin.Context) {
 			err = json.Unmarshal([]byte(value[0]), &plmnid)
 			if err != nil {
 				problemDetail := "[Request Body] " + err.Error()
-				rsp := models.ProblemDetails{
+				pd := &models.ProblemDetails{
 					Title:  "Json Unmarshal Error",
 					Status: http.StatusBadRequest,
 					Detail: problemDetail,
 				}
-				logger.AccTokenLog.Errorln(problemDetail)
-				c.JSON(http.StatusBadRequest, rsp)
+				logger.AccTokenLog.Errorf("PlmnId Unmarshal err:%+v", problemDetail)
+				util.GinProblemJson(c, pd)
 				return
 			}
 			reflectvalue := reflect.ValueOf(&plmnid)
 			reflect.ValueOf(&accessTokenReq).Elem().FieldByName(name).Set(reflectvalue)
 		}
 	}
-
-	err = c.Bind(&accessTokenReq)
-	if err != nil {
-		problemDetail := "[Request Body] " + err.Error()
-		rsp := models.ProblemDetails{
-			Title:  "Malformed request syntax",
-			Status: http.StatusBadRequest,
-			Detail: problemDetail,
-		}
-		logger.AccTokenLog.Warnln(problemDetail)
-		c.JSON(http.StatusBadRequest, rsp)
-		return
-	}
-
-	req := httpwrapper.NewRequest(c.Request, accessTokenReq)
-	req.Params["paramName"] = c.Params.ByName("paramName")
-
-	httpResponse := s.Processor().HandleAccessTokenRequest(req)
-
-	c.JSON(httpResponse.Status, httpResponse.Body)
+	s.Processor().HandleAccessTokenRequest(c, accessTokenReq)
 }

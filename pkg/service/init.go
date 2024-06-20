@@ -148,6 +148,7 @@ func (a *NrfApp) Start() {
 	if err := a.sbiServer.Run(&a.wg); err != nil {
 		logger.MainLog.Fatalf("Run SBI server failed: %+v", err)
 	}
+	a.WaitRoutineStopped()
 }
 
 func (a *NrfApp) listenShutdownEvent() {
