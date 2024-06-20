@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/signal"
 	"strings"
+	"sync"
 	"syscall"
 	"testing"
 	"time"
@@ -57,6 +58,7 @@ func init() {
 			initNfCfg.OAuth = true
 		}
 	}
+	fmt.Println("os.Args:", os.Args)
 
 	switch initFlag {
 	case multiAMF:
@@ -124,22 +126,31 @@ func setMongoDB() {
 	fmt.Println("MongoDB Set")
 }
 
+var nfWaitingGroup sync.WaitGroup
+
 func NfStart() {
 	fmt.Println("NfStart", len(NFstructs))
 
 	for _, app := range NFstructs {
-		go app.Nf.Start()
+		go func() {
+			nfWaitingGroup.Add(1)
+			defer nfWaitingGroup.Done()
+
+			app.Nf.Start()
+		}()
 		time.Sleep(200 * time.Millisecond)
 	}
+	time.Sleep(1 * time.Second)
 }
 
 func NfTerminate() {
 	if initFlag != noInit {
-		nfNums := len(NFstructs)
-		for i := nfNums - 1; i >= 0; i-- {
-			NFstructs[i].Nf.Terminate()
-		}
+		// nfNums := len(NFstructs)
+		// for i := nfNums - 1; i >= 0; i-- {
+		// 	NFstructs[i].Nf.Terminate()
+		// }
 		test.NfCancel()
+		nfWaitingGroup.Wait()
 	}
 }
 
