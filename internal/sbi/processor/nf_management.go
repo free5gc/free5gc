@@ -178,7 +178,7 @@ func (p *Processor) UpdateSubscriptionProcedure(subscriptionID string, patchJSON
 	if err := mongoapi.RestfulAPIJSONPatch(collName, filter, patchJSON); err != nil {
 		return nil
 	} else {
-		if response, err := mongoapi.RestfulAPIGetOne(collName, filter); err == nil {
+		if response, err1 := mongoapi.RestfulAPIGetOne(collName, filter); err1 == nil {
 			return response
 		}
 		return nil
@@ -217,7 +217,7 @@ func (p *Processor) GetNFInstancesProcedure(nfType string, limit int) (*nrf_cont
 	rspUriList := &nrf_context.UriList{}
 	for _, UL := range ULs {
 		originalUL := &nrf_context.UriList{}
-		if err := mapstructure.Decode(UL, originalUL); err != nil {
+		if err = mapstructure.Decode(UL, originalUL); err != nil {
 			logger.NfmLog.Errorf("Decode error in GetNFInstancesProcedure: %+v", err)
 			problemDetail := &models.ProblemDetails{
 				Title:  "System failure",
@@ -238,7 +238,7 @@ func (p *Processor) GetNFInstancesProcedure(nfType string, limit int) (*nrf_cont
 }
 
 func (p *Processor) NFDeregisterProcedure(nfInstanceID string) *models.ProblemDetails {
-	collName := "NfProfile"
+	collName := nrf_context.NfProfileCollName
 	filter := bson.M{"nfInstanceId": nfInstanceID}
 
 	nfProfilesRaw, err := mongoapi.RestfulAPIGetMany(collName, filter)
@@ -252,9 +252,10 @@ func (p *Processor) NFDeregisterProcedure(nfInstanceID string) *models.ProblemDe
 		}
 		return problemDetail
 	}
-	time.Sleep(time.Duration(200) * time.Millisecond)
+	const dbWaitTime = time.Duration(200) * time.Millisecond
+	time.Sleep(dbWaitTime)
 
-	if err := mongoapi.RestfulAPIDeleteMany(collName, filter); err != nil {
+	if err = mongoapi.RestfulAPIDeleteMany(collName, filter); err != nil {
 		logger.NfmLog.Errorf("NFDeregisterProcedure err: %+v", err)
 		problemDetail := &models.ProblemDetails{
 			Title:  "System failure",
@@ -267,7 +268,7 @@ func (p *Processor) NFDeregisterProcedure(nfInstanceID string) *models.ProblemDe
 
 	// nfProfile data for response
 	var nfProfiles []models.NfProfile
-	if err := timedecode.Decode(nfProfilesRaw, &nfProfiles); err != nil {
+	if err = timedecode.Decode(nfProfilesRaw, &nfProfiles); err != nil {
 		logger.NfmLog.Warnln("Time decode error: ", err)
 		problemDetails := &models.ProblemDetails{
 			Status: http.StatusInternalServerError,
@@ -303,7 +304,7 @@ func (p *Processor) NFDeregisterProcedure(nfInstanceID string) *models.ProblemDe
 	collNameURI := "urilist"
 	filterURI := bson.M{"nfType": nfProfiles[0].NfType}
 	putData := bson.M{"_link.item": bson.M{"href": nfInstanceUri}, "multi": true}
-	if err := mongoapi.RestfulAPIPullOne(collNameURI, filterURI, putData); err != nil {
+	if err = mongoapi.RestfulAPIPullOne(collNameURI, filterURI, putData); err != nil {
 		logger.NfmLog.Errorf("NFDeregisterProcedure err: %+v", err)
 		problemDetail := &models.ProblemDetails{
 			Title:  "System failure",
@@ -315,9 +316,8 @@ func (p *Processor) NFDeregisterProcedure(nfInstanceID string) *models.ProblemDe
 	}
 	if factory.NrfConfig.GetOAuth() {
 		nfCertPath := oauth.GetNFCertPath(factory.NrfConfig.GetCertBasePath(), string(nfInstanceType), nfInstanceID)
-		err := os.Remove(nfCertPath)
-		if err != nil {
-			logger.NfmLog.Warningf("Can not delete NFCertPem file: %v: %v", nfCertPath, err)
+		if removeErr := os.Remove(nfCertPath); removeErr != nil {
+			logger.NfmLog.Warningf("Can not delete NFCertPem file: %v: %v", nfCertPath, removeErr)
 		}
 	}
 	logger.NfmLog.Infof("NfDeregister Success: %v [%v]", nfInstanceType, nfInstanceID)
@@ -325,7 +325,7 @@ func (p *Processor) NFDeregisterProcedure(nfInstanceID string) *models.ProblemDe
 }
 
 func (p *Processor) UpdateNFInstanceProcedure(nfInstanceID string, patchJSON []byte) map[string]interface{} {
-	collName := "NfProfile"
+	collName := nrf_context.NfProfileCollName
 	filter := bson.M{"nfInstanceId": nfInstanceID}
 
 	if err := mongoapi.RestfulAPIJSONPatch(collName, filter, patchJSON); err != nil {
@@ -344,7 +344,7 @@ func (p *Processor) UpdateNFInstanceProcedure(nfInstanceID string, patchJSON []b
 	}
 
 	var nfProfiles []models.NfProfile
-	if err := timedecode.Decode(nfProfilesRaw, &nfProfiles); err != nil {
+	if err = timedecode.Decode(nfProfilesRaw, &nfProfiles); err != nil {
 		logger.NfmLog.Errorf("UpdateNFInstanceProcedure err: %+v", err)
 	}
 
@@ -366,7 +366,7 @@ func (p *Processor) UpdateNFInstanceProcedure(nfInstanceID string, patchJSON []b
 }
 
 func (p *Processor) GetNFInstanceProcedure(c *gin.Context, nfInstanceID string) {
-	collName := "NfProfile"
+	collName := nrf_context.NfProfileCollName
 	filter := bson.M{"nfInstanceId": nfInstanceID}
 	response, err := mongoapi.RestfulAPIGetOne(collName, filter)
 	if err != nil {
@@ -432,7 +432,7 @@ func (p *Processor) NFRegisterProcedure(
 		return
 	}
 	// set db info
-	collName := "NfProfile"
+	collName := nrf_context.NfProfileCollName
 	nfInstanceId := nf.NfInstanceId
 	filter := bson.M{"nfInstanceId": nfInstanceId}
 
@@ -488,7 +488,7 @@ func (p *Processor) NFRegisterProcedure(
 
 		if factory.NrfConfig.GetOAuth() {
 			// Generate NF's pubkey certificate with root certificate
-			err := nrf_context.SignNFCert(string(nf.NfType), nfInstanceId)
+			err = nrf_context.SignNFCert(string(nf.NfType), nfInstanceId)
 			if err != nil {
 				logger.NfmLog.Warnln(err)
 			}

@@ -167,13 +167,14 @@ func (a *NrfApp) listenShutdownEvent() {
 func (a *NrfApp) Terminate() {
 	logger.InitLog.Infof("Terminating NRF...")
 
-	logger.InitLog.Infof("Waiting for 2s for other NFs to deregister")
-	time.Sleep(2 * time.Second)
+	waitTime := 2
+	logger.InitLog.Infof("Waiting for %vs for other NFs to deregister", waitTime)
+	time.Sleep(time.Duration(waitTime) * time.Second)
 
 	a.cancel()
 
 	logger.InitLog.Infof("Remove NF Profile...")
-	err := mongoapi.Drop("NfProfile")
+	err := mongoapi.Drop(nrf_context.NfProfileCollName)
 	if err != nil {
 		logger.InitLog.Errorf("Drop NfProfile collection failed: %+v", err)
 	}

@@ -12,7 +12,7 @@ import (
 
 // Ipv6ToInt - Convert Ipv6 string to *bigInt
 func Ipv6ToInt(ipv6 string) *big.Int {
-	ipv6 = ipv6 + "/32"
+	ipv6 += "/32"
 	ip, _, err := net.ParseCIDR(ipv6)
 	if err != nil {
 		fmt.Println("Error", ip, err)
@@ -24,7 +24,7 @@ func Ipv6ToInt(ipv6 string) *big.Int {
 
 // Ipv4ToInt - Convert Ipv4 string to int64
 func Ipv4ToInt(ipv4 string) int64 {
-	ipv4 = ipv4 + "/24"
+	ipv4 += "/24"
 	ip, _, err := net.ParseCIDR(ipv4)
 	if err != nil {
 		fmt.Println("Error", ip, err)
@@ -70,14 +70,13 @@ func EncodeGroupId(groupId string) string {
 	for i := 0; i < (10 - len(externalGroupIdentitySplit[0])); i++ {
 		groupServiceIdentifierPadding += "0"
 	}
-	encodedGroupId = encodedGroupId + groupServiceIdentifierPadding + strconv.Itoa(encodedGroupServiceIdentifier)
-
-	encodedGroupId = encodedGroupId + externalGroupIdentitySplit[1]
+	encodedGroupId += groupServiceIdentifierPadding + strconv.Itoa(encodedGroupServiceIdentifier)
+	encodedGroupId += externalGroupIdentitySplit[1]
 
 	if len(externalGroupIdentitySplit[2]) == 2 {
-		encodedGroupId = encodedGroupId + "0" + externalGroupIdentitySplit[2]
+		encodedGroupId += "0" + externalGroupIdentitySplit[2]
 	} else {
-		encodedGroupId = encodedGroupId + externalGroupIdentitySplit[2]
+		encodedGroupId += externalGroupIdentitySplit[2]
 	}
 
 	var encodedLocalGroupId int

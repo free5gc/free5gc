@@ -20,6 +20,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"go.mongodb.org/mongo-driver/bson"
 
+	nrf_context "github.com/free5gc/nrf/internal/context"
 	"github.com/free5gc/nrf/internal/logger"
 	"github.com/free5gc/nrf/internal/util"
 	"github.com/free5gc/openapi"
@@ -332,7 +333,7 @@ func (s *Server) getUdrInfo() map[string]models.UdrInfo {
 	servedUdrInfo := make(map[string]models.UdrInfo)
 	var UDRProfile models.NfProfile
 
-	collName := "NfProfile"
+	collName := nrf_context.NfProfileCollName
 	filter := bson.M{"nfType": "UDR"}
 
 	UDR, err := mongoapi.RestfulAPIGetMany(collName, filter)
@@ -341,12 +342,12 @@ func (s *Server) getUdrInfo() map[string]models.UdrInfo {
 	}
 
 	var UDRStruct []models.NfProfile
-	if err := timedecode.Decode(UDR, &UDRStruct); err != nil {
+	if err = timedecode.Decode(UDR, &UDRStruct); err != nil {
 		logger.NfmLog.Errorf("getUdrInfo err: %+v", err)
 	}
 
 	for i := 0; i < len(UDRStruct); i++ {
-		err := mapstructure.Decode(UDRStruct[i], &UDRProfile)
+		err = mapstructure.Decode(UDRStruct[i], &UDRProfile)
 		if err != nil {
 			panic(err)
 		}
@@ -360,7 +361,7 @@ func (s *Server) getUdmInfo() map[string]models.UdmInfo {
 	servedUdmInfo := make(map[string]models.UdmInfo)
 	var UDMProfile models.NfProfile
 
-	collName := "NfProfile"
+	collName := nrf_context.NfProfileCollName
 	filter := bson.M{"nfType": "UDM"}
 
 	UDM, err := mongoapi.RestfulAPIGetMany(collName, filter)
@@ -369,12 +370,12 @@ func (s *Server) getUdmInfo() map[string]models.UdmInfo {
 	}
 
 	var UDMStruct []models.NfProfile
-	if err := timedecode.Decode(UDM, &UDMStruct); err != nil {
+	if err = timedecode.Decode(UDM, &UDMStruct); err != nil {
 		logger.NfmLog.Errorf("getUdmInfo err: %+v", err)
 	}
 
 	for i := 0; i < len(UDMStruct); i++ {
-		err := mapstructure.Decode(UDMStruct[i], &UDMProfile)
+		err = mapstructure.Decode(UDMStruct[i], &UDMProfile)
 		if err != nil {
 			panic(err)
 		}
@@ -388,7 +389,7 @@ func (s *Server) getAusfInfo() map[string]models.AusfInfo {
 	servedAusfInfo := make(map[string]models.AusfInfo)
 	var AUSFProfile models.NfProfile
 
-	collName := "NfProfile"
+	collName := nrf_context.NfProfileCollName
 	filter := bson.M{"nfType": "AUSF"}
 
 	AUSF, err := mongoapi.RestfulAPIGetMany(collName, filter)
@@ -397,11 +398,11 @@ func (s *Server) getAusfInfo() map[string]models.AusfInfo {
 	}
 
 	var AUSFStruct []models.NfProfile
-	if err := timedecode.Decode(AUSF, &AUSFStruct); err != nil {
+	if err = timedecode.Decode(AUSF, &AUSFStruct); err != nil {
 		logger.NfmLog.Errorf("getAusfInfo err: %+v", err)
 	}
 	for i := 0; i < len(AUSFStruct); i++ {
-		err := mapstructure.Decode(AUSFStruct[i], &AUSFProfile)
+		err = mapstructure.Decode(AUSFStruct[i], &AUSFProfile)
 		if err != nil {
 			panic(err)
 		}
@@ -415,7 +416,7 @@ func (s *Server) getAmfInfo() map[string]models.AmfInfo {
 	servedAmfinfo := make(map[string]models.AmfInfo)
 	var AMFProfile models.NfProfile
 
-	collName := "NfProfile"
+	collName := nrf_context.NfProfileCollName
 	filter := bson.M{"nfType": "AMF"}
 
 	AMF, err := mongoapi.RestfulAPIGetMany(collName, filter)
@@ -424,11 +425,11 @@ func (s *Server) getAmfInfo() map[string]models.AmfInfo {
 	}
 
 	var AMFStruct []models.NfProfile
-	if err := timedecode.Decode(AMF, &AMFStruct); err != nil {
+	if err = timedecode.Decode(AMF, &AMFStruct); err != nil {
 		logger.NfmLog.Errorf("getAmfInfo err: %+v", err)
 	}
 	for i := 0; i < len(AMFStruct); i++ {
-		err := mapstructure.Decode(AMFStruct[i], &AMFProfile)
+		err = mapstructure.Decode(AMFStruct[i], &AMFProfile)
 		if err != nil {
 			panic(err)
 		}
@@ -442,7 +443,7 @@ func (s *Server) getSmfInfo() map[string]models.SmfInfo {
 	servedSmfInfo := make(map[string]models.SmfInfo)
 	var SMFProfile models.NfProfile
 
-	collName := "NfProfile"
+	collName := nrf_context.NfProfileCollName
 	filter := bson.M{"nfType": "SMF"}
 
 	SMF, err := mongoapi.RestfulAPIGetMany(collName, filter)
@@ -451,11 +452,11 @@ func (s *Server) getSmfInfo() map[string]models.SmfInfo {
 	}
 
 	var SMFStruct []models.NfProfile
-	if err := timedecode.Decode(SMF, &SMFStruct); err != nil {
+	if err = timedecode.Decode(SMF, &SMFStruct); err != nil {
 		logger.NfmLog.Errorf("getSmfInfo err: %+v", err)
 	}
 	for i := 0; i < len(SMFStruct); i++ {
-		err := mapstructure.Decode(SMFStruct[i], &SMFProfile)
+		err = mapstructure.Decode(SMFStruct[i], &SMFProfile)
 		if err != nil {
 			panic(err)
 		}
@@ -469,7 +470,7 @@ func (s *Server) getUpfInfo() map[string]models.UpfInfo {
 	servedUpfInfo := make(map[string]models.UpfInfo)
 	var UPFProfile models.NfProfile
 
-	collName := "NfProfile"
+	collName := nrf_context.NfProfileCollName
 	filter := bson.M{"nfType": "UPF"}
 
 	UPF, err := mongoapi.RestfulAPIGetMany(collName, filter)
@@ -478,11 +479,11 @@ func (s *Server) getUpfInfo() map[string]models.UpfInfo {
 	}
 
 	var UPFStruct []models.NfProfile
-	if err := timedecode.Decode(UPF, &UPFStruct); err != nil {
+	if err = timedecode.Decode(UPF, &UPFStruct); err != nil {
 		logger.NfmLog.Errorf("getUpfInfo err: %+v", err)
 	}
 	for i := 0; i < len(UPFStruct); i++ {
-		err := mapstructure.Decode(UPFStruct[i], &UPFProfile)
+		err = mapstructure.Decode(UPFStruct[i], &UPFProfile)
 		if err != nil {
 			panic(err)
 		}
@@ -496,7 +497,7 @@ func (s *Server) getPcfInfo() map[string]models.PcfInfo {
 	servedPcfInfo := make(map[string]models.PcfInfo)
 	var PCFProfile models.NfProfile
 
-	collName := "NfProfile"
+	collName := nrf_context.NfProfileCollName
 	filter := bson.M{"nfType": "PCF"}
 
 	PCF, err := mongoapi.RestfulAPIGetMany(collName, filter)
@@ -505,11 +506,11 @@ func (s *Server) getPcfInfo() map[string]models.PcfInfo {
 	}
 
 	var PCFStruct []models.NfProfile
-	if err := timedecode.Decode(PCF, &PCFStruct); err != nil {
+	if err = timedecode.Decode(PCF, &PCFStruct); err != nil {
 		logger.NfmLog.Errorf("getPcfInfo err: %+v", err)
 	}
 	for i := 0; i < len(PCFStruct); i++ {
-		err := mapstructure.Decode(PCFStruct[i], &PCFProfile)
+		err = mapstructure.Decode(PCFStruct[i], &PCFProfile)
 		if err != nil {
 			panic(err)
 		}
@@ -523,7 +524,7 @@ func (s *Server) getBsfInfo() map[string]models.BsfInfo {
 	servedBsfInfo := make(map[string]models.BsfInfo)
 	var BSFProfile models.NfProfile
 
-	collName := "NfProfile"
+	collName := nrf_context.NfProfileCollName
 	filter := bson.M{"nfType": "BSF"}
 
 	BSF, err := mongoapi.RestfulAPIGetMany(collName, filter)
@@ -532,11 +533,11 @@ func (s *Server) getBsfInfo() map[string]models.BsfInfo {
 	}
 
 	var BSFStruct []models.NfProfile
-	if err := timedecode.Decode(BSF, &BSFStruct); err != nil {
+	if err = timedecode.Decode(BSF, &BSFStruct); err != nil {
 		logger.NfmLog.Errorf("getBsfInfo err: %+v", err)
 	}
 	for i := 0; i < len(BSFStruct); i++ {
-		err := mapstructure.Decode(BSFStruct[i], &BSFProfile)
+		err = mapstructure.Decode(BSFStruct[i], &BSFProfile)
 		if err != nil {
 			panic(err)
 		}
@@ -550,7 +551,7 @@ func (s *Server) getChfInfo() map[string]models.ChfInfo {
 	servedChfInfo := make(map[string]models.ChfInfo)
 	var CHFProfile models.NfProfile
 
-	collName := "NfProfile"
+	collName := nrf_context.NfProfileCollName
 	filter := bson.M{"nfType": "CHF"}
 
 	CHF, err := mongoapi.RestfulAPIGetMany(collName, filter)
@@ -559,11 +560,11 @@ func (s *Server) getChfInfo() map[string]models.ChfInfo {
 	}
 
 	var CHFStruct []models.NfProfile
-	if err := timedecode.Decode(CHF, &CHFStruct); err != nil {
+	if err = timedecode.Decode(CHF, &CHFStruct); err != nil {
 		logger.NfmLog.Errorf("getChfInfo err: %+v", err)
 	}
 	for i := 0; i < len(CHFStruct); i++ {
-		err := mapstructure.Decode(CHFStruct[i], &CHFProfile)
+		err = mapstructure.Decode(CHFStruct[i], &CHFProfile)
 		if err != nil {
 			panic(err)
 		}

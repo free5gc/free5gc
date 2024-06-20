@@ -12,6 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 
 	"github.com/free5gc/nrf/internal/context"
+	nrf_context "github.com/free5gc/nrf/internal/context"
 	"github.com/free5gc/nrf/internal/logger"
 	"github.com/free5gc/nrf/internal/util"
 	"github.com/free5gc/openapi/models"
@@ -113,7 +114,7 @@ func (p *Processor) NFDiscoveryProcedure(c *gin.Context, queryParameters url.Val
 	logger.DiscLog.Traceln("Query filter: ", filter)
 
 	// Use the filter to find documents
-	nfProfilesRaw, err := mongoapi.RestfulAPIGetMany("NfProfile", filter)
+	nfProfilesRaw, err := mongoapi.RestfulAPIGetMany(nrf_context.NfProfileCollName, filter)
 	if err != nil {
 		logger.DiscLog.Errorf("NFDiscoveryProcedure err: %+v", err)
 		problemDetails := &models.ProblemDetails{
@@ -128,7 +129,7 @@ func (p *Processor) NFDiscoveryProcedure(c *gin.Context, queryParameters url.Val
 
 	// nfProfile data for response
 	var nfProfilesStruct []models.NfProfile
-	if err := timedecode.Decode(nfProfilesRaw, &nfProfilesStruct); err != nil {
+	if err = timedecode.Decode(nfProfilesRaw, &nfProfilesStruct); err != nil {
 		logger.DiscLog.Errorf("NF Profile Raw decode error: %+v", err)
 		problemDetails := &models.ProblemDetails{
 			Title:  "System failure",
@@ -145,34 +146,36 @@ func (p *Processor) NFDiscoveryProcedure(c *gin.Context, queryParameters url.Val
 		for i, nfProfile := range nfProfilesStruct {
 			if nfProfile.BsfInfo != nil && nfProfile.BsfInfo.Ipv4AddressRanges != nil {
 				for j := range *nfProfile.BsfInfo.Ipv4AddressRanges {
-					ipv4IntStart, err := strconv.Atoi((((*(*nfProfilesStruct[i].BsfInfo).Ipv4AddressRanges)[j]).Start))
-					if err != nil {
-						logger.DiscLog.Warnln("ipv4IntStart Atoi Error: ", err)
+					ipv4IntStart, errAtoi := strconv.Atoi((((*nfProfilesStruct[i].BsfInfo.Ipv4AddressRanges)[j]).Start))
+					if errAtoi != nil {
+						logger.DiscLog.Warnln("ipv4IntStart Atoi Error: ", errAtoi)
 					}
-					((*(*nfProfilesStruct[i].BsfInfo).Ipv4AddressRanges)[j]).Start = context.Ipv4IntToIpv4String(int64(ipv4IntStart))
-					ipv4IntEnd, err := strconv.Atoi((((*(*nfProfilesStruct[i].BsfInfo).Ipv4AddressRanges)[j]).End))
-					if err != nil {
-						logger.DiscLog.Warnln("ipv4IntEnd Atoi Error: ", err)
+					((*nfProfilesStruct[i].BsfInfo.Ipv4AddressRanges)[j]).Start = context.Ipv4IntToIpv4String(int64(ipv4IntStart))
+					ipv4IntEnd, errAtoi := strconv.Atoi((((*nfProfilesStruct[i].BsfInfo.Ipv4AddressRanges)[j]).End))
+					if errAtoi != nil {
+						logger.DiscLog.Warnln("ipv4IntEnd Atoi Error: ", errAtoi)
 					}
-					((*(*nfProfilesStruct[i].BsfInfo).Ipv4AddressRanges)[j]).End = context.Ipv4IntToIpv4String(int64(ipv4IntEnd))
+					((*nfProfilesStruct[i].BsfInfo.Ipv4AddressRanges)[j]).End = context.Ipv4IntToIpv4String(int64(ipv4IntEnd))
 				}
 			}
 			if nfProfile.BsfInfo != nil && nfProfile.BsfInfo.Ipv6PrefixRanges != nil {
 				for j := range *nfProfile.BsfInfo.Ipv6PrefixRanges {
 					ipv6IntStart := new(big.Int)
-					ipv6IntStart.SetString(((*(*nfProfilesStruct[i].BsfInfo).Ipv6PrefixRanges)[j]).Start, 10)
-					((*(*nfProfilesStruct[i].BsfInfo).Ipv6PrefixRanges)[j]).Start = context.Ipv6IntToIpv6String(ipv6IntStart)
+					ipv6IntStart.SetString(((*nfProfilesStruct[i].BsfInfo.Ipv6PrefixRanges)[j]).Start, 10)
+					((*nfProfilesStruct[i].BsfInfo.Ipv6PrefixRanges)[j]).Start = context.Ipv6IntToIpv6String(ipv6IntStart)
 
 					ipv6IntEnd := new(big.Int)
-					ipv6IntEnd.SetString(((*(*nfProfilesStruct[i].BsfInfo).Ipv6PrefixRanges)[j]).End, 10)
-					((*(*nfProfilesStruct[i].BsfInfo).Ipv6PrefixRanges)[j]).End = context.Ipv6IntToIpv6String(ipv6IntEnd)
+					ipv6IntEnd.SetString(((*nfProfilesStruct[i].BsfInfo.Ipv6PrefixRanges)[j]).End, 10)
+					((*nfProfilesStruct[i].BsfInfo.Ipv6PrefixRanges)[j]).End = context.Ipv6IntToIpv6String(ipv6IntEnd)
 				}
 			}
 		}
 	}
+	validityPeriod := 100
+
 	// Build SearchResult model
 	searchResult := &models.SearchResult{
-		ValidityPeriod: 100,
+		ValidityPeriod: int32(validityPeriod),
 		NfInstances:    nfProfilesStruct,
 	}
 	c.JSON(http.StatusOK, searchResult)
@@ -571,7 +574,8 @@ func buildFilter(queryParameters url.Values) bson.M {
 		var supiFilter bson.M
 		supi = queryParameters["supi"][0]
 		supi = supi[5:]
-		if targetNfType == "PCF" {
+		switch targetNfType {
+		case "PCF":
 			supiFilter = bson.M{
 				"$or": []bson.M{
 					{
@@ -593,7 +597,7 @@ func buildFilter(queryParameters url.Values) bson.M {
 					},
 				},
 			}
-		} else if targetNfType == "CHF" {
+		case "CHF":
 			supiFilter = bson.M{
 				"$or": []bson.M{
 					{
@@ -615,7 +619,7 @@ func buildFilter(queryParameters url.Values) bson.M {
 					},
 				},
 			}
-		} else if targetNfType == "AUSF" {
+		case "AUSF":
 			supiFilter = bson.M{
 				"$or": []bson.M{
 					{
@@ -637,7 +641,7 @@ func buildFilter(queryParameters url.Values) bson.M {
 					},
 				},
 			}
-		} else if targetNfType == "UDM" {
+		case "UDM":
 			supiFilter = bson.M{
 				"$or": []bson.M{
 					{
@@ -667,7 +671,7 @@ func buildFilter(queryParameters url.Values) bson.M {
 					},
 				},
 			}
-		} else if targetNfType == "UDR" {
+		case "UDR":
 			supiFilter = bson.M{
 				"$or": []bson.M{
 					{
@@ -1726,7 +1730,8 @@ func complexQueryFilterSubprocess(queryParameters map[string]*AtomElem, complexQ
 	if queryParameters["supi"] != nil {
 		var supiFilter bson.M
 		supi = queryParameters["supi"].value
-		if targetNfType == "PCF" {
+		switch targetNfType {
+		case "PCF":
 			supiFilter = bson.M{
 				"pcfInfo": bson.M{
 					"$elemMatch": bson.M{
@@ -1743,7 +1748,7 @@ func complexQueryFilterSubprocess(queryParameters map[string]*AtomElem, complexQ
 					},
 				},
 			}
-		} else if targetNfType == "CHF" {
+		case "CHF":
 			supiFilter = bson.M{
 				"chfInfo": bson.M{
 					"$elemMatch": bson.M{
@@ -1760,7 +1765,7 @@ func complexQueryFilterSubprocess(queryParameters map[string]*AtomElem, complexQ
 					},
 				},
 			}
-		} else if targetNfType == "AUSF" {
+		case "AUSF":
 			supiFilter = bson.M{
 				"ausfInfo": bson.M{
 					"$elemMatch": bson.M{
@@ -1777,7 +1782,7 @@ func complexQueryFilterSubprocess(queryParameters map[string]*AtomElem, complexQ
 					},
 				},
 			}
-		} else if targetNfType == "UDM" {
+		case "UDM":
 			supiFilter = bson.M{
 				"udmInfo": bson.M{
 					"$elemMatch": bson.M{
@@ -1794,7 +1799,7 @@ func complexQueryFilterSubprocess(queryParameters map[string]*AtomElem, complexQ
 					},
 				},
 			}
-		} else if targetNfType == "UDR" {
+		case "UDR":
 			supiFilter = bson.M{
 				"udrInfo": bson.M{
 					"$elemMatch": bson.M{

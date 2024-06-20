@@ -42,7 +42,7 @@ func (s *nnrfService) getNFManagementClient(uri string) *Nnrf_NFManagement.APICl
 }
 
 func (s *nnrfService) SendNFStatusNotify(
-	Notification_event models.NotificationEventType,
+	notification_event models.NotificationEventType,
 	nfInstanceUri string,
 	url string,
 	nfProfile *models.NfProfile,
@@ -61,7 +61,7 @@ func (s *nnrfService) SendNFStatusNotify(
 	defer s.nfMngmntMu.RUnlock()
 
 	notifcationData := models.NotificationData{
-		Event:         Notification_event,
+		Event:         notification_event,
 		NfInstanceUri: nfInstanceUri,
 	}
 	if nfProfile != nil {

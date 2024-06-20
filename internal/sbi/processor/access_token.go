@@ -93,7 +93,7 @@ func (p *Processor) AccessTokenProcedure(request models.AccessTokenReq) (
 
 func (p *Processor) AccessTokenScopeCheck(req models.AccessTokenReq) *models.AccessTokenErr {
 	// Check with nf profile
-	collName := "NfProfile"
+	collName := nrf_context.NfProfileCollName
 	reqGrantType := req.GrantType
 	reqNfType := strings.ToUpper(string(req.NfType))
 	reqTargetNfType := strings.ToUpper(string(req.TargetNfType))

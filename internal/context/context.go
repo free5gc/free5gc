@@ -27,6 +27,10 @@ type NRFContext struct {
 	NrfCert          *x509.Certificate
 }
 
+const (
+	NfProfileCollName string = "NfProfile"
+)
+
 type NFContext interface {
 	AuthorizationCheck(token string, serviceName models.ServiceName) error
 }
