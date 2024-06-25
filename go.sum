@@ -62,6 +62,8 @@ github.com/evanphx/json-patch v0.5.2 h1:xVCHIVMUu1wtM/VkR9jVZ45N3FhZfYMMYGorLCR8
 github.com/evanphx/json-patch v0.5.2/go.mod h1:ZWS5hhDbVDyob71nXKNL0+PWn6ToqBHMikGIFbs31qQ=
 github.com/free5gc/openapi v1.0.8 h1:QjfQdB6VVA1GRnzOJ7nILzrI7gMiY0lH64JHVW7vF34=
 github.com/free5gc/openapi v1.0.8/go.mod h1:w6y9P/uySczc1d9OJZAEuB2FImR/z60Wg2BekPAVt3M=
+github.com/free5gc/openapi v1.0.9-0.20240503143645-eac9f06c2f6b h1:+VcgZq+3apB6Xr4jEqgGf/uAECRF038SwixEvvxhYrM=
+github.com/free5gc/openapi v1.0.9-0.20240503143645-eac9f06c2f6b/go.mod h1:0qRW+H1/Nyzw5tjjvyp+90m+2SOZZefGQC9QV8iPwu8=
 github.com/free5gc/util v1.0.6 h1:dBt9drcXtYKE/cY5XuQcuffgsYclPIpIArhSeS6M+DQ=
 github.com/free5gc/util v1.0.6/go.mod h1:eSGN7POUM8LNTvg/E591XR6447a6/w1jFWGKNZPHcXw=
 github.com/gabriel-vasile/mimetype v1.4.2 h1:w5qFW6JKBz9Y393Y4q372O9A7cUSequkh1Q7OhCmWKU=

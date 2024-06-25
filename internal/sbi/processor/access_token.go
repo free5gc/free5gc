@@ -1,4 +1,4 @@
-package producer
+package processor
 
 import (
 	"crypto/x509"
@@ -6,31 +6,32 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
 	"go.mongodb.org/mongo-driver/bson"
 
 	nrf_context "github.com/free5gc/nrf/internal/context"
 	"github.com/free5gc/nrf/internal/logger"
+	"github.com/free5gc/nrf/internal/util"
 	"github.com/free5gc/nrf/pkg/factory"
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/openapi/oauth"
-	"github.com/free5gc/util/httpwrapper"
 	"github.com/free5gc/util/mapstruct"
 	"github.com/free5gc/util/mongoapi"
 )
 
-func HandleAccessTokenRequest(request *httpwrapper.Request) *httpwrapper.Response {
+func (p *Processor) HandleAccessTokenRequest(c *gin.Context, accessTokenReq models.AccessTokenReq) {
 	// Param of AccessTokenRsp
 	logger.AccTokenLog.Debugln("Handle AccessTokenRequest")
 
-	accessTokenReq := request.Body.(models.AccessTokenReq)
-
-	response, errResponse := AccessTokenProcedure(accessTokenReq)
+	response, errResponse := p.AccessTokenProcedure(accessTokenReq)
 	if errResponse != nil {
-		return httpwrapper.NewResponse(http.StatusBadRequest, nil, errResponse)
+		c.JSON(http.StatusBadRequest, errResponse)
+		return
 	} else if response != nil {
 		// status code is based on SPEC, and option headers
-		return httpwrapper.NewResponse(http.StatusOK, nil, response)
+		c.JSON(http.StatusOK, response)
+		return
 	}
 
 	logger.AccTokenLog.Errorln("AccessTokenProcedure returned neither an error nor a response")
@@ -38,20 +39,22 @@ func HandleAccessTokenRequest(request *httpwrapper.Request) *httpwrapper.Respons
 		Status: http.StatusInternalServerError,
 		Cause:  "UNSPECIFIED",
 	}
-	return httpwrapper.NewResponse(int(problemDetails.Status), nil, problemDetails)
+	util.GinProblemJson(c, problemDetails)
 }
 
-func AccessTokenProcedure(request models.AccessTokenReq) (
+func (p *Processor) AccessTokenProcedure(request models.AccessTokenReq) (
 	*models.AccessTokenRsp, *models.AccessTokenErr,
 ) {
 	logger.AccTokenLog.Debugln("In AccessTokenProcedure")
 
-	var expiration int32 = 1000
+	var (
+		expiration int32  = 1000
+		tokenType  string = "Bearer"
+	)
 	scope := request.Scope
-	tokenType := "Bearer"
 	now := int32(time.Now().Unix())
 
-	errResponse := AccessTokenScopeCheck(request)
+	errResponse := p.AccessTokenScopeCheck(request)
 	if errResponse != nil {
 		logger.AccTokenLog.Errorf("AccessTokenScopeCheck error: %v", errResponse.Error)
 		return nil, errResponse
@@ -88,9 +91,9 @@ func AccessTokenProcedure(request models.AccessTokenReq) (
 	return response, nil
 }
 
-func AccessTokenScopeCheck(req models.AccessTokenReq) *models.AccessTokenErr {
+func (p *Processor) AccessTokenScopeCheck(req models.AccessTokenReq) *models.AccessTokenErr {
 	// Check with nf profile
-	collName := "NfProfile"
+	collName := nrf_context.NfProfileCollName
 	reqGrantType := req.GrantType
 	reqNfType := strings.ToUpper(string(req.NfType))
 	reqTargetNfType := strings.ToUpper(string(req.TargetNfType))
@@ -233,6 +236,5 @@ func AccessTokenScopeCheck(req models.AccessTokenReq) *models.AccessTokenErr {
 			}
 		}
 	}
-
 	return nil
 }

@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
@@ -25,7 +26,19 @@ type NRFContext struct {
 	NrfPrivKey       *rsa.PrivateKey
 	NrfPubKey        *rsa.PublicKey
 	NrfCert          *x509.Certificate
+	NfRegistNum      int
+	nfRegistNumLock  sync.RWMutex
 }
+
+const (
+	NfProfileCollName string = "NfProfile"
+)
+
+type NFContext interface {
+	AuthorizationCheck(token string, serviceName models.ServiceName) error
+}
+
+var _ NFContext = &NRFContext{}
 
 var nrfContext NRFContext
 
@@ -38,6 +51,7 @@ func InitNrfContext() error {
 	nrfContext.NrfNfProfile.NfInstanceId = uuid.New().String()
 	nrfContext.NrfNfProfile.NfType = models.NfType_NRF
 	nrfContext.NrfNfProfile.NfStatus = models.NfStatus_REGISTERED
+	nrfContext.NfRegistNum = 0
 
 	serviceNameList := configuration.ServiceNameList
 
@@ -189,14 +203,26 @@ func GetSelf() *NRFContext {
 	return &nrfContext
 }
 
-func (context *NRFContext) AuthorizationCheck(token, serviceName string) error {
+func (context *NRFContext) AuthorizationCheck(token string, serviceName models.ServiceName) error {
 	if !factory.NrfConfig.GetOAuth() {
 		return nil
 	}
-	err := oauth.VerifyOAuth(token, serviceName, factory.NrfConfig.GetNrfCertPemPath())
+	err := oauth.VerifyOAuth(token, string(serviceName), factory.NrfConfig.GetNrfCertPemPath())
 	if err != nil {
 		logger.AccTokenLog.Warningln("AuthorizationCheck:", err)
 		return err
 	}
 	return nil
+}
+
+func (ctx *NRFContext) AddNfRegister() {
+	ctx.nfRegistNumLock.Lock()
+	defer ctx.nfRegistNumLock.Unlock()
+	ctx.NfRegistNum += 1
+}
+
+func (ctx *NRFContext) DelNfRegister() {
+	ctx.nfRegistNumLock.Lock()
+	defer ctx.nfRegistNumLock.Unlock()
+	ctx.NfRegistNum -= 1
 }

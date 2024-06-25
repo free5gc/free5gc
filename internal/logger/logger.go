@@ -13,11 +13,13 @@ var (
 	InitLog     *logrus.Entry
 	CfgLog      *logrus.Entry
 	CtxLog      *logrus.Entry
+	SBILog      *logrus.Entry
 	GinLog      *logrus.Entry
 	ConsumerLog *logrus.Entry
 	NfmLog      *logrus.Entry
 	AccTokenLog *logrus.Entry
 	DiscLog     *logrus.Entry
+	UtilLog     *logrus.Entry
 )
 
 func init() {
@@ -32,9 +34,11 @@ func init() {
 	InitLog = NfLog.WithField(logger_util.FieldCategory, "Init")
 	CfgLog = NfLog.WithField(logger_util.FieldCategory, "CFG")
 	CtxLog = NfLog.WithField(logger_util.FieldCategory, "CTX")
+	SBILog = NfLog.WithField(logger_util.FieldCategory, "SBI")
 	GinLog = NfLog.WithField(logger_util.FieldCategory, "GIN")
 	ConsumerLog = NfLog.WithField(logger_util.FieldCategory, "Consumer")
 	NfmLog = NfLog.WithField(logger_util.FieldCategory, "NFM")
 	AccTokenLog = NfLog.WithField(logger_util.FieldCategory, "Token")
 	DiscLog = NfLog.WithField(logger_util.FieldCategory, "DISC")
+	UtilLog = NfLog.WithField(logger_util.FieldCategory, "Util")
 }

@@ -45,7 +45,9 @@ func NnrfNFManagementDataModel(nf *models.NfProfile, nfprofile models.NfProfile)
 }
 
 func SetsubscriptionId() (string, error) {
-	buffer := make([]byte, 16)
+	subscriptionIdSize := 16
+
+	buffer := make([]byte, subscriptionIdSize)
 	_, err := rand.Read(buffer)
 	if err != nil {
 		return "", err
@@ -454,7 +456,7 @@ func setUriListByFilter(filter bson.M, uriList *[]string) {
 	}
 
 	var filterNfTypeResults []models.NrfSubscriptionData
-	if err := openapi.Convert(filterNfTypeResultsRaw, &filterNfTypeResults); err != nil {
+	if err = openapi.Convert(filterNfTypeResultsRaw, &filterNfTypeResults); err != nil {
 		logger.NfmLog.Errorf("setUriListByFilter err: %+v", err)
 	}
 
@@ -463,7 +465,7 @@ func setUriListByFilter(filter bson.M, uriList *[]string) {
 	}
 }
 
-func nnrfUriList(originalUL *UriList, UL *UriList, location []string) {
+func nnrfUriList(originalUL *UriList, ul *UriList, location []string) {
 	var i int
 	var b *Links
 	var flag bool
@@ -495,7 +497,7 @@ func nnrfUriList(originalUL *UriList, UL *UriList, location []string) {
 	}
 
 	b.Item = c
-	UL.Link = *b
+	ul.Link = *b
 }
 
 func GetNofificationUri(nfProfile models.NfProfile) []string {
@@ -536,8 +538,8 @@ func GetNofificationUri(nfProfile models.NfProfile) []string {
 	if nfProfile.AmfInfo != nil {
 		amfCond := bson.M{
 			"subscrCond": bson.M{
-				"amfSetId":    (*nfProfile.AmfInfo).AmfSetId,
-				"amfRegionId": (*nfProfile.AmfInfo).AmfRegionId,
+				"amfSetId":    nfProfile.AmfInfo.AmfSetId,
+				"amfRegionId": nfProfile.AmfInfo.AmfRegionId,
 			},
 		}
 		setUriListByFilter(amfCond, &uriList)
@@ -546,9 +548,9 @@ func GetNofificationUri(nfProfile models.NfProfile) []string {
 	// GuamiListCond
 	if nfProfile.AmfInfo != nil {
 		var guamiListFilter bson.M
-		if (*nfProfile.AmfInfo).GuamiList != nil {
+		if nfProfile.AmfInfo.GuamiList != nil {
 			var guamiListBsonArray bson.A
-			for _, guami := range *(*nfProfile.AmfInfo).GuamiList {
+			for _, guami := range *nfProfile.AmfInfo.GuamiList {
 				tmp, err := json.Marshal(guami)
 				if err != nil {
 					logger.NfmLog.Error(err)
@@ -623,7 +625,7 @@ func GetNofificationUri(nfProfile models.NfProfile) []string {
 		nfGroupCond := bson.M{
 			"subscrCond": bson.M{
 				"nfType":    nfProfile.NfType,
-				"nfGroupId": (*nfProfile.UdrInfo).GroupId,
+				"nfGroupId": nfProfile.UdrInfo.GroupId,
 			},
 		}
 		setUriListByFilter(nfGroupCond, &uriList)
@@ -631,7 +633,7 @@ func GetNofificationUri(nfProfile models.NfProfile) []string {
 		nfGroupCond := bson.M{
 			"subscrCond": bson.M{
 				"nfType":    nfProfile.NfType,
-				"nfGroupId": (*nfProfile.UdmInfo).GroupId,
+				"nfGroupId": nfProfile.UdmInfo.GroupId,
 			},
 		}
 		setUriListByFilter(nfGroupCond, &uriList)
@@ -639,7 +641,7 @@ func GetNofificationUri(nfProfile models.NfProfile) []string {
 		nfGroupCond := bson.M{
 			"subscrCond": bson.M{
 				"nfType":    nfProfile.NfType,
-				"nfGroupId": (*nfProfile.AusfInfo).GroupId,
+				"nfGroupId": nfProfile.AusfInfo.GroupId,
 			},
 		}
 		setUriListByFilter(nfGroupCond, &uriList)
