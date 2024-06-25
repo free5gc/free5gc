@@ -169,19 +169,38 @@ func (a *NrfApp) Terminate() {
 }
 
 func (a *NrfApp) terminateProcedure() {
-	logger.InitLog.Infof("Terminating NRF...")
+	logger.MainLog.Infof("Terminating NRF...")
 
-	waitTime := 2
-	logger.InitLog.Infof("Waiting for %vs for other NFs to deregister", waitTime)
-	time.Sleep(time.Duration(waitTime) * time.Second)
+	waitTime := 5
+	logger.MainLog.Infof("Waiting for %vs for other NFs to deregister", waitTime)
+	a.waitNfDeregister(waitTime)
 
-	logger.InitLog.Infof("Remove NF Profile...")
+	logger.MainLog.Infof("Remove NF Profile...")
 	err := mongoapi.Drop(nrf_context.NfProfileCollName)
 	if err != nil {
-		logger.InitLog.Errorf("Drop NfProfile collection failed: %+v", err)
+		logger.MainLog.Errorf("Drop NfProfile collection failed: %+v", err)
 	}
 
 	a.sbiServer.Stop()
+}
+
+func (a *NrfApp) waitNfDeregister(waitTime int) {
+	ctx, cancal := context.WithTimeout(context.Background(), time.Duration(waitTime)*time.Second)
+	defer cancal()
+
+	ticker := time.NewTicker(100 * time.Millisecond)
+	for {
+		select {
+		case <-ctx.Done():
+			logger.MainLog.Warningln("Wait NF Deregister timeout")
+			return
+		case <-ticker.C:
+			if a.Context().NfRegistNum == 0 {
+				logger.MainLog.Infoln("All Register NF had been deregister")
+				return
+			}
+		}
+	}
 }
 
 func (a *NrfApp) WaitRoutineStopped() {

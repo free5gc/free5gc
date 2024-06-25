@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
@@ -25,6 +26,8 @@ type NRFContext struct {
 	NrfPrivKey       *rsa.PrivateKey
 	NrfPubKey        *rsa.PublicKey
 	NrfCert          *x509.Certificate
+	NfRegistNum      int
+	nfRegistNumLock  sync.RWMutex
 }
 
 const (
@@ -48,6 +51,7 @@ func InitNrfContext() error {
 	nrfContext.NrfNfProfile.NfInstanceId = uuid.New().String()
 	nrfContext.NrfNfProfile.NfType = models.NfType_NRF
 	nrfContext.NrfNfProfile.NfStatus = models.NfStatus_REGISTERED
+	nrfContext.NfRegistNum = 0
 
 	serviceNameList := configuration.ServiceNameList
 
@@ -209,4 +213,16 @@ func (context *NRFContext) AuthorizationCheck(token string, serviceName models.S
 		return err
 	}
 	return nil
+}
+
+func (ctx *NRFContext) AddNfRegister() {
+	ctx.nfRegistNumLock.Lock()
+	defer ctx.nfRegistNumLock.Unlock()
+	ctx.NfRegistNum += 1
+}
+
+func (ctx *NRFContext) DelNfRegister() {
+	ctx.nfRegistNumLock.Lock()
+	defer ctx.nfRegistNumLock.Unlock()
+	ctx.NfRegistNum -= 1
 }

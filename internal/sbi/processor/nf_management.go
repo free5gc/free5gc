@@ -252,7 +252,7 @@ func (p *Processor) NFDeregisterProcedure(nfInstanceID string) *models.ProblemDe
 		}
 		return problemDetail
 	}
-	const dbWaitTime = time.Duration(200) * time.Millisecond
+	const dbWaitTime = time.Duration(500) * time.Millisecond
 	time.Sleep(dbWaitTime)
 
 	if err = mongoapi.RestfulAPIDeleteMany(collName, filter); err != nil {
@@ -320,6 +320,8 @@ func (p *Processor) NFDeregisterProcedure(nfInstanceID string) *models.ProblemDe
 			logger.NfmLog.Warningf("Can not delete NFCertPem file: %v: %v", nfCertPath, removeErr)
 		}
 	}
+	// Minus NF Register Conter
+	p.Context().DelNfRegister()
 	logger.NfmLog.Infof("NfDeregister Success: %v [%v]", nfInstanceType, nfInstanceID)
 	return nil
 }
@@ -476,6 +478,9 @@ func (p *Processor) NFRegisterProcedure(
 		// set info for NotificationData
 		Notification_event := models.NotificationEventType_REGISTERED
 		nfInstanceUri := locationHeaderValue
+
+		// Add NF Register Conter
+		p.Context().AddNfRegister()
 
 		for _, uri := range uriList {
 			problemDetails := p.Consumer().SendNFStatusNotify(Notification_event, nfInstanceUri, uri, &nfProfile)
