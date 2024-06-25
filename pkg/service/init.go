@@ -161,17 +161,19 @@ func (a *NrfApp) listenShutdownEvent() {
 	}()
 
 	<-a.ctx.Done()
-	a.Terminate()
+	a.terminateProcedure()
 }
 
 func (a *NrfApp) Terminate() {
+	a.cancel()
+}
+
+func (a *NrfApp) terminateProcedure() {
 	logger.InitLog.Infof("Terminating NRF...")
 
 	waitTime := 2
 	logger.InitLog.Infof("Waiting for %vs for other NFs to deregister", waitTime)
 	time.Sleep(time.Duration(waitTime) * time.Second)
-
-	a.cancel()
 
 	logger.InitLog.Infof("Remove NF Profile...")
 	err := mongoapi.Drop(nrf_context.NfProfileCollName)
