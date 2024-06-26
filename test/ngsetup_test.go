@@ -145,10 +145,6 @@ func NfStart() {
 
 func NfTerminate() {
 	if initFlag != noInit {
-		// nfNums := len(NFstructs)
-		// for i := nfNums - 1; i >= 0; i-- {
-		// 	NFstructs[i].Nf.Terminate()
-		// }
 		test.NfCancel()
 		nfWaitingGroup.Wait()
 	}
