@@ -38,3 +38,6 @@ free5gc.zip
 
 # cert
 cert/*_*.pem
+
+# ./test.sh All
+testing_output/

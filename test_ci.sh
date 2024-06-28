@@ -188,7 +188,7 @@ then
     fi
 
     # Run CN
-    cd test && go test -v -vet=off -timeout 0 -run TestCN &
+    cd test && go test -v -vet=off -timeout 0 -run TestCN -args $2 &
     sleep 10
 
     # Run N3IWF
