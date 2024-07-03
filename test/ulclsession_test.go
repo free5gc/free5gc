@@ -245,7 +245,8 @@ func testULCLSessionBase(t *testing.T, ueCount int, upfNum int) {
 
 		// check PDR and FAR start(For ULCL)
 		dir, _ := os.Getwd()
-		cmdPath := dir + "/go-gtp5gnl/bin/"
+		parentDir := filepath.Dir(dir) // without test/
+		cmdPath := parentDir + "/go-gtp5gnl/bin/"
 		gtp5gTunnelCmdPath := filepath.Clean(cmdPath)
 
 		for ns_num := 1; ns_num < upfNum+1; ns_num++ {

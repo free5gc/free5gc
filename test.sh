@@ -220,7 +220,7 @@ then
 
     # Run Test UE
     cd test
-    ${EXEC_UENS} $GOROOT/bin/go test -v -vet=off -timeout 0 -run TestNon3GPPUE -args noinit
+    ${EXEC_UENS} $GOROOT/bin/go test -v -vet=off -timeout 0 -run TestNon3GPPUE -args noinit $2
 elif [[ "$1" == "TestMultiAmfRegistration" ]]
 then
     make amf
@@ -232,7 +232,7 @@ then
     sleep 0.1
 
     cd test
-    $GOROOT/bin/go test -v -vet=off -run TestMultiAmfRegistration -args multiAmf
+    $GOROOT/bin/go test -v -vet=off -run TestMultiAmfRegistration -args multiAmf $2
 elif [[ "$1" == "TestNasReroute" ]]
 then
     make amf
@@ -244,10 +244,10 @@ then
     sleep 0.1
 
     cd test
-    $GOROOT/bin/go test -v -vet=off -run TestNasReroute -args multiAmf
+    $GOROOT/bin/go test -v -vet=off -run TestNasReroute -args multiAmf $2
 else
     cd test
-    $GOROOT/bin/go test -v -vet=off -run $1
+    $GOROOT/bin/go test -v -vet=off -run $1 -args $2
 fi
 
 terminate $1

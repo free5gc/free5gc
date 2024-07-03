@@ -61,11 +61,12 @@ function terminate()
         done
     fi
     
-    for ((i=${#PID_LIST[@]}-1;i>=0;i--)); do
-        sudo kill -SIGTERM ${PID_LIST[i]}
-    done
-    sleep 2
-    wait ${PID_LIST}
+    # for ((i=${#PID_LIST[@]}-1;i>=0;i--)); do
+    #     sudo kill -SIGTERM ${PID_LIST[i]}
+    # done
+    echo Terminate PID_LIST = ${PID_LIST[@]}
+    wait ${PID_LIST[@]}
+    echo The free5GC terminated successfully!
     exit 0
 }
 
@@ -126,7 +127,10 @@ export GIN_MODE=release
 
 for NF in ${NF_LIST}; do
     ./bin/${NF} -c ./config/${NF}cfg.yaml -l ${LOG_PATH}${LOG_NAME} &
-    PID_LIST+=($!)
+    PID=$!
+    PID_LIST+=($PID)
+
+    echo "Started ${NF} with PID ${PID}"
     sleep 0.1
 done
 
@@ -138,5 +142,5 @@ if [ $N3IWF_ENABLE -ne 0 ]; then
     PID_LIST+=($SUDO_N3IWF_PID $N3IWF_PID)
 fi
 
-wait ${PID_LIST}
+wait ${PID_LIST[@]}
 exit 0
