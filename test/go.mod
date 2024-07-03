@@ -9,7 +9,7 @@ require (
 	github.com/free5gc/amf v0.0.0
 	github.com/free5gc/aper v1.0.5
 	github.com/free5gc/ausf v0.0.0
-	github.com/free5gc/chf v1.0.1
+	github.com/free5gc/chf v1.0.2
 	github.com/free5gc/n3iwf v0.0.0
 	github.com/free5gc/nas v1.1.4-0.20240503151133-e6ab3d82e25b
 	github.com/free5gc/ngap v1.0.9-0.20240414165820-453b0aa37228
@@ -18,7 +18,7 @@ require (
 	github.com/free5gc/openapi v1.0.9-0.20240503143645-eac9f06c2f6b
 	github.com/free5gc/pcf v0.0.0
 	github.com/free5gc/sctp v1.0.1
-	github.com/free5gc/smf v1.2.3
+	github.com/free5gc/smf v1.2.4
 	github.com/free5gc/udm v0.0.0
 	github.com/free5gc/udr v0.0.0
 	github.com/free5gc/util v1.0.7-0.20240423011541-6c6d53b385d5
