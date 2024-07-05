@@ -63,7 +63,7 @@ require (
 	github.com/free5gc/pfcp v1.0.7 // indirect
 	github.com/free5gc/tlv v1.0.3-0.20240503144839-e03d55722836 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
-	github.com/gin-contrib/cors v1.4.0 // indirect
+	github.com/gin-contrib/cors v1.6.0 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-mail/mail v2.3.1+incompatible // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
