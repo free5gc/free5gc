@@ -7,7 +7,7 @@ import (
 	"sync"
 
 	"github.com/free5gc/nrf/internal/logger"
-	"github.com/free5gc/openapi/Nnrf_NFManagement"
+	"github.com/free5gc/openapi/nrf/NFManagement"
 	"github.com/free5gc/openapi/models"
 )
 
@@ -16,7 +16,7 @@ type nnrfService struct {
 
 	nfMngmntMu sync.RWMutex
 
-	nfMngmntClients map[string]*Nnrf_NFManagement.APIClient
+	nfMngmntClients map[string]*nrf_NFManagement.APIClient
 }
 
 func (s *nnrfService) getNFManagementClient(uri string) *Nnrf_NFManagement.APIClient {

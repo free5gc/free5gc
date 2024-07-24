@@ -2,7 +2,7 @@ package consumer
 
 import (
 	"github.com/free5gc/nrf/pkg/app"
-	"github.com/free5gc/openapi/Nnrf_NFManagement"
+	//"github.com/free5gc/openapi/nrf/Nnrf_NFManagement"
 )
 
 type ConsumerNrf interface {
