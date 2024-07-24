@@ -5,8 +5,8 @@ import (
 )
 
 type SearchNFInstances struct {
-	TargetNFType            models.NfType        `form:"target-nf-type" binding:"required"`
-	RequesterNFType         models.NfType        `form:"requester-nf-type" binding:"required"`
+	TargetNFType            models.NrfNfManagementNfType        `form:"target-nf-type" binding:"required"`
+	RequesterNFType         models.NrfNfManagementNfType        `form:"requester-nf-type" binding:"required"`
 	ServiceNames            []models.ServiceName `form:"service-names" `
 	RequesterNfInstanceFqdn string               `form:"requester-nf-instance-fqdn" `
 	TargetPlmnList          []models.PlmnId      `form:"target-plmn-list" `

@@ -19,7 +19,7 @@ import (
 )
 
 type NRFContext struct {
-	NrfNfProfile     models.NfProfile
+	NrfNfProfile     models.NrfNfManagementNfProfile
 	Nrf_NfInstanceID string
 	RootPrivKey      *rsa.PrivateKey
 	RootCert         *x509.Certificate
@@ -49,8 +49,8 @@ func InitNrfContext() error {
 	configuration := config.Configuration
 
 	nrfContext.NrfNfProfile.NfInstanceId = uuid.New().String()
-	nrfContext.NrfNfProfile.NfType = models.NfType_NRF
-	nrfContext.NrfNfProfile.NfStatus = models.NfStatus_REGISTERED
+	nrfContext.NrfNfProfile.NfType = models.NrfNfManagementNfType_NRF
+	nrfContext.NrfNfProfile.NfStatus = models.NrfNfManagementNfStatus_REGISTERED
 	nrfContext.NfRegistNum = 0
 
 	serviceNameList := configuration.ServiceNameList
@@ -107,20 +107,20 @@ func InitNrfContext() error {
 	}
 
 	NFServices := InitNFService(serviceNameList, config.Info.Version)
-	nrfContext.NrfNfProfile.NfServices = &NFServices
+	nrfContext.NrfNfProfile.NfServices = NFServices
 	return nil
 }
 
-func InitNFService(srvNameList []string, version string) []models.NfService {
+func InitNFService(srvNameList []string, version string) []models.NrfNfManagementNfService {
 	tmpVersion := strings.Split(version, ".")
 	versionUri := "v" + tmpVersion[0]
-	NFServices := make([]models.NfService, len(srvNameList))
+	NFServices := make([]models.NrfNfManagementNfService, len(srvNameList))
 	for index, nameString := range srvNameList {
 		name := models.ServiceName(nameString)
-		NFServices[index] = models.NfService{
+		NFServices[index] = models.NrfNfManagementNfService{
 			ServiceInstanceId: strconv.Itoa(index),
 			ServiceName:       name,
-			Versions: &[]models.NfServiceVersion{
+			Versions: []models.NfServiceVersion{
 				{
 					ApiFullVersion:  version,
 					ApiVersionInUri: versionUri,
@@ -129,7 +129,7 @@ func InitNFService(srvNameList []string, version string) []models.NfService {
 			Scheme:          models.UriScheme(factory.NrfConfig.GetSbiScheme()),
 			NfServiceStatus: models.NfServiceStatus_REGISTERED,
 			ApiPrefix:       factory.NrfConfig.GetSbiUri(),
-			IpEndPoints: &[]models.IpEndPoint{
+			IpEndPoints: []models.IpEndPoint{
 				{
 					Ipv4Address: factory.NrfConfig.GetSbiRegisterIP(),
 					Transport:   models.TransportProtocol_TCP,
