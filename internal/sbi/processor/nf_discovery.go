@@ -93,7 +93,7 @@ func (p *Processor) NFDiscoveryProcedure(c *gin.Context, queryParameters url.Val
 			logger.DiscLog.Warnln("UnMasrhal complexQuery Error: ", err)
 		}
 		// Check either CNF or DNF
-		if complexQueryStruct.CNf != nil && complexQueryStruct.DNf != nil {
+		if complexQueryStruct.CnfUnits != nil && complexQueryStruct.DnfUnits != nil {
 			problemDetails := &models.ProblemDetails{
 				Title:  "Invalid Parameter",
 				Status: http.StatusBadRequest,
@@ -128,7 +128,7 @@ func (p *Processor) NFDiscoveryProcedure(c *gin.Context, queryParameters url.Val
 	}
 
 	// nfProfile data for response
-	var nfProfilesStruct []models.NfProfile
+	var nfProfilesStruct []models.NrfNfDiscoveryNfProfile
 	if err = timedecode.Decode(nfProfilesRaw, &nfProfilesStruct); err != nil {
 		logger.DiscLog.Errorf("NF Profile Raw decode error: %+v", err)
 		problemDetails := &models.ProblemDetails{
@@ -145,28 +145,28 @@ func (p *Processor) NFDiscoveryProcedure(c *gin.Context, queryParameters url.Val
 	if queryParameters["target-nf-type"][0] == "BSF" {
 		for i, nfProfile := range nfProfilesStruct {
 			if nfProfile.BsfInfo != nil && nfProfile.BsfInfo.Ipv4AddressRanges != nil {
-				for j := range *nfProfile.BsfInfo.Ipv4AddressRanges {
-					ipv4IntStart, errAtoi := strconv.Atoi((((*nfProfilesStruct[i].BsfInfo.Ipv4AddressRanges)[j]).Start))
+				for j := range nfProfile.BsfInfo.Ipv4AddressRanges {
+					ipv4IntStart, errAtoi := strconv.Atoi((((nfProfilesStruct[i].BsfInfo.Ipv4AddressRanges)[j]).Start))
 					if errAtoi != nil {
 						logger.DiscLog.Warnln("ipv4IntStart Atoi Error: ", errAtoi)
 					}
-					((*nfProfilesStruct[i].BsfInfo.Ipv4AddressRanges)[j]).Start = context.Ipv4IntToIpv4String(int64(ipv4IntStart))
-					ipv4IntEnd, errAtoi := strconv.Atoi((((*nfProfilesStruct[i].BsfInfo.Ipv4AddressRanges)[j]).End))
+					((nfProfilesStruct[i].BsfInfo.Ipv4AddressRanges)[j]).Start = context.Ipv4IntToIpv4String(int64(ipv4IntStart))
+					ipv4IntEnd, errAtoi := strconv.Atoi((((nfProfilesStruct[i].BsfInfo.Ipv4AddressRanges)[j]).End))
 					if errAtoi != nil {
 						logger.DiscLog.Warnln("ipv4IntEnd Atoi Error: ", errAtoi)
 					}
-					((*nfProfilesStruct[i].BsfInfo.Ipv4AddressRanges)[j]).End = context.Ipv4IntToIpv4String(int64(ipv4IntEnd))
+					((nfProfilesStruct[i].BsfInfo.Ipv4AddressRanges)[j]).End = context.Ipv4IntToIpv4String(int64(ipv4IntEnd))
 				}
 			}
 			if nfProfile.BsfInfo != nil && nfProfile.BsfInfo.Ipv6PrefixRanges != nil {
-				for j := range *nfProfile.BsfInfo.Ipv6PrefixRanges {
+				for j := range nfProfile.BsfInfo.Ipv6PrefixRanges {
 					ipv6IntStart := new(big.Int)
-					ipv6IntStart.SetString(((*nfProfilesStruct[i].BsfInfo.Ipv6PrefixRanges)[j]).Start, 10)
-					((*nfProfilesStruct[i].BsfInfo.Ipv6PrefixRanges)[j]).Start = context.Ipv6IntToIpv6String(ipv6IntStart)
+					ipv6IntStart.SetString(((nfProfilesStruct[i].BsfInfo.Ipv6PrefixRanges)[j]).Start, 10)
+					((nfProfilesStruct[i].BsfInfo.Ipv6PrefixRanges)[j]).Start = context.Ipv6IntToIpv6String(ipv6IntStart)
 
 					ipv6IntEnd := new(big.Int)
-					ipv6IntEnd.SetString(((*nfProfilesStruct[i].BsfInfo.Ipv6PrefixRanges)[j]).End, 10)
-					((*nfProfilesStruct[i].BsfInfo.Ipv6PrefixRanges)[j]).End = context.Ipv6IntToIpv6String(ipv6IntEnd)
+					ipv6IntEnd.SetString(((nfProfilesStruct[i].BsfInfo.Ipv6PrefixRanges)[j]).End, 10)
+					((nfProfilesStruct[i].BsfInfo.Ipv6PrefixRanges)[j]).End = context.Ipv6IntToIpv6String(ipv6IntEnd)
 				}
 			}
 		}
@@ -1182,7 +1182,7 @@ type AtomElem struct {
 
 func complexQueryFilter(complexQueryParameter *models.ComplexQuery) bson.M {
 	complexQueryType := ""
-	if complexQueryParameter.CNf != nil {
+	if complexQueryParameter.CnfUnits != nil {
 		complexQueryType = COMPLEX_QUERY_TYPE_CNF
 	} else {
 		complexQueryType = COMPLEX_QUERY_TYPE_DNF
@@ -1195,7 +1195,7 @@ func complexQueryFilter(complexQueryParameter *models.ComplexQuery) bson.M {
 		filter = bson.M{
 			"$and": []bson.M{},
 		}
-		for _, cnfUnit := range complexQueryParameter.CNf.CnfUnits {
+		for _, cnfUnit := range complexQueryParameter.CnfUnits.CnfUnit { //cnf.go的Cnf結構有CnfUnits本來用於第二個，原本第一個是屬於ComplexQuery結構的CnfUnits
 			var queryParameters map[string]*AtomElem = make(map[string]*AtomElem)
 			var cnfUnitFilter bson.M
 			for _, atom := range cnfUnit.CnfUnit {

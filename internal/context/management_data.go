@@ -23,19 +23,19 @@ func NnrfNFManagementDataModel(nf *models.NrfNfManagementNfProfile, nfprofile mo
 	if nfprofile.NfInstanceId != "" {
 		nf.NfInstanceId = nfprofile.NfInstanceId
 	} else {
-		return fmt.Errorf("NfInstanceId field is required\n")
+		return fmt.Errorf("NfInstanceId field is required")
 	}
 
 	if nfprofile.NfType != "" {
 		nf.NfType = nfprofile.NfType
 	} else {
-		return fmt.Errorf("NfType field is required\n")
+		return fmt.Errorf("NfType field is required")
 	}
 
 	if nfprofile.NfStatus != "" {
 		nf.NfStatus = nfprofile.NfStatus
 	} else {
-		return fmt.Errorf("NfStatus field is required\n")
+		return fmt.Errorf("NfStatus field is required")
 	}
 
 	nnrfNFManagementCondition(nf, nfprofile)

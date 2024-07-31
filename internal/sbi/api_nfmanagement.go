@@ -136,7 +136,7 @@ func (s *Server) HTTPGetNFInstance(c *gin.Context) {
 // RegisterNFInstance - Register a new NF Instance
 func (s *Server) HTTPRegisterNFInstance(c *gin.Context) {
 	// // step 1: retrieve http request body
-	var nfprofile models.NfProfile
+	var nfprofile models.NrfNfManagementNfProfile
 
 	requestBody, err := c.GetRawData()
 	if err != nil {
@@ -280,7 +280,7 @@ func (s *Server) HTTPUpdateSubscription(c *gin.Context) {
 
 // CreateSubscription - Create a new subscription
 func (s *Server) HTTPCreateSubscription(c *gin.Context) {
-	var subscription models.NrfSubscriptionData
+	var subscription models.NrfNfManagementSubscriptionData
 
 	// step 1: retrieve http request body
 	requestBody, err := c.GetRawData()
@@ -315,7 +315,7 @@ func (s *Server) HTTPCreateSubscription(c *gin.Context) {
 func (s *Server) GetNrfInfo() *models.NrfInfo {
 	// init
 	var nrfinfo models.NrfInfo
-
+	
 	nrfinfo.ServedUdrInfo = s.getUdrInfo()
 	nrfinfo.ServedUdmInfo = s.getUdmInfo()
 	nrfinfo.ServedAusfInfo = s.getAusfInfo()
@@ -331,7 +331,7 @@ func (s *Server) GetNrfInfo() *models.NrfInfo {
 
 func (s *Server) getUdrInfo() map[string]models.UdrInfo {
 	servedUdrInfo := make(map[string]models.UdrInfo)
-	var UDRProfile models.NfProfile
+	var UDRProfile models.NrfNfManagementNfProfile
 
 	collName := nrf_context.NfProfileCollName
 	filter := bson.M{"nfType": "UDR"}
@@ -341,7 +341,7 @@ func (s *Server) getUdrInfo() map[string]models.UdrInfo {
 		logger.NfmLog.Errorf("getUdrInfo err: %+v", err)
 	}
 
-	var UDRStruct []models.NfProfile
+	var UDRStruct []models.NrfNfManagementNfProfile
 	if err = timedecode.Decode(UDR, &UDRStruct); err != nil {
 		logger.NfmLog.Errorf("getUdrInfo err: %+v", err)
 	}
@@ -359,7 +359,7 @@ func (s *Server) getUdrInfo() map[string]models.UdrInfo {
 
 func (s *Server) getUdmInfo() map[string]models.UdmInfo {
 	servedUdmInfo := make(map[string]models.UdmInfo)
-	var UDMProfile models.NfProfile
+	var UDMProfile models.NrfNfManagementNfProfile
 
 	collName := nrf_context.NfProfileCollName
 	filter := bson.M{"nfType": "UDM"}
@@ -369,7 +369,7 @@ func (s *Server) getUdmInfo() map[string]models.UdmInfo {
 		logger.NfmLog.Errorf("getUdmInfo err: %+v", err)
 	}
 
-	var UDMStruct []models.NfProfile
+	var UDMStruct []models.NrfNfManagementNfProfile
 	if err = timedecode.Decode(UDM, &UDMStruct); err != nil {
 		logger.NfmLog.Errorf("getUdmInfo err: %+v", err)
 	}
@@ -387,7 +387,7 @@ func (s *Server) getUdmInfo() map[string]models.UdmInfo {
 
 func (s *Server) getAusfInfo() map[string]models.AusfInfo {
 	servedAusfInfo := make(map[string]models.AusfInfo)
-	var AUSFProfile models.NfProfile
+	var AUSFProfile models.NrfNfManagementNfProfile
 
 	collName := nrf_context.NfProfileCollName
 	filter := bson.M{"nfType": "AUSF"}
@@ -397,7 +397,7 @@ func (s *Server) getAusfInfo() map[string]models.AusfInfo {
 		logger.NfmLog.Errorf("getAusfInfo err: %+v", err)
 	}
 
-	var AUSFStruct []models.NfProfile
+	var AUSFStruct []models.NrfNfManagementNfProfile
 	if err = timedecode.Decode(AUSF, &AUSFStruct); err != nil {
 		logger.NfmLog.Errorf("getAusfInfo err: %+v", err)
 	}
@@ -412,9 +412,9 @@ func (s *Server) getAusfInfo() map[string]models.AusfInfo {
 	return servedAusfInfo
 }
 
-func (s *Server) getAmfInfo() map[string]models.AmfInfo {
-	servedAmfinfo := make(map[string]models.AmfInfo)
-	var AMFProfile models.NfProfile
+func (s *Server) getAmfInfo() map[string]models.NrfNfManagementAmfInfo {
+	servedAmfinfo := make(map[string]models.NrfNfManagementAmfInfo)
+	var AMFProfile models.NrfNfManagementNfProfile
 
 	collName := nrf_context.NfProfileCollName
 	filter := bson.M{"nfType": "AMF"}
@@ -424,7 +424,7 @@ func (s *Server) getAmfInfo() map[string]models.AmfInfo {
 		logger.NfmLog.Errorf("getAmfInfo err: %+v", err)
 	}
 
-	var AMFStruct []models.NfProfile
+	var AMFStruct []models.NrfNfManagementNfProfile
 	if err = timedecode.Decode(AMF, &AMFStruct); err != nil {
 		logger.NfmLog.Errorf("getAmfInfo err: %+v", err)
 	}
@@ -441,7 +441,7 @@ func (s *Server) getAmfInfo() map[string]models.AmfInfo {
 
 func (s *Server) getSmfInfo() map[string]models.SmfInfo {
 	servedSmfInfo := make(map[string]models.SmfInfo)
-	var SMFProfile models.NfProfile
+	var SMFProfile models.NrfNfManagementNfProfile
 
 	collName := nrf_context.NfProfileCollName
 	filter := bson.M{"nfType": "SMF"}
@@ -451,7 +451,7 @@ func (s *Server) getSmfInfo() map[string]models.SmfInfo {
 		logger.NfmLog.Errorf("getSmfInfo err: %+v", err)
 	}
 
-	var SMFStruct []models.NfProfile
+	var SMFStruct []models.NrfNfManagementNfProfile
 	if err = timedecode.Decode(SMF, &SMFStruct); err != nil {
 		logger.NfmLog.Errorf("getSmfInfo err: %+v", err)
 	}
@@ -468,7 +468,7 @@ func (s *Server) getSmfInfo() map[string]models.SmfInfo {
 
 func (s *Server) getUpfInfo() map[string]models.UpfInfo {
 	servedUpfInfo := make(map[string]models.UpfInfo)
-	var UPFProfile models.NfProfile
+	var UPFProfile models.NrfNfManagementNfProfile
 
 	collName := nrf_context.NfProfileCollName
 	filter := bson.M{"nfType": "UPF"}
@@ -478,7 +478,7 @@ func (s *Server) getUpfInfo() map[string]models.UpfInfo {
 		logger.NfmLog.Errorf("getUpfInfo err: %+v", err)
 	}
 
-	var UPFStruct []models.NfProfile
+	var UPFStruct []models.NrfNfManagementNfProfile
 	if err = timedecode.Decode(UPF, &UPFStruct); err != nil {
 		logger.NfmLog.Errorf("getUpfInfo err: %+v", err)
 	}
@@ -495,7 +495,7 @@ func (s *Server) getUpfInfo() map[string]models.UpfInfo {
 
 func (s *Server) getPcfInfo() map[string]models.PcfInfo {
 	servedPcfInfo := make(map[string]models.PcfInfo)
-	var PCFProfile models.NfProfile
+	var PCFProfile models.NrfNfManagementNfProfile
 
 	collName := nrf_context.NfProfileCollName
 	filter := bson.M{"nfType": "PCF"}
@@ -505,7 +505,7 @@ func (s *Server) getPcfInfo() map[string]models.PcfInfo {
 		logger.NfmLog.Errorf("getPcfInfo err: %+v", err)
 	}
 
-	var PCFStruct []models.NfProfile
+	var PCFStruct []models.NrfNfManagementNfProfile
 	if err = timedecode.Decode(PCF, &PCFStruct); err != nil {
 		logger.NfmLog.Errorf("getPcfInfo err: %+v", err)
 	}
@@ -520,9 +520,9 @@ func (s *Server) getPcfInfo() map[string]models.PcfInfo {
 	return servedPcfInfo
 }
 
-func (s *Server) getBsfInfo() map[string]models.BsfInfo {
-	servedBsfInfo := make(map[string]models.BsfInfo)
-	var BSFProfile models.NfProfile
+func (s *Server) getBsfInfo() map[string]models.NrfNfManagementBsfInfo {
+	servedBsfInfo := make(map[string]models.NrfNfManagementBsfInfo)
+	var BSFProfile models.NrfNfManagementNfProfile
 
 	collName := nrf_context.NfProfileCollName
 	filter := bson.M{"nfType": "BSF"}
@@ -532,7 +532,7 @@ func (s *Server) getBsfInfo() map[string]models.BsfInfo {
 		logger.NfmLog.Errorf("getBsfInfo err: %+v", err)
 	}
 
-	var BSFStruct []models.NfProfile
+	var BSFStruct []models.NrfNfManagementNfProfile
 	if err = timedecode.Decode(BSF, &BSFStruct); err != nil {
 		logger.NfmLog.Errorf("getBsfInfo err: %+v", err)
 	}
@@ -549,7 +549,7 @@ func (s *Server) getBsfInfo() map[string]models.BsfInfo {
 
 func (s *Server) getChfInfo() map[string]models.ChfInfo {
 	servedChfInfo := make(map[string]models.ChfInfo)
-	var CHFProfile models.NfProfile
+	var CHFProfile models.NrfNfManagementNfProfile
 
 	collName := nrf_context.NfProfileCollName
 	filter := bson.M{"nfType": "CHF"}
@@ -559,7 +559,7 @@ func (s *Server) getChfInfo() map[string]models.ChfInfo {
 		logger.NfmLog.Errorf("getChfInfo err: %+v", err)
 	}
 
-	var CHFStruct []models.NfProfile
+	var CHFStruct []models.NrfNfManagementNfProfile
 	if err = timedecode.Decode(CHF, &CHFStruct); err != nil {
 		logger.NfmLog.Errorf("getChfInfo err: %+v", err)
 	}
@@ -575,8 +575,8 @@ func (s *Server) getChfInfo() map[string]models.ChfInfo {
 }
 
 // DecodeNfProfile - Only support []map[string]interface to []models.NfProfile
-func (s *Server) DecodeNfProfile(source interface{}, format string) (models.NfProfile, error) {
-	var target models.NfProfile
+func (s *Server) DecodeNfProfile(source interface{}, format string) (models.NrfNfManagementNfProfile, error) {
+	var target models.NrfNfManagementNfProfile
 
 	// config mapstruct
 	stringToDateTimeHook := func(
