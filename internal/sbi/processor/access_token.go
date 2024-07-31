@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v5"
 	"go.mongodb.org/mongo-driver/bson"
 
 	nrf_context "github.com/free5gc/nrf/internal/context"
@@ -52,7 +52,8 @@ func (p *Processor) AccessTokenProcedure(request models.AccessTokenReq) (
 		tokenType  string = "Bearer"
 	)
 	scope := request.Scope
-	now := int32(time.Now().Unix())
+	now := time.Now()
+	nowNum := int32(now.Unix())
 
 	errResponse := p.AccessTokenScopeCheck(request)
 	if errResponse != nil {
@@ -63,14 +64,14 @@ func (p *Processor) AccessTokenProcedure(request models.AccessTokenReq) (
 	// Create AccessToken
 	nrfCtx := nrf_context.GetSelf()
 	accessTokenClaims := models.AccessTokenClaims{
-		Iss:            nrfCtx.Nrf_NfInstanceID,    // NF instance id of the NRF
-		Sub:            request.NfInstanceId,       // nfInstanceId of service consumer
-		Aud:            request.TargetNfInstanceId, // nfInstanceId of service producer
-		Scope:          request.Scope,              // TODO: the name of the NF services for which the
-		Exp:            now + expiration,           // access_token is authorized for use
-		StandardClaims: jwt.StandardClaims{},
+		Iss:              nrfCtx.Nrf_NfInstanceID,    // NF instance id of the NRF
+		Sub:              request.NfInstanceId,       // nfInstanceId of service consumer
+		Aud:              request.TargetNfInstanceId, // nfInstanceId of service producer
+		Scope:            request.Scope,              // TODO: the name of the NF services for which the
+		Exp:              nowNum + expiration,        // access_token is authorized for use
+		RegisteredClaims: jwt.RegisteredClaims{},
 	}
-	accessTokenClaims.IssuedAt = int64(now)
+	accessTokenClaims.IssuedAt = &jwt.NumericDate{Time: now}
 
 	// Use NRF private key to sign AccessToken
 	token := jwt.NewWithClaims(jwt.GetSigningMethod("RS512"), accessTokenClaims)
