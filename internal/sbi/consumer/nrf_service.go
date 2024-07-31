@@ -16,10 +16,10 @@ type nnrfService struct {
 
 	nfMngmntMu sync.RWMutex
 
-	nfMngmntClients map[string]*nrf_NFManagement.APIClient
+	nfMngmntClients map[string]*NFManagement.APIClient
 }
 
-func (s *nnrfService) getNFManagementClient(uri string) *Nnrf_NFManagement.APIClient {
+func (s *nnrfService) getNFManagementClient(uri string) *NFManagement.APIClient {
 	if uri == "" {
 		return nil
 	}
@@ -30,9 +30,9 @@ func (s *nnrfService) getNFManagementClient(uri string) *Nnrf_NFManagement.APICl
 		return client
 	}
 
-	configuration := Nnrf_NFManagement.NewConfiguration()
+	configuration := NFManagement.NewConfiguration()
 	configuration.SetBasePath(uri)
-	client = Nnrf_NFManagement.NewAPIClient(configuration)
+	client = NFManagement.NewAPIClient(configuration)
 
 	s.nfMngmntMu.RUnlock()
 	s.nfMngmntMu.Lock()
@@ -45,7 +45,7 @@ func (s *nnrfService) SendNFStatusNotify(
 	notification_event models.NotificationEventType,
 	nfInstanceUri string,
 	url string,
-	nfProfile *models.NfProfile,
+	nfProfile *models.NrfNfManagementNfProfile,
 ) *models.ProblemDetails {
 	logger.ConsumerLog.Infoln("SendNFStatusNotify")
 
@@ -60,7 +60,7 @@ func (s *nnrfService) SendNFStatusNotify(
 	s.nfMngmntMu.RLock()
 	defer s.nfMngmntMu.RUnlock()
 
-	notifcationData := models.NotificationData{
+	notifcationData := models.NrfNfManagementNotificationData{
 		Event:         notification_event,
 		NfInstanceUri: nfInstanceUri,
 	}

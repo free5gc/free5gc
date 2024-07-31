@@ -2,7 +2,7 @@ package consumer
 
 import (
 	"github.com/free5gc/nrf/pkg/app"
-	//"github.com/free5gc/openapi/nrf/Nnrf_NFManagement"
+	"github.com/free5gc/openapi/nrf/NFManagement"
 )
 
 type ConsumerNrf interface {
@@ -22,7 +22,7 @@ func NewConsumer(nrf ConsumerNrf) (*Consumer, error) {
 
 	c.nnrfService = &nnrfService{
 		consumer:        c,
-		nfMngmntClients: make(map[string]*Nnrf_NFManagement.APIClient),
+		nfMngmntClients: make(map[string]*NFManagement.APIClient),
 	}
 	return c, nil
 }

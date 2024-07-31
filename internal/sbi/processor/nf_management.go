@@ -39,7 +39,7 @@ func (p *Processor) HandleGetNFInstanceRequest(c *gin.Context, nfInstanceId stri
 	p.GetNFInstanceProcedure(c, nfInstanceId)
 }
 
-func (p *Processor) HandleNFRegisterRequest(c *gin.Context, nfProfile models.NfProfile) {
+func (p *Processor) HandleNFRegisterRequest(c *gin.Context, nfProfile models.NrfNfManagementNfProfile) {
 	logger.NfmLog.Infoln("Handle NFRegisterRequest")
 
 	p.NFRegisterProcedure(c, nfProfile)
@@ -102,7 +102,7 @@ func (p *Processor) HandleUpdateSubscriptionRequest(
 
 func (p *Processor) HandleCreateSubscriptionRequest(
 	c *gin.Context,
-	subscription models.NrfSubscriptionData,
+	subscription models.NrfNfManagementSubscriptionData,
 ) {
 	logger.NfmLog.Infoln("Handle CreateSubscriptionRequest")
 
@@ -125,7 +125,7 @@ func (p *Processor) HandleCreateSubscriptionRequest(
 }
 
 func (p *Processor) CreateSubscriptionProcedure(
-	subscription models.NrfSubscriptionData,
+	subscription models.NrfNfManagementSubscriptionData,
 ) (bson.M, *models.ProblemDetails) {
 	subscriptionID, err := nrf_context.SetsubscriptionId()
 	if err != nil {
@@ -267,7 +267,7 @@ func (p *Processor) NFDeregisterProcedure(nfInstanceID string) *models.ProblemDe
 	}
 
 	// nfProfile data for response
-	var nfProfiles []models.NfProfile
+	var nfProfiles []models.NrfNfManagementNfProfile
 	if err = timedecode.Decode(nfProfilesRaw, &nfProfiles); err != nil {
 		logger.NfmLog.Warnln("Time decode error: ", err)
 		problemDetails := &models.ProblemDetails{
@@ -345,7 +345,7 @@ func (p *Processor) UpdateNFInstanceProcedure(nfInstanceID string, patchJSON []b
 		nf,
 	}
 
-	var nfProfiles []models.NfProfile
+	var nfProfiles []models.NrfNfManagementNfProfile
 	if err = timedecode.Decode(nfProfilesRaw, &nfProfiles); err != nil {
 		logger.NfmLog.Errorf("UpdateNFInstanceProcedure err: %+v", err)
 	}
@@ -389,10 +389,10 @@ func (p *Processor) GetNFInstanceProcedure(c *gin.Context, nfInstanceID string) 
 
 func (p *Processor) NFRegisterProcedure(
 	c *gin.Context,
-	nfProfile models.NfProfile,
+	nfProfile models.NrfNfManagementNfProfile,
 ) {
 	logger.NfmLog.Traceln("[NRF] In NFRegisterProcedure")
-	var nf models.NfProfile
+	var nf models.NrfNfManagementNfProfile
 
 	err := nrf_context.NnrfNFManagementDataModel(&nf, nfProfile)
 	if err != nil {
