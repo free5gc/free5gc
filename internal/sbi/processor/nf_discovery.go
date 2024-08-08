@@ -1426,39 +1426,12 @@ func complexQueryFilterSubprocess(queryParameters map[string]*AtomElem, complexQ
 	// Pattern: '^[A-Fa-f0-9]{6}$'
 	if queryParameters["snssais"] != nil {
 		snssais := queryParameters["snssais"].value
-		// snssaisSplit := strings.Split(snssais, ",")
+
 		var snssaisBsonArray bson.A
-
-		// var tempSnssai string
-		// for i, v := range snssaisSplit {
-		// 	if i%2 == 0 {
-		// 		tempSnssai = v
-		// 	} else {
-		// 		tempSnssai += ","
-		// 		tempSnssai += v
-
-		// 		snssaiStruct := &models.Snssai{}
-		// 		err := json.Unmarshal([]byte(tempSnssai), snssaiStruct)
-		// 		if err != nil {
-		// 			logger.DiscLog.Warnln("Unmarshal Error in snssaiStruct: ", err)
-		// 		}
-
-		// 		snssaiByteArray, err := bson.Marshal(snssaiStruct)
-		// 		if err != nil {
-		// 			logger.DiscLog.Warnln("Unmarshal Error in snssaiByteArray: ", err)
-		// 		}
-
-		// 		snssaiBsonM := bson.M{}
-		// 		err = bson.Unmarshal(snssaiByteArray, &snssaiBsonM)
-		// 		if err != nil {
-		// 			logger.DiscLog.Warnln("Unmarshal Error in snssaiBsonM: ", err)
-		// 		}
-
-		// 		snssaisBsonArray = append(snssaisBsonArray, snssaiBsonM)
-		// 	}
-		// }
-
-		snssaisBsonArray = append(snssaisBsonArray, util.SnssaisToBsonM(snssais))
+		slices := util.SnssaisToBsonM(snssais)
+		for _, slice := range slices {
+			snssaisBsonArray = append(snssaisBsonArray, bson.M{"sNssais": bson.M{"$elemMatch": slice}})
+		}
 
 		snssaisFilter := bson.M{
 			"snssais": bson.M{
