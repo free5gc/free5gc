@@ -31,24 +31,23 @@ configuration:
   NASTCPPort: 20000 # TCP port which the NAS listens on
 
   # --- Bind Interfaces ---
-  # IKEBindAddress: 127.0.0.21 # IP address of Nwu interface (IKE) on this TNGF
-  IKEBindAddress: 192.168.1.102 #192.168.202.103 # IP address of Nwu interface (IKE) on this TNGF
-  RadiusBindAddress: 192.168.1.102 #192.168.137.103 # IP address of Nwu interface (IKE) on this TNGF
+  IKEBindAddress: 192.168.1.102  # IP address of Nwu interface (IKE) on this TNGF
+  RadiusBindAddress: 192.168.1.102 # IP address of Nwu interface (IKE) on this TNGF
   IPSecInterfaceAddress: 10.0.0.1 # IP address of IPSec virtual interface (IPsec tunnel enpoint on this TNGF)
   IPSecTunnelAddress: 10.0.0.1 # Tunnel IP address of XFRM interface on this TNGF
   UEIPAddressRange: 10.0.0.0/24 # IP address allocated to UE in IPSec tunnel
   XFRMInterfaceName: xfrmi # Prefix of XFRM interface name created by TNGF
   XFRMInterfaceID: 1 # XFRM interface if_id for IPSec routing (Any value except to 0, default value is 7 if not defined)
 
-  #GTPBindAddress: 10.200.200.2 # IP address of N3 interface (GTP) on this TNGF
+  # --- N3 Interfaces ---
   GTPBindAddress: 127.0.0.33 # IP address of N3 interface (GTP) on this TNGF
 
   FQDN: tngf.free5gc.org # FQDN of this TNGF
 
   # --- Security ---
-  PrivateKey: cert/n3iwf.key # Private key file path
-  CertificateAuthority: cert/n3iwf.pem # Certificate Authority (CA) file path
-  Certificate: cert/n3iwf.pem # Certificate file path
+  PrivateKey: cert/tngf.key # Private key file path
+  CertificateAuthority: cert/tngf.pem # Certificate Authority (CA) file path
+  Certificate: cert/tngf.pem # Certificate file path
   RadiusSecret: free5gctngf
 
 # the kind of log output
