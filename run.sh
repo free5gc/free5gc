@@ -61,9 +61,6 @@ function terminate()
         done
     fi
     
-    # for ((i=${#PID_LIST[@]}-1;i>=0;i--)); do
-    #     sudo kill -SIGTERM ${PID_LIST[i]}
-    # done
     echo Terminate PID_LIST = ${PID_LIST[@]}
     wait ${PID_LIST[@]}
     echo The free5GC terminated successfully!
@@ -117,8 +114,23 @@ sleep 0.1
 UPF_PID=$(pgrep -P $SUDO_UPF_PID)
 PID_LIST+=($SUDO_UPF_PID $UPF_PID)
 
-mongo --eval "db.NfProfile.drop();db.applicationData.influenceData.subsToNotify.drop();db.applicationData.subsToNotify.drop();db.policyData.subsToNotify.drop();db.exposureData.subsToNotify.drop()" free5gc
-mongosh --eval "db.NfProfile.drop();db.applicationData.influenceData.subsToNotify.drop();db.applicationData.subsToNotify.drop();db.policyData.subsToNotify.drop();db.exposureData.subsToNotify.drop()" free5gc
+DB_NAME="free5gc"
+DB_DROP_COLLECTION=(
+    "NfProfile"
+    "applicationData.influenceData.subsToNotify"
+    "applicationData.subsToNotify"
+    "policyData.subsToNotify"
+    "exposureData.subsToNotify"
+)
+
+MONGO_SCRIPT=""
+for COLLECTION in "${DB_DROP_COLLECTION[@]}"
+do
+    MONGO_SCRIPT+="db.$COLLECTION.drop();"
+done
+mongo "$DB_NAME" --eval "$MONGO_SCRIPT"
+mongosh "$DB_NAME" --eval "$MONGO_SCRIPT" 
+
 sleep 0.1
 
 NF_LIST="nrf amf smf udr pcf udm nssf ausf chf"
