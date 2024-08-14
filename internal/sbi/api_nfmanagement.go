@@ -165,7 +165,7 @@ func (s *Server) HTTPRegisterNFInstance(c *gin.Context) {
 		return
 	}
 
-	s.Processor().HandleNFRegisterRequest(c, nfprofile)
+	s.Processor().HandleNFRegisterRequest(c, &nfprofile)
 }
 
 // UpdateNFInstance - Update NF Instance profile
@@ -315,7 +315,7 @@ func (s *Server) HTTPCreateSubscription(c *gin.Context) {
 func (s *Server) GetNrfInfo() *models.NrfInfo {
 	// init
 	var nrfinfo models.NrfInfo
-	
+
 	nrfinfo.ServedUdrInfo = s.getUdrInfo()
 	nrfinfo.ServedUdmInfo = s.getUdmInfo()
 	nrfinfo.ServedAusfInfo = s.getAusfInfo()
@@ -329,8 +329,8 @@ func (s *Server) GetNrfInfo() *models.NrfInfo {
 	return &nrfinfo
 }
 
-func (s *Server) getUdrInfo() map[string]models.UdrInfo {
-	servedUdrInfo := make(map[string]models.UdrInfo)
+func (s *Server) getUdrInfo() map[string]interface{} {
+	servedUdrInfo := make(map[string]interface{})
 	var UDRProfile models.NrfNfManagementNfProfile
 
 	collName := nrf_context.NfProfileCollName
@@ -357,8 +357,8 @@ func (s *Server) getUdrInfo() map[string]models.UdrInfo {
 	return servedUdrInfo
 }
 
-func (s *Server) getUdmInfo() map[string]models.UdmInfo {
-	servedUdmInfo := make(map[string]models.UdmInfo)
+func (s *Server) getUdmInfo() map[string]interface{} {
+	servedUdmInfo := make(map[string]interface{})
 	var UDMProfile models.NrfNfManagementNfProfile
 
 	collName := nrf_context.NfProfileCollName
@@ -385,8 +385,8 @@ func (s *Server) getUdmInfo() map[string]models.UdmInfo {
 	return servedUdmInfo
 }
 
-func (s *Server) getAusfInfo() map[string]models.AusfInfo {
-	servedAusfInfo := make(map[string]models.AusfInfo)
+func (s *Server) getAusfInfo() map[string]interface{} {
+	servedAusfInfo := make(map[string]interface{})
 	var AUSFProfile models.NrfNfManagementNfProfile
 
 	collName := nrf_context.NfProfileCollName
@@ -412,8 +412,8 @@ func (s *Server) getAusfInfo() map[string]models.AusfInfo {
 	return servedAusfInfo
 }
 
-func (s *Server) getAmfInfo() map[string]models.NrfNfManagementAmfInfo {
-	servedAmfinfo := make(map[string]models.NrfNfManagementAmfInfo)
+func (s *Server) getAmfInfo() map[string]interface{} {
+	servedAmfinfo := make(map[string]interface{})
 	var AMFProfile models.NrfNfManagementNfProfile
 
 	collName := nrf_context.NfProfileCollName
@@ -439,8 +439,8 @@ func (s *Server) getAmfInfo() map[string]models.NrfNfManagementAmfInfo {
 	return servedAmfinfo
 }
 
-func (s *Server) getSmfInfo() map[string]models.SmfInfo {
-	servedSmfInfo := make(map[string]models.SmfInfo)
+func (s *Server) getSmfInfo() map[string]interface{} {
+	servedSmfInfo := make(map[string]interface{})
 	var SMFProfile models.NrfNfManagementNfProfile
 
 	collName := nrf_context.NfProfileCollName
@@ -466,8 +466,8 @@ func (s *Server) getSmfInfo() map[string]models.SmfInfo {
 	return servedSmfInfo
 }
 
-func (s *Server) getUpfInfo() map[string]models.UpfInfo {
-	servedUpfInfo := make(map[string]models.UpfInfo)
+func (s *Server) getUpfInfo() map[string]interface{} {
+	servedUpfInfo := make(map[string]interface{})
 	var UPFProfile models.NrfNfManagementNfProfile
 
 	collName := nrf_context.NfProfileCollName
@@ -493,8 +493,8 @@ func (s *Server) getUpfInfo() map[string]models.UpfInfo {
 	return servedUpfInfo
 }
 
-func (s *Server) getPcfInfo() map[string]models.PcfInfo {
-	servedPcfInfo := make(map[string]models.PcfInfo)
+func (s *Server) getPcfInfo() map[string]interface{} {
+	servedPcfInfo := make(map[string]interface{})
 	var PCFProfile models.NrfNfManagementNfProfile
 
 	collName := nrf_context.NfProfileCollName
@@ -520,8 +520,8 @@ func (s *Server) getPcfInfo() map[string]models.PcfInfo {
 	return servedPcfInfo
 }
 
-func (s *Server) getBsfInfo() map[string]models.NrfNfManagementBsfInfo {
-	servedBsfInfo := make(map[string]models.NrfNfManagementBsfInfo)
+func (s *Server) getBsfInfo() map[string]interface{} {
+	servedBsfInfo := make(map[string]interface{})
 	var BSFProfile models.NrfNfManagementNfProfile
 
 	collName := nrf_context.NfProfileCollName
@@ -547,8 +547,8 @@ func (s *Server) getBsfInfo() map[string]models.NrfNfManagementBsfInfo {
 	return servedBsfInfo
 }
 
-func (s *Server) getChfInfo() map[string]models.ChfInfo {
-	servedChfInfo := make(map[string]models.ChfInfo)
+func (s *Server) getChfInfo() map[string]interface{} {
+	servedChfInfo := make(map[string]interface{})
 	var CHFProfile models.NrfNfManagementNfProfile
 
 	collName := nrf_context.NfProfileCollName

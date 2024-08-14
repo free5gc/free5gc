@@ -132,7 +132,7 @@ func InitNFService(srvNameList []string, version string) []models.NrfNfManagemen
 			IpEndPoints: []models.IpEndPoint{
 				{
 					Ipv4Address: factory.NrfConfig.GetSbiRegisterIP(),
-					Transport:   models.NrfNfManagementTransportProtocol(models.NrfNfManagementTransportProtocol_TCP),
+					Transport:   models.NrfNfManagementTransportProtocol_TCP,
 					Port:        int32(factory.NrfConfig.GetSbiPort()),
 				},
 			},
