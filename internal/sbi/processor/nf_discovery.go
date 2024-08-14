@@ -2,6 +2,7 @@ package processor
 
 import (
 	"encoding/json"
+	"log"
 	"math/big"
 	"net/http"
 	"net/url"
@@ -11,7 +12,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 
-	"github.com/free5gc/nrf/internal/context"
 	nrf_context "github.com/free5gc/nrf/internal/context"
 	"github.com/free5gc/nrf/internal/logger"
 	"github.com/free5gc/nrf/internal/util"
@@ -143,30 +143,31 @@ func (p *Processor) NFDiscoveryProcedure(c *gin.Context, queryParameters url.Val
 
 	// handle ipv4 & ipv6
 	if queryParameters["target-nf-type"][0] == "BSF" {
-		for i, nfProfile := range nfProfilesStruct {
+		for i := 0; i < len(nfProfilesStruct); i++ {
+			nfProfile := nfProfilesStruct[i]
 			if nfProfile.BsfInfo != nil && nfProfile.BsfInfo.Ipv4AddressRanges != nil {
 				for j := range nfProfile.BsfInfo.Ipv4AddressRanges {
 					ipv4IntStart, errAtoi := strconv.Atoi((((nfProfilesStruct[i].BsfInfo.Ipv4AddressRanges)[j]).Start))
 					if errAtoi != nil {
 						logger.DiscLog.Warnln("ipv4IntStart Atoi Error: ", errAtoi)
 					}
-					((nfProfilesStruct[i].BsfInfo.Ipv4AddressRanges)[j]).Start = context.Ipv4IntToIpv4String(int64(ipv4IntStart))
+					((nfProfilesStruct[i].BsfInfo.Ipv4AddressRanges)[j]).Start = nrf_context.Ipv4IntToIpv4String(int64(ipv4IntStart))
 					ipv4IntEnd, errAtoi := strconv.Atoi((((nfProfilesStruct[i].BsfInfo.Ipv4AddressRanges)[j]).End))
 					if errAtoi != nil {
 						logger.DiscLog.Warnln("ipv4IntEnd Atoi Error: ", errAtoi)
 					}
-					((nfProfilesStruct[i].BsfInfo.Ipv4AddressRanges)[j]).End = context.Ipv4IntToIpv4String(int64(ipv4IntEnd))
+					((nfProfilesStruct[i].BsfInfo.Ipv4AddressRanges)[j]).End = nrf_context.Ipv4IntToIpv4String(int64(ipv4IntEnd))
 				}
 			}
 			if nfProfile.BsfInfo != nil && nfProfile.BsfInfo.Ipv6PrefixRanges != nil {
 				for j := range nfProfile.BsfInfo.Ipv6PrefixRanges {
 					ipv6IntStart := new(big.Int)
 					ipv6IntStart.SetString(((nfProfilesStruct[i].BsfInfo.Ipv6PrefixRanges)[j]).Start, 10)
-					((nfProfilesStruct[i].BsfInfo.Ipv6PrefixRanges)[j]).Start = context.Ipv6IntToIpv6String(ipv6IntStart)
+					((nfProfilesStruct[i].BsfInfo.Ipv6PrefixRanges)[j]).Start = nrf_context.Ipv6IntToIpv6String(ipv6IntStart)
 
 					ipv6IntEnd := new(big.Int)
 					ipv6IntEnd.SetString(((nfProfilesStruct[i].BsfInfo.Ipv6PrefixRanges)[j]).End, 10)
-					((nfProfilesStruct[i].BsfInfo.Ipv6PrefixRanges)[j]).End = context.Ipv6IntToIpv6String(ipv6IntEnd)
+					((nfProfilesStruct[i].BsfInfo.Ipv6PrefixRanges)[j]).End = nrf_context.Ipv6IntToIpv6String(ipv6IntEnd)
 				}
 			}
 		}
@@ -685,7 +686,7 @@ func buildFilter(queryParameters url.Values) bson.M {
 		var ueIpv4AddressFilter bson.M
 		if targetNfType == "BSF" {
 			ueIpv4Address := queryParameters["ue-ipv4-address"][0]
-			ueIpv4AddressNumber := context.Ipv4ToInt(ueIpv4Address)
+			ueIpv4AddressNumber := nrf_context.Ipv4ToInt(ueIpv4Address)
 			ueIpv4AddressFilter = bson.M{
 				"$or": []bson.M{
 					{
@@ -737,7 +738,7 @@ func buildFilter(queryParameters url.Values) bson.M {
 		var ueIpv6PrefixFilter bson.M
 		if targetNfType == "BSF" {
 			ueIpv6Prefix := queryParameters["ue-ipv6-prefix"][0]
-			ueIpv6PrefixNumber := context.Ipv6ToInt(ueIpv6Prefix)
+			ueIpv6PrefixNumber := nrf_context.Ipv6ToInt(ueIpv6Prefix)
 			ueIpv6PrefixFilter = bson.M{
 				"$or": []bson.M{
 					{
@@ -881,7 +882,7 @@ func buildFilter(queryParameters url.Values) bson.M {
 		var externalGroupIdentityFilter bson.M
 		externalGroupIdentity := queryParameters["external-group-identity"][0]
 
-		encodedGroupId := context.EncodeGroupId(externalGroupIdentity)
+		encodedGroupId := nrf_context.EncodeGroupId(externalGroupIdentity)
 
 		if targetNfType == "UDM" {
 			externalGroupIdentityFilter = bson.M{
@@ -1195,11 +1196,16 @@ func complexQueryFilter(complexQueryParameter *models.ComplexQuery) bson.M {
 		filter = bson.M{
 			"$and": []bson.M{},
 		}
-		for _, cnfUnit := range complexQueryParameter.CnfUnits.CnfUnit { //cnf.go的Cnf結構有CnfUnits本來用於第二個，原本第一個是屬於ComplexQuery結構的CnfUnits
+		for _, cnfUnit := range complexQueryParameter.CnfUnits {
 			var queryParameters map[string]*AtomElem = make(map[string]*AtomElem)
 			var cnfUnitFilter bson.M
 			for _, atom := range cnfUnit.CnfUnit {
-				queryParameters[atom.Attr] = &AtomElem{value: atom.Value, negative: atom.Negative}
+				valueJson, err := json.Marshal(atom.Value)
+				if err != nil {
+					log.Fatalf("Failed: %v", err)
+				}
+				value := string(valueJson)
+				queryParameters[atom.Attr] = &AtomElem{value: value, negative: atom.Negative}
 			}
 			cnfUnitFilter = complexQueryFilterSubprocess(queryParameters, complexQueryType)
 
@@ -1780,7 +1786,7 @@ func complexQueryFilterSubprocess(queryParameters map[string]*AtomElem, complexQ
 		var ueIpv4AddressFilter bson.M
 		if targetNfType == "BSF" {
 			ueIpv4Address := queryParameters["ue-ipv4-address"].value
-			ueIpv4AddressNumber := context.Ipv4ToInt(ueIpv4Address)
+			ueIpv4AddressNumber := nrf_context.Ipv4ToInt(ueIpv4Address)
 			ueIpv4AddressFilter = bson.M{
 				"bsfInfo": bson.M{
 					"$elemMatch": bson.M{
@@ -1832,7 +1838,7 @@ func complexQueryFilterSubprocess(queryParameters map[string]*AtomElem, complexQ
 		var ueIpv6PrefixFilter bson.M
 		if targetNfType == "BSF" {
 			ueIpv6Prefix := queryParameters["ue-ipv6-prefix"].value
-			ueIpv6PrefixNumber := context.Ipv6ToInt(ueIpv6Prefix)
+			ueIpv6PrefixNumber := nrf_context.Ipv6ToInt(ueIpv6Prefix)
 			ueIpv6PrefixFilter = bson.M{
 				"bsfInfo": bson.M{
 					"$elemMatch": bson.M{

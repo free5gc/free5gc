@@ -19,7 +19,7 @@ import (
 
 const NRF_NFINST_RES_URI_PREFIX = factory.NrfNfmResUriPrefix + "/nf-instances/"
 
-func NnrfNFManagementDataModel(nf *models.NrfNfManagementNfProfile, nfprofile models.NrfNfManagementNfProfile) error {
+func NnrfNFManagementDataModel(nf *models.NrfNfManagementNfProfile, nfprofile *models.NrfNfManagementNfProfile) error {
 	if nfprofile.NfInstanceId != "" {
 		nf.NfInstanceId = nfprofile.NfInstanceId
 	} else {
@@ -55,7 +55,7 @@ func SetsubscriptionId() (string, error) {
 	return hex.EncodeToString(buffer), nil
 }
 
-func nnrfNFManagementCondition(nf *models.NrfNfManagementNfProfile, nfprofile models.NrfNfManagementNfProfile) {
+func nnrfNFManagementCondition(nf *models.NrfNfManagementNfProfile, nfprofile *models.NrfNfManagementNfProfile) {
 	// HeartBeatTimer
 	if nfprofile.HeartBeatTimer >= 0 {
 		nf.HeartBeatTimer = nfprofile.HeartBeatTimer
@@ -99,14 +99,12 @@ func nnrfNFManagementCondition(nf *models.NrfNfManagementNfProfile, nfprofile mo
 	}
 }
 
-func nnrfNFManagementOption(nf *models.NrfNfManagementNfProfile, nfprofile models.NrfNfManagementNfProfile) {
+func nnrfNFManagementOption(nf *models.NrfNfManagementNfProfile, nfprofile *models.NrfNfManagementNfProfile) {
 	// sNssais
 	if nfprofile.SNssais != nil {
 		// fmt.Println("SNssais")
 		a := make([]models.ExtSnssai, len(nfprofile.SNssais))
-		for i, extSnssai := range nfprofile.SNssais {
-			a[i] = models.ExtSnssai(extSnssai)
-		}
+		copy(a, nfprofile.SNssais)
 		nf.SNssais = a
 	}
 
@@ -140,9 +138,7 @@ func nnrfNFManagementOption(nf *models.NrfNfManagementNfProfile, nfprofile model
 	if nfprofile.AllowedNssais != nil {
 		// fmt.Println("SNssais")
 		a := make([]models.ExtSnssai, len(nfprofile.AllowedNssais))
-		for i, extSnssai := range nfprofile.AllowedNssais {
-			a[i] = models.ExtSnssai(extSnssai)
-		}
+		copy(a, nfprofile.AllowedNssais)
 		nf.AllowedNssais = a
 	}
 	// Priority
@@ -404,7 +400,7 @@ func GetNfInstanceURI(nfInstID string) string {
 	return factory.NrfConfig.GetSbiUri() + NRF_NFINST_RES_URI_PREFIX + nfInstID
 }
 
-func SetLocationHeader(nfprofile models.NrfNfManagementNfProfile) string {
+func SetLocationHeader(nfprofile *models.NrfNfManagementNfProfile) string {
 	var modifyUL UriList
 	var locationHeader []string
 
@@ -504,7 +500,7 @@ func nnrfUriList(originalUL *UriList, ul *UriList, location []string) {
 	ul.Link = *b
 }
 
-func GetNofificationUri(nfProfile models.NrfNfManagementNfProfile) []string {
+func GetNofificationUri(nfProfile *models.NrfNfManagementNfProfile) []string {
 	var uriList []string
 
 	// nfTypeCond
