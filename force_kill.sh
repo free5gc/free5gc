@@ -21,7 +21,7 @@ if [ $# -ne 0 ]; then
     done
 fi
 
-NF_LIST="nrf amf smf udr pcf udm nssf ausf n3iwf upf chf"
+NF_LIST="nrf amf smf udr pcf udm nssf ausf n3iwf upf chf tngf"
 
 for NF in ${NF_LIST}; do
     sudo killall -9 ${NF}
