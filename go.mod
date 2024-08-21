@@ -11,8 +11,8 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/mitchellh/mapstructure v1.4.2
 	github.com/pkg/errors v0.9.1
-	github.com/stretchr/testify v1.8.3
 	github.com/sirupsen/logrus v1.9.3
+	github.com/stretchr/testify v1.8.4
 	github.com/urfave/cli v1.22.5
 	go.mongodb.org/mongo-driver v1.8.4
 	gopkg.in/yaml.v2 v2.4.0
@@ -36,6 +36,7 @@ require (
 	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/golang/protobuf v1.5.0 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
+	github.com/h2non/gock v1.2.0 // indirect
 	github.com/h2non/parth v0.0.0-20190131123155-b4df798d6542 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.13.6 // indirect
@@ -69,8 +70,7 @@ require (
 	golang.org/x/text v0.21.0 // indirect
 	google.golang.org/appengine v1.6.6 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect
-	gopkg.in/h2non/gock.v1 v1.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/free5gc/openapi => /home/kun/openapi
+replace github.com/free5gc/openapi => github.com/free5gc/openapi v1.0.9-0.20240815025812-3320f3d0079d
