@@ -42,6 +42,9 @@ configuration:
     nodeID: 127.0.0.1 # the Node ID of this SMF
     listenAddr: 127.0.0.1 # the IP/FQDN of N4 interface on this SMF (PFCP)
     externalAddr: 127.0.0.1 # the IP/FQDN of N4 interface on this SMF (PFCP)
+    assocFailAlertInterval: 10s
+    AssocFailRetryInterval: 30s
+    heartbeatInterval: 10s
   userplaneInformation: # list of userplane information
     upNodes: # information of userplane node (AN or UPF)
       gNB1: # the name of the node
@@ -90,8 +93,8 @@ configuration:
     maxRetryTimes: 3 # the max number of retransmission
   nrfUri: http://127.0.0.10:8000 # a valid URI of NRF
   nrfCertPem: cert/nrf.pem # NRF Certificate
-  urrPeriod: 10 # default usage report period in seconds
-  urrThreshold: 1000 # default usage report threshold in bytes
+  urrPeriod: 30 # default usage report period in seconds
+  urrThreshold: 500000 # default usage report threshold in bytes
   requestedUnit: 1000
 logger: # log output setting
   enable: true # true or false
