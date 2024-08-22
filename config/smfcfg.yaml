@@ -42,6 +42,9 @@ configuration:
     nodeID: 127.0.0.1 # the Node ID of this SMF
     listenAddr: 127.0.0.1 # the IP/FQDN of N4 interface on this SMF (PFCP)
     externalAddr: 127.0.0.1 # the IP/FQDN of N4 interface on this SMF (PFCP)
+    assocFailAlertInterval: 10s
+    AssocFailRetryInterval: 30s
+    heartbeatInterval: 10s
   userplaneInformation: # list of userplane information
     upNodes: # information of userplane node (AN or UPF)
       gNB1: # the name of the node
