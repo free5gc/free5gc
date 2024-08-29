@@ -24,6 +24,7 @@ configuration:
   volumeLimitPDU: 10000
   volumeThresholdRate: 0.8
   cgf:
+    enable: true
     hostIPv4: 127.0.0.1 # billing server ftp server
     port: 2121 # billing server listen on port 2121
     listenPort: 2122 # cgf ftp server listen port

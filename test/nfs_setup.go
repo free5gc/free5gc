@@ -573,8 +573,10 @@ func smfConfig(testID TestId) error {
 				ExpireTime:    5 * time.Second,
 				MaxRetryTimes: 2,
 			},
-			NrfUri:     "http://127.0.0.10:8000",
-			NrfCertPem: "../cert/nrf.pem",
+			NrfUri:       "http://127.0.0.10:8000",
+			NrfCertPem:   "../cert/nrf.pem",
+			UrrPeriod:    30,
+			UrrThreshold: 10000,
 		},
 		Logger: &smf_factory.Logger{
 			Enable:       true,
@@ -1410,6 +1412,7 @@ func chfConfig() error {
 			VolumeLimitPDU:      10000,
 			VolumeThresholdRate: 0.8,
 			Cgf: &chf_factory.Cgf{
+				Enable:     false,
 				HostIPv4:   "127.0.0.1",
 				Port:       2121,
 				ListenPort: 2122,
