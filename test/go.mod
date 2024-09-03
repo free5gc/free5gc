@@ -143,6 +143,7 @@ replace (
 	github.com/free5gc/nssf => ../NFs/nssf
 	github.com/free5gc/pcf => ../NFs/pcf
 	github.com/free5gc/smf => ../NFs/smf
+	github.com/free5gc/tngf => ../NFs/tngf
 	github.com/free5gc/udm => ../NFs/udm
 	github.com/free5gc/udr => ../NFs/udr
 	github.com/free5gc/upf => ../NFs/upf
