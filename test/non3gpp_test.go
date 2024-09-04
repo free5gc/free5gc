@@ -402,7 +402,6 @@ func decryptProcedure(ikeSecurityAssociation *context.IKESecurityAssociation, ik
 		return nil, errors.New("Encoding IKE message failed:" + err.Error())
 	}
 
-	// [TODO] ike.VerifyIKEChecksum is Deprecate
 	ok, err := verifyIKEChecksum(ikeSecurityAssociation.SK_ar, ikeMessageData[:len(ikeMessageData)-checksumLength], checksum, transformIntegrityAlgorithm.TransformID)
 	if err != nil {
 		return nil, errors.New("Error verify checksum")
@@ -453,7 +452,6 @@ func encryptProcedure(ikeSecurityAssociation *context.IKESecurityAssociation, ik
 	if err != nil {
 		return errors.New("Encoding IKE message error")
 	}
-	// [TODO] security.CalculateChecksum deprecated
 	checksumOfMessage, err := calculateChecksum(ikeSecurityAssociation.SK_ai, responseIKEMessageData[:len(responseIKEMessageData)-checksumLength], transformIntegrityAlgorithm.TransformID)
 	if err != nil {
 		return errors.New("Error calculating checksum")
