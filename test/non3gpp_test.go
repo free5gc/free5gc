@@ -1,6 +1,9 @@
 package test
 
 import (
+	"crypto/hmac"
+	"crypto/md5"
+	"crypto/sha1"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -8,26 +11,27 @@ import (
 	"math/big"
 	"net"
 	"strconv"
+	"test/consumerTestdata/UDM/TestGenAuthData"
+	"test/nasTestpacket"
 	"testing"
 	"time"
 
-	"test/consumerTestdata/UDM/TestGenAuthData"
-	"test/nasTestpacket"
-
-	"github.com/davecgh/go-spew/spew"
 	"github.com/go-ping/ping"
 	"github.com/stretchr/testify/assert"
 	"github.com/vishvananda/netlink"
 	"golang.org/x/sys/unix"
 
+	"github.com/davecgh/go-spew/spew"
+
 	"github.com/free5gc/n3iwf/pkg/context"
-	"github.com/free5gc/n3iwf/pkg/ike/handler"
+	n3iwfContext "github.com/free5gc/n3iwf/pkg/context"
 	"github.com/free5gc/n3iwf/pkg/ike/message"
+	"github.com/free5gc/n3iwf/pkg/ike/security"
 	"github.com/free5gc/n3iwf/pkg/ike/xfrm"
 	"github.com/free5gc/nas"
 	"github.com/free5gc/nas/nasMessage"
 	"github.com/free5gc/nas/nasType"
-	"github.com/free5gc/nas/security"
+	nasSecurity "github.com/free5gc/nas/security"
 	"github.com/free5gc/ngap"
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/util/ueauth"
@@ -46,15 +50,23 @@ var (
 )
 
 type N3IWFUe struct {
-	context.N3IWFIkeUe
-	context.N3IWFRanUe
+	n3iwfContext.N3IWFIkeUe
+	n3iwfContext.N3IWFRanUe
+}
+
+type PDUQoSInfo struct {
+	pduSessionID    uint8
+	qfiList         []uint8
+	isDefault       bool
+	isDSCPSpecified bool
+	DSCP            uint8
 }
 
 func generateSPI(n3ue *N3IWFUe) []byte {
 	var spi uint32
 	spiByte := make([]byte, 4)
 	for {
-		randomUint64 := handler.GenerateRandomNumber().Uint64()
+		randomUint64 := security.GenerateRandomNumber().Uint64()
 		if _, ok := n3ue.N3IWFChildSecurityAssociation[uint32(randomUint64)]; !ok {
 			spi = uint32(randomUint64)
 			binary.BigEndian.PutUint32(spiByte, spi)
@@ -230,7 +242,7 @@ func generateKeyForIKESA(ikeSecurityAssociation *context.IKESecurityAssociation)
 	// Generate IKE SA key as defined in RFC7296 Section 1.3 and Section 1.4
 	var pseudorandomFunction hash.Hash
 
-	if pseudorandomFunction, ok = handler.NewPseudorandomFunction(ikeSecurityAssociation.ConcatenatedNonce, transformPseudorandomFunction.TransformID); !ok {
+	if pseudorandomFunction, ok = security.NewPseudorandomFunction(ikeSecurityAssociation.ConcatenatedNonce, transformPseudorandomFunction.TransformID); !ok {
 		return errors.New("New pseudorandom function failed")
 	}
 
@@ -245,7 +257,7 @@ func generateKeyForIKESA(ikeSecurityAssociation *context.IKESecurityAssociation)
 	var keyStream, generatedKeyBlock []byte
 	var index byte
 	for index = 1; len(keyStream) < totalKeyLength; index++ {
-		if pseudorandomFunction, ok = handler.NewPseudorandomFunction(SKEYSEED, transformPseudorandomFunction.TransformID); !ok {
+		if pseudorandomFunction, ok = security.NewPseudorandomFunction(SKEYSEED, transformPseudorandomFunction.TransformID); !ok {
 			return errors.New("New pseudorandom function failed")
 		}
 		if _, err := pseudorandomFunction.Write(append(append(generatedKeyBlock, seed...), index)); err != nil {
@@ -300,7 +312,7 @@ func generateKeyForChildSA(ikeSecurityAssociation *context.IKESecurityAssociatio
 	var keyStream, generatedKeyBlock []byte
 	var index byte
 	for index = 1; len(keyStream) < totalKeyLength; index++ {
-		if pseudorandomFunction, ok = handler.NewPseudorandomFunction(ikeSecurityAssociation.SK_d, transformPseudorandomFunction.TransformID); !ok {
+		if pseudorandomFunction, ok = security.NewPseudorandomFunction(ikeSecurityAssociation.SK_d, transformPseudorandomFunction.TransformID); !ok {
 			return errors.New("New pseudorandom function failed")
 		}
 		if _, err := pseudorandomFunction.Write(append(append(generatedKeyBlock, seed...), index)); err != nil {
@@ -322,6 +334,60 @@ func generateKeyForChildSA(ikeSecurityAssociation *context.IKESecurityAssociatio
 
 }
 
+func verifyIKEChecksum(key []byte, originData []byte, checksum []byte, algorithmType uint16) (bool, error) {
+	switch algorithmType {
+	case message.AUTH_HMAC_MD5_96:
+		if len(key) != 16 {
+			return false, errors.New("Unmatched input key length")
+		}
+		integrityFunction := hmac.New(md5.New, key)
+		if _, err := integrityFunction.Write(originData); err != nil {
+			return false, errors.New("Hash function write error")
+		}
+		checksumOfMessage := integrityFunction.Sum(nil)
+		return hmac.Equal(checksumOfMessage, checksum), nil
+	case message.AUTH_HMAC_SHA1_96:
+		if len(key) != 20 {
+			return false, errors.New("Unmatched input key length")
+		}
+		integrityFunction := hmac.New(sha1.New, key)
+		if _, err := integrityFunction.Write(originData); err != nil {
+			return false, errors.New("Hash function write error")
+		}
+		checksumOfMessage := integrityFunction.Sum(nil)[:12]
+
+		return hmac.Equal(checksumOfMessage, checksum), nil
+	default:
+		return false, errors.New("Unsupported algorithm")
+	}
+}
+
+// Integrity Algorithm
+func calculateChecksum(key []byte, originData []byte, algorithmType uint16) ([]byte, error) {
+	switch algorithmType {
+	case message.AUTH_HMAC_MD5_96:
+		if len(key) != 16 {
+			return nil, errors.New("Unmatched input key length")
+		}
+		integrityFunction := hmac.New(md5.New, key)
+		if _, err := integrityFunction.Write(originData); err != nil {
+			return nil, errors.New("Hash function write error")
+		}
+		return integrityFunction.Sum(nil), nil
+	case message.AUTH_HMAC_SHA1_96:
+		if len(key) != 20 {
+			return nil, errors.New("Unmatched input key length")
+		}
+		integrityFunction := hmac.New(sha1.New, key)
+		if _, err := integrityFunction.Write(originData); err != nil {
+			return nil, errors.New("Hash function write error")
+		}
+		return integrityFunction.Sum(nil)[:12], nil
+	default:
+		return nil, errors.New("Unsupported algorithm")
+	}
+}
+
 func decryptProcedure(ikeSecurityAssociation *context.IKESecurityAssociation, ikeMessage *message.IKEMessage, encryptedPayload *message.Encrypted) (message.IKEPayloadContainer, error) {
 	// Load needed information
 	transformIntegrityAlgorithm := ikeSecurityAssociation.IntegrityAlgorithm
@@ -333,10 +399,10 @@ func decryptProcedure(ikeSecurityAssociation *context.IKESecurityAssociation, ik
 
 	ikeMessageData, err := ikeMessage.Encode()
 	if err != nil {
-		return nil, errors.New("Encoding IKE message failed")
+		return nil, errors.New("Encoding IKE message failed:" + err.Error())
 	}
 
-	ok, err := handler.VerifyIKEChecksum(ikeSecurityAssociation.SK_ar, ikeMessageData[:len(ikeMessageData)-checksumLength], checksum, transformIntegrityAlgorithm.TransformID)
+	ok, err := verifyIKEChecksum(ikeSecurityAssociation.SK_ar, ikeMessageData[:len(ikeMessageData)-checksumLength], checksum, transformIntegrityAlgorithm.TransformID)
 	if err != nil {
 		return nil, errors.New("Error verify checksum")
 	}
@@ -346,7 +412,7 @@ func decryptProcedure(ikeSecurityAssociation *context.IKESecurityAssociation, ik
 
 	// Decrypt
 	encryptedData := encryptedPayload.EncryptedData[:len(encryptedPayload.EncryptedData)-checksumLength]
-	plainText, err := handler.DecryptMessage(ikeSecurityAssociation.SK_er, encryptedData, transformEncryptionAlgorithm.TransformID)
+	plainText, err := security.DecryptMessage(ikeSecurityAssociation.SK_er, encryptedData, transformEncryptionAlgorithm.TransformID)
 	if err != nil {
 		return nil, errors.New("Error decrypting message")
 	}
@@ -373,7 +439,7 @@ func encryptProcedure(ikeSecurityAssociation *context.IKESecurityAssociation, ik
 		return errors.New("Encoding IKE payload failed.")
 	}
 
-	encryptedData, err := handler.EncryptMessage(ikeSecurityAssociation.SK_ei, notificationPayloadData, transformEncryptionAlgorithm.TransformID)
+	encryptedData, err := security.EncryptMessage(ikeSecurityAssociation.SK_ei, notificationPayloadData, transformEncryptionAlgorithm.TransformID)
 	if err != nil {
 		return errors.New("Error encrypting message")
 	}
@@ -386,7 +452,7 @@ func encryptProcedure(ikeSecurityAssociation *context.IKESecurityAssociation, ik
 	if err != nil {
 		return errors.New("Encoding IKE message error")
 	}
-	checksumOfMessage, err := handler.CalculateChecksum(ikeSecurityAssociation.SK_ai, responseIKEMessageData[:len(responseIKEMessageData)-checksumLength], transformIntegrityAlgorithm.TransformID)
+	checksumOfMessage, err := calculateChecksum(ikeSecurityAssociation.SK_ai, responseIKEMessageData[:len(responseIKEMessageData)-checksumLength], transformIntegrityAlgorithm.TransformID)
 	if err != nil {
 		return errors.New("Error calculating checksum")
 	}
@@ -394,7 +460,6 @@ func encryptProcedure(ikeSecurityAssociation *context.IKESecurityAssociation, ik
 	copy(checksumField, checksumOfMessage)
 
 	return nil
-
 }
 
 // [TS 24502] 9.3.2.2.2 EAP-Response/5G-NAS message
@@ -498,16 +563,7 @@ func parseIPAddressInformationToChildSecurityAssociation(
 		IP:   trafficSelectorRemote.StartAddress,
 		Mask: []byte{255, 255, 255, 255},
 	}
-
 	return nil
-}
-
-type PDUQoSInfo struct {
-	pduSessionID    uint8
-	qfiList         []uint8
-	isDefault       bool
-	isDSCPSpecified bool
-	DSCP            uint8
 }
 
 func parse5GQoSInfoNotify(n *message.Notification) (info *PDUQoSInfo, err error) {
@@ -650,7 +706,6 @@ func applyXFRMRule(ue_is_initiator bool, ifId uint32, childSecurityAssociation *
 	if err = netlink.XfrmPolicyAdd(xfrmPolicy); err != nil {
 		return fmt.Errorf("Set XFRM policy rule failed: %+v", err)
 	}
-
 	return nil
 }
 
@@ -778,7 +833,7 @@ func sendPduSessionEstablishmentRequest(
 	ikePayload = append(ikePayload, responseTrafficSelectorResponder)
 
 	// Nonce
-	localNonce := handler.GenerateRandomNumber().Bytes()
+	localNonce := security.GenerateRandomNumber().Bytes()
 	ikeSA.ConcatenatedNonce = append(ikeSA.ConcatenatedNonce, localNonce...)
 	ikePayload.BuildNonce(localNonce)
 
@@ -905,7 +960,7 @@ func sendPduSessionEstablishmentRequest(
 
 func TestNon3GPPUE(t *testing.T) {
 	// New UE
-	ue := NewRanUeContext("imsi-2089300007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA2,
+	ue := NewRanUeContext("imsi-2089300007487", 1, nasSecurity.AlgCiphering128NEA0, nasSecurity.AlgIntegrity128NIA2,
 		models.AccessType_NON_3_GPP_ACCESS)
 	ue.AmfUeNgapId = 1
 	ue.AuthenticationSubs = getAuthSubscription()
@@ -916,6 +971,7 @@ func TestNon3GPPUE(t *testing.T) {
 
 	// Used to save IPsec/IKE related data
 	n3ue := new(N3IWFUe)
+	n3ue.N3IWFIkeUe.N3iwfCtx = new(n3iwfContext.N3IWFContext)
 	n3ue.PduSessionList = make(map[int64]*context.PDUSession)
 	n3ue.N3IWFChildSecurityAssociation = make(map[uint32]*context.ChildSecurityAssociation)
 	n3ue.TemporaryExchangeMsgIDChildSAMapping = make(map[uint32]*context.ChildSecurityAssociation)
@@ -951,19 +1007,19 @@ func TestNon3GPPUE(t *testing.T) {
 	proposal.DiffieHellmanGroup.BuildTransform(message.TypeDiffieHellmanGroup, message.DH_2048_BIT_MODP, nil, nil, nil)
 
 	// Key exchange data
-	generator := new(big.Int).SetUint64(handler.Group14Generator)
-	factor, ok := new(big.Int).SetString(handler.Group14PrimeString, 16)
+	generator := new(big.Int).SetUint64(security.Group14Generator)
+	factor, ok := new(big.Int).SetString(security.Group14PrimeString, 16)
 	if !ok {
 		t.Fatalf("Generate key exchange data failed")
 	}
-	secert := handler.GenerateRandomNumber()
+	secert := security.GenerateRandomNumber()
 	localPublicKeyExchangeValue := new(big.Int).Exp(generator, secert, factor).Bytes()
 	prependZero := make([]byte, len(factor.Bytes())-len(localPublicKeyExchangeValue))
 	localPublicKeyExchangeValue = append(prependZero, localPublicKeyExchangeValue...)
 	ikeMessage.Payloads.BUildKeyExchange(message.DH_2048_BIT_MODP, localPublicKeyExchangeValue)
 
 	// Nonce
-	localNonce := handler.GenerateRandomNumber().Bytes()
+	localNonce := security.GenerateRandomNumber().Bytes()
 	ikeMessage.Payloads.BuildNonce(localNonce)
 
 	// Send to N3IWF
@@ -1364,7 +1420,7 @@ func TestNon3GPPUE(t *testing.T) {
 	P0 := make([]byte, 4)
 	binary.BigEndian.PutUint32(P0, ue.ULCount.Get()-1)
 	L0 := ueauth.KDFLen(P0)
-	P1 := []byte{security.AccessTypeNon3GPP}
+	P1 := []byte{nasSecurity.AccessTypeNon3GPP}
 	L1 := ueauth.KDFLen(P1)
 
 	Kn3iwf, err := ueauth.GetKDFValue(ue.Kamf, ueauth.FC_FOR_KGNB_KN3IWF_DERIVATION, P0, L0, P1, L1)
@@ -1372,7 +1428,7 @@ func TestNon3GPPUE(t *testing.T) {
 		t.Fatalf("Get Kn3iwf error : %+v", err)
 	}
 
-	pseudorandomFunction, ok := handler.NewPseudorandomFunction(ikeSecurityAssociation.SK_pi,
+	pseudorandomFunction, ok := security.NewPseudorandomFunction(ikeSecurityAssociation.SK_pi,
 		ikeSecurityAssociation.PseudorandomFunction.TransformID)
 	if !ok {
 		t.Fatalf("Get an unsupported pseudorandom funcion. This may imply an unsupported transform is chosen.")
@@ -1391,7 +1447,7 @@ func TestNon3GPPUE(t *testing.T) {
 
 	transformPseudorandomFunction := ikeSecurityAssociation.PseudorandomFunction
 
-	pseudorandomFunction, ok = handler.NewPseudorandomFunction(Kn3iwf, transformPseudorandomFunction.TransformID)
+	pseudorandomFunction, ok = security.NewPseudorandomFunction(Kn3iwf, transformPseudorandomFunction.TransformID)
 	if !ok {
 		t.Fatalf("Get an unsupported pseudorandom funcion. This may imply an unsupported transform is chosen.")
 	}
@@ -1399,7 +1455,7 @@ func TestNon3GPPUE(t *testing.T) {
 		t.Fatalf("Pseudorandom function write error: %+v", err)
 	}
 	secret := pseudorandomFunction.Sum(nil)
-	pseudorandomFunction, ok = handler.NewPseudorandomFunction(secret, transformPseudorandomFunction.TransformID)
+	pseudorandomFunction, ok = security.NewPseudorandomFunction(secret, transformPseudorandomFunction.TransformID)
 	if !ok {
 		t.Fatalf("Get an unsupported pseudorandom funcion. This may imply an unsupported transform is chosen.")
 	}
@@ -1678,7 +1734,7 @@ func TestNon3GPPUE(t *testing.T) {
 	ikePayload = append(ikePayload, responseTrafficSelectorResponder)
 
 	// Nonce
-	localNonce = handler.GenerateRandomNumber().Bytes()
+	localNonce = security.GenerateRandomNumber().Bytes()
 	ikeSecurityAssociation.ConcatenatedNonce = append(ikeSecurityAssociation.ConcatenatedNonce, localNonce...)
 	ikePayload.BuildNonce(localNonce)
 
@@ -1845,26 +1901,25 @@ func setUESecurityCapability(ue *RanUeContext) (UESecurityCapability *nasType.UE
 		Buffer: []uint8{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
 	}
 	switch ue.CipheringAlg {
-	case security.AlgCiphering128NEA0:
+	case nasSecurity.AlgCiphering128NEA0:
 		UESecurityCapability.SetEA0_5G(1)
-	case security.AlgCiphering128NEA1:
+	case nasSecurity.AlgCiphering128NEA1:
 		UESecurityCapability.SetEA1_128_5G(1)
-	case security.AlgCiphering128NEA2:
+	case nasSecurity.AlgCiphering128NEA2:
 		UESecurityCapability.SetEA2_128_5G(1)
-	case security.AlgCiphering128NEA3:
+	case nasSecurity.AlgCiphering128NEA3:
 		UESecurityCapability.SetEA3_128_5G(1)
 	}
 
 	switch ue.IntegrityAlg {
-	case security.AlgIntegrity128NIA0:
+	case nasSecurity.AlgIntegrity128NIA0:
 		UESecurityCapability.SetIA0_5G(1)
-	case security.AlgIntegrity128NIA1:
+	case nasSecurity.AlgIntegrity128NIA1:
 		UESecurityCapability.SetIA1_128_5G(1)
-	case security.AlgIntegrity128NIA2:
+	case nasSecurity.AlgIntegrity128NIA2:
 		UESecurityCapability.SetIA2_128_5G(1)
-	case security.AlgIntegrity128NIA3:
+	case nasSecurity.AlgIntegrity128NIA3:
 		UESecurityCapability.SetIA3_128_5G(1)
 	}
-
 	return
 }

@@ -601,7 +601,6 @@ func TestServiceRequest(t *testing.T) {
 	assert.Nil(t, err)
 
 	// UE is CM-IDLE now
-
 	time.Sleep(1 * time.Second)
 
 	ue.AmfUeNgapId = 2
@@ -621,6 +620,7 @@ func TestServiceRequest(t *testing.T) {
 	assert.Nil(t, err)
 
 	// update AMF UE NGAP ID
+	require.NotNil(t, ngapMsg.InitiatingMessage.Value.InitialContextSetupRequest)
 	ue.AmfUeNgapId = ngapMsg.InitiatingMessage.
 		Value.InitialContextSetupRequest.ProtocolIEs.List[0].Value.AMFUENGAPID.Value
 
