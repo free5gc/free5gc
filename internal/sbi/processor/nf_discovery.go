@@ -147,7 +147,7 @@ func (p *Processor) NFDiscoveryProcedure(c *gin.Context, queryParameters url.Val
 			nfProfile := nfProfilesStruct[i]
 			if nfProfile.BsfInfo != nil && nfProfile.BsfInfo.Ipv4AddressRanges != nil {
 				for j := range nfProfile.BsfInfo.Ipv4AddressRanges {
-					ipv4IntStart, errAtoi := strconv.Atoi((((nfProfilesStruct[i].BsfInfo.Ipv4AddressRanges)[j]).Start))
+					ipv4IntStart, errAtoi := strconv.Atoi(nfProfilesStruct[i].BsfInfo.Ipv4AddressRanges[j].Start)
 					if errAtoi != nil {
 						logger.DiscLog.Warnln("ipv4IntStart Atoi Error: ", errAtoi)
 					}

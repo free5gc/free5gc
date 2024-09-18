@@ -342,8 +342,8 @@ func nnrfNFManagementOption(nf *models.NrfNfManagementNfProfile, nfprofile *mode
 		if nfprofile.BsfInfo.Ipv6PrefixRanges != nil {
 			b := make([]models.NrfNfManagementIpv6PrefixRange, len(nfprofile.BsfInfo.Ipv6PrefixRanges))
 			for i := 0; i < len(nfprofile.BsfInfo.Ipv6PrefixRanges); i++ {
-				b[i].Start = Ipv6ToInt(((nfprofile.BsfInfo.Ipv6PrefixRanges)[i].Start)).String()
-				b[i].End = Ipv6ToInt(((nfprofile.BsfInfo.Ipv6PrefixRanges)[i].End)).String()
+				b[i].Start = Ipv6ToInt(nfprofile.BsfInfo.Ipv6PrefixRanges[i].Start).String()
+				b[i].End = Ipv6ToInt(nfprofile.BsfInfo.Ipv6PrefixRanges[i].End).String()
 			}
 			a.Ipv6PrefixRanges = b
 		}
