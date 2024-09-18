@@ -316,15 +316,15 @@ func (s *Server) GetNrfInfo() *models.NrfInfo {
 	// init
 	var nrfinfo models.NrfInfo
 
-	nrfinfo.ServedUdrInfo = s.getUdrInfo()
-	nrfinfo.ServedUdmInfo = s.getUdmInfo()
-	nrfinfo.ServedAusfInfo = s.getAusfInfo()
+	//nrfinfo.ServedUdrInfo = s.getUdrInfo()
+	//nrfinfo.ServedUdmInfo = s.getUdmInfo()
+	//nrfinfo.ServedAusfInfo = s.getAusfInfo()
 	nrfinfo.ServedAmfInfo = s.getAmfInfo()
-	nrfinfo.ServedSmfInfo = s.getSmfInfo()
-	nrfinfo.ServedUpfInfo = s.getUpfInfo()
-	nrfinfo.ServedPcfInfo = s.getPcfInfo()
+	//nrfinfo.ServedSmfInfo = s.getSmfInfo()
+	//nrfinfo.ServedUpfInfo = s.getUpfInfo()
+	//nrfinfo.ServedPcfInfo = s.getPcfInfo()
 	nrfinfo.ServedBsfInfo = s.getBsfInfo()
-	nrfinfo.ServedChfInfo = s.getChfInfo()
+	//nrfinfo.ServedChfInfo = s.getChfInfo()
 
 	return &nrfinfo
 }
@@ -357,8 +357,8 @@ func (s *Server) getUdrInfo() map[string]interface{} {
 	return servedUdrInfo
 }
 
-func (s *Server) getUdmInfo() map[string]interface{} {
-	servedUdmInfo := make(map[string]interface{})
+func (s *Server) getUdmInfo() map[string]models.UdmInfo {
+	servedUdmInfo := make(map[string]models.UdmInfo)
 	var UDMProfile models.NrfNfManagementNfProfile
 
 	collName := nrf_context.NfProfileCollName
@@ -385,8 +385,8 @@ func (s *Server) getUdmInfo() map[string]interface{} {
 	return servedUdmInfo
 }
 
-func (s *Server) getAusfInfo() map[string]interface{} {
-	servedAusfInfo := make(map[string]interface{})
+func (s *Server) getAusfInfo() map[string]models.AusfInfo {
+	servedAusfInfo := make(map[string]models.AusfInfo)
 	var AUSFProfile models.NrfNfManagementNfProfile
 
 	collName := nrf_context.NfProfileCollName
@@ -412,8 +412,8 @@ func (s *Server) getAusfInfo() map[string]interface{} {
 	return servedAusfInfo
 }
 
-func (s *Server) getAmfInfo() map[string]interface{} {
-	servedAmfinfo := make(map[string]interface{})
+func (s *Server) getAmfInfo() map[string]models.AmfInfo {
+	servedAmfinfo := make(map[string]models.AmfInfo)
 	var AMFProfile models.NrfNfManagementNfProfile
 
 	collName := nrf_context.NfProfileCollName
@@ -439,8 +439,8 @@ func (s *Server) getAmfInfo() map[string]interface{} {
 	return servedAmfinfo
 }
 
-func (s *Server) getSmfInfo() map[string]interface{} {
-	servedSmfInfo := make(map[string]interface{})
+func (s *Server) getSmfInfo() map[string]models.SmfInfo {
+	servedSmfInfo := make(map[string]models.SmfInfo)
 	var SMFProfile models.NrfNfManagementNfProfile
 
 	collName := nrf_context.NfProfileCollName
@@ -466,8 +466,8 @@ func (s *Server) getSmfInfo() map[string]interface{} {
 	return servedSmfInfo
 }
 
-func (s *Server) getUpfInfo() map[string]interface{} {
-	servedUpfInfo := make(map[string]interface{})
+func (s *Server) getUpfInfo() map[string]models.UpfInfo {
+	servedUpfInfo := make(map[string]models.UpfInfo)
 	var UPFProfile models.NrfNfManagementNfProfile
 
 	collName := nrf_context.NfProfileCollName
@@ -493,8 +493,8 @@ func (s *Server) getUpfInfo() map[string]interface{} {
 	return servedUpfInfo
 }
 
-func (s *Server) getPcfInfo() map[string]interface{} {
-	servedPcfInfo := make(map[string]interface{})
+func (s *Server) getPcfInfo() map[string]models.PcfInfo {
+	servedPcfInfo := make(map[string]models.PcfInfo)
 	var PCFProfile models.NrfNfManagementNfProfile
 
 	collName := nrf_context.NfProfileCollName
@@ -520,8 +520,8 @@ func (s *Server) getPcfInfo() map[string]interface{} {
 	return servedPcfInfo
 }
 
-func (s *Server) getBsfInfo() map[string]interface{} {
-	servedBsfInfo := make(map[string]interface{})
+func (s *Server) getBsfInfo() map[string]models.BsfInfo {
+	servedBsfInfo := make(map[string]models.BsfInfo)
 	var BSFProfile models.NrfNfManagementNfProfile
 
 	collName := nrf_context.NfProfileCollName
@@ -547,8 +547,8 @@ func (s *Server) getBsfInfo() map[string]interface{} {
 	return servedBsfInfo
 }
 
-func (s *Server) getChfInfo() map[string]interface{} {
-	servedChfInfo := make(map[string]interface{})
+func (s *Server) getChfInfo() map[string]models.ChfInfo {
+	servedChfInfo := make(map[string]models.ChfInfo)
 	var CHFProfile models.NrfNfManagementNfProfile
 
 	collName := nrf_context.NfProfileCollName
