@@ -1,6 +1,7 @@
 package processor
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -294,8 +295,10 @@ func (p *Processor) NFDeregisterProcedure(nfInstanceID string) *models.ProblemDe
 	// set info for NotificationData
 	Notification_event := models.NotificationEventType_DEREGISTERED
 
+	ctx := context.Background()
+
 	for _, uri := range uriList {
-		problemDetails := p.Consumer().SendNFStatusNotify(Notification_event, nfInstanceUri, uri, nil)
+		problemDetails := p.Consumer().SendNFStatusNotify(ctx, Notification_event, nfInstanceUri, uri, nil)
 		if problemDetails != nil {
 			return problemDetails
 		}
@@ -361,8 +364,10 @@ func (p *Processor) UpdateNFInstanceProcedure(nfInstanceID string, patchJSON []b
 	Notification_event := models.NotificationEventType_PROFILE_CHANGED
 	nfInstanceUri := nrf_context.GetNfInstanceURI(nfInstanceID)
 
+	ctx := context.Background()
+
 	for _, uri := range uriList {
-		p.Consumer().SendNFStatusNotify(Notification_event, nfInstanceUri, uri, &nfProfiles[0])
+		p.Consumer().SendNFStatusNotify(ctx, Notification_event, nfInstanceUri, uri, &nfProfiles[0])
 	}
 	return nf
 }
@@ -460,9 +465,11 @@ func (p *Processor) NFRegisterProcedure(
 		Notification_event := models.NotificationEventType_PROFILE_CHANGED
 		nfInstanceUri := locationHeaderValue
 
+		ctx := context.Background()
+
 		// receive the rsp from handler
 		for _, uri := range uriList {
-			problemDetails := p.Consumer().SendNFStatusNotify(Notification_event, nfInstanceUri, uri, nfProfile)
+			problemDetails := p.Consumer().SendNFStatusNotify(ctx, Notification_event, nfInstanceUri, uri, nfProfile)
 			if problemDetails != nil {
 				util.GinProblemJson(c, problemDetails)
 				return
@@ -482,8 +489,10 @@ func (p *Processor) NFRegisterProcedure(
 		// Add NF Register Conter
 		p.Context().AddNfRegister()
 
+		ctx := context.Background()
+
 		for _, uri := range uriList {
-			problemDetails := p.Consumer().SendNFStatusNotify(Notification_event, nfInstanceUri, uri, nfProfile)
+			problemDetails := p.Consumer().SendNFStatusNotify(ctx, Notification_event, nfInstanceUri, uri, nfProfile)
 			if problemDetails != nil {
 				util.GinProblemJson(c, problemDetails)
 				return
