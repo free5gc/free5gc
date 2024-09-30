@@ -1,6 +1,7 @@
 version: 1.0.3
 description: UPF initial local configuration
 
+# PFCP Configuration
 # The listen IP and nodeID of the N4 interface on this UPF (Can't set to 0.0.0.0)
 pfcp:
   addr: 127.0.0.8   # IP addr for listening
@@ -8,6 +9,7 @@ pfcp:
   retransTimeout: 1s # retransmission timeout
   maxRetrans: 3 # the max number of retransmission
 
+# GTP-U Configuration
 gtpu:
   forwarder: gtp5g
   # The IP list of the N3/N9 interfaces on this UPF
@@ -19,7 +21,8 @@ gtpu:
       # ifname: gtpif
       # mtu: 1400
 
-# The DNN list supported by UPF
+# Supported DNNs
+# List of Data Network Names (DNN) supported by this UPF.
 dnnList:
   - dnn: internet # Data Network Name
     cidr: 10.60.0.0/16 # Classless Inter-Domain Routing for assigned IPv4 pool of UE
@@ -27,7 +30,9 @@ dnnList:
     cidr: 10.61.0.0/16 # Classless Inter-Domain Routing for assigned IPv4 pool of UE
     # natifname: eth0
 
-logger: # log output setting
+# Logging Configuration
+# Controls logging level and output for the UPF.
+logger:
   enable: true # true or false
   level: info # how detailed to output, value: trace, debug, info, warn, error, fatal, panic
   reportCaller: false # enable the caller report or not, value: true or false
