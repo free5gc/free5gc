@@ -84,6 +84,6 @@ func (s *nnrfService) SendNFStatusNotify(
 		}
 		return problemDetails
 	}
-	
+
 	return nil
 }
