@@ -73,7 +73,7 @@ func (s *nnrfService) SendNFStatusNotify(
 		NrfNfManagementNotificationData: &notifcationData,
 	}
 
-	res, err := client.SubscriptionsCollectionApi.CreateSubscriptionOnNFStatusEventPost(
+	_, err := client.SubscriptionsCollectionApi.CreateSubscriptionOnNFStatusEventPost(
 		ctx, nfInstanceUri, request)
 	if err != nil {
 		logger.NfmLog.Infof("Notify fail: %v", err)
@@ -84,15 +84,6 @@ func (s *nnrfService) SendNFStatusNotify(
 		}
 		return problemDetails
 	}
-	if res != nil {
-		if res.AcceptEncoding != "" && res.AcceptEncoding != "application/json" {
-			logger.NfmLog.Warnln("Unexpected Accept-Encoding in response: ", res.AcceptEncoding)
-			problemDetails := &models.ProblemDetails{
-				Status: http.StatusUnsupportedMediaType,
-				Cause:  "NOTIFICATION_ERROR",
-			}
-			return problemDetails
-		}
-	}
+	
 	return nil
 }
