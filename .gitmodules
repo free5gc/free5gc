@@ -39,4 +39,4 @@
 	url = https://github.com/free5gc/tngf.git
 [submodule "NFs/nef"]
 	path = NFs/nef
-	url = git@github.com:free5gc/nef.git
+	url = https://github.com/free5gc/nef.git
