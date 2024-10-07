@@ -1,0 +1,23 @@
+info:
+  version: 1.0.1
+  description: NEF initial local configuration
+
+configuration:
+  sbi:
+    scheme: http # The protocol for sbi (http or https)
+    registerIPv4: 127.0.0.5 # IP used to register to NRF
+    bindingIPv4: 127.0.0.5 # IP used to bind the service
+    port: 8000 # port used to bind the service
+    tls: # the local path of TLS key
+      pem: cert/nef.pem # NEF TLS Certificate
+      key: cert/nef.key # NEF TLS Private key
+  nrfUri: http://127.0.0.10:8000 # A valid URI of NRF
+  nrfCertPem: cert/nrf.pem # NRF Certificate
+  serviceList: # the SBI services provided by this NEF
+    - serviceName: nnef-pfdmanagement # Nnef_PFDManagement Service
+    - serviceName: nnef-oam # OAM service
+
+logger: # log output setting
+  enable: true # true or false
+  level: info # how detailed to output, value: trace, debug, info, warn, error, fatal, panic
+  reportCaller: false # enable the caller report or not, value: true or false
