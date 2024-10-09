@@ -1,11 +1,10 @@
 package test_test
 
 import (
-	"bytes"
 	"context"
+	cryptorand "crypto/rand"
 
 	"encoding/base64"
-	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 	"net"
@@ -2574,52 +2573,30 @@ func TestReSynchronization(t *testing.T) {
 	K, OPC := make([]byte, 16), make([]byte, 16)
 	K, _ = hex.DecodeString(ue.AuthenticationSubs.PermanentKey.PermanentKeyValue)
 	OPC, _ = hex.DecodeString(ue.AuthenticationSubs.Opc.OpcValue)
-	SQN := make([]byte, 6)
-	AK := make([]byte, 6)
-
 	rand := nasPdu.AuthenticationRequest.GetRANDValue()
-	milenage.F2345(OPC, K, rand[:], nil, nil, nil, AK, nil)
-	autn := nasPdu.AuthenticationRequest.GetAUTN()
-	SQNxorAK := autn[:6]
-	for i := 0; i < 6; i++ {
-		SQN[i] = AK[i] ^ SQNxorAK[i]
-	}
-	const SqnMAx int64 = 0x7FFFFFFFFFF
-	const SqnMs int64 = 0
-	const IND int64 = 32
-	var newSqnMsString string
-	SQNBuffer := make([]byte, 8)
-	copy(SQNBuffer[2:], SQN)
-	r := bytes.NewReader(SQNBuffer)
-	var retrieveSqn int64
-	if err := binary.Read(r, binary.BigEndian, &retrieveSqn); err != nil {
-		fmt.Println("err", err)
-		return
-	}
 
-	delita := retrieveSqn - SqnMs
-	if delita < 0x7FFFFFFFFFF {
-		newSqnMsString = "000000000000"
-	}
+	// Based on TS 33.105, clause 5.1.1.3. The SQN_ms is a SQN value managed by the mobile station (or UE).
+	// Whenever the UE finds that SQN_ms is not in synced with SQN sent by the AMF, it start the
+	// re-synchronization process, sending AUTS (Authentication Token for Synchronization) to the
+	// AMF. AUTS is concatenation of concealed SQN_ms and MAC_S.
+	// AUTS = SQN_ms [^ AK*] | MAC-S
 
-	newSqnMs, _ := hex.DecodeString(newSqnMsString)
-	MAC_A, MAC_S := make([]byte, 8), make([]byte, 8)
-	CK, IK := make([]byte, 16), make([]byte, 16)
-	RES := make([]byte, 8)
-	AK, AKstar := make([]byte, 6), make([]byte, 6)
-	AMF, _ := hex.DecodeString("0000")
-	milenage.F1(OPC, K, rand[:], newSqnMs, AMF, MAC_A, MAC_S)
-	milenage.F2345(OPC, K, rand[:], RES, CK, IK, AK, AKstar)
+	// To test out that core network synchronize the SQN properly. We generated a random SQN here.
+	var randomSqnMs [6]byte
+	_, err = cryptorand.Read(randomSqnMs[:])
+	assert.Nil(t, err)
 
+	// Build AUTS
+	AK, MAC_S := make([]byte, 6), make([]byte, 8)
+	AMF, _ := hex.DecodeString("0000") // Re-Sync AMF
+	milenage.F1(OPC, K, rand[:], randomSqnMs[:], AMF, nil, MAC_S)
+	milenage.F2345(OPC, K, rand[:], nil, nil, nil, nil, AK)
 	SQNmsxorAK := make([]byte, 6)
-	for i := 0; i < len(SQN); i++ {
-		SQNxorAK[i] = SQN[i] ^ AK[i]
+	for i := 0; i < 6; i++ {
+		SQNmsxorAK[i] = randomSqnMs[i] ^ AK[i]
 	}
-	ColSQNmsxorAK := make([]byte, 6)
-	for i := 0; i < len(SQN); i++ {
-		ColSQNmsxorAK[i] = SQNmsxorAK[i] ^ AKstar[i]
-	}
-	AUTS := append(ColSQNmsxorAK, MAC_S...)
+	AUTS := append(SQNmsxorAK, MAC_S...)
+
 	// compute SQN by AUTN, K, AK
 	// suppose
 	// send NAS Authentication Rejcet
@@ -2645,10 +2622,12 @@ func TestReSynchronization(t *testing.T) {
 		"Received wrong GMM message. Expected Authentication Request.")
 	rand = nasPdu.AuthenticationRequest.GetRANDValue()
 
+	// After re-synchronization, check if the SQN is updated
 	milenage.F2345(OPC, K, rand[:], nil, nil, nil, AK, nil)
-	autn = nasPdu.AuthenticationRequest.GetAUTN()
-	SQNxorAK = autn[:6]
+	autn := nasPdu.AuthenticationRequest.GetAUTN()
+	SQNxorAK := autn[:6]
 
+	SQN := make([]byte, 6)
 	for i := 0; i < 6; i++ {
 		SQN[i] = AK[i] ^ SQNxorAK[i]
 	}
