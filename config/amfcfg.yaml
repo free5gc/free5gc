@@ -7,7 +7,9 @@ configuration:
   ngapIpList:  # the IP list of N2 interfaces on this AMF
     - 127.0.0.18
   ngapPort: 38412 # the SCTP port listened by NGAP
-  sbi: # Service-based interface information
+
+  # Service-based Interface (SBI) Configuration
+  sbi:
     scheme: http # the protocol for sbi (http or https)
     registerIPv4: 127.0.0.18 # IP used to register to NRF
     bindingIPv4: 127.0.0.18  # IP used to bind the service
@@ -15,24 +17,32 @@ configuration:
     tls: # the local path of TLS key
       pem: cert/amf.pem # AMF TLS Certificate
       key: cert/amf.key # AMF TLS Private key
-  serviceNameList: # the SBI services provided by this AMF, refer to TS 29.518
+
+  # SBI Services offered by this AMF, as per TS 29.518
+  serviceNameList:
     - namf-comm # Namf_Communication service
     - namf-evts # Namf_EventExposure service
     - namf-mt   # Namf_MT service
     - namf-loc  # Namf_Location service
     - namf-oam  # OAM service
-  servedGuamiList: # Guami (Globally Unique AMF ID) list supported by this AMF
+
+  # Guami (Globally Unique AMF ID) list supported by this AMF
+  servedGuamiList:
     # <GUAMI> = <MCC><MNC><AMF ID>
     - plmnId: # Public Land Mobile Network ID, <PLMN ID> = <MCC><MNC>
         mcc: 208 # Mobile Country Code (3 digits string, digit: 0~9)
         mnc: 93 # Mobile Network Code (2 or 3 digits string, digit: 0~9)
       amfId: cafe00 # AMF identifier (3 bytes hex string, range: 000000~FFFFFF)
-  supportTaiList:  # the TAI (Tracking Area Identifier) list supported by this AMF
+
+  # the TAI (Tracking Area Identifier) list supported by this AMF
+  supportTaiList:
     - plmnId: # Public Land Mobile Network ID, <PLMN ID> = <MCC><MNC>
         mcc: 208 # Mobile Country Code (3 digits string, digit: 0~9)
         mnc: 93 # Mobile Network Code (2 or 3 digits string, digit: 0~9)
       tac: 000001 # Tracking Area Code (3 bytes hex string, range: 000000~FFFFFF)
-  plmnSupportList: # the PLMNs (Public land mobile network) list supported by this AMF
+
+  # the PLMNs (Public land mobile network) list supported by this AMF
+  plmnSupportList:
     - plmnId: # Public Land Mobile Network ID, <PLMN ID> = <MCC><MNC>
         mcc: 208 # Mobile Country Code (3 digits string, digit: 0~9)
         mnc: 93 # Mobile Network Code (2 or 3 digits string, digit: 0~9)
@@ -41,28 +51,40 @@ configuration:
           sd: 010203 # Slice Differentiator (3 bytes hex string, range: 000000~FFFFFF)
         - sst: 1 # Slice/Service Type (uinteger, range: 0~255)
           sd: 112233 # Slice Differentiator (3 bytes hex string, range: 000000~FFFFFF)
-  supportDnnList:  # the DNN (Data Network Name) list supported by this AMF
+
+  # the DNN (Data Network Name) list supported by this AMF
+  supportDnnList:
     - internet
   nrfUri: http://127.0.0.10:8000 # a valid URI of NRF
   nrfCertPem: cert/nrf.pem # NRF Certificate
-  security:  # NAS security parameters
-    integrityOrder: # the priority of integrity algorithms
+
+  # NAS Security Configuration
+  # the priority of integrity algorithms
+  # the priority of ciphering algorithms
+  security:
+    integrityOrder:
       - NIA2
       # - NIA0
-    cipheringOrder: # the priority of ciphering algorithms
+    cipheringOrder:
       - NEA0
       - NEA2
-  networkName:  # the name of this core network
+
+  # Network Name Information
+  networkName:
     full: free5GC
     short: free
-  ngapIE: # Optional NGAP IEs
+
+  # Optional NGAP Information Elements (IE)
+  ngapIE:
     mobilityRestrictionList: # Mobility Restriction List IE, refer to TS 38.413
       enable: true # append this IE in related message or not
     maskedIMEISV: # Masked IMEISV IE, refer to TS 38.413
       enable: true # append this IE in related message or not
     redirectionVoiceFallback: # Redirection Voice Fallback IE, refer to TS 38.413
       enable: false # append this IE in related message or not
-  nasIE: # Optional NAS IEs
+
+  # Optional NAS Information Elements (IE)
+  nasIE:
     networkFeatureSupport5GS: # 5gs Network Feature Support IE, refer to TS 24.501
       enable: true # append this IE in Registration accept or not
       length: 1 # IE content length (uinteger, range: 1~3)
@@ -112,7 +134,9 @@ configuration:
     expireTime: 6s   # default is 6 seconds
     maxRetryTimes: 4 # the max number of retransmission
   locality: area1 # Name of the location where a set of AMF, SMF, PCF and UPFs are located
-  sctp: # set the sctp server setting <optinal>, once this field is set, please also add maxInputStream, maxOsStream, maxAttempts, maxInitTimeOut
+
+  # set the sctp server setting <optinal>, once this field is set, please also add maxInputStream, maxOsStream, maxAttempts, maxInitTimeOut
+  sctp:
     numOstreams: 3 # the maximum out streams of each sctp connection
     maxInstreams: 5 # the maximum in streams of each sctp connection
     maxAttempts: 2 # the maximum attempts of each sctp connection
