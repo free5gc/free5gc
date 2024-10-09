@@ -3,12 +3,11 @@ package TestSMPolicy
 import (
 	"time"
 
-	"github.com/free5gc/openapi/models"
+	"github.com/free5gc/openapi-r17/models"
 )
 
 func CreateTestData() models.SmPolicyContextData {
 	t := time.Date(2000, 2, 1, 12, 30, 0, 0, time.UTC)
-	// timeNow := time.Now()
 	smReqData := models.SmPolicyContextData{
 		NotificationUri: "https://127.0.0.1:29502/nsmf-callback/v1/sm-policies/imsi-2089300007487-1",
 		// AccNetChId: &models.AccNetChId{
@@ -31,7 +30,7 @@ func CreateTestData() models.SmPolicyContextData {
 		// Chargingcharacteristics: "string",
 		Dnn:            "internet",
 		PduSessionType: models.PduSessionType_IPV4,
-		ServingNetwork: &models.NetworkId{
+		ServingNetwork: &models.PlmnIdNid{
 			Mcc: "208",
 			Mnc: "93",
 		},
@@ -102,12 +101,14 @@ func CreateTestData() models.SmPolicyContextData {
 	return smReqData
 }
 
-func UpdateTestData(trigger []models.PolicyControlRequestTrigger, op *models.RuleOperation) models.SmPolicyUpdateContextData {
+func UpdateTestData(
+	trigger []models.PolicyControlRequestTrigger, op *models.RuleOperation,
+) models.SmPolicyUpdateContextData {
 	t := time.Date(2000, 2, 1, 12, 30, 0, 0, time.UTC)
 	data := models.SmPolicyUpdateContextData{
 		RepPolicyCtrlReqTriggers: trigger,
 		AccessType:               models.AccessType__3_GPP_ACCESS,
-		ServingNetwork: &models.NetworkId{
+		ServingNetwork: &models.PlmnIdNid{
 			Mnc: "208",
 			Mcc: "93",
 		},
@@ -159,7 +160,7 @@ func UpdateTestData(trigger []models.PolicyControlRequestTrigger, op *models.Rul
 		},
 		ServNfId: &models.ServingNfIdentity{
 			Guami: &models.Guami{
-				PlmnId: &models.PlmnId{
+				PlmnId: &models.PlmnIdNid{
 					Mcc: "208",
 					Mnc: "93",
 				},

@@ -2,13 +2,14 @@ package TestPDUSession
 
 import (
 	"bytes"
+	"log"
 
 	"github.com/google/uuid"
 
 	"github.com/free5gc/nas"
 	"github.com/free5gc/nas/nasMessage"
 	"github.com/free5gc/nas/nasType"
-	"github.com/free5gc/openapi/models"
+	"github.com/free5gc/openapi-r17/models"
 )
 
 const (
@@ -80,55 +81,71 @@ func GetEstablishmentRequestData(testType string) (n1SmBytes []byte) {
 	m.GsmMessage = nas.NewGsmMessage()
 	m.PDUSessionEstablishmentRequest = nasMessage.NewPDUSessionEstablishmentRequest(0x0)
 	n1SmBuf := bytes.Buffer{}
-	m.PDUSessionEstablishmentRequest.ExtendedProtocolDiscriminator.SetExtendedProtocolDiscriminator(table.inExtendedProtocolDiscriminator)
+	m.PDUSessionEstablishmentRequest.
+		ExtendedProtocolDiscriminator.SetExtendedProtocolDiscriminator(table.inExtendedProtocolDiscriminator)
 	m.PDUSessionEstablishmentRequest.PDUSessionID.SetPDUSessionID(table.inPDUSessionID)
 	m.PDUSessionEstablishmentRequest.PTI.SetPTI(table.inPTI)
-	m.PDUSessionEstablishmentRequest.PDUSESSIONESTABLISHMENTREQUESTMessageIdentity.SetMessageType(table.inPDUSESSIONESTABLISHMENTREQUESTMessageIdentity)
+	m.PDUSessionEstablishmentRequest.
+		PDUSESSIONESTABLISHMENTREQUESTMessageIdentity.SetMessageType(table.inPDUSESSIONESTABLISHMENTREQUESTMessageIdentity)
 	m.PDUSessionEstablishmentRequest.IntegrityProtectionMaximumDataRate = table.inIntegrityProtectionMaximumDataRate
 
-	m.PDUSessionEstablishmentRequest.PDUSessionType = nasType.NewPDUSessionType(nasMessage.PDUSessionEstablishmentRequestPDUSessionTypeType)
+	m.PDUSessionEstablishmentRequest.PDUSessionType =
+		nasType.NewPDUSessionType(nasMessage.PDUSessionEstablishmentRequestPDUSessionTypeType)
 	m.PDUSessionEstablishmentRequest.PDUSessionType = &table.inPDUSessionType
 
 	m.PDUSessionEstablishmentRequest.SSCMode = nasType.NewSSCMode(nasMessage.PDUSessionEstablishmentRequestSSCModeType)
 	m.PDUSessionEstablishmentRequest.SSCMode = &table.inSSCMode
 
-	m.PDUSessionEstablishmentRequest.Capability5GSM = nasType.NewCapability5GSM(nasMessage.PDUSessionEstablishmentRequestCapability5GSMType)
+	m.PDUSessionEstablishmentRequest.Capability5GSM =
+		nasType.NewCapability5GSM(nasMessage.PDUSessionEstablishmentRequestCapability5GSMType)
 	m.PDUSessionEstablishmentRequest.Capability5GSM = &table.inCapability5GSM
 
-	m.PDUSessionEstablishmentRequest.MaximumNumberOfSupportedPacketFilters = nasType.NewMaximumNumberOfSupportedPacketFilters(nasMessage.PDUSessionEstablishmentRequestMaximumNumberOfSupportedPacketFiltersType)
-	m.PDUSessionEstablishmentRequest.MaximumNumberOfSupportedPacketFilters = &table.inMaximumNumberOfSupportedPacketFilters
+	m.PDUSessionEstablishmentRequest.MaximumNumberOfSupportedPacketFilters =
+		nasType.NewMaximumNumberOfSupportedPacketFilters(
+			nasMessage.PDUSessionEstablishmentRequestMaximumNumberOfSupportedPacketFiltersType)
+	m.PDUSessionEstablishmentRequest.MaximumNumberOfSupportedPacketFilters =
+		&table.inMaximumNumberOfSupportedPacketFilters
 
-	m.PDUSessionEstablishmentRequest.AlwaysonPDUSessionRequested = nasType.NewAlwaysonPDUSessionRequested(nasMessage.PDUSessionEstablishmentRequestAlwaysonPDUSessionRequestedType)
-	m.PDUSessionEstablishmentRequest.AlwaysonPDUSessionRequested = &table.inAlwaysonPDUSessionRequested
+	m.PDUSessionEstablishmentRequest.AlwaysonPDUSessionRequested =
+		nasType.NewAlwaysonPDUSessionRequested(nasMessage.PDUSessionEstablishmentRequestAlwaysonPDUSessionRequestedType)
+	m.PDUSessionEstablishmentRequest.AlwaysonPDUSessionRequested =
+		&table.inAlwaysonPDUSessionRequested
 
-	m.PDUSessionEstablishmentRequest.SMPDUDNRequestContainer = nasType.NewSMPDUDNRequestContainer(nasMessage.PDUSessionEstablishmentRequestSMPDUDNRequestContainerType)
-	m.PDUSessionEstablishmentRequest.SMPDUDNRequestContainer = &table.inSMPDUDNRequestContainer
+	m.PDUSessionEstablishmentRequest.SMPDUDNRequestContainer =
+		nasType.NewSMPDUDNRequestContainer(nasMessage.PDUSessionEstablishmentRequestSMPDUDNRequestContainerType)
+	m.PDUSessionEstablishmentRequest.SMPDUDNRequestContainer =
+		&table.inSMPDUDNRequestContainer
 
-	m.PDUSessionEstablishmentRequest.ExtendedProtocolConfigurationOptions = nasType.NewExtendedProtocolConfigurationOptions(nasMessage.PDUSessionEstablishmentRequestExtendedProtocolConfigurationOptionsType)
+	m.PDUSessionEstablishmentRequest.ExtendedProtocolConfigurationOptions =
+		nasType.NewExtendedProtocolConfigurationOptions(
+			nasMessage.PDUSessionEstablishmentRequestExtendedProtocolConfigurationOptionsType)
 	m.PDUSessionEstablishmentRequest.ExtendedProtocolConfigurationOptions = &table.inExtendedProtocolConfigurationOptions
-	m.PDUSessionEstablishmentRequest.EncodePDUSessionEstablishmentRequest(&n1SmBuf)
+	err := m.PDUSessionEstablishmentRequest.EncodePDUSessionEstablishmentRequest(&n1SmBuf)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	n1SmBytes = n1SmBuf.Bytes()
 	return n1SmBytes
 }
 
-var ConsumerSMFPDUSessionSMContextCreateTable = make(map[string]models.SmContextCreateData)
+var ConsumerSMFPDUSessionSMContextCreateTable = make(map[string]models.SmfPduSessionSmContextCreateData)
 
 func init() {
-	ConsumerSMFPDUSessionSMContextCreateTable[SERVICE_REQUEST] = models.SmContextCreateData{
+	ConsumerSMFPDUSessionSMContextCreateTable[SERVICE_REQUEST] = models.SmfPduSessionSmContextCreateData{
 		Supi:                "imsi-2089300007487",
 		UnauthenticatedSupi: false,
 		PduSessionId:        2,
 		Dnn:                 "internet",
 		ServingNfId:         uuid.New().String(),
 		Guami: &models.Guami{
-			PlmnId: &models.PlmnId{
+			PlmnId: &models.PlmnIdNid{
 				Mcc: "208",
 				Mnc: "93",
 			},
 			AmfId: "cafe00",
 		},
-		ServingNetwork: &models.PlmnId{
+		ServingNetwork: &models.PlmnIdNid{
 			Mcc: "208",
 			Mnc: "93",
 		},
@@ -206,17 +223,17 @@ var ConsumerSMFPDUSessionUpdateContextTable = make(map[string]models.UpdateSmCon
 
 func init() {
 	ConsumerSMFPDUSessionUpdateContextTable[ACTIVATING] = models.UpdateSmContextRequest{
-		JsonData: &models.SmContextUpdateData{
+		JsonData: &models.SmfPduSessionSmContextUpdateData{
 			UpCnxState:  ACTIVATING,
 			ServingNfId: uuid.New().String(),
 			Guami: &models.Guami{
-				PlmnId: &models.PlmnId{
+				PlmnId: &models.PlmnIdNid{
 					Mcc: "208",
 					Mnc: "93",
 				},
 				AmfId: "cafe00",
 			},
-			ServingNetwork: &models.PlmnId{
+			ServingNetwork: &models.PlmnIdNid{
 				Mcc: "208",
 				Mnc: "93",
 			},

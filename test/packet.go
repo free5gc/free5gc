@@ -1,9 +1,6 @@
 package test
 
 import (
-
-	// "github.com/free5gc/openapi/models"
-
 	"encoding/binary"
 	"fmt"
 	"net"

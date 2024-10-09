@@ -1,7 +1,7 @@
 package TestGenAuthData
 
 import (
-	"github.com/free5gc/openapi/models"
+	"github.com/free5gc/openapi-r17/models"
 )
 
 type milenageTestSet struct {
