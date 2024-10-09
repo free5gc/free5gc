@@ -13,7 +13,10 @@ pfcp:
 gtpu:
   forwarder: gtp5g
   # The IP list of the N3/N9 interfaces on this UPF
-  # If there are multiple connection, set addr to 0.0.0.0 or list all the addresses
+  # You can bind this to a specific IP from your available subnets (e.g., 10.10.0.1).
+  # Alternatively, you can bind it to all interfaces using 0.0.0.0.
+  # If you bind to a specific IP, ensure SMF uses the same IP in its N3 configuration.
+  # If you bind to all (0.0.0.0), SMF can use any of the available UPF IPs, but do not use 0.0.0.0 in SMF.
   ifList:
     - addr: 127.0.0.8
       type: N3

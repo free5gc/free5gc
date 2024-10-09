@@ -59,11 +59,13 @@ configuration:
   nrfCertPem: cert/nrf.pem # NRF Certificate
 
   # NAS Security Configuration
+  # the priority of integrity algorithms
+  # the priority of ciphering algorithms
   security:
-    integrityOrder: # the priority of integrity algorithms
+    integrityOrder:
       - NIA2
       # - NIA0
-    cipheringOrder: # the priority of ciphering algorithms
+    cipheringOrder:
       - NEA0
       - NEA2
 

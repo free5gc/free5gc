@@ -84,6 +84,10 @@ configuration:
                   - cidr: 10.61.0.0/16
                 staticPools:
                   - cidr: 10.61.100.0/24
+        # The IP address for the N3 interface must match the IP bound in the UPF N3 interface.
+        # If UPF binds to a specific IP, set that same IP here.
+        # If UPF binds to all IPs (0.0.0.0), you can set any of the available UPF IPs here.
+        # Do NOT set 0.0.0.0 as this is not a valid routable address.
         interfaces: # Interface list for this UPF
           - interfaceType: N3 # the type of the interface (N3 or N9)
             endpoints: # the IP address of this N3/N9 interface on this UPF
