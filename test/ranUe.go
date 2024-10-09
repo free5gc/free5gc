@@ -16,7 +16,8 @@ import (
 	"github.com/free5gc/nas/nasMessage"
 	"github.com/free5gc/nas/nasType"
 	"github.com/free5gc/nas/security"
-	"github.com/free5gc/openapi/models"
+	"github.com/free5gc/openapi-r17/models"
+	models_r15 "github.com/free5gc/openapi/models"
 	"github.com/free5gc/util/milenage"
 	"github.com/free5gc/util/ueauth"
 	"github.com/free5gc/webconsole/backend/WebUI"
@@ -34,7 +35,7 @@ type RanUeContext struct {
 	KnasInt            [16]uint8
 	Kamf               []uint8
 	AnType             models.AccessType
-	AuthenticationSubs models.AuthenticationSubscription
+	AuthenticationSubs models_r15.AuthenticationSubscription
 }
 
 func CalculateIpv4HeaderChecksum(hdr *ipv4.Header) uint32 {
@@ -54,63 +55,63 @@ func CalculateIpv4HeaderChecksum(hdr *ipv4.Header) uint32 {
 	return ^(Checksum&0xffff0000>>16 + Checksum&0xffff)
 }
 
-func GetAuthSubscription(k, opc, op string) models.AuthenticationSubscription {
-	var authSubs models.AuthenticationSubscription
-	authSubs.PermanentKey = &models.PermanentKey{
+func GetAuthSubscription(k, opc, op string) models_r15.AuthenticationSubscription {
+	var authSubs models_r15.AuthenticationSubscription
+	authSubs.PermanentKey = &models_r15.PermanentKey{
 		PermanentKeyValue: k,
 	}
-	authSubs.Opc = &models.Opc{
+	authSubs.Opc = &models_r15.Opc{
 		OpcValue: opc,
 	}
-	authSubs.Milenage = &models.Milenage{
-		Op: &models.Op{
+	authSubs.Milenage = &models_r15.Milenage{
+		Op: &models_r15.Op{
 			OpValue: op,
 		},
 	}
 	authSubs.AuthenticationManagementField = "8000"
 
 	authSubs.SequenceNumber = TestGenAuthData.MilenageTestSet19.SQN
-	authSubs.AuthenticationMethod = models.AuthMethod__5_G_AKA
+	authSubs.AuthenticationMethod = models_r15.AuthMethod__5_G_AKA
 	return authSubs
 }
 
-func GetEAPAKAPrimeAuthSubscription(k, opc, op string) models.AuthenticationSubscription {
-	var authSubs models.AuthenticationSubscription
-	authSubs.PermanentKey = &models.PermanentKey{
+func GetEAPAKAPrimeAuthSubscription(k, opc, op string) models_r15.AuthenticationSubscription {
+	var authSubs models_r15.AuthenticationSubscription
+	authSubs.PermanentKey = &models_r15.PermanentKey{
 		PermanentKeyValue: k,
 	}
-	authSubs.Opc = &models.Opc{
+	authSubs.Opc = &models_r15.Opc{
 		OpcValue: opc,
 	}
-	authSubs.Milenage = &models.Milenage{
-		Op: &models.Op{
+	authSubs.Milenage = &models_r15.Milenage{
+		Op: &models_r15.Op{
 			OpValue: op,
 		},
 	}
 	authSubs.AuthenticationManagementField = "8000"
 
 	authSubs.SequenceNumber = TestGenAuthData.MilenageTestSet19.SQN
-	authSubs.AuthenticationMethod = models.AuthMethod_EAP_AKA_PRIME
+	authSubs.AuthenticationMethod = models_r15.AuthMethod_EAP_AKA_PRIME
 	return authSubs
 }
 
-func GetAccessAndMobilitySubscriptionData() (amData models.AccessAndMobilitySubscriptionData) {
+func GetAccessAndMobilitySubscriptionData() (amData models_r15.AccessAndMobilitySubscriptionData) {
 	return TestRegistrationProcedure.TestAmDataTable[TestRegistrationProcedure.FREE5GC_CASE]
 }
 
-func GetSmfSelectionSubscriptionData() (smfSelData models.SmfSelectionSubscriptionData) {
+func GetSmfSelectionSubscriptionData() (smfSelData models_r15.SmfSelectionSubscriptionData) {
 	return TestRegistrationProcedure.TestSmfSelDataTable[TestRegistrationProcedure.FREE5GC_CASE]
 }
 
-func GetSessionManagementSubscriptionData() (smfSelData []models.SessionManagementSubscriptionData) {
+func GetSessionManagementSubscriptionData() (smfSelData []models_r15.SessionManagementSubscriptionData) {
 	return TestRegistrationProcedure.TestSmSelDataTable[TestRegistrationProcedure.FREE5GC_CASE]
 }
 
-func GetAmPolicyData() (amPolicyData models.AmPolicyData) {
+func GetAmPolicyData() (amPolicyData models_r15.AmPolicyData) {
 	return TestRegistrationProcedure.TestAmPolicyDataTable[TestRegistrationProcedure.FREE5GC_CASE]
 }
 
-func GetSmPolicyData() (smPolicyData models.SmPolicyData) {
+func GetSmPolicyData() (smPolicyData models_r15.SmPolicyData) {
 	return TestRegistrationProcedure.TestSmPolicyDataTable[TestRegistrationProcedure.FREE5GC_CASE]
 }
 
@@ -138,7 +139,7 @@ func NewRanUeContext(supi string, ranUeNgapId int64, cipheringAlg, integrityAlg 
 }
 
 func (ue *RanUeContext) DeriveRESstarAndSetKey(
-	authSubs models.AuthenticationSubscription, rand []byte, snName string) []byte {
+	authSubs models_r15.AuthenticationSubscription, rand []byte, snName string) []byte {
 
 	sqn, err := hex.DecodeString(authSubs.SequenceNumber)
 	if err != nil {
@@ -212,7 +213,7 @@ func (ue *RanUeContext) DeriveRESstarAndSetKey(
 }
 
 func (ue *RanUeContext) DeriveResEAPMessageAndSetKey(
-	authSubs models.AuthenticationSubscription, eAPMessage []byte, snName string) []byte {
+	authSubs models_r15.AuthenticationSubscription, eAPMessage []byte, snName string) []byte {
 
 	sqn, err := hex.DecodeString(authSubs.SequenceNumber)
 	if err != nil {

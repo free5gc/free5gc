@@ -33,8 +33,8 @@ import (
 	"github.com/free5gc/nas/security"
 	"github.com/free5gc/ngap"
 	"github.com/free5gc/ngap/ngapType"
-	"github.com/free5gc/openapi/Npcf_PolicyAuthorization"
-	"github.com/free5gc/openapi/models"
+	"github.com/free5gc/openapi-r17/models"
+	Npcf_PolicyAuthorization "github.com/free5gc/openapi-r17/pcf/PolicyAuthorization"
 	"github.com/free5gc/util/httpwrapper"
 	"github.com/free5gc/util/milenage"
 )
@@ -2489,8 +2489,10 @@ func TestAFInfluenceOnTrafficRouting(t *testing.T) {
 	client := Npcf_PolicyAuthorization.NewAPIClient(cfg)
 
 	appSessCtx := TestPolicyAuthorization.GetPostAppSessionsData_AFInfluenceOnTrafficRouting()
-
-	_, _, err = client.ApplicationSessionsCollectionApi.PostAppSessions(context.Background(), appSessCtx)
+	postAppSesionReq := &Npcf_PolicyAuthorization.PostAppSessionsRequest{
+		AppSessionContext: &appSessCtx,
+	}
+	_, err = client.ApplicationSessionsCollectionApi.PostAppSessions(context.Background(), postAppSesionReq)
 	assert.Nil(t, err, "PolicyAuthorize failed")
 
 	time.Sleep(1 * time.Second)

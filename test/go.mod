@@ -16,6 +16,7 @@ require (
 	github.com/free5gc/nrf v0.0.0
 	github.com/free5gc/nssf v0.0.0
 	github.com/free5gc/openapi v1.0.9-0.20240730084323-449098e08462
+	github.com/free5gc/openapi-r17 v0.0.0-00010101000000-000000000000
 	github.com/free5gc/pcf v0.0.0
 	github.com/free5gc/sctp v1.0.1
 	github.com/free5gc/smf v1.2.4
@@ -147,3 +148,5 @@ replace (
 	github.com/free5gc/upf => ../NFs/upf
 	github.com/free5gc/webconsole => ../webconsole
 )
+
+replace github.com/free5gc/openapi-r17 => github.com/free5gc/openapi v1.0.9-0.20240823100026-6a9f667e914f

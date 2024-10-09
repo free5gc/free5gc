@@ -167,6 +167,8 @@ github.com/free5gc/ngap v1.0.9-0.20240708062829-734d184eed74 h1:foSd3OVtTfDmn3EZ
 github.com/free5gc/ngap v1.0.9-0.20240708062829-734d184eed74/go.mod h1:UsPP9LWVyNwu5sm7ZE5toAFeBNkkyj0rh+4Q3ylRBi8=
 github.com/free5gc/openapi v1.0.9-0.20240730084323-449098e08462 h1:bK9UWqOhoddpAW9RfZRp4DPZNnPfEUeHvo4I86YAuzA=
 github.com/free5gc/openapi v1.0.9-0.20240730084323-449098e08462/go.mod h1:afeuEQ21QCQDxZHnFjCmYrq3gBi+cd/WDNSUbaMcILo=
+github.com/free5gc/openapi v1.0.9-0.20240823100026-6a9f667e914f h1:b//Fa0CvIDU7fufqMcrEgbVUqpubokK/lFgkTxN3fGM=
+github.com/free5gc/openapi v1.0.9-0.20240823100026-6a9f667e914f/go.mod h1:aKw6uGzEibGDrn9++w4/JpWxaaUBo7GaqsvuFKU9fl4=
 github.com/free5gc/pfcp v1.0.7 h1:20/4PGok8Ihy+NfYQzic39zVq3ZB4/gdZhDO1676TMQ=
 github.com/free5gc/pfcp v1.0.7/go.mod h1:57l3+7h2o1Sg8vbgl0kflROwuEQltx2VbULLrV9F1Ts=
 github.com/free5gc/sctp v1.0.1 h1:g8WDO97r8B9ubkT5Hyk9b4I1fZUOii9Z39gQ2eRaASo=
