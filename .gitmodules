@@ -37,3 +37,6 @@
 [submodule "tngf"]
 	path = NFs/tngf
 	url = https://github.com/free5gc/tngf.git
+[submodule "NFs/nef"]
+	path = NFs/nef
+	url = https://github.com/free5gc/nef.git
