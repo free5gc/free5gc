@@ -465,7 +465,8 @@ func (p *Processor) NFRegisterProcedure(
 
 		// receive the rsp from handler
 		for _, uri := range uriList {
-			problemDetails := p.Consumer().SendNFStatusNotify(context.Background(), Notification_event, nfInstanceUri, uri, nfProfile)
+			problemDetails := p.Consumer().SendNFStatusNotify(context.Background(),
+				Notification_event, nfInstanceUri, uri, nfProfile)
 			if problemDetails != nil {
 				util.GinProblemJson(c, problemDetails)
 				return
