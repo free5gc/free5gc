@@ -362,10 +362,8 @@ func (p *Processor) UpdateNFInstanceProcedure(nfInstanceID string, patchJSON []b
 	Notification_event := models.NotificationEventType_PROFILE_CHANGED
 	nfInstanceUri := nrf_context.GetNfInstanceURI(nfInstanceID)
 
-	ctx := context.Background()
-
 	for _, uri := range uriList {
-		p.Consumer().SendNFStatusNotify(ctx, Notification_event, nfInstanceUri, uri, &nfProfiles[0])
+		p.Consumer().SendNFStatusNotify(context.Background(), Notification_event, nfInstanceUri, uri, &nfProfiles[0])
 	}
 	return nf
 }
@@ -486,10 +484,9 @@ func (p *Processor) NFRegisterProcedure(
 		// Add NF Register Conter
 		p.Context().AddNfRegister()
 
-		ctx := context.Background()
-
 		for _, uri := range uriList {
-			problemDetails := p.Consumer().SendNFStatusNotify(ctx, Notification_event, nfInstanceUri, uri, nfProfile)
+			problemDetails := p.Consumer().SendNFStatusNotify(context.Background(),
+				Notification_event, nfInstanceUri, uri, nfProfile)
 			if problemDetails != nil {
 				util.GinProblemJson(c, problemDetails)
 				return
