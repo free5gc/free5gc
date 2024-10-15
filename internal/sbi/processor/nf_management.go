@@ -295,10 +295,8 @@ func (p *Processor) NFDeregisterProcedure(nfInstanceID string) *models.ProblemDe
 	// set info for NotificationData
 	Notification_event := models.NotificationEventType_DEREGISTERED
 
-	ctx := context.Background()
-
 	for _, uri := range uriList {
-		problemDetails := p.Consumer().SendNFStatusNotify(ctx, Notification_event, nfInstanceUri, uri, nil)
+		problemDetails := p.Consumer().SendNFStatusNotify(context.Background(), Notification_event, nfInstanceUri, uri, nil)
 		if problemDetails != nil {
 			return problemDetails
 		}
@@ -465,11 +463,9 @@ func (p *Processor) NFRegisterProcedure(
 		Notification_event := models.NotificationEventType_PROFILE_CHANGED
 		nfInstanceUri := locationHeaderValue
 
-		ctx := context.Background()
-
 		// receive the rsp from handler
 		for _, uri := range uriList {
-			problemDetails := p.Consumer().SendNFStatusNotify(ctx, Notification_event, nfInstanceUri, uri, nfProfile)
+			problemDetails := p.Consumer().SendNFStatusNotify(context.Background(), Notification_event, nfInstanceUri, uri, nfProfile)
 			if problemDetails != nil {
 				util.GinProblemJson(c, problemDetails)
 				return
