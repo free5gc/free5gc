@@ -3,7 +3,7 @@ package TestAmf
 import (
 	"github.com/google/uuid"
 
-	"github.com/free5gc/openapi-r17/models"
+	"github.com/free5gc/openapi/models"
 )
 
 func BuildSmfNfProfile() (uuId string, profile models.NrfNfManagementNfProfile) {

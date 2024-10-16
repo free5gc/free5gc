@@ -9,7 +9,7 @@ import (
 	"github.com/free5gc/nas"
 	"github.com/free5gc/nas/nasMessage"
 	"github.com/free5gc/nas/nasType"
-	"github.com/free5gc/openapi-r17/models"
+	"github.com/free5gc/openapi/models"
 )
 
 const (

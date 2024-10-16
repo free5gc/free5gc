@@ -131,7 +131,7 @@ func NewSmfStruct(ctx context.Context, testId TestId) app.NFstruct {
 		fmt.Printf("SMF Config failed: %v\n", err)
 	}
 	smf_ctx, smf_cancel := context.WithCancel(ctx)
-	pfcpStart, pfcpTerminate := smf_utils.InitPFCPFunc(ctx)
+	pfcpStart, pfcpTerminate := smf_utils.InitPFCPFunc()
 	smfApp, errApp := smf_service.NewApp(smf_ctx, smf_factory.SmfConfig, "", pfcpStart, pfcpTerminate)
 	if errApp != nil {
 		fmt.Printf("SMF NewApp failed: %v\n", errApp)
@@ -333,7 +333,7 @@ func amfConfig(testID TestId) error {
 				"namf-oam",
 			},
 			ServedGumaiList: []models.Guami{{
-				PlmnId: &models.PlmnId{
+				PlmnId: &models.PlmnIdNid{
 					Mcc: "208",
 					Mnc: "93",
 				},
@@ -988,7 +988,7 @@ func nssfConfig() error {
 						},
 						Tac: "33456",
 					},
-					SupportedSnssaiList: []models.Snssai{{
+					SupportedSnssaiList: []models.ExtSnssai{{
 						Sst: 1,
 						Sd:  "000001",
 					}, {
@@ -1006,7 +1006,7 @@ func nssfConfig() error {
 						},
 						Tac: "33457",
 					},
-					SupportedSnssaiList: []models.Snssai{{
+					SupportedSnssaiList: []models.ExtSnssai{{
 						Sst: 1,
 					}, {
 						Sst: 1,
@@ -1027,7 +1027,7 @@ func nssfConfig() error {
 						},
 						Tac: "33456",
 					},
-					SupportedSnssaiList: []models.Snssai{{
+					SupportedSnssaiList: []models.ExtSnssai{{
 						Sst: 1,
 					}, {
 						Sst: 1,
@@ -1047,7 +1047,7 @@ func nssfConfig() error {
 						},
 						Tac: "33458",
 					},
-					SupportedSnssaiList: []models.Snssai{{
+					SupportedSnssaiList: []models.ExtSnssai{{
 						Sst: 1,
 					}, {
 						Sst: 1,
@@ -1067,7 +1067,7 @@ func nssfConfig() error {
 						},
 						Tac: "33456",
 					},
-					SupportedSnssaiList: []models.Snssai{{
+					SupportedSnssaiList: []models.ExtSnssai{{
 						Sst: 1,
 					}, {
 						Sst: 1,
@@ -1083,7 +1083,7 @@ func nssfConfig() error {
 						},
 						Tac: "33457",
 					},
-					SupportedSnssaiList: []models.Snssai{{
+					SupportedSnssaiList: []models.ExtSnssai{{
 						Sst: 1,
 						Sd:  "000001",
 					}, {
@@ -1101,7 +1101,7 @@ func nssfConfig() error {
 						},
 						Tac: "33458",
 					},
-					SupportedSnssaiList: []models.Snssai{{
+					SupportedSnssaiList: []models.ExtSnssai{{
 						Sst: 1,
 					}, {
 						Sst: 1,
@@ -1120,7 +1120,7 @@ func nssfConfig() error {
 						},
 						Tac: "33459",
 					},
-					SupportedSnssaiList: []models.Snssai{{
+					SupportedSnssaiList: []models.ExtSnssai{{
 						Sst: 1,
 					}, {
 						Sst: 1,
@@ -1142,7 +1142,7 @@ func nssfConfig() error {
 						},
 						Tac: "33456",
 					},
-					SupportedSnssaiList: []models.Snssai{{
+					SupportedSnssaiList: []models.ExtSnssai{{
 						Sst: 1,
 					}, {
 						Sst: 1,
@@ -1161,7 +1161,7 @@ func nssfConfig() error {
 						},
 						Tac: "33458",
 					},
-					SupportedSnssaiList: []models.Snssai{{
+					SupportedSnssaiList: []models.ExtSnssai{{
 						Sst: 1,
 					}, {
 						Sst: 1,
@@ -1183,7 +1183,7 @@ func nssfConfig() error {
 					Tac: "33456",
 				},
 				AccessType: &accessType3GPP,
-				SupportedSnssaiList: []models.Snssai{{
+				SupportedSnssaiList: []models.ExtSnssai{{
 					Sst: 1,
 				}, {
 					Sst: 1,
@@ -1203,7 +1203,7 @@ func nssfConfig() error {
 					Tac: "33458",
 				},
 				AccessType: &accessType3GPP,
-				SupportedSnssaiList: []models.Snssai{{
+				SupportedSnssaiList: []models.ExtSnssai{{
 					Sst: 1,
 				}, {
 					Sst: 1,
@@ -1219,7 +1219,7 @@ func nssfConfig() error {
 						Mcc: "310",
 						Mnc: "560",
 					},
-					SNssaiList: []models.Snssai{{
+					SNssaiList: []models.ExtSnssai{{
 						Sst: 1,
 						Sd:  "000003",
 					}},
@@ -1233,7 +1233,7 @@ func nssfConfig() error {
 					Tac: "33459",
 				},
 				AccessType: &accessType3GPP,
-				SupportedSnssaiList: []models.Snssai{{
+				SupportedSnssaiList: []models.ExtSnssai{{
 					Sst: 1,
 				}, {
 					Sst: 1,
@@ -1249,7 +1249,7 @@ func nssfConfig() error {
 						Mcc: "310",
 						Mnc: "560",
 					},
-					SNssaiList: []models.Snssai{{
+					SNssaiList: []models.ExtSnssai{{
 						Sst: 2,
 						Sd:  "000001",
 					}},

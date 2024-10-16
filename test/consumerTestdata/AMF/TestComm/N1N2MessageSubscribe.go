@@ -1,7 +1,7 @@
 package TestComm
 
 import (
-	"github.com/free5gc/openapi-r17/models"
+	"github.com/free5gc/openapi/models"
 )
 
 const (

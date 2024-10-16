@@ -1,7 +1,7 @@
 package TestPolicyAuthorization
 
 import (
-	"github.com/free5gc/openapi-r17/models"
+	"github.com/free5gc/openapi/models"
 )
 
 func GetPostAppSessionsData_Normal() models.AppSessionContext {

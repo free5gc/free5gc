@@ -3,7 +3,7 @@ package TestBDTPolicy
 import (
 	"time"
 
-	"github.com/free5gc/openapi-r17/models"
+	"github.com/free5gc/openapi/models"
 )
 
 func GetCreateTestData() models.BdtReqData {

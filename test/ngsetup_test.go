@@ -16,7 +16,7 @@ import (
 
 	"github.com/free5gc/nas/security"
 	"github.com/free5gc/ngap"
-	"github.com/free5gc/openapi-r17/models"
+	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/util/mongoapi"
 	"github.com/stretchr/testify/assert"
 )
