@@ -163,12 +163,12 @@ github.com/franela/goblin v0.0.0-20200105215937-c9ffbefa60db/go.mod h1:7dvUGVsVB
 github.com/franela/goreq v0.0.0-20171204163338-bcd34c9993f8/go.mod h1:ZhphrRTfi2rbfLwlschooIH4+wKKDR4Pdxhh+TRoA20=
 github.com/free5gc/aper v1.0.6-0.20240503143507-2c4c4780b98f h1:sO8FFwAq7feSw/vKN9ioY+fX1gNTXd6/xQOqaeclzsA=
 github.com/free5gc/aper v1.0.6-0.20240503143507-2c4c4780b98f/go.mod h1:oh3dtNsje2W4/q3pfidMWQKXbXIehXK3t6CD9tXmHx0=
-github.com/free5gc/nas v1.1.4-0.20240807053650-6775d72a73b6 h1:c8Z+AlgG6CPlOKTpoDhEnTtpOWW+clCr+88Ybe0hyog=
-github.com/free5gc/nas v1.1.4-0.20240807053650-6775d72a73b6/go.mod h1:uhfoCLa/HKa975hKfob3wmdUiFMU2omTIWiRtYgn6XQ=
+github.com/free5gc/nas v1.1.4-0.20241017033043-7d59b6bb499e h1:BIyG7tZbh46d3yY0PbTPPxIZ03Y1GdC6Za41iFz99ok=
+github.com/free5gc/nas v1.1.4-0.20241017033043-7d59b6bb499e/go.mod h1:FznyxLdE/CXuoUZUqAWXgtzfYbbQknExIqeV0Sx1lmo=
 github.com/free5gc/ngap v1.0.9-0.20240801044503-4db04dae3900 h1:ZElji98JSdDEJuUtpHGuV0L+xCY5ePs3YolqVfDR9Ig=
 github.com/free5gc/ngap v1.0.9-0.20240801044503-4db04dae3900/go.mod h1:HedQCbA/XoFgO3wnNSNhIpp5Dhv0f42lLMT/EiEyAQ0=
-github.com/free5gc/openapi v1.0.9-0.20240823100026-6a9f667e914f h1:b//Fa0CvIDU7fufqMcrEgbVUqpubokK/lFgkTxN3fGM=
-github.com/free5gc/openapi v1.0.9-0.20240823100026-6a9f667e914f/go.mod h1:aKw6uGzEibGDrn9++w4/JpWxaaUBo7GaqsvuFKU9fl4=
+github.com/free5gc/openapi v1.0.9-0.20241024114001-1414ef920de2 h1:rMZE/FZtEbOiAZISVs9M093g4I2SGdpcxDYp2htt6Ws=
+github.com/free5gc/openapi v1.0.9-0.20241024114001-1414ef920de2/go.mod h1:aKw6uGzEibGDrn9++w4/JpWxaaUBo7GaqsvuFKU9fl4=
 github.com/free5gc/pfcp v1.0.7 h1:20/4PGok8Ihy+NfYQzic39zVq3ZB4/gdZhDO1676TMQ=
 github.com/free5gc/pfcp v1.0.7/go.mod h1:57l3+7h2o1Sg8vbgl0kflROwuEQltx2VbULLrV9F1Ts=
 github.com/free5gc/sctp v1.0.1 h1:g8WDO97r8B9ubkT5Hyk9b4I1fZUOii9Z39gQ2eRaASo=

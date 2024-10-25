@@ -198,7 +198,7 @@ then
 fi
 
 ${EXEC_UPFNS} ./bin/upf -c ./config/upfcfg.test.yaml &
-sleep 2
+sleep 1
 
 if [[ "$1" == "TestNon3GPP" ]]
 then

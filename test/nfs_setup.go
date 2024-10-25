@@ -468,6 +468,12 @@ func smfConfig(testID TestId) error {
 					Key: "cert/smf.key",
 				},
 			},
+			PLMNList: []smf_factory.PlmnID{
+				{
+					Mcc: "208",
+					Mnc: "93",
+				},
+			},
 			ServiceNameList: []string{
 				"nsmf-pdusession",
 				"nsmf-event-exposure",
