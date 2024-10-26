@@ -340,9 +340,10 @@ func buildFilter(queryParameters url.Values) bson.M {
 	// Pattern: '^[A-Fa-f0-9]{6}$'
 	if queryParameters["snssais"] != nil {
 		snssais := queryParameters["snssais"][0]
+		// snssais = [{"sst":1,"sd":"fedcba"}]
 
 		var snssaisBsonArray bson.A
-		slices := util.SnssaisToBsonM(snssais)
+		slices := util.SnssaisToBsonM(snssais[1 : len(snssais)-1])
 		for _, slice := range slices {
 			snssaisBsonArray = append(snssaisBsonArray, bson.M{"sNssais": bson.M{"$elemMatch": slice}})
 		}
