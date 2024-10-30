@@ -15,13 +15,13 @@ require (
 	github.com/free5gc/ngap v1.0.9-0.20240801044503-4db04dae3900
 	github.com/free5gc/nrf v0.0.0
 	github.com/free5gc/nssf v0.0.0
-	github.com/free5gc/openapi v1.0.9-0.20241024114001-1414ef920de2
+	github.com/free5gc/openapi v1.0.9-0.20241030114155-51c7fcd04b72
 	github.com/free5gc/pcf v0.0.0
 	github.com/free5gc/sctp v1.0.1
 	github.com/free5gc/smf v1.2.4
 	github.com/free5gc/udm v0.0.0
 	github.com/free5gc/udr v0.0.0
-	github.com/free5gc/util v1.0.7-0.20240911054252-194b3b49aba9
+	github.com/free5gc/util v1.0.7-0.20241018034647-c9a9c3a8581e
 	github.com/free5gc/webconsole v0.0.0
 	github.com/gin-gonic/gin v1.10.0
 	github.com/go-ping/ping v1.1.0
@@ -155,5 +155,3 @@ replace (
 	github.com/free5gc/upf => ../NFs/upf
 	github.com/free5gc/webconsole => ../webconsole
 )
-
-// replace github.com/free5gc/openapi => /home/ctfang/openapi-dev

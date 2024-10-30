@@ -75,7 +75,7 @@ export GIN_MODE=release
 
 function terminate()
 {
-    sleep 3
+    sleep 2
     sudo killall -15 upf
 
     if [ ${DUMP_NS} ]
@@ -114,7 +114,7 @@ function terminate()
         cd .. && ./force_kill.sh
     fi
 
-    sleep 5
+    sleep 1
 }
 
 function removeN3iwfInterfaces()

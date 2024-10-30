@@ -17,7 +17,6 @@ import (
 	"github.com/free5gc/nas/nasType"
 	"github.com/free5gc/nas/security"
 	"github.com/free5gc/openapi/models"
-	models_r15 "github.com/free5gc/openapi/models"
 	"github.com/free5gc/util/milenage"
 	"github.com/free5gc/util/ueauth"
 	"github.com/free5gc/webconsole/backend/WebUI"
@@ -35,7 +34,7 @@ type RanUeContext struct {
 	KnasInt            [16]uint8
 	Kamf               []uint8
 	AnType             models.AccessType
-	AuthenticationSubs models_r15.AuthenticationSubscription
+	AuthenticationSubs models.AuthenticationSubscription
 }
 
 func CalculateIpv4HeaderChecksum(hdr *ipv4.Header) uint32 {
@@ -58,54 +57,58 @@ func CalculateIpv4HeaderChecksum(hdr *ipv4.Header) uint32 {
 func GetAuthSubscription(k, opc, op string) models.AuthenticationSubscription {
 	var authSubs models.AuthenticationSubscription
 	authSubs.EncPermanentKey = k
+	if opc == "" {
+		var err error
+		opc, err = milenage.GenerateOPcFromHex(k, op)
+		if err != nil {
+			fatal.Fatalf("GenerateOPcFromHex error: %+v", err)
+		}
+	}
 	authSubs.EncOpcKey = opc
-	// authSubs.Milenage = &models_r15.Milenage{
-	// 	Op: &models_r15.Op{
-	// 		OpValue: op,
-	// 	},
-	// }
 	authSubs.AuthenticationManagementField = "8000"
 	authSubs.SequenceNumber = &models.SequenceNumber{
 		Sqn: TestGenAuthData.MilenageTestSet19.SQN,
 	}
-	authSubs.AuthenticationMethod = models_r15.AuthMethod__5_G_AKA
+	authSubs.AuthenticationMethod = models.AuthMethod__5_G_AKA
 	return authSubs
 }
 
 func GetEAPAKAPrimeAuthSubscription(k, opc, op string) models.AuthenticationSubscription {
 	var authSubs models.AuthenticationSubscription
 	authSubs.EncPermanentKey = k
+	if opc == "" {
+		var err error
+		opc, err = milenage.GenerateOPcFromHex(k, op)
+		if err != nil {
+			fatal.Fatalf("GenerateOPcFromHex error: %+v", err)
+		}
+	}
 	authSubs.EncOpcKey = opc
-	// authSubs.Milenage = &models_r15.Milenage{
-	// 	Op: &models_r15.Op{
-	// 		OpValue: op,
-	// 	},
-	// }
 	authSubs.AuthenticationManagementField = "8000"
 	authSubs.SequenceNumber = &models.SequenceNumber{
 		Sqn: TestGenAuthData.MilenageTestSet19.SQN,
 	}
-	authSubs.AuthenticationMethod = models_r15.AuthMethod_EAP_AKA_PRIME
+	authSubs.AuthenticationMethod = models.AuthMethod_EAP_AKA_PRIME
 	return authSubs
 }
 
-func GetAccessAndMobilitySubscriptionData() (amData models_r15.AccessAndMobilitySubscriptionData) {
+func GetAccessAndMobilitySubscriptionData() (amData models.AccessAndMobilitySubscriptionData) {
 	return TestRegistrationProcedure.TestAmDataTable[TestRegistrationProcedure.FREE5GC_CASE]
 }
 
-func GetSmfSelectionSubscriptionData() (smfSelData models_r15.SmfSelectionSubscriptionData) {
+func GetSmfSelectionSubscriptionData() (smfSelData models.SmfSelectionSubscriptionData) {
 	return TestRegistrationProcedure.TestSmfSelDataTable[TestRegistrationProcedure.FREE5GC_CASE]
 }
 
-func GetSessionManagementSubscriptionData() (smfSelData []models_r15.SessionManagementSubscriptionData) {
+func GetSessionManagementSubscriptionData() (smfSelData []models.SessionManagementSubscriptionData) {
 	return TestRegistrationProcedure.TestSmSelDataTable[TestRegistrationProcedure.FREE5GC_CASE]
 }
 
-func GetAmPolicyData() (amPolicyData models_r15.AmPolicyData) {
+func GetAmPolicyData() (amPolicyData models.AmPolicyData) {
 	return TestRegistrationProcedure.TestAmPolicyDataTable[TestRegistrationProcedure.FREE5GC_CASE]
 }
 
-func GetSmPolicyData() (smPolicyData models_r15.SmPolicyData) {
+func GetSmPolicyData() (smPolicyData models.SmPolicyData) {
 	return TestRegistrationProcedure.TestSmPolicyDataTable[TestRegistrationProcedure.FREE5GC_CASE]
 }
 
@@ -158,12 +161,12 @@ func (ue *RanUeContext) DeriveRESstarAndSetKey(
 		fatal.Fatalf("DecodeString error: %+v", err)
 	}
 
-	// TODO: CTFANG
 	opc, err = hex.DecodeString(authSubs.EncOpcKey)
 	if err != nil {
 		fatal.Fatalf("DecodeString OPC error: %+v", err)
 	}
 
+	// TODO: if the opc need to from op
 	// if authSubs.Opc.OpcValue == "" {
 	// 	opStr := authSubs.Milenage.Op.OpValue
 	// 	var op []byte
@@ -266,6 +269,8 @@ func (ue *RanUeContext) DeriveResEAPMessageAndSetKey(
 	if err != nil {
 		fatal.Fatalf("DecodeString OPC error: %+v", err)
 	}
+	// TODO: if the opc need to from op
+
 	// if authSubs.Opc.OpcValue == "" {
 	// 	opStr := authSubs.Milenage.Op.OpValue
 	// 	var op []byte

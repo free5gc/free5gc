@@ -34,7 +34,6 @@ import (
 	nasSecurity "github.com/free5gc/nas/security"
 	"github.com/free5gc/ngap"
 	"github.com/free5gc/openapi/models"
-	models_r15 "github.com/free5gc/openapi/models"
 	"github.com/free5gc/util/ueauth"
 )
 
@@ -184,17 +183,12 @@ func setupGreTunnel(greIfaceName, parentIfaceName string, ueTunnelAddr, n3iwfTun
 func getAuthSubscription() (authSubs models.AuthenticationSubscription) {
 	authSubs.EncPermanentKey = TestGenAuthData.MilenageTestSet19.K
 	authSubs.EncOpcKey = TestGenAuthData.MilenageTestSet19.OPC
-	// authSubs.Milenage = &models_r15.Milenage{
-	// 	Op: &models_r15.Op{
-	// 		OpValue: TestGenAuthData.MilenageTestSet19.OP,
-	// 	},
-	// }
 	authSubs.AuthenticationManagementField = "8000"
 
 	authSubs.SequenceNumber = &models.SequenceNumber{
 		Sqn: TestGenAuthData.MilenageTestSet19.SQN,
 	}
-	authSubs.AuthenticationMethod = models_r15.AuthMethod__5_G_AKA
+	authSubs.AuthenticationMethod = models.AuthMethod__5_G_AKA
 	return
 }
 
