@@ -1,8 +1,6 @@
 module test
 
-go 1.21.0
-
-toolchain go1.21.8
+go 1.21
 
 require (
 	github.com/antihax/optional v1.0.0
