@@ -131,7 +131,7 @@ func NewSmfStruct(ctx context.Context, testId TestId) app.NFstruct {
 		fmt.Printf("SMF Config failed: %v\n", err)
 	}
 	smf_ctx, smf_cancel := context.WithCancel(ctx)
-	pfcpStart, pfcpTerminate := smf_utils.InitPFCPFunc()
+	pfcpStart, pfcpTerminate := smf_utils.InitPFCPFunc(ctx)
 	smfApp, errApp := smf_service.NewApp(smf_ctx, smf_factory.SmfConfig, "", pfcpStart, pfcpTerminate)
 	if errApp != nil {
 		fmt.Printf("SMF NewApp failed: %v\n", errApp)
