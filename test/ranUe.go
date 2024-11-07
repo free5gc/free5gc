@@ -166,26 +166,6 @@ func (ue *RanUeContext) DeriveRESstarAndSetKey(
 		fatal.Fatalf("DecodeString OPC error: %+v", err)
 	}
 
-	// TODO: if the opc need to from op
-	// if authSubs.Opc.OpcValue == "" {
-	// 	opStr := authSubs.Milenage.Op.OpValue
-	// 	var op []byte
-	// 	op, err = hex.DecodeString(opStr)
-	// 	if err != nil {
-	// 		fatal.Fatalf("DecodeString error: %+v", err)
-	// 	}
-
-	// 	opc, err = milenage.GenerateOPC(k, op)
-	// 	if err != nil {
-	// 		fatal.Fatalf("milenage GenerateOPC error: %+v", err)
-	// 	}
-	// } else {
-	// 	opc, err = hex.DecodeString(authSubs.Opc.OpcValue)
-	// 	if err != nil {
-	// 		fatal.Fatalf("DecodeString error: %+v", err)
-	// 	}
-	// }
-
 	// Generate MAC_A, MAC_S
 	err = milenage.F1(opc, k, rand, sqn, amf, macA, macS)
 	if err != nil {
@@ -269,26 +249,6 @@ func (ue *RanUeContext) DeriveResEAPMessageAndSetKey(
 	if err != nil {
 		fatal.Fatalf("DecodeString OPC error: %+v", err)
 	}
-	// TODO: if the opc need to from op
-
-	// if authSubs.Opc.OpcValue == "" {
-	// 	opStr := authSubs.Milenage.Op.OpValue
-	// 	var op []byte
-	// 	op, err = hex.DecodeString(opStr)
-	// 	if err != nil {
-	// 		fatal.Fatalf("DecodeString error: %+v", err)
-	// 	}
-
-	// 	opc, err = milenage.GenerateOPC(k, op)
-	// 	if err != nil {
-	// 		fatal.Fatalf("milenage GenerateOPC error: %+v", err)
-	// 	}
-	// } else {
-	// 	opc, err = hex.DecodeString(authSubs.Opc.OpcValue)
-	// 	if err != nil {
-	// 		fatal.Fatalf("DecodeString error: %+v", err)
-	// 	}
-	// }
 
 	// Generate MAC_A, MAC_S
 	err = milenage.F1(opc, k, rand, sqn, amf, macA, macS)
