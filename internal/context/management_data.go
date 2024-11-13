@@ -62,9 +62,9 @@ func nnrfNFManagementCondition(nf *models.NrfNfManagementNfProfile, nfprofile *m
 	}
 	// PlmnList
 	if nfprofile.PlmnList != nil {
-		plmnId := make([]models.PlmnId, len(nfprofile.PlmnList))
-		copy(plmnId, nfprofile.PlmnList)
-		nf.PlmnList = plmnId
+		plmnList := make([]models.PlmnId, len(nfprofile.PlmnList))
+		copy(plmnList, nfprofile.PlmnList)
+		nf.PlmnList = plmnList
 	} else {
 		nf.PlmnList = []models.PlmnId{
 			factory.NrfConfig.Configuration.DefaultPlmnId,
@@ -81,16 +81,16 @@ func nnrfNFManagementCondition(nf *models.NrfNfManagementNfProfile, nfprofile *m
 	// ipv4Addresses
 	if nfprofile.Ipv4Addresses != nil {
 		// fmt.Println("NsiList")
-		Ipv4 := make([]string, len(nfprofile.Ipv4Addresses))
-		copy(Ipv4, nfprofile.Ipv4Addresses)
-		nf.Ipv4Addresses = Ipv4
+		ipv4 := make([]string, len(nfprofile.Ipv4Addresses))
+		copy(ipv4, nfprofile.Ipv4Addresses)
+		nf.Ipv4Addresses = ipv4
 	}
 	// ipv6Addresses
 	if nfprofile.Ipv6Addresses != nil {
 		// fmt.Println("NsiList")
-		Ipv6 := make([]string, len(nfprofile.Ipv6Addresses))
-		copy(Ipv6, nfprofile.Ipv4Addresses)
-		nf.Ipv6Addresses = Ipv6
+		ipv6 := make([]string, len(nfprofile.Ipv6Addresses))
+		copy(ipv6, nfprofile.Ipv4Addresses)
+		nf.Ipv6Addresses = ipv6
 	}
 	// DefaultNotificationSubscription
 	if nfprofile.DefaultNotificationSubscriptions != nil {
@@ -103,9 +103,9 @@ func nnrfNFManagementOption(nf *models.NrfNfManagementNfProfile, nfprofile *mode
 	// sNssais
 	if nfprofile.SNssais != nil {
 		// fmt.Println("SNssais")
-		SNssais := make([]models.ExtSnssai, len(nfprofile.SNssais))
-		copy(SNssais, nfprofile.SNssais)
-		nf.SNssais = SNssais
+		snssais := make([]models.ExtSnssai, len(nfprofile.SNssais))
+		copy(snssais, nfprofile.SNssais)
+		nf.SNssais = snssais
 	}
 
 	// nsiList
