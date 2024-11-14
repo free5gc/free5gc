@@ -1,6 +1,7 @@
 package processor
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -39,7 +40,7 @@ func (p *Processor) HandleGetNFInstanceRequest(c *gin.Context, nfInstanceId stri
 	p.GetNFInstanceProcedure(c, nfInstanceId)
 }
 
-func (p *Processor) HandleNFRegisterRequest(c *gin.Context, nfProfile models.NfProfile) {
+func (p *Processor) HandleNFRegisterRequest(c *gin.Context, nfProfile *models.NrfNfManagementNfProfile) {
 	logger.NfmLog.Infoln("Handle NFRegisterRequest")
 
 	p.NFRegisterProcedure(c, nfProfile)
@@ -102,7 +103,7 @@ func (p *Processor) HandleUpdateSubscriptionRequest(
 
 func (p *Processor) HandleCreateSubscriptionRequest(
 	c *gin.Context,
-	subscription models.NrfSubscriptionData,
+	subscription models.NrfNfManagementSubscriptionData,
 ) {
 	logger.NfmLog.Infoln("Handle CreateSubscriptionRequest")
 
@@ -125,7 +126,7 @@ func (p *Processor) HandleCreateSubscriptionRequest(
 }
 
 func (p *Processor) CreateSubscriptionProcedure(
-	subscription models.NrfSubscriptionData,
+	subscription models.NrfNfManagementSubscriptionData,
 ) (bson.M, *models.ProblemDetails) {
 	subscriptionID, err := nrf_context.SetsubscriptionId()
 	if err != nil {
@@ -267,7 +268,7 @@ func (p *Processor) NFDeregisterProcedure(nfInstanceID string) *models.ProblemDe
 	}
 
 	// nfProfile data for response
-	var nfProfiles []models.NfProfile
+	var nfProfiles []models.NrfNfManagementNfProfile
 	if err = timedecode.Decode(nfProfilesRaw, &nfProfiles); err != nil {
 		logger.NfmLog.Warnln("Time decode error: ", err)
 		problemDetails := &models.ProblemDetails{
@@ -288,14 +289,14 @@ func (p *Processor) NFDeregisterProcedure(nfInstanceID string) *models.ProblemDe
 		return problemDetails
 	}
 
-	uriList := nrf_context.GetNofificationUri(nfProfiles[0])
+	uriList := nrf_context.GetNofificationUri(&nfProfiles[0])
 	nfInstanceType := nfProfiles[0].NfType
 	nfInstanceUri := nrf_context.GetNfInstanceURI(nfInstanceID)
 	// set info for NotificationData
 	Notification_event := models.NotificationEventType_DEREGISTERED
 
 	for _, uri := range uriList {
-		problemDetails := p.Consumer().SendNFStatusNotify(Notification_event, nfInstanceUri, uri, nil)
+		problemDetails := p.Consumer().SendNFStatusNotify(context.Background(), Notification_event, nfInstanceUri, uri, nil)
 		if problemDetails != nil {
 			return problemDetails
 		}
@@ -345,7 +346,7 @@ func (p *Processor) UpdateNFInstanceProcedure(nfInstanceID string, patchJSON []b
 		nf,
 	}
 
-	var nfProfiles []models.NfProfile
+	var nfProfiles []models.NrfNfManagementNfProfile
 	if err = timedecode.Decode(nfProfilesRaw, &nfProfiles); err != nil {
 		logger.NfmLog.Errorf("UpdateNFInstanceProcedure err: %+v", err)
 	}
@@ -355,14 +356,14 @@ func (p *Processor) UpdateNFInstanceProcedure(nfInstanceID string, patchJSON []b
 		return nil
 	}
 
-	uriList := nrf_context.GetNofificationUri(nfProfiles[0])
+	uriList := nrf_context.GetNofificationUri(&nfProfiles[0])
 
 	// set info for NotificationData
 	Notification_event := models.NotificationEventType_PROFILE_CHANGED
 	nfInstanceUri := nrf_context.GetNfInstanceURI(nfInstanceID)
 
 	for _, uri := range uriList {
-		p.Consumer().SendNFStatusNotify(Notification_event, nfInstanceUri, uri, &nfProfiles[0])
+		p.Consumer().SendNFStatusNotify(context.Background(), Notification_event, nfInstanceUri, uri, &nfProfiles[0])
 	}
 	return nf
 }
@@ -389,10 +390,10 @@ func (p *Processor) GetNFInstanceProcedure(c *gin.Context, nfInstanceID string) 
 
 func (p *Processor) NFRegisterProcedure(
 	c *gin.Context,
-	nfProfile models.NfProfile,
+	nfProfile *models.NrfNfManagementNfProfile,
 ) {
 	logger.NfmLog.Traceln("[NRF] In NFRegisterProcedure")
-	var nf models.NfProfile
+	var nf models.NrfNfManagementNfProfile
 
 	err := nrf_context.NnrfNFManagementDataModel(&nf, nfProfile)
 	if err != nil {
@@ -454,7 +455,7 @@ func (p *Processor) NFRegisterProcedure(
 
 	if existed {
 		logger.NfmLog.Infoln("NFRegister NfProfile Update:", nfInstanceId)
-		uriList := nrf_context.GetNofificationUri(nf)
+		uriList := nrf_context.GetNofificationUri(&nf)
 
 		// set info for NotificationData
 		Notification_event := models.NotificationEventType_PROFILE_CHANGED
@@ -462,7 +463,8 @@ func (p *Processor) NFRegisterProcedure(
 
 		// receive the rsp from handler
 		for _, uri := range uriList {
-			problemDetails := p.Consumer().SendNFStatusNotify(Notification_event, nfInstanceUri, uri, &nfProfile)
+			problemDetails := p.Consumer().SendNFStatusNotify(context.Background(),
+				Notification_event, nfInstanceUri, uri, nfProfile)
 			if problemDetails != nil {
 				util.GinProblemJson(c, problemDetails)
 				return
@@ -474,7 +476,7 @@ func (p *Processor) NFRegisterProcedure(
 		return
 	} else { // Create NF Profile case
 		logger.NfmLog.Infoln("Create NF Profile:", nfInstanceId)
-		uriList := nrf_context.GetNofificationUri(nf)
+		uriList := nrf_context.GetNofificationUri(&nf)
 		// set info for NotificationData
 		Notification_event := models.NotificationEventType_REGISTERED
 		nfInstanceUri := locationHeaderValue
@@ -483,7 +485,8 @@ func (p *Processor) NFRegisterProcedure(
 		p.Context().AddNfRegister()
 
 		for _, uri := range uriList {
-			problemDetails := p.Consumer().SendNFStatusNotify(Notification_event, nfInstanceUri, uri, &nfProfile)
+			problemDetails := p.Consumer().SendNFStatusNotify(context.Background(),
+				Notification_event, nfInstanceUri, uri, nfProfile)
 			if problemDetails != nil {
 				util.GinProblemJson(c, problemDetails)
 				return

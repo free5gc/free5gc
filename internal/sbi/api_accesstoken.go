@@ -55,7 +55,7 @@ func (s *Server) HTTPAccessTokenRequest(c *gin.Context) {
 		return
 	}
 
-	var accessTokenReq models.AccessTokenReq
+	var accessTokenReq models.NrfAccessTokenAccessTokenReq
 
 	// Request parser
 	err := c.Request.ParseForm()
@@ -80,7 +80,8 @@ func (s *Server) HTTPAccessTokenRequest(c *gin.Context) {
 				break
 			}
 		}
-		if vt.Name() == "string" || vt.Name() == "NfType" {
+		if vt == reflect.TypeOf("") || vt == reflect.TypeOf(models.NrfNfManagementNfType_NRF) {
+			// Type is string
 			reflect.ValueOf(&accessTokenReq).Elem().FieldByName(name).SetString(value[0])
 		} else {
 			plmnid := models.PlmnId{}

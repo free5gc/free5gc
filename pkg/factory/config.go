@@ -30,6 +30,7 @@ const (
 	NrfSbiDefaultScheme          = "https"
 	NrfNfmResUriPrefix           = "/nnrf-nfm/v1"
 	NrfDiscResUriPrefix          = "/nnrf-disc/v1"
+	NrfBootstrappingPrefix       = "/bootstrapping"
 )
 
 type Config struct {
