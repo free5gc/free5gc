@@ -1,8 +1,10 @@
 package test_test
 
 import (
+	"bytes"
 	"context"
 	cryptorand "crypto/rand"
+	"io"
 
 	"encoding/base64"
 	"encoding/hex"
@@ -19,6 +21,7 @@ import (
 	"test/consumerTestdata/UDM/TestGenAuthData"
 	"test/nasTestpacket"
 
+	"github.com/free5gc/openapi"
 	"github.com/free5gc/sctp"
 	"github.com/gin-gonic/gin"
 	"github.com/mohae/deepcopy"
@@ -26,6 +29,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/icmp"
 	"golang.org/x/net/ipv4"
+	"gopkg.in/h2non/gock.v1"
 
 	"github.com/free5gc/nas"
 	"github.com/free5gc/nas/nasMessage"
@@ -2776,6 +2780,37 @@ func TestRequestTwoPDUSessions(t *testing.T) {
 	var sendMsg []byte
 	var recvMsg = make([]byte, 2048)
 
+	// use gock to mock chf API to ger charging req
+	defer gock.Off()
+	gock.New("http://127.0.0.113:8000").
+		Post("/chargingdata/:ChargingDataRef/update").
+		AddMatcher(func(req *http.Request, mock *gock.Request) (bool, error) {
+			body, err := io.ReadAll(req.Body)
+			if err != nil {
+				return false, err
+			}
+
+			req.Body = io.NopCloser(bytes.NewBuffer(body))
+
+			var chargingDataReq models.ChargingDataRequest
+			err = openapi.Deserialize(&chargingDataReq, body, "application/json")
+			if err != nil {
+				return false, err
+			}
+			for _, unit := range chargingDataReq.MultipleUnitUsage {
+				for _, usedUnitContainer := range unit.UsedUnitContainer {
+					// fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@", "usedUnitContainer.TotalVolume: ", usedUnitContainer.TotalVolume)
+					if usedUnitContainer.TotalVolume < 0 {
+						assert.Fail(t, "usedUnitContainer.TotalVolume is 0")
+						return false, nil
+					}
+				}
+			}
+			return true, nil
+		}).
+		Reply(200).
+		JSON(map[string]interface{}{})
+
 	// RAN connect to AMF
 	conn, err := test.ConnectToAmf(amfN2Ipv4Addr, ranN2Ipv4Addr, 38412, 9487)
 	assert.Nil(t, err)
@@ -3073,6 +3108,10 @@ func TestRequestTwoPDUSessions(t *testing.T) {
 
 	// terminate all NF
 	NfTerminate()
+
+	if !gock.IsDone() {
+		t.Errorf("No any charging request captured by gock(mock chf)")
+	}
 }
 
 func TestEAPAKAPrimeAuthentication(t *testing.T) {
