@@ -198,8 +198,8 @@ func (s *Server) HTTPUpdateNFInstance(c *gin.Context) {
 
 // GetNFInstances - Retrieves a collection of NF Instances
 func (s *Server) HTTPGetNFInstances(c *gin.Context) {
-	nfType := c.Params.ByName("nf-type")
-	limitParam := c.Params.ByName("limit")
+	nfType := c.Query("nf-type")
+	limitParam := c.Query("limit")
 
 	if nfType == "" || limitParam == "" {
 		problemDetail := &models.ProblemDetails{
