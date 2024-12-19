@@ -1,0 +1,30 @@
+name: CI Test
+
+on:
+  schedule:
+    - cron: '14 19 * * *' # at 3:14 AM everyday
+
+jobs:
+  test:
+    runs-on: [self-hosted, linux, x64]
+    steps:
+      - name: Checkout sub-repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+      
+      - name: Start docker compose
+        run: |
+          docker compose -f docker-compose-ci-ulcl.yaml up -d
+
+      - name: Wait for services to be ready
+        run: sleep 30
+      
+      - name: Run ULCL test
+        run: |
+          docker exec ci /bin/bash -c "cd /root/test && ./test-ulcl.sh TestULCLTrafficInfluence"
+      
+      - name: Cleanup docker compose
+        if: always()
+        run: |
+          docker compose -f docker-compose-ci-ulcl.yaml down
