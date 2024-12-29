@@ -32,7 +32,7 @@ require (
 	github.com/urfave/cli v1.22.14
 	github.com/vishvananda/netlink v1.1.0
 	go.mongodb.org/mongo-driver v1.11.3
-	golang.org/x/net v0.27.0
+	golang.org/x/net v0.33.0
 	golang.org/x/sys v0.28.0
 	gopkg.in/yaml.v2 v2.4.0
 )
