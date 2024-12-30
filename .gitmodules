@@ -40,3 +40,6 @@
 [submodule "NFs/nef"]
 	path = NFs/nef
 	url = https://github.com/free5gc/nef.git
+[submodule "ci-test"]
+	path = ci-test
+	url = https://github.com/Alonza0314/free5gc-ci-test
