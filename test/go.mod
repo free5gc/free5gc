@@ -9,7 +9,7 @@ require (
 	github.com/free5gc/amf v0.0.0
 	github.com/free5gc/aper v1.0.6-0.20240503143507-2c4c4780b98f
 	github.com/free5gc/ausf v0.0.0
-	github.com/free5gc/chf v1.0.2
+	github.com/free5gc/chf v1.0.5-0.20241224083457-ad38fc8dfa7d
 	github.com/free5gc/ike v1.1.1-0.20241014015325-083f89768f43
 	github.com/free5gc/nas v1.1.4-0.20240807053650-6775d72a73b6
 	github.com/free5gc/ngap v1.0.9-0.20240708062829-734d184eed74
@@ -32,7 +32,7 @@ require (
 	github.com/urfave/cli v1.22.14
 	github.com/vishvananda/netlink v1.1.0
 	go.mongodb.org/mongo-driver v1.11.3
-	golang.org/x/net v0.27.0
+	golang.org/x/net v0.33.0
 	golang.org/x/sys v0.28.0
 	gopkg.in/yaml.v2 v2.4.0
 )
@@ -59,8 +59,8 @@ require (
 	github.com/fclairamb/ftpserverlib v0.21.0 // indirect
 	github.com/fclairamb/go-log v0.4.1 // indirect
 	github.com/fiorix/go-diameter v3.0.2+incompatible // indirect
-	github.com/free5gc/pfcp v1.0.7 // indirect
-	github.com/free5gc/tlv v1.0.3-0.20240503144839-e03d55722836 // indirect
+	github.com/free5gc/pfcp v1.0.8-0.20241205172610-db6cd2e7f0bf // indirect
+	github.com/free5gc/tlv v1.0.3-0.20241204153300-1005a019612d // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
 	github.com/gin-contrib/cors v1.6.0 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
