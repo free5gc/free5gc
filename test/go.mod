@@ -9,13 +9,13 @@ require (
 	github.com/free5gc/amf v0.0.0
 	github.com/free5gc/aper v1.0.6-0.20240503143507-2c4c4780b98f
 	github.com/free5gc/ausf v0.0.0
-	github.com/free5gc/chf v1.0.2
+	github.com/free5gc/chf v1.0.5-0.20241224083457-ad38fc8dfa7d
 	github.com/free5gc/ike v1.1.1-0.20241014015325-083f89768f43
 	github.com/free5gc/nas v1.1.4-0.20241107083120-4605e0d39ece
 	github.com/free5gc/ngap v1.0.9-0.20241107082718-d359a67ebfa2
 	github.com/free5gc/nrf v0.0.0
 	github.com/free5gc/nssf v0.0.0
-	github.com/free5gc/openapi v1.0.9-0.20241120083140-6285477c583b
+	github.com/free5gc/openapi v1.0.9-0.20250102055216-bb5814d1e736
 	github.com/free5gc/pcf v0.0.0
 	github.com/free5gc/sctp v1.0.1
 	github.com/free5gc/smf v1.2.4
@@ -32,8 +32,8 @@ require (
 	github.com/urfave/cli v1.22.15
 	github.com/vishvananda/netlink v1.1.0
 	go.mongodb.org/mongo-driver v1.11.3
-	golang.org/x/net v0.28.0
-	golang.org/x/sys v0.24.0
+	golang.org/x/net v0.33.0
+	golang.org/x/sys v0.28.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
@@ -126,11 +126,11 @@ require (
 	go.opentelemetry.io/otel/trace v1.24.0 // indirect
 	go.uber.org/mock v0.4.0 // indirect
 	golang.org/x/arch v0.8.0 // indirect
-	golang.org/x/crypto v0.26.0 // indirect
+	golang.org/x/crypto v0.31.0 // indirect
 	golang.org/x/exp v0.0.0-20231127185646-65229373498e // indirect
-	golang.org/x/oauth2 v0.20.0 // indirect
-	golang.org/x/sync v0.8.0 // indirect
-	golang.org/x/text v0.17.0 // indirect
+	golang.org/x/oauth2 v0.21.0 // indirect
+	golang.org/x/sync v0.10.0 // indirect
+	golang.org/x/text v0.21.0 // indirect
 	google.golang.org/api v0.126.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240528184218-531527333157 // indirect
