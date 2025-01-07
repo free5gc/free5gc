@@ -31,26 +31,26 @@ func GetPostAppSessionsData_Normal() models.AppSessionContext {
 					},
 				},
 			},
-			EvSubsc: &models.EventsSubscReqData{
+			EvSubsc: &models.PcfPolicyAuthorizationEventsSubscReqData{
 				Events: []models.AfEventSubscription{
 					{
-						Event:       models.AfEvent_ACCESS_TYPE_CHANGE,
+						Event:       models.PcfPolicyAuthorizationAfEvent_ACCESS_TYPE_CHANGE,
 						NotifMethod: models.AfNotifMethod_EVENT_DETECTION,
 					},
 					{
-						Event: models.AfEvent_QOS_NOTIF,
+						Event: models.PcfPolicyAuthorizationAfEvent_QOS_NOTIF,
 					},
 					{
-						Event: models.AfEvent_PLMN_CHG,
+						Event: models.PcfPolicyAuthorizationAfEvent_PLMN_CHG,
 					},
 					{
-						Event: models.AfEvent_FAILED_RESOURCES_ALLOCATION,
+						Event: models.PcfPolicyAuthorizationAfEvent_FAILED_RESOURCES_ALLOCATION,
 					},
 					{
-						Event: models.AfEvent_SUCCESSFUL_RESOURCES_ALLOCATION,
+						Event: models.PcfPolicyAuthorizationAfEvent_SUCCESSFUL_RESOURCES_ALLOCATION,
 					},
 					{
-						Event: models.AfEvent_USAGE_REPORT,
+						Event: models.PcfPolicyAuthorizationAfEvent_USAGE_REPORT,
 					},
 				},
 				NotifUri: "https://127.0.0.1:12345",
@@ -86,7 +86,7 @@ func GetPostAppSessionsData_AFInfluenceOnTrafficRouting() models.AppSessionConte
 					NotificationUri: "http://127.0.0.100:8000/nnef-callback/v1/traffic-influence/edge",
 					NotifCorreId:    "1234",
 				},
-				RouteToLocs: []models.RouteToLocation{
+				RouteToLocs: []*models.RouteToLocation{
 					{
 						Dnai:        "edge",
 						RouteProfId: "MEC1",
@@ -152,20 +152,20 @@ func GetDeleteAppSession204Data() models.AppSessionContext {
 			SuppFeat: "0",
 		},
 		AscRespData: &models.AppSessionContextRespData{},
-		EvsNotif:    &models.EventsNotification{},
+		EvsNotif:    &models.PcfPolicyAuthorizationEventsNotification{},
 	}
 	return DeleteAppSession204Data
 }
 
-func GetUpdateEventsSubsc201Data() models.EventsSubscReqData {
-	UpdateEventsSubsc201Data := models.EventsSubscReqData{
+func GetUpdateEventsSubsc201Data() models.PcfPolicyAuthorizationEventsSubscReqData {
+	UpdateEventsSubsc201Data := models.PcfPolicyAuthorizationEventsSubscReqData{
 		Events: []models.AfEventSubscription{
 			{
-				Event:       models.AfEvent_ACCESS_TYPE_CHANGE,
+				Event:       models.PcfPolicyAuthorizationAfEvent_ACCESS_TYPE_CHANGE,
 				NotifMethod: models.AfNotifMethod_EVENT_DETECTION,
 			},
 			{
-				Event:       models.AfEvent_PLMN_CHG,
+				Event:       models.PcfPolicyAuthorizationAfEvent_PLMN_CHG,
 				NotifMethod: models.AfNotifMethod_EVENT_DETECTION,
 			},
 		},
@@ -174,11 +174,11 @@ func GetUpdateEventsSubsc201Data() models.EventsSubscReqData {
 	return UpdateEventsSubsc201Data
 }
 
-func GetUpdateEventsSubsc200Data() models.EventsSubscReqData {
-	UpdateEventsSubsc200Data := models.EventsSubscReqData{
+func GetUpdateEventsSubsc200Data() models.PcfPolicyAuthorizationEventsSubscReqData {
+	UpdateEventsSubsc200Data := models.PcfPolicyAuthorizationEventsSubscReqData{
 		Events: []models.AfEventSubscription{
 			{
-				Event:       models.AfEvent_PLMN_CHG,
+				Event:       models.PcfPolicyAuthorizationAfEvent_PLMN_CHG,
 				NotifMethod: models.AfNotifMethod_EVENT_DETECTION,
 			},
 		},
@@ -187,11 +187,11 @@ func GetUpdateEventsSubsc200Data() models.EventsSubscReqData {
 	return UpdateEventsSubsc200Data
 }
 
-func GetUpdateEventsSubsc204Data() models.EventsSubscReqData {
-	UpdateEventsSubsc204Data := models.EventsSubscReqData{
+func GetUpdateEventsSubsc204Data() models.PcfPolicyAuthorizationEventsSubscReqData {
+	UpdateEventsSubsc204Data := models.PcfPolicyAuthorizationEventsSubscReqData{
 		Events: []models.AfEventSubscription{
 			{
-				Event:       models.AfEvent_SUCCESSFUL_RESOURCES_ALLOCATION,
+				Event:       models.PcfPolicyAuthorizationAfEvent_SUCCESSFUL_RESOURCES_ALLOCATION,
 				NotifMethod: models.AfNotifMethod_EVENT_DETECTION,
 			},
 		},
@@ -200,8 +200,8 @@ func GetUpdateEventsSubsc204Data() models.EventsSubscReqData {
 	return UpdateEventsSubsc204Data
 }
 
-func GetUpdateEventsSubsc400Data() models.EventsSubscReqData {
-	UpdateEventsSubsc400Data := models.EventsSubscReqData{
+func GetUpdateEventsSubsc400Data() models.PcfPolicyAuthorizationEventsSubscReqData {
+	UpdateEventsSubsc400Data := models.PcfPolicyAuthorizationEventsSubscReqData{
 		UsgThres: &models.UsageThreshold{
 			Duration:       0,
 			TotalVolume:    0,
@@ -215,7 +215,7 @@ func GetModAppSession200Data() models.AppSessionContextUpdateData {
 	ModAppSession200Data := models.AppSessionContextUpdateData{
 		AfRoutReq: &models.AfRoutingRequirementRm{
 			AppReloc: true,
-			RouteToLocs: []models.RouteToLocation{
+			RouteToLocs: []*models.RouteToLocation{
 				{
 					Dnai: "Dnai",
 					RouteInfo: &models.RouteInformation{
@@ -228,11 +228,11 @@ func GetModAppSession200Data() models.AppSessionContextUpdateData {
 			},
 			UpPathChgSub: &models.UpPathChgEvent{},
 		},
-		EvSubsc: &models.EventsSubscReqDataRm{
+		EvSubsc: &models.PcfPolicyAuthorizationEventsSubscReqDataRm{
 			NotifUri: "EvSubsc_NotifUri",
 			Events: []models.AfEventSubscription{
 				{
-					Event:       models.AfEvent_ACCESS_TYPE_CHANGE,
+					Event:       models.PcfPolicyAuthorizationAfEvent_ACCESS_TYPE_CHANGE,
 					NotifMethod: models.AfNotifMethod_EVENT_DETECTION,
 				},
 			},
@@ -241,7 +241,7 @@ func GetModAppSession200Data() models.AppSessionContextUpdateData {
 				TotalVolume: 10,
 			},
 		},
-		MedComponents: map[string]models.MediaComponentRm{
+		MedComponents: map[string]*models.MediaComponentRm{
 			"1": {
 				MedCompN: 1,
 				MarBwDl:  "40 Mbps",
@@ -250,7 +250,7 @@ func GetModAppSession200Data() models.AppSessionContextUpdateData {
 				MirBwUl:  "20 Mbps",
 				MedType:  models.MediaType_AUDIO,
 				FStatus:  models.FlowStatus_ENABLED,
-				MedSubComps: map[string]models.MediaSubComponentRm{
+				MedSubComps: map[string]*models.MediaSubComponentRm{
 					"1": {
 						FNum:    1,
 						FDescs:  []string{"permit out ip from 127.0.0.9 to 45.45.0.2"},
