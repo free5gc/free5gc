@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
 SCRIPT_DIR="$(cd "$( dirname "$0" )" && pwd -P)"
 CMD_FILE="gtp5g-tunnel"
 
