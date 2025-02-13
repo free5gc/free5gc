@@ -89,7 +89,7 @@ func nnrfNFManagementCondition(nf *models.NfProfile, nfprofile models.NfProfile)
 	if nfprofile.Ipv6Addresses != nil {
 		// fmt.Println("NsiList")
 		a := make([]string, len(nfprofile.Ipv6Addresses))
-		copy(a, nfprofile.Ipv4Addresses)
+		copy(a, nfprofile.Ipv6Addresses)
 		nf.Ipv6Addresses = a
 	}
 	// DefaultNotificationSubscription
