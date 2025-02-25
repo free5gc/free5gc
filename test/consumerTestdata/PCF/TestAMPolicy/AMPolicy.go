@@ -48,10 +48,10 @@ UserLoc :
 						" SMacroNGeNB-34B89" indicates a Short Macro NG-eNB ID with value 0x34B89.
 */
 //Success Test
-func GetAMreqdata() models.PolicyAssociationRequest {
+func GetAMreqdata() models.PcfAmPolicyControlPolicyAssociationRequest {
 	timeNow := time.Now()
 	//d := time.Date(2019, 7, 5, 12, 30, 0, 0, time.UTC)
-	amCreateReqData := models.PolicyAssociationRequest{
+	amCreateReqData := models.PcfAmPolicyControlPolicyAssociationRequest{
 		NotificationUri: "http://127.0.0.1:29518/namf-callback/v1/am-policy/imsi-2089300007487-1",
 		Supi:            "imsi-2089300007487",
 		SuppFeat:        "1",
@@ -102,7 +102,7 @@ func GetAMreqdata() models.PolicyAssociationRequest {
 				},
 			},
 		},
-		ServingPlmn: &models.NetworkId{
+		ServingPlmn: &models.PlmnIdNid{
 			Mcc: "208",
 			Mnc: "93",
 		},
@@ -110,7 +110,7 @@ func GetAMreqdata() models.PolicyAssociationRequest {
 			"groupids",
 		},
 		Guami: &models.Guami{
-			PlmnId: &models.PlmnId{
+			PlmnId: &models.PlmnIdNid{
 				Mcc: "208",
 				Mnc: "93",
 			},
@@ -129,11 +129,11 @@ func GetAMreqdata() models.PolicyAssociationRequest {
 	}
 	return amCreateReqData
 }
-func GetAMUpdateReqData() models.PolicyAssociationUpdateRequest {
-	amUpdateReqData := models.PolicyAssociationUpdateRequest{
-		Triggers: []models.RequestTrigger{
-			"RFSP_CH",
-			"SERV_AREA_CH",
+func GetAMUpdateReqData() models.PcfAmPolicyControlPolicyAssociationUpdateRequest {
+	amUpdateReqData := models.PcfAmPolicyControlPolicyAssociationUpdateRequest{
+		Triggers: []models.PcfAmPolicyControlRequestTrigger{
+			models.PcfAmPolicyControlRequestTrigger_RFSP_CH,
+			models.PcfAmPolicyControlRequestTrigger_SERV_AREA_CH,
 		},
 		ServAreaRes: &models.ServiceAreaRestriction{
 			RestrictionType: "ALLOWED_AREAS",
@@ -167,13 +167,13 @@ func GetAMUpdateReqData() models.PolicyAssociationUpdateRequest {
 
 //-------------------------------------------------------------------------------------------------
 //Fail Test (Create part)
-func GetamCreatefailnotifyURIData() models.PolicyAssociationRequest {
+func GetamCreatefailnotifyURIData() models.PcfAmPolicyControlPolicyAssociationRequest {
 	//d := time.Date(2019, 7, 5, 12, 30, 0, 0, time.UTC)
 	amCreatefailnotifyURIData := GetAMreqdata()
 	amCreatefailnotifyURIData.NotificationUri = ""
 	return amCreatefailnotifyURIData
 }
-func GetamCreatefailsupiData() models.PolicyAssociationRequest {
+func GetamCreatefailsupiData() models.PcfAmPolicyControlPolicyAssociationRequest {
 	//d := time.Date(2019, 7, 5, 12, 30, 0, 0, time.UTC)
 	amCreatefailnotifysupiData := GetAMreqdata()
 	amCreatefailnotifysupiData.Supi = "dadfasdfasd"
