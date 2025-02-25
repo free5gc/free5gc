@@ -75,7 +75,7 @@ func init() {
 				{
 					PduSessionId: 10,
 					N2InfoContent: &models.N2InfoContent{
-						NgapIeType: models.NgapIeType_PDU_RES_REL_CMD,
+						NgapIeType: models.AmfCommunicationNgapIeType_PDU_RES_REL_CMD,
 						NgapData: &models.RefToBinaryData{
 							ContentId: "N2SmInfo",
 						},

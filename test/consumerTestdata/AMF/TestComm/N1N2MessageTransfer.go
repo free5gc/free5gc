@@ -24,7 +24,7 @@ func init() {
 			SmInfo: &models.N2SmInformation{
 				PduSessionId: 10,
 				N2InfoContent: &models.N2InfoContent{
-					NgapIeType: models.NgapIeType_PDU_RES_REL_CMD,
+					NgapIeType: models.AmfCommunicationNgapIeType_PDU_RES_REL_CMD,
 					NgapData: &models.RefToBinaryData{
 						ContentId: "N2SmInfo",
 					},
@@ -72,7 +72,7 @@ func init() {
 			SmInfo: &models.N2SmInformation{
 				PduSessionId: 10,
 				N2InfoContent: &models.N2InfoContent{
-					NgapIeType: models.NgapIeType_PDU_RES_SETUP_REQ,
+					NgapIeType: models.AmfCommunicationNgapIeType_PDU_RES_SETUP_REQ,
 					NgapData: &models.RefToBinaryData{
 						ContentId: "N2SmInfo",
 					},
@@ -91,7 +91,7 @@ func init() {
 			SmInfo: &models.N2SmInformation{
 				PduSessionId: 11,
 				N2InfoContent: &models.N2InfoContent{
-					NgapIeType: models.NgapIeType_PDU_RES_SETUP_REQ,
+					NgapIeType: models.AmfCommunicationNgapIeType_PDU_RES_SETUP_REQ,
 					NgapData: &models.RefToBinaryData{
 						ContentId: "N2SmInfo",
 					},
@@ -106,10 +106,10 @@ func init() {
 	}
 }
 
-var N2InfoTable = make(map[models.NgapIeType]interface{})
+var N2InfoTable = make(map[models.AmfCommunicationNgapIeType]interface{})
 
 func init() {
-	N2InfoTable[models.NgapIeType_PDU_RES_REL_CMD] = buildPDUSessionResourceReleaseCommandTransfer()
+	N2InfoTable[models.AmfCommunicationNgapIeType_PDU_RES_REL_CMD] = buildPDUSessionResourceReleaseCommandTransfer()
 	// pdu := buildPDUSessionResourceReleaseCommand()
 	// rawData, err := ngap.Encoder(pdu)
 	// if err != nil {
@@ -132,6 +132,6 @@ func buildPDUSessionResourceReleaseCommandTransfer() (data ngapType.PDUSessionRe
 	return
 }
 func GetPDUSessionResourceReleaseCommandTransfer() []byte {
-	encodeData, _ := aper.MarshalWithParams(N2InfoTable[models.NgapIeType_PDU_RES_REL_CMD], "valueExt")
+	encodeData, _ := aper.MarshalWithParams(N2InfoTable[models.AmfCommunicationNgapIeType_PDU_RES_REL_CMD], "valueExt")
 	return encodeData
 }

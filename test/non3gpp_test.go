@@ -293,20 +293,22 @@ func setupGreTunnel(greIfaceName, parentIfaceName string, ueTunnelAddr, n3iwfTun
 }
 
 func getAuthSubscription() (authSubs models.AuthenticationSubscription) {
-	authSubs.PermanentKey = &models.PermanentKey{
-		PermanentKeyValue: TestGenAuthData.MilenageTestSet19.K,
-	}
-	authSubs.Opc = &models.Opc{
-		OpcValue: TestGenAuthData.MilenageTestSet19.OPC,
-	}
-	authSubs.Milenage = &models.Milenage{
-		Op: &models.Op{
-			OpValue: TestGenAuthData.MilenageTestSet19.OP,
-		},
-	}
+	// authSubs.EncPermanentKey = &models.PermanentKey{
+	// 	PermanentKeyValue: TestGenAuthData.MilenageTestSet19.K,
+	// }
+	// authSubs.EncOpcKey = &models.Opc{
+	// 	OpcValue: TestGenAuthData.MilenageTestSet19.OPC,
+	// }
+	authSubs.EncPermanentKey = TestGenAuthData.MilenageTestSet19.K
+	authSubs.EncOpcKey = TestGenAuthData.MilenageTestSet19.OPC
+	// authSubs.Milenage = &models.Milenage{
+	// 	Op: &models.Op{
+	// 		OpValue: TestGenAuthData.MilenageTestSet19.OP,
+	// 	},
+	// }
 	authSubs.AuthenticationManagementField = "8000"
 
-	authSubs.SequenceNumber = TestGenAuthData.MilenageTestSet19.SQN
+	authSubs.SequenceNumber.Sqn = TestGenAuthData.MilenageTestSet19.SQN
 	authSubs.AuthenticationMethod = models.AuthMethod__5_G_AKA
 	return
 }
