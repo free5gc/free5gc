@@ -4,6 +4,7 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"regexp"
 
@@ -56,17 +57,6 @@ func CalculateIpv4HeaderChecksum(hdr *ipv4.Header) uint32 {
 
 func GetAuthSubscription(k, opc, op string) models.AuthenticationSubscription {
 	var authSubs models.AuthenticationSubscription
-	// authSubs.PermanentKey = &models.PermanentKey{
-	// 	PermanentKeyValue: k,
-	// }
-	// authSubs.Opc = &models.Opc{
-	// 	OpcValue: opc,
-	// }
-	// authSubs.Milenage = &models.Milenage{
-	// 	Op: &models.Op{
-	// 		OpValue: op,
-	// 	},
-	// }
 	authSubs.EncPermanentKey = k
 	authSubs.EncOpcKey = opc
 	authSubs.AuthenticationManagementField = "8000"
@@ -80,17 +70,6 @@ func GetAuthSubscription(k, opc, op string) models.AuthenticationSubscription {
 
 func GetEAPAKAPrimeAuthSubscription(k, opc, op string) models.AuthenticationSubscription {
 	var authSubs models.AuthenticationSubscription
-	// authSubs.PermanentKey = &models.PermanentKey{
-	// 	PermanentKeyValue: k,
-	// }
-	// authSubs.Opc = &models.Opc{
-	// 	OpcValue: opc,
-	// }
-	// authSubs.Milenage = &models.Milenage{
-	// 	Op: &models.Op{
-	// 		OpValue: op,
-	// 	},
-	// }
 	authSubs.EncPermanentKey = k
 	authSubs.EncOpcKey = opc
 	authSubs.AuthenticationManagementField = "8000"
@@ -172,17 +151,7 @@ func (ue *RanUeContext) DeriveRESstarAndSetKey(
 	}
 
 	if authSubs.EncOpcKey == "" {
-		// opStr := authSubs.Milenage.Op.OpValue
-		// var op []byte
-		// op, err = hex.DecodeString(opStr)
-		// if err != nil {
-		// 	fatal.Fatalf("DecodeString error: %+v", err)
-		// }
-
-		// opc, err = milenage.GenerateOPC(k, op)
-		// if err != nil {
-		// 	fatal.Fatalf("milenage GenerateOPC error: %+v", err)
-		// }
+		fatal.Fatalf("%+v", errors.New("EncOpcKey is empty"))
 	} else {
 		opc, err = hex.DecodeString(authSubs.EncOpcKey)
 		if err != nil {
@@ -270,17 +239,7 @@ func (ue *RanUeContext) DeriveResEAPMessageAndSetKey(
 	}
 
 	if authSubs.EncOpcKey == "" {
-		// opStr := authSubs.Milenage.Op.OpValue
-		// var op []byte
-		// op, err = hex.DecodeString(opStr)
-		// if err != nil {
-		// 	fatal.Fatalf("DecodeString error: %+v", err)
-		// }
-
-		// opc, err = milenage.GenerateOPC(k, op)
-		// if err != nil {
-		// 	fatal.Fatalf("milenage GenerateOPC error: %+v", err)
-		// }
+		fatal.Fatalf("%+v", errors.New("EncOpcKey is empty"))
 	} else {
 		opc, err = hex.DecodeString(authSubs.EncOpcKey)
 		if err != nil {
