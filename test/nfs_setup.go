@@ -577,6 +577,12 @@ func smfConfig(testID TestId) error {
 			NrfCertPem:   "../cert/nrf.pem",
 			UrrPeriod:    30,
 			UrrThreshold: 10000,
+			PLMNList: []smf_factory.PlmnID{
+				{
+					Mcc: "208",
+					Mnc: "93",
+				},
+			},
 		},
 		Logger: &smf_factory.Logger{
 			Enable:       true,

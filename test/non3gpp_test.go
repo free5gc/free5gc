@@ -308,7 +308,9 @@ func getAuthSubscription() (authSubs models.AuthenticationSubscription) {
 	// }
 	authSubs.AuthenticationManagementField = "8000"
 
-	authSubs.SequenceNumber.Sqn = TestGenAuthData.MilenageTestSet19.SQN
+	authSubs.SequenceNumber = &models.SequenceNumber{
+		Sqn: TestGenAuthData.MilenageTestSet19.SQN,
+	}
 	authSubs.AuthenticationMethod = models.AuthMethod__5_G_AKA
 	return
 }

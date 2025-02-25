@@ -71,7 +71,9 @@ func GetAuthSubscription(k, opc, op string) models.AuthenticationSubscription {
 	authSubs.EncOpcKey = opc
 	authSubs.AuthenticationManagementField = "8000"
 
-	authSubs.SequenceNumber.Sqn = TestGenAuthData.MilenageTestSet19.SQN
+	authSubs.SequenceNumber = &models.SequenceNumber{
+		Sqn: TestGenAuthData.MilenageTestSet19.SQN,
+	}
 	authSubs.AuthenticationMethod = models.AuthMethod__5_G_AKA
 	return authSubs
 }
@@ -93,7 +95,9 @@ func GetEAPAKAPrimeAuthSubscription(k, opc, op string) models.AuthenticationSubs
 	authSubs.EncOpcKey = opc
 	authSubs.AuthenticationManagementField = "8000"
 
-	authSubs.SequenceNumber.Sqn = TestGenAuthData.MilenageTestSet19.SQN
+	authSubs.SequenceNumber = &models.SequenceNumber{
+		Sqn: TestGenAuthData.MilenageTestSet19.SQN,
+	}
 	authSubs.AuthenticationMethod = models.AuthMethod_EAP_AKA_PRIME
 	return authSubs
 }
