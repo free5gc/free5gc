@@ -3,6 +3,7 @@ name: CI Test
 on:
   schedule:
     - cron: '14 19 * * *'  # UTC 19:14 (Local 03:14)
+  # pull_request:
 
 env:
   COMPOSE_FILE: ci-test/docker-compose-ci-ulcl.yaml
