@@ -31,7 +31,7 @@ func CreateTestData() models.SmPolicyContextData {
 		// Chargingcharacteristics: "string",
 		Dnn:            "internet",
 		PduSessionType: models.PduSessionType_IPV4,
-		ServingNetwork: &models.NetworkId{
+		ServingNetwork: &models.PlmnIdNid{
 			Mcc: "208",
 			Mnc: "93",
 		},
@@ -107,7 +107,7 @@ func UpdateTestData(trigger []models.PolicyControlRequestTrigger, op *models.Rul
 	data := models.SmPolicyUpdateContextData{
 		RepPolicyCtrlReqTriggers: trigger,
 		AccessType:               models.AccessType__3_GPP_ACCESS,
-		ServingNetwork: &models.NetworkId{
+		ServingNetwork: &models.PlmnIdNid{
 			Mnc: "208",
 			Mcc: "93",
 		},
@@ -159,7 +159,7 @@ func UpdateTestData(trigger []models.PolicyControlRequestTrigger, op *models.Rul
 		},
 		ServNfId: &models.ServingNfIdentity{
 			Guami: &models.Guami{
-				PlmnId: &models.PlmnId{
+				PlmnId: &models.PlmnIdNid{
 					Mcc: "208",
 					Mnc: "93",
 				},

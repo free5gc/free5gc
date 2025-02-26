@@ -1,0 +1,76 @@
+name: CI Test
+
+on:
+  schedule:
+    - cron: '14 19 * * *'  # UTC 19:14 (Local 03:14)
+  # pull_request:
+
+env:
+  COMPOSE_FILE: ci-test/docker-compose-ci-ulcl.yaml
+  MAX_RETRIES: 5
+  RETRY_INTERVAL: 10
+
+jobs:
+  test:
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 180
+
+    steps:
+      - name: Checkout sub-repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          fetch-depth: 1
+
+      - name: Check Docker and Docker Compose
+        run: |
+          docker --version || exit 1
+          docker compose version || exit 1
+          
+      - name: Check if compose file exists
+        run: |
+          if [ ! -f "${{ env.COMPOSE_FILE }}" ]; then
+            echo "Docker Compose file not found: ${{ env.COMPOSE_FILE }}"
+            exit 1
+          fi
+
+      - name: Start docker compose
+        id: docker_up
+        run: |
+          docker compose -f ${{ env.COMPOSE_FILE }} up -d
+          if [ $? -ne 0 ]; then
+            echo "Failed to start docker compose"
+            exit 1
+          fi
+
+      - name: Wait for services to be ready
+        run: |
+          attempt=1
+          while [ $attempt -le ${{ env.MAX_RETRIES }} ]; do
+            echo "Checking services health (Attempt $attempt/${{ env.MAX_RETRIES }})..."
+            
+            if docker container inspect ci --format '{{.State.Status}}' | grep -q "running"; then
+              echo "CI container is ready!"
+              exit 0
+            fi
+            
+            echo "Services not ready yet, waiting..."
+            sleep ${{ env.RETRY_INTERVAL }}
+            attempt=$((attempt + 1))
+          done
+          
+          echo "Services failed to become ready in time"
+          exit 1
+
+      - name: Run ULCL test
+        id: test_run
+        run: |
+          set -e
+          echo "Starting ULCL test..."
+          docker exec ci /bin/bash -c "cd /root/test && ./test-ulcl.sh TestULCLTrafficInfluence"
+      
+      - name: Cleanup docker compose
+        if: always()
+        run: |
+          echo "Cleaning up resources..."
+          docker compose -f ${{ env.COMPOSE_FILE }} down -v

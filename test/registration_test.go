@@ -33,8 +33,8 @@ import (
 	"github.com/free5gc/nas/security"
 	"github.com/free5gc/ngap"
 	"github.com/free5gc/ngap/ngapType"
-	"github.com/free5gc/openapi/Npcf_PolicyAuthorization"
 	"github.com/free5gc/openapi/models"
+	"github.com/free5gc/openapi/pcf/PolicyAuthorization"
 	"github.com/free5gc/util/httpwrapper"
 	"github.com/free5gc/util/milenage"
 )
@@ -866,9 +866,9 @@ func TestGUTIRegistration(t *testing.T) {
 
 	// Calculate for RES*
 	rand = nasPdu.AuthenticationRequest.GetRANDValue()
-	sqn, _ := strconv.ParseUint(ue.AuthenticationSubs.SequenceNumber, 16, 48)
+	sqn, _ := strconv.ParseUint(ue.AuthenticationSubs.SequenceNumber.Sqn, 16, 48)
 	sqn++
-	ue.AuthenticationSubs.SequenceNumber = strconv.FormatUint(sqn, 16)
+	ue.AuthenticationSubs.SequenceNumber.Sqn = strconv.FormatUint(sqn, 16)
 	resStat = ue.DeriveRESstarAndSetKey(ue.AuthenticationSubs, rand[:], "5G:mnc093.mcc208.3gppnetwork.org")
 
 	// send NAS Authentication Response
@@ -2484,13 +2484,15 @@ func TestAFInfluenceOnTrafficRouting(t *testing.T) {
 
 	// Send the dummy packet
 
-	cfg := Npcf_PolicyAuthorization.NewConfiguration()
+	cfg := PolicyAuthorization.NewConfiguration()
 	cfg.SetBasePath("http://127.0.0.7:8000")
-	client := Npcf_PolicyAuthorization.NewAPIClient(cfg)
+	client := PolicyAuthorization.NewAPIClient(cfg)
 
 	appSessCtx := TestPolicyAuthorization.GetPostAppSessionsData_AFInfluenceOnTrafficRouting()
 
-	_, _, err = client.ApplicationSessionsCollectionApi.PostAppSessions(context.Background(), appSessCtx)
+	_, err = client.ApplicationSessionsCollectionApi.PostAppSessions(context.Background(), &PolicyAuthorization.PostAppSessionsRequest{
+		AppSessionContext: &appSessCtx,
+	})
 	assert.Nil(t, err, "PolicyAuthorize failed")
 
 	time.Sleep(1 * time.Second)
@@ -2571,8 +2573,8 @@ func TestReSynchronization(t *testing.T) {
 
 	// gen AK
 	K, OPC := make([]byte, 16), make([]byte, 16)
-	K, _ = hex.DecodeString(ue.AuthenticationSubs.PermanentKey.PermanentKeyValue)
-	OPC, _ = hex.DecodeString(ue.AuthenticationSubs.Opc.OpcValue)
+	K, _ = hex.DecodeString(ue.AuthenticationSubs.EncPermanentKey)
+	OPC, _ = hex.DecodeString(ue.AuthenticationSubs.EncOpcKey)
 	rand := nasPdu.AuthenticationRequest.GetRANDValue()
 
 	// Based on TS 33.105, clause 5.1.1.3. The SQN_ms is a SQN value managed by the mobile station (or UE).
@@ -2632,7 +2634,7 @@ func TestReSynchronization(t *testing.T) {
 		SQN[i] = AK[i] ^ SQNxorAK[i]
 	}
 	fmt.Printf("retrieve SQN %x\n", SQN)
-	ue.AuthenticationSubs.SequenceNumber = hex.EncodeToString(SQN)
+	ue.AuthenticationSubs.SequenceNumber.Sqn = hex.EncodeToString(SQN)
 	resStar := ue.DeriveRESstarAndSetKey(ue.AuthenticationSubs, rand[:], "5G:mnc093.mcc208.3gppnetwork.org")
 
 	// send NAS Authentication Response

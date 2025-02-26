@@ -333,7 +333,7 @@ func amfConfig(testID TestId) error {
 				"namf-oam",
 			},
 			ServedGumaiList: []models.Guami{{
-				PlmnId: &models.PlmnId{
+				PlmnId: &models.PlmnIdNid{
 					Mcc: "208",
 					Mnc: "93",
 				},
@@ -577,6 +577,12 @@ func smfConfig(testID TestId) error {
 			NrfCertPem:   "../cert/nrf.pem",
 			UrrPeriod:    30,
 			UrrThreshold: 10000,
+			PLMNList: []smf_factory.PlmnID{
+				{
+					Mcc: "208",
+					Mnc: "93",
+				},
+			},
 		},
 		Logger: &smf_factory.Logger{
 			Enable:       true,
@@ -988,7 +994,7 @@ func nssfConfig() error {
 						},
 						Tac: "33456",
 					},
-					SupportedSnssaiList: []models.Snssai{{
+					SupportedSnssaiList: []models.ExtSnssai{{
 						Sst: 1,
 						Sd:  "000001",
 					}, {
@@ -1006,7 +1012,7 @@ func nssfConfig() error {
 						},
 						Tac: "33457",
 					},
-					SupportedSnssaiList: []models.Snssai{{
+					SupportedSnssaiList: []models.ExtSnssai{{
 						Sst: 1,
 					}, {
 						Sst: 1,
@@ -1027,7 +1033,7 @@ func nssfConfig() error {
 						},
 						Tac: "33456",
 					},
-					SupportedSnssaiList: []models.Snssai{{
+					SupportedSnssaiList: []models.ExtSnssai{{
 						Sst: 1,
 					}, {
 						Sst: 1,
@@ -1047,7 +1053,7 @@ func nssfConfig() error {
 						},
 						Tac: "33458",
 					},
-					SupportedSnssaiList: []models.Snssai{{
+					SupportedSnssaiList: []models.ExtSnssai{{
 						Sst: 1,
 					}, {
 						Sst: 1,
@@ -1067,7 +1073,7 @@ func nssfConfig() error {
 						},
 						Tac: "33456",
 					},
-					SupportedSnssaiList: []models.Snssai{{
+					SupportedSnssaiList: []models.ExtSnssai{{
 						Sst: 1,
 					}, {
 						Sst: 1,
@@ -1083,7 +1089,7 @@ func nssfConfig() error {
 						},
 						Tac: "33457",
 					},
-					SupportedSnssaiList: []models.Snssai{{
+					SupportedSnssaiList: []models.ExtSnssai{{
 						Sst: 1,
 						Sd:  "000001",
 					}, {
@@ -1101,7 +1107,7 @@ func nssfConfig() error {
 						},
 						Tac: "33458",
 					},
-					SupportedSnssaiList: []models.Snssai{{
+					SupportedSnssaiList: []models.ExtSnssai{{
 						Sst: 1,
 					}, {
 						Sst: 1,
@@ -1120,7 +1126,7 @@ func nssfConfig() error {
 						},
 						Tac: "33459",
 					},
-					SupportedSnssaiList: []models.Snssai{{
+					SupportedSnssaiList: []models.ExtSnssai{{
 						Sst: 1,
 					}, {
 						Sst: 1,
@@ -1142,7 +1148,7 @@ func nssfConfig() error {
 						},
 						Tac: "33456",
 					},
-					SupportedSnssaiList: []models.Snssai{{
+					SupportedSnssaiList: []models.ExtSnssai{{
 						Sst: 1,
 					}, {
 						Sst: 1,
@@ -1161,7 +1167,7 @@ func nssfConfig() error {
 						},
 						Tac: "33458",
 					},
-					SupportedSnssaiList: []models.Snssai{{
+					SupportedSnssaiList: []models.ExtSnssai{{
 						Sst: 1,
 					}, {
 						Sst: 1,
@@ -1183,7 +1189,7 @@ func nssfConfig() error {
 					Tac: "33456",
 				},
 				AccessType: &accessType3GPP,
-				SupportedSnssaiList: []models.Snssai{{
+				SupportedSnssaiList: []models.ExtSnssai{{
 					Sst: 1,
 				}, {
 					Sst: 1,
@@ -1203,7 +1209,7 @@ func nssfConfig() error {
 					Tac: "33458",
 				},
 				AccessType: &accessType3GPP,
-				SupportedSnssaiList: []models.Snssai{{
+				SupportedSnssaiList: []models.ExtSnssai{{
 					Sst: 1,
 				}, {
 					Sst: 1,
@@ -1219,7 +1225,7 @@ func nssfConfig() error {
 						Mcc: "310",
 						Mnc: "560",
 					},
-					SNssaiList: []models.Snssai{{
+					SNssaiList: []models.ExtSnssai{{
 						Sst: 1,
 						Sd:  "000003",
 					}},
@@ -1233,7 +1239,7 @@ func nssfConfig() error {
 					Tac: "33459",
 				},
 				AccessType: &accessType3GPP,
-				SupportedSnssaiList: []models.Snssai{{
+				SupportedSnssaiList: []models.ExtSnssai{{
 					Sst: 1,
 				}, {
 					Sst: 1,
@@ -1249,7 +1255,7 @@ func nssfConfig() error {
 						Mcc: "310",
 						Mnc: "560",
 					},
-					SNssaiList: []models.Snssai{{
+					SNssaiList: []models.ExtSnssai{{
 						Sst: 2,
 						Sd:  "000001",
 					}},

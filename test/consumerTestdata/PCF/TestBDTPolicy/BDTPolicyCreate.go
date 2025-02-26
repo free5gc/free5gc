@@ -7,14 +7,13 @@ import (
 )
 
 func GetCreateTestData() models.BdtReqData {
-	startTime := time.Now().Format(time.RFC3339)
-	mm, _ := time.ParseDuration("10m")
-	stopTime := time.Now().Add(mm).Format(time.RFC3339)
+	startTime := time.Now()
+	stopTime := startTime.Add(10 * time.Minute)
 	bdtReqData := models.BdtReqData{
 		AspId: "123456",
 		DesTimeInt: &models.TimeWindow{
-			StartTime: startTime,
-			StopTime:  stopTime,
+			StartTime: &startTime,
+			StopTime:  &stopTime,
 		},
 		NumOfUes: 1,
 		VolPerUe: &models.UsageThreshold{
@@ -61,8 +60,8 @@ func GetCreateTestData() models.BdtReqData {
 	return bdtReqData
 }
 
-func GetUpdateTestData() models.BdtPolicyDataPatch {
-	bdtPolicyDataPatch := models.BdtPolicyDataPatch{
+func GetUpdateTestData() models.PcfBdtPolicyControlBdtPolicyDataPatch {
+	bdtPolicyDataPatch := models.PcfBdtPolicyControlBdtPolicyDataPatch{
 		SelTransPolicyId: 1,
 	}
 	return bdtPolicyDataPatch
