@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 DROP_ALL_DB=0
 DB_NAME="free5gc"
