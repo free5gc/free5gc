@@ -74,6 +74,10 @@ func (s *Server) applyService() {
 	accesstokenGroup := s.router.Group("") // accesstoken service didn't have api prefix
 	applyRoutes(accesstokenGroup, accesstokenRoutes)
 
+	bootstrappingRoutes := s.getBootstrappingRoutes()
+	bootstrappingGroup := s.router.Group(factory.NrfBootstrappingPrefix)
+	applyRoutes(bootstrappingGroup, bootstrappingRoutes)
+
 	discoveryRoutes := s.getNfDiscoveryRoutes()
 	discoveryGroup := s.router.Group(factory.NrfDiscResUriPrefix)
 	discAuthCheck := util.NewRouterAuthorizationCheck(models.ServiceName_NNRF_DISC)
