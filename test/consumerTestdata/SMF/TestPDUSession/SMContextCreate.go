@@ -112,23 +112,23 @@ func GetEstablishmentRequestData(testType string) (n1SmBytes []byte) {
 	return n1SmBytes
 }
 
-var ConsumerSMFPDUSessionSMContextCreateTable = make(map[string]models.SmContextCreateData)
+var ConsumerSMFPDUSessionSMContextCreateTable = make(map[string]models.SmfPduSessionSmContextCreateData)
 
 func init() {
-	ConsumerSMFPDUSessionSMContextCreateTable[SERVICE_REQUEST] = models.SmContextCreateData{
+	ConsumerSMFPDUSessionSMContextCreateTable[SERVICE_REQUEST] = models.SmfPduSessionSmContextCreateData{
 		Supi:                "imsi-2089300007487",
 		UnauthenticatedSupi: false,
 		PduSessionId:        2,
 		Dnn:                 "internet",
 		ServingNfId:         uuid.New().String(),
 		Guami: &models.Guami{
-			PlmnId: &models.PlmnId{
+			PlmnId: &models.PlmnIdNid{
 				Mcc: "208",
 				Mnc: "93",
 			},
 			AmfId: "cafe00",
 		},
-		ServingNetwork: &models.PlmnId{
+		ServingNetwork: &models.PlmnIdNid{
 			Mcc: "208",
 			Mnc: "93",
 		},
@@ -206,17 +206,17 @@ var ConsumerSMFPDUSessionUpdateContextTable = make(map[string]models.UpdateSmCon
 
 func init() {
 	ConsumerSMFPDUSessionUpdateContextTable[ACTIVATING] = models.UpdateSmContextRequest{
-		JsonData: &models.SmContextUpdateData{
+		JsonData: &models.SmfPduSessionSmContextUpdateData{
 			UpCnxState:  ACTIVATING,
 			ServingNfId: uuid.New().String(),
 			Guami: &models.Guami{
-				PlmnId: &models.PlmnId{
+				PlmnId: &models.PlmnIdNid{
 					Mcc: "208",
 					Mnc: "93",
 				},
 				AmfId: "cafe00",
 			},
-			ServingNetwork: &models.PlmnId{
+			ServingNetwork: &models.PlmnIdNid{
 				Mcc: "208",
 				Mnc: "93",
 			},
