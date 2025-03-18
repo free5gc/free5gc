@@ -19,6 +19,7 @@ require (
 	github.com/free5gc/pcf v0.0.0
 	github.com/free5gc/sctp v1.0.1
 	github.com/free5gc/smf v1.2.4
+	github.com/free5gc/tngf v0.0.0-00010101000000-000000000000
 	github.com/free5gc/udm v0.0.0
 	github.com/free5gc/udr v0.0.0
 	github.com/free5gc/util v1.0.7-0.20240911054252-194b3b49aba9
@@ -114,6 +115,7 @@ require (
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.12 // indirect
 	github.com/vishvananda/netns v0.0.4 // indirect
+	github.com/wmnsk/go-gtp v0.8.0 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.1.2 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect
