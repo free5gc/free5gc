@@ -255,7 +255,7 @@ then
     cd test && $GOROOT/bin/go test -v -vet=off -timeout 0 -run TestCN &
     sleep 10
 
-    # Run N3IWF
+    # Run TNGF
     sudo -E ./bin/tngf -c ./config/tngfcfg.test.yaml &
     sleep 5
 
