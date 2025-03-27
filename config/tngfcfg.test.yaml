@@ -1,0 +1,59 @@
+info:
+  version: 1.0.3
+  description: TNGF initial local configuration
+
+configuration:
+  TNGFInformation:
+    GlobalTNGFID: # ID used to globally identify an TNGF
+      PLMNID: # Public Land Mobile Network ID, <PLMN ID> = <MCC><MNC>
+        MCC: 208 # Mobile Country Code (3 digits string, digit: 0~9)
+        MNC: 93 # Mobile Network Code (2 or 3 digits string, digit: 0~9)
+      TNGFID: 135 # ID used to identify an TNGF in PLMN (uinteger, range: 0~65535)
+    Name: free5GC_TNGF # The name of this TNGF
+    SupportedTAList: # Tracking Area supported by this TNGF
+      - TAC: 000001 # Tracking Area Code (3 bytes hex string, range: 000000~FFFFFF)
+        BroadcastPLMNList: # Refer to TS 38.413
+          - PLMNID: # Public Land Mobile Network ID
+              MCC: 208 # Mobile Country Code (3 digits string, digit: 0~9)
+              MNC: 93 # Mobile Network Code (2 or 3 digits string, digit: 0~9)
+            TAISliceSupportList: # Network Slice supported in this TAI
+              - SNSSAI: # Single Network Slice Selection Assistance Information
+                  SST: 1 # Slice/Service Type (1 byte hex string, range: 0~F)
+                  SD: 010203 # Slice Differentiator (3 bytes hex string, range: 000000~FFFFFF)
+              - SNSSAI: # Single Network Slice Selection Assistance Information
+                  SST: 1 # Slice/Service Type (1 byte hex string, range: 0~F)
+                  SD: 112233 # Slice Differentiator (3 bytes hex string, range: 000000~FFFFFF)
+
+  AMFSCTPAddresses: # the IP list of N2 interfaces (SCTP) on AMF when using NGAP
+    - IP:
+        - 10.200.200.1
+      Port: 38412
+  NASTCPPort: 20000 # TCP port which the NAS listens on
+
+  # --- Bind Interfaces ---
+  IKEBindAddress: 192.168.127.1  # IP address of Nwu interface (IKE) on this TNGF
+  RadiusBindAddress: 192.168.127.1 # IP address of Nwu interface (IKE) on this TNGF
+  IPSecInterfaceAddress: 10.0.0.1 # IP address of IPSec virtual interface (IPsec tunnel enpoint on this TNGF)
+  IPSecTunnelAddress: 10.0.0.1 # Tunnel IP address of XFRM interface on this TNGF
+  UEIPAddressRange: 10.0.0.0/24 # IP address allocated to UE in IPSec tunnel
+  XFRMInterfaceName: xfrmi # Prefix of XFRM interface name created by TNGF
+  XFRMInterfaceID: 1 # XFRM interface if_id for IPSec routing (Any value except to 0, default value is 7 if not defined)
+
+  # --- N3 Interfaces ---
+  GTPBindAddress: 10.200.200.2 # IP address of N3 interface (GTP) on this TNGF
+
+  FQDN: tngf.free5gc.org # FQDN of this TNGF
+
+  # --- Security ---
+  PrivateKey: cert/tngf.key # Private key file path
+  CertificateAuthority: cert/tngf.pem # Certificate Authority (CA) file path
+  Certificate: cert/tngf.pem # Certificate file path
+  RadiusSecret: free5gctngf
+
+# the kind of log output
+# debugLevel: how detailed to output, value: trace, debug, info, warn, error, fatal, panic
+# ReportCaller: enable the caller report or not, value: true or false
+logger:
+  enable: true # true or false
+  level: info # how detailed to output, value: trace, debug, info, warn, error, fatal, panic
+  reportCaller: false # enable the caller report or not, value: true or false
