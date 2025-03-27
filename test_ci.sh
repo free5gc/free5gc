@@ -29,7 +29,7 @@ do
 done
 shift $(($OPTIND - 1))
 
-TEST_POOL="TestRegistration|TestGUTIRegistration|TestServiceRequest|TestXnHandover|TestN2Handover|TestDeregistration|TestPDUSessionReleaseRequest|TestPaging|TestNon3GPP|TestReSynchronization|TestDuplicateRegistration|TestEAPAKAPrimeAuthentication|TestMultiAmfRegistration|TestNasReroute"
+TEST_POOL="TestRegistration|TestGUTIRegistration|TestServiceRequest|TestXnHandover|TestN2Handover|TestDeregistration|TestPDUSessionReleaseRequest|TestPaging|TestNon3GPP|TestReSynchronization|TestDuplicateRegistration|TestEAPAKAPrimeAuthentication|TestMultiAmfRegistration|TestNasReroute|TestTngf"
 if [[ ! "$1" =~ $TEST_POOL ]]
 then
     echo "Usage: $0 [ ${TEST_POOL//|/ | } ]"
@@ -224,6 +224,23 @@ then
 
     cd test
     $GOROOT/bin/go test -v -vet=off -run TestNasReroute -args multiAmf $2
+elif [[ "$1" == "TestTngf" ]]
+then
+    removeN3iwfInterfaces
+    # setup TNGFUE's namespace, interfaces for IPsec
+    setupN3ueEnv
+
+    # Run CN
+    cd test && $GOROOT/bin/go test -v -vet=off -timeout 0 -run TestCN &
+    sleep 10
+
+    # Run TNGF
+    sudo -E ./bin/tngf -c ./config/tngfcfg.test.yaml &
+    sleep 5
+
+    # Run Test UE
+    cd test
+    ${EXEC_UENS} $GOROOT/bin/go test -v -vet=off -timeout 0 -run TestTngfUE -args noinit $2
 else
     cd test
     if ! go test -v -vet=off -run $1 -args $2; then
