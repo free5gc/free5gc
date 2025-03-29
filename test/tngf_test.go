@@ -87,6 +87,11 @@ func tngfSetupIPsecXfrmi(xfrmIfaceName, parentIfaceName string, xfrmIfaceId uint
 		return nil, err
 	}
 
+	if oldLink, err := netlink.LinkByName(xfrmIfaceName); err == nil {
+		fmt.Println("Deleting old XFRM interface...")
+		_ = netlink.LinkDel(oldLink)
+	}
+
 	link := &netlink.Xfrmi{
 		LinkAttrs: netlink.LinkAttrs{
 			MTU:         1478,
@@ -1565,6 +1570,9 @@ func TestTngfUE(t *testing.T) {
 		_ = netlink.XfrmStateFlush(netlink.XFRM_PROTO_IPSEC_ANY)
 	}()
 
+	// Waiting for downlink data to be stored in the cache, then establishing a TCP connection.
+	time.Sleep(1 * time.Second)
+
 	localTCPAddr := &net.TCPAddr{
 		IP: ueInnerAddr.IP,
 	}
@@ -1572,6 +1580,7 @@ func TestTngfUE(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	t.Log("Establish TCP connection with TNGF successfully!!")
 
 	nasEnv := make([]byte, 65535)
 
@@ -1580,6 +1589,8 @@ func TestTngfUE(t *testing.T) {
 		t.Fatal(err)
 		return
 	}
+	// For timeout
+	tcpConnWithTNGF.SetReadDeadline(time.Now().Add(20 * time.Second))
 
 	nasEnv, n, err = DecapNasPduFromEnvelope(nasEnv[:n])
 	if err != nil {
@@ -1606,8 +1617,6 @@ func TestTngfUE(t *testing.T) {
 		t.Fatal(err)
 		return
 	}
-
-	time.Sleep(5000 * time.Millisecond)
 
 	// UE request PDU session setup
 	sNssai := models.Snssai{
