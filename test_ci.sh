@@ -240,7 +240,13 @@ then
 
     # Run Test UE
     cd test
-    ${EXEC_UENS} $GOROOT/bin/go test -v -vet=off -timeout 0 -run TestTngfUE -args noinit $2
+    if ! ${EXEC_UENS} $GOROOT/bin/go test -v -vet=off -timeout 0 -run TestTngfUE -args noinit $2; then
+        echo "Test result: Failed"
+        terminate $1
+        exit 1
+    else
+        echo "Test result: Succeeded"
+    fi
 else
     cd test
     if ! go test -v -vet=off -run $1 -args $2; then
