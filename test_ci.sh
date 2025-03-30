@@ -77,7 +77,7 @@ function terminate()
         removeN3iwfInterfaces
         sudo ip link del veth2
         sudo killall n3iwf tngf
-        killall test.test
+        ps aux | grep test.test | awk '{print $2}' | xargs sudo kill -SIGUSR1
     fi
 
     if [[ "$1" == "TestMultiAmfRegistration" ]]
