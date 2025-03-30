@@ -226,7 +226,13 @@ then
     $GOROOT/bin/go test -v -vet=off -run TestNasReroute -args multiAmf $2
 elif [[ "$1" == "TestTngf" ]]
 then
+    # clean up the old test environment
+    sudo ip xfrm policy flush
+    sudo ip xfrm state flush
+    sudo ip netns del ${UENS}
     removeN3iwfInterfaces
+    sudo ip link del veth2
+
     # setup TNGFUE's namespace, interfaces for IPsec
     setupN3ueEnv
 

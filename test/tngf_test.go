@@ -906,10 +906,12 @@ func TestTngfUE(t *testing.T) {
 	}
 
 	udpConnection, err := setupUDPSocket()
-	radiusConnection, err := setupRadiusSocket()
-
 	if err != nil {
-		t.Fatalf("Setup UDP socket Fail: %+v", err)
+		t.Fatalf("Setup UDP socket Fail: %v", err)
+	}
+	radiusConnection, err := setupRadiusSocket()
+	if err != nil {
+		t.Fatalf("Setup Radius socket Fail: %+v", err)
 	}
 
 	// calling station payload

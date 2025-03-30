@@ -93,6 +93,8 @@ jobs:
         CHF_PATCH: ${{ inputs.chf_patch }}
         # TNGF_PATCH: ${{ inputs.tngf_patch }}
 
+    - name: TNGF Registration Test
+      run: ./test_ci.sh TestTngf
     - name: Basic Test
       run: |
         ls bin/ -al
@@ -125,5 +127,4 @@ jobs:
       run: ./patch.sh
     # - name: Non3GPP Test
     #   run: ./test_ci.sh TestNon3GPP
-    - name: TNGF Registration Test
-      run: ./test_ci.sh TestTngf
+    
