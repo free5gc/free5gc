@@ -29,7 +29,7 @@ do
 done
 shift $(($OPTIND - 1))
 
-TEST_POOL="TestRegistration|TestGUTIRegistration|TestServiceRequest|TestXnHandover|TestN2Handover|TestDeregistration|TestPDUSessionReleaseRequest|TestPaging|TestNon3GPP|TestReSynchronization|TestDuplicateRegistration|TestEAPAKAPrimeAuthentication|TestMultiAmfRegistration|TestNasReroute"
+TEST_POOL="TestRegistration|TestGUTIRegistration|TestServiceRequest|TestXnHandover|TestN2Handover|TestDeregistration|TestPDUSessionReleaseRequest|TestPaging|TestNon3GPP|TestReSynchronization|TestDuplicateRegistration|TestEAPAKAPrimeAuthentication|TestMultiAmfRegistration|TestNasReroute|TestTngf"
 if [[ ! "$1" =~ $TEST_POOL ]]
 then
     echo "Usage: $0 [ ${TEST_POOL//|/ | } ]"
@@ -65,7 +65,7 @@ function terminate()
     sudo ip netns del ${UPFNS}
     sudo ip addr del 10.60.0.1/32 dev lo
 
-    if [[ "$1" == "TestNon3GPP" ]]
+    if [[ "$1" == "TestNon3GPP" || "$1" == "TestTngf" ]]
     then
         if [ ${DUMP_NS} ]
         then
@@ -76,8 +76,8 @@ function terminate()
         sudo ip netns del ${UENS}
         removeN3iwfInterfaces
         sudo ip link del veth2
-        sudo killall n3iwf
-        killall test.test
+        sudo killall n3iwf tngf
+        ps aux | grep test.test | awk '{print $2}' | xargs sudo kill -SIGUSR1
     fi
 
     if [[ "$1" == "TestMultiAmfRegistration" ]]
@@ -224,6 +224,35 @@ then
 
     cd test
     $GOROOT/bin/go test -v -vet=off -run TestNasReroute -args multiAmf $2
+elif [[ "$1" == "TestTngf" ]]
+then
+    # clean up the old test environment
+    sudo ip xfrm policy flush
+    sudo ip xfrm state flush
+    sudo ip netns del ${UENS}
+    removeN3iwfInterfaces
+    sudo ip link del veth2
+
+    # setup TNGFUE's namespace, interfaces for IPsec
+    setupN3ueEnv
+
+    # Run CN
+    cd test && $GOROOT/bin/go test -v -vet=off -timeout 0 -run TestCN &
+    sleep 10
+
+    # Run TNGF
+    sudo -E ./bin/tngf -c ./config/tngfcfg.test.yaml &
+    sleep 5
+
+    # Run Test UE
+    cd test
+    if ! ${EXEC_UENS} $GOROOT/bin/go test -v -vet=off -timeout 0 -run TestTngfUE -args noinit $2; then
+        echo "Test result: Failed"
+        terminate $1
+        exit 1
+    else
+        echo "Test result: Succeeded"
+    fi
 else
     cd test
     if ! go test -v -vet=off -run $1 -args $2; then

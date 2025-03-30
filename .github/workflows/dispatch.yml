@@ -47,6 +47,10 @@ on:
         description: 'NF patch'
         required: false
         type: string
+      # tngf_patch:
+      #   description: 'NF patch'
+      #   required: false
+      #   type: string
 jobs:
   build:
     runs-on: [self-hosted, linux, x64]
@@ -87,6 +91,7 @@ jobs:
         # N3IWF_PATCH: ${{ inputs.n3iwf_patch }}
         PCF_PATCH: ${{ inputs.pcf_patch }}
         CHF_PATCH: ${{ inputs.chf_patch }}
+        # TNGF_PATCH: ${{ inputs.tngf_patch }}
 
     - name: Basic Test
       run: |
@@ -120,3 +125,5 @@ jobs:
       run: ./patch.sh
     # - name: Non3GPP Test
     #   run: ./test_ci.sh TestNon3GPP
+    - name: TNGF Registration Test
+      run: ./test_ci.sh TestTngf

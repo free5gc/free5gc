@@ -95,3 +95,5 @@ jobs:
       run: ./test_ci_ulcl.sh TestRequestTwoPDUSessions oauth
     # - name: Non3GPP Test
     #  run: ./test_ci.sh TestNon3GPP
+    - name: TNGF Registration Test
+      run: ./test_ci.sh TestTngf
