@@ -1582,6 +1582,9 @@ func TestTngfUE(t *testing.T) {
 	}
 	t.Log("Establish TCP connection with TNGF successfully!!")
 
+	// For timeout
+	tcpConnWithTNGF.SetReadDeadline(time.Now().Add(20 * time.Second))
+
 	nasEnv := make([]byte, 65535)
 
 	n, err = tcpConnWithTNGF.Read(nasEnv)
@@ -1589,8 +1592,6 @@ func TestTngfUE(t *testing.T) {
 		t.Fatal(err)
 		return
 	}
-	// For timeout
-	tcpConnWithTNGF.SetReadDeadline(time.Now().Add(20 * time.Second))
 
 	nasEnv, n, err = DecapNasPduFromEnvelope(nasEnv[:n])
 	if err != nil {
@@ -1603,7 +1604,7 @@ func TestTngfUE(t *testing.T) {
 
 	spew.Config.Indent = "\t"
 	nasStr := spew.Sdump(nasMsg)
-	t.Logf("Get NAS Security Mode Command Message:\n %+v", nasStr)
+	t.Logf("Get Registration Accept Message:\n %+v", nasStr)
 
 	// send NAS Registration Complete Msg
 	pdu := nasTestpacket.GetRegistrationComplete(nil)
@@ -1617,6 +1618,9 @@ func TestTngfUE(t *testing.T) {
 		t.Fatal(err)
 		return
 	}
+
+	// Do not read the response, just wait for the AMF to finish the registration process
+	time.Sleep(1 * time.Second)
 
 	// UE request PDU session setup
 	sNssai := models.Snssai{
