@@ -7,12 +7,12 @@ require (
 	github.com/calee0219/fatal v0.0.1
 	github.com/davecgh/go-spew v1.1.1
 	github.com/free5gc/amf v0.0.0
-	github.com/free5gc/aper v1.0.6-0.20240503143507-2c4c4780b98f
+	github.com/free5gc/aper v1.0.6-0.20250102035630-3ddc831eed6a
 	github.com/free5gc/ausf v0.0.0
 	github.com/free5gc/chf v1.0.5-0.20241224083457-ad38fc8dfa7d
 	github.com/free5gc/ike v1.1.1-0.20241014015325-083f89768f43
-	github.com/free5gc/nas v1.1.4-0.20241107083120-4605e0d39ece
-	github.com/free5gc/ngap v1.0.9-0.20241107082718-d359a67ebfa2
+	github.com/free5gc/nas v1.1.4
+	github.com/free5gc/ngap v1.0.9
 	github.com/free5gc/nrf v0.0.0
 	github.com/free5gc/nssf v0.0.0
 	github.com/free5gc/openapi v1.0.9-0.20250102055216-bb5814d1e736
