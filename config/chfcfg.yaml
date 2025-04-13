@@ -27,7 +27,10 @@ configuration:
     enable: true
     hostIPv4: 127.0.0.1 # billing server ftp server
     port: 2121 # billing server listen on port 2121
-    listenPort: 2122 # cgf ftp server listen port
+    listenPort: 2122 # cgf ftp server listen 
+    passiveTransferPortRange:
+      start: 2123
+      end: 2130
     tls:
       pem: cert/chf.pem
       key: cert/chf.key
