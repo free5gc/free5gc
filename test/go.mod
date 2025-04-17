@@ -11,11 +11,11 @@ require (
 	github.com/free5gc/ausf v0.0.0
 	github.com/free5gc/chf v1.0.5-0.20241224083457-ad38fc8dfa7d
 	github.com/free5gc/ike v1.1.1-0.20241014015325-083f89768f43
-	github.com/free5gc/nas v1.1.4
-	github.com/free5gc/ngap v1.0.9
+	github.com/free5gc/nas v1.1.5
+	github.com/free5gc/ngap v1.0.10
 	github.com/free5gc/nrf v0.0.0
 	github.com/free5gc/nssf v0.0.0
-	github.com/free5gc/openapi v1.0.9-0.20250102055216-bb5814d1e736
+	github.com/free5gc/openapi v1.1.0
 	github.com/free5gc/pcf v0.0.0
 	github.com/free5gc/sctp v1.0.1
 	github.com/free5gc/smf v1.2.4
