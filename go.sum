@@ -16,8 +16,8 @@ github.com/evanphx/json-patch v0.5.2 h1:xVCHIVMUu1wtM/VkR9jVZ45N3FhZfYMMYGorLCR8
 github.com/evanphx/json-patch v0.5.2/go.mod h1:ZWS5hhDbVDyob71nXKNL0+PWn6ToqBHMikGIFbs31qQ=
 github.com/felixge/httpsnoop v1.0.4 h1:NFTV2Zj1bL4mc9sqWACXbQFVBBg2W3GPvqp8/ESS2Wg=
 github.com/felixge/httpsnoop v1.0.4/go.mod h1:m8KPJKqk1gH5J9DgRY2ASl2lWCfGKXixSwevea8zH2U=
-github.com/free5gc/openapi v1.0.9-0.20250102055216-bb5814d1e736 h1:TIEUa/PaEdzXh47vQEMV7jOSmKd2ugP/4NjeBDPK0OM=
-github.com/free5gc/openapi v1.0.9-0.20250102055216-bb5814d1e736/go.mod h1:ATF7/Id4loKIDCX3DYwePBUxIdOBixxNKBVL1s5xYlU=
+github.com/free5gc/openapi v1.1.0 h1:bOTp6vKC2MxupEXD76qeUL1MppV/SmXnka09JQJADZ0=
+github.com/free5gc/openapi v1.1.0/go.mod h1:Q2vSmc1xpSE9Dy8rbNSWQwv7cFLHbZvKhq528vj6Wbg=
 github.com/free5gc/util v1.0.6 h1:dBt9drcXtYKE/cY5XuQcuffgsYclPIpIArhSeS6M+DQ=
 github.com/free5gc/util v1.0.6/go.mod h1:eSGN7POUM8LNTvg/E591XR6447a6/w1jFWGKNZPHcXw=
 github.com/gabriel-vasile/mimetype v1.4.2 h1:w5qFW6JKBz9Y393Y4q372O9A7cUSequkh1Q7OhCmWKU=
