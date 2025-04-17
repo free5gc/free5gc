@@ -9,7 +9,7 @@ require (
 	github.com/free5gc/amf v0.0.0
 	github.com/free5gc/aper v1.0.6-0.20250102035630-3ddc831eed6a
 	github.com/free5gc/ausf v0.0.0
-	github.com/free5gc/chf v1.0.5-0.20241224083457-ad38fc8dfa7d
+	github.com/free5gc/chf v1.1.1
 	github.com/free5gc/ike v1.1.1-0.20241014015325-083f89768f43
 	github.com/free5gc/nas v1.1.5
 	github.com/free5gc/ngap v1.0.10
@@ -73,7 +73,6 @@ require (
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.20.0 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
-	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/golang-jwt/jwt/v5 v5.2.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/mock v1.6.0 // indirect
