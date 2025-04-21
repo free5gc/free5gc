@@ -28,6 +28,9 @@ configuration:
     hostIPv4: 127.0.0.1 # billing server ftp server
     port: 2121 # billing server listen on port 2121
     listenPort: 2122 # cgf ftp server listen port
+    passiveTransferPortRange: # Range of ports used for passive FTP data transfer connections
+      start: 2123 # Starting port number for passive mode data connections
+      end: 2130 # Ending port number for passive mode data connections
     tls:
       pem: cert/chf.pem
       key: cert/chf.key
