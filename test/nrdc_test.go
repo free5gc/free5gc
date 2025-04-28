@@ -388,7 +388,7 @@ func pduSessionEstablishment(t *testing.T, ue *test.RanUeContext, MranConn *sctp
 	time.Sleep(1 * time.Second)
 }
 
-func TestDCRegistration(t *testing.T) {
+func TestDC(t *testing.T) {
 	// RANs connect to AMF
 	MranConn, SranConn := connectRANsToAMF(t)
 	if MranConn == nil || SranConn == nil {
