@@ -510,4 +510,6 @@ func TestDC(t *testing.T) {
 	// ping test
 	icmpTest(t, MupfConn, SupfConn)
 	t.Log("ICMP write to Master N3 and Second N3 tunnel successfully")
+
+	NfTerminate()
 }
