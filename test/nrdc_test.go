@@ -2,6 +2,7 @@ package test_test
 
 import (
 	"encoding/hex"
+	"fmt"
 	"net"
 	"test"
 	"test/consumerTestdata/UDM/TestGenAuthData"
@@ -29,23 +30,31 @@ import (
 const (
 	amfN2Addr  = "127.0.0.1"
 	mranN2Addr = "127.0.0.1"
-	sranN2Addr = "127.0.0.1"
+	sranN2Addr = "127.0.0.2"
 	upfN3Addr  = "10.200.200.102"
 	mranN3Addr = "10.200.200.1"
 	sranN3Addr = "10.200.200.2"
+
+	googleDNS    = "9.9.10.10"
+	cloudFareDNS = "9.9.9.9"
+
+	ueIp = "10.60.0.1"
+	loIp = "10.60.0.101"
 
 	amfPort    = 38412
 	mranN2Port = 9487
 	sranN2Port = 9488
 	mupfN3Port = 2152
-	supfN3Port = 2153
+	supfN3Port = 2152
 	mranN3Port = 2152
-	sranN3Port = 2153
+	sranN3Port = 2152
 
 	servingPlmnId = "20893"
 
-	mranTeid = "\x00\x00\x00\x01"
-	sranTeid = "\x00\x00\x00\x02"
+	mranULTeid = "00000002"
+	sranULTeid = "00000003"
+	mranDLTeid = "\x00\x00\x00\x01"
+	sranDLTeid = "\x00\x00\x00\x02"
 )
 
 func connectRANsToAMF(t *testing.T) (*sctp.SCTPConn, *sctp.SCTPConn) {
@@ -251,7 +260,7 @@ func pduSessionEstablishment(t *testing.T, ue *test.RanUeContext, MranConn *sctp
 		upTransportLayerInformation := &qosFlowPerTNLInformation.UPTransportLayerInformation
 		upTransportLayerInformation.Present = ngapType.UPTransportLayerInformationPresentGTPTunnel
 		upTransportLayerInformation.GTPTunnel = new(ngapType.GTPTunnel)
-		upTransportLayerInformation.GTPTunnel.GTPTEID.Value = aper.OctetString(mranTeid)
+		upTransportLayerInformation.GTPTunnel.GTPTEID.Value = aper.OctetString(mranDLTeid)
 		upTransportLayerInformation.GTPTunnel.TransportLayerAddress = ngapConvert.IPAddressToNgap(mranN3Addr, "")
 
 		// Associated QoS Flow List in QoS Flow per TNL Information
@@ -269,7 +278,7 @@ func pduSessionEstablishment(t *testing.T, ue *test.RanUeContext, MranConn *sctp
 		DCUpTransportLayerInformation := &DCQosFlowPerTNLInformationItem.QosFlowPerTNLInformation.UPTransportLayerInformation
 		DCUpTransportLayerInformation.Present = ngapType.UPTransportLayerInformationPresentGTPTunnel
 		DCUpTransportLayerInformation.GTPTunnel = new(ngapType.GTPTunnel)
-		DCUpTransportLayerInformation.GTPTunnel.GTPTEID.Value = aper.OctetString(sranTeid)
+		DCUpTransportLayerInformation.GTPTunnel.GTPTEID.Value = aper.OctetString(sranDLTeid)
 		DCUpTransportLayerInformation.GTPTunnel.TransportLayerAddress = ngapConvert.IPAddressToNgap(sranN3Addr, "")
 
 		// DC Associated QoS Flow List in QoS Flow per TNL Information
@@ -393,7 +402,7 @@ func pduSessionEstablishment(t *testing.T, ue *test.RanUeContext, MranConn *sctp
 
 func icmpTest(t *testing.T, MupfConn *net.UDPConn, SupfConn *net.UDPConn) {
 	// Send ICMP Echo Request through Master RAN
-	gtpHdr, err := hex.DecodeString("32ff00340000000100000000")
+	gtpHdr, err := hex.DecodeString(fmt.Sprintf("32ff0034%s00000000", mranULTeid))
 	assert.Nil(t, err)
 	icmpData, err := hex.DecodeString("8c870d0000000000101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f3031323334353637")
 	assert.Nil(t, err)
@@ -406,8 +415,8 @@ func icmpTest(t *testing.T, MupfConn *net.UDPConn, SupfConn *net.UDPConn) {
 		Flags:    0,
 		TotalLen: 48,
 		TTL:      64,
-		Src:      net.ParseIP("10.60.0.1").To4(),
-		Dst:      net.ParseIP("10.60.0.101").To4(),
+		Src:      net.ParseIP(ueIp).To4(),
+		Dst:      net.ParseIP(googleDNS).To4(),
 		ID:       1,
 	}
 	checksum := test.CalculateIpv4HeaderChecksum(&ipv4hdr)
@@ -431,10 +440,18 @@ func icmpTest(t *testing.T, MupfConn *net.UDPConn, SupfConn *net.UDPConn) {
 	_, err = MupfConn.Write(append(tt, b...))
 	assert.Nil(t, err)
 
-	time.Sleep(1 * time.Second)
+	// read from Master RAN
+	// recvMsg := make([]byte, 2048)
+	// err = MupfConn.SetReadDeadline(time.Now().Add(10 * time.Second))
+	// assert.Nil(t, err)
+	// n, err := MupfConn.Read(recvMsg)
+	// assert.Nil(t, err)
+	// assert.Equal(t, 48, n)
+	// err = MupfConn.SetReadDeadline(time.Time{})
+	// assert.Nil(t, err)
 
 	// Send ICMP Echo Request through Second RAN
-	gtpHdr, err = hex.DecodeString("32ff00340000000200000000")
+	gtpHdr, err = hex.DecodeString(fmt.Sprintf("32ff0034%s00000000", sranULTeid))
 	assert.Nil(t, err)
 
 	// Send through Second RAN
@@ -445,8 +462,8 @@ func icmpTest(t *testing.T, MupfConn *net.UDPConn, SupfConn *net.UDPConn) {
 		Flags:    0,
 		TotalLen: 48,
 		TTL:      64,
-		Src:      net.ParseIP("10.60.0.1").To4(),
-		Dst:      net.ParseIP("10.60.0.102").To4(),
+		Src:      net.ParseIP(ueIp).To4(),
+		Dst:      net.ParseIP(cloudFareDNS).To4(),
 		ID:       1,
 	}
 	checksum = test.CalculateIpv4HeaderChecksum(&ipv4hdr)
@@ -470,7 +487,15 @@ func icmpTest(t *testing.T, MupfConn *net.UDPConn, SupfConn *net.UDPConn) {
 	_, err = SupfConn.Write(append(tt, b...))
 	assert.Nil(t, err)
 
-	time.Sleep(1 * time.Second)
+	// read from Second RAN
+	// recvMsg = make([]byte, 2048)
+	// err = SupfConn.SetReadDeadline(time.Now().Add(5 * time.Second))
+	// assert.Nil(t, err)
+	// n, err = SupfConn.Read(recvMsg)
+	// assert.Nil(t, err)
+	// assert.Equal(t, 48, n)
+	// err = SupfConn.SetReadDeadline(time.Time{})
+	// assert.Nil(t, err)
 }
 
 func TestDC(t *testing.T) {
