@@ -26,7 +26,7 @@ jobs:
         run: |
           docker --version || exit 1
           docker compose version || exit 1
-          
+
       - name: Check if compose file exists
         run: |
           if [ ! -f "${{ env.COMPOSE_FILE }}" ]; then
@@ -48,17 +48,17 @@ jobs:
           attempt=1
           while [ $attempt -le ${{ env.MAX_RETRIES }} ]; do
             echo "Checking services health (Attempt $attempt/${{ env.MAX_RETRIES }})..."
-            
+
             if docker container inspect ci --format '{{.State.Status}}' | grep -q "running"; then
               echo "CI container is ready!"
               exit 0
             fi
-            
+
             echo "Services not ready yet, waiting..."
             sleep ${{ env.RETRY_INTERVAL }}
             attempt=$((attempt + 1))
           done
-          
+
           echo "Services failed to become ready in time"
           exit 1
 
@@ -68,9 +68,10 @@ jobs:
           set -e
           echo "Starting ULCL test..."
           docker exec ci /bin/bash -c "cd /root/test && ./test-ulcl.sh TestULCLTrafficInfluence"
-      
+
       - name: Cleanup docker compose
         if: always()
         run: |
           echo "Cleaning up resources..."
           docker compose -f ${{ env.COMPOSE_FILE }} down -v
+          docker system prune -a -f --volumes
