@@ -29,7 +29,7 @@ do
 done
 shift $(($OPTIND - 1))
 
-TEST_POOL="All|TestRegistration|TestGUTIRegistration|TestServiceRequest|TestXnHandover|TestN2Handover|TestDeregistration|TestPDUSessionReleaseRequest|TestPaging|TestNon3GPP|TestReSynchronization|TestDuplicateRegistration|TestEAPAKAPrimeAuthentication|TestMultiAmfRegistration|TestNasReroute|TestTngf"
+TEST_POOL="All|TestRegistration|TestGUTIRegistration|TestServiceRequest|TestXnHandover|TestN2Handover|TestDeregistration|TestPDUSessionReleaseRequest|TestPaging|TestNon3GPP|TestReSynchronization|TestDuplicateRegistration|TestEAPAKAPrimeAuthentication|TestMultiAmfRegistration|TestNasReroute|TestTngf|TestDC"
 if [[ ! "$1" =~ $TEST_POOL ]]
 then
     echo "Usage: $0 [ ${TEST_POOL//|/ | } ]"
@@ -188,13 +188,28 @@ ${EXEC_UPFNS} ip link set veth1 up
 ${EXEC_UPFNS} ip addr add 10.60.0.101 dev lo
 ${EXEC_UPFNS} ip addr add 10.200.200.101/24 dev veth1
 ${EXEC_UPFNS} ip addr add 10.200.200.102/24 dev veth1
+${EXEC_UPFNS} ip route add 10.200.200.1/32 dev veth1 src 10.200.200.102
+${EXEC_UPFNS} ip route add 10.200.200.2/32 dev veth1 src 10.200.200.102
+
+if [[ "$1" == "TestDC" ]]
+then
+    ${EXEC_UPFNS} ip tuntap add dev googleDNS mode tun
+    ${EXEC_UPFNS} ip link set googleDNS up
+    ${EXEC_UPFNS} ip addr add 9.9.10.10/32 dev googleDNS
+    ${EXEC_UPFNS} ip route add 9.9.0.0/16 dev googleDNS
+    
+    ${EXEC_UPFNS} ip tuntap add dev cloudFareDNS mode tun
+    ${EXEC_UPFNS} ip link set cloudFareDNS up
+    ${EXEC_UPFNS} ip addr add 9.9.9.9/32 dev cloudFareDNS
+    ${EXEC_UPFNS} ip route add 9.9.0.0/16 dev cloudFareDNS
+fi
 
 if [ ${DUMP_NS} ]
 then
     PCAP_PATH=testpcap
     mkdir -p ${PCAP_PATH}
     ${EXEC_UPFNS} tcpdump -U -i any -w ${PCAP_PATH}/${UPFNS}.pcap &
-    sudo -E tcpdump -U -i lo -w ${PCAP_PATH}/default_ns.pcap &
+    sudo -E tcpdump -U -i any -w ${PCAP_PATH}/default_ns.pcap &
 fi
 
 ${EXEC_UPFNS} ./bin/upf -c ./config/upfcfg.test.yaml &
@@ -265,6 +280,9 @@ then
 else
     cd test
     $GOROOT/bin/go test -v -vet=off -run $1 -args $2
+    # LOG_FILE="test_output_${1}.log"
+    # $GOROOT/bin/go test -v -vet=off -run $1 -args $2 > $LOG_FILE
+    # echo "Test output saved to $LOG_FILE"
 fi
 
 terminate $1
