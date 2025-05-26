@@ -441,14 +441,14 @@ func icmpTest(t *testing.T, MupfConn *net.UDPConn, SupfConn *net.UDPConn) {
 	assert.Nil(t, err)
 
 	// read from Master RAN
-	// recvMsg := make([]byte, 2048)
-	// err = MupfConn.SetReadDeadline(time.Now().Add(10 * time.Second))
-	// assert.Nil(t, err)
-	// n, err := MupfConn.Read(recvMsg)
-	// assert.Nil(t, err)
-	// assert.Equal(t, 48, n)
-	// err = MupfConn.SetReadDeadline(time.Time{})
-	// assert.Nil(t, err)
+	recvMsg := make([]byte, 2048)
+	err = MupfConn.SetReadDeadline(time.Now().Add(10 * time.Second))
+	assert.Nil(t, err)
+	n, err := MupfConn.Read(recvMsg)
+	assert.Nil(t, err)
+	assert.Equal(t, 64, n)
+	err = MupfConn.SetReadDeadline(time.Time{})
+	assert.Nil(t, err)
 
 	// Send ICMP Echo Request through Second RAN
 	gtpHdr, err = hex.DecodeString(fmt.Sprintf("32ff0034%s00000000", sranULTeid))
@@ -488,14 +488,14 @@ func icmpTest(t *testing.T, MupfConn *net.UDPConn, SupfConn *net.UDPConn) {
 	assert.Nil(t, err)
 
 	// read from Second RAN
-	// recvMsg = make([]byte, 2048)
-	// err = SupfConn.SetReadDeadline(time.Now().Add(5 * time.Second))
-	// assert.Nil(t, err)
-	// n, err = SupfConn.Read(recvMsg)
-	// assert.Nil(t, err)
-	// assert.Equal(t, 48, n)
-	// err = SupfConn.SetReadDeadline(time.Time{})
-	// assert.Nil(t, err)
+	recvMsg = make([]byte, 2048)
+	err = SupfConn.SetReadDeadline(time.Now().Add(5 * time.Second))
+	assert.Nil(t, err)
+	n, err = SupfConn.Read(recvMsg)
+	assert.Nil(t, err)
+	assert.Equal(t, 64, n)
+	err = SupfConn.SetReadDeadline(time.Time{})
+	assert.Nil(t, err)
 }
 
 func TestDC(t *testing.T) {

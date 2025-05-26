@@ -188,7 +188,8 @@ ${EXEC_UPFNS} ip link set veth1 up
 ${EXEC_UPFNS} ip addr add 10.60.0.101 dev lo
 ${EXEC_UPFNS} ip addr add 10.200.200.101/24 dev veth1
 ${EXEC_UPFNS} ip addr add 10.200.200.102/24 dev veth1
-${EXEC_UPFNS} ip route add 10.200.200.0/24 dev veth1
+${EXEC_UPFNS} ip route add 10.200.200.1/32 dev veth1 src 10.200.200.102
+${EXEC_UPFNS} ip route add 10.200.200.2/32 dev veth1 src 10.200.200.102
 
 if [[ "$1" == "TestDC" ]]
 then
