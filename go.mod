@@ -4,7 +4,7 @@ go 1.24
 
 require (
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d
-	github.com/free5gc/openapi v1.2.0
+	github.com/free5gc/openapi v1.2.1
 	github.com/free5gc/util v1.2.0
 	github.com/gin-gonic/gin v1.10.0
 	github.com/golang-jwt/jwt/v5 v5.2.2

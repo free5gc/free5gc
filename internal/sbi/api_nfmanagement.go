@@ -23,6 +23,7 @@ import (
 	"github.com/free5gc/nrf/internal/util"
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
+	"github.com/free5gc/util/metrics/sbi"
 )
 
 func (s *Server) getNfRegisterRoute() []Route {
@@ -176,6 +177,7 @@ func (s *Server) HTTPUpdateNFInstance(c *gin.Context) {
 			Cause:  "SYSTEM_FAILURE",
 		}
 		logger.NfmLog.Errorf("Get Request Body error: %+v", err)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetail.Cause)
 		c.JSON(http.StatusInternalServerError, problemDetail)
 		return
 	}
@@ -288,6 +290,7 @@ func (s *Server) HTTPCreateSubscription(c *gin.Context) {
 			Cause:  "SYSTEM_FAILURE",
 		}
 		logger.NfmLog.Errorf("Get Request Body error: %+v", err)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetail.Cause)
 		c.JSON(http.StatusInternalServerError, problemDetail)
 		return
 	}
@@ -302,6 +305,7 @@ func (s *Server) HTTPCreateSubscription(c *gin.Context) {
 			Detail: problemDetail,
 		}
 		logger.NfmLog.Errorln(problemDetail)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetail)
 		c.JSON(http.StatusBadRequest, rsp)
 		return
 	}

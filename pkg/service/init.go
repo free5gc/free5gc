@@ -75,7 +75,7 @@ func NewApp(ctx context.Context, cfg *factory.Config, tlsKeyLogPath string) (*Nr
 		return nil, err
 	}
 
-	features := map[utils.MetricTypeEnabled]bool{}
+	features := map[utils.MetricTypeEnabled]bool{utils.SBI: true}
 	customMetrics := make(map[utils.MetricTypeEnabled][]prometheus.Collector)
 	if cfg.AreMetricsEnabled() {
 		if nrf.metricsServer, err = metrics.NewServer(

@@ -9,6 +9,7 @@ import (
 	"github.com/free5gc/nrf/internal/logger"
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/openapi/nrf/NFManagement"
+	sbi_metrics "github.com/free5gc/util/metrics/sbi"
 )
 
 type nnrfService struct {
@@ -32,6 +33,7 @@ func (s *nnrfService) getNFManagementClient(uri string) *NFManagement.APIClient 
 
 	configuration := NFManagement.NewConfiguration()
 	configuration.SetBasePath(uri)
+	configuration.SetMetrics(sbi_metrics.SbiMetricHook)
 	client = NFManagement.NewAPIClient(configuration)
 
 	s.nfMngmntMu.RUnlock()
