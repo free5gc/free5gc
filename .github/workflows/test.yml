@@ -25,7 +25,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get -y update
-        sudo apt-get -y install netcat psmisc iproute2 git gcc g++ cmake autoconf libtool pkg-config libmnl-dev libyaml-dev
+        sudo apt-get -y install netcat-openbsd psmisc iproute2 git gcc g++ cmake autoconf libtool pkg-config libmnl-dev libyaml-dev
 
     - name: Build
       run: |
