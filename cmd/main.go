@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"syscall"
 
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 
 	"github.com/free5gc/nrf/internal/logger"
 	"github.com/free5gc/nrf/pkg/factory"
@@ -24,13 +24,15 @@ func main() {
 	app.Usage = "5G Network Repository Function (NRF)"
 	app.Action = action
 	app.Flags = []cli.Flag{
-		cli.StringFlag{
-			Name:  "config, c",
-			Usage: "Load configuration from `FILE`",
+		&cli.StringFlag{
+			Name:    "config",
+			Aliases: []string{"c"},
+			Usage:   "Load configuration from `FILE`",
 		},
-		cli.StringSliceFlag{
-			Name:  "log, l",
-			Usage: "Output NF log to `FILE`",
+		&cli.StringSliceFlag{
+			Name:    "log",
+			Aliases: []string{"l"},
+			Usage:   "Output NF log to `FILE`",
 		},
 	}
 	if err := app.Run(os.Args); err != nil {
