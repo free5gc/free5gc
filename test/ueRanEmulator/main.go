@@ -12,7 +12,7 @@ import (
 	"test/nasTestpacket"
 
 	"github.com/calee0219/fatal"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 	"gopkg.in/yaml.v2"
 
 	"github.com/free5gc/nas"
@@ -107,7 +107,7 @@ func encodeSuci(imsi []byte, mncLen int) *nasType.MobileIdentity5GS {
 			nasMessage.MobileIdentity5GSTypeSuci, 0x0, 0x0, 0x0, 0xf0, 0xff, 0x00, 0x00},
 	}
 
-	//mcc & mnc
+	// mcc & mnc
 	suci.Buffer[1] = hexCharToByte(imsi[1])<<4 | hexCharToByte(imsi[0])
 	if mncLen > 2 {
 		suci.Buffer[2] = hexCharToByte(imsi[3])<<4 | hexCharToByte(imsi[2])
@@ -135,7 +135,7 @@ func encodeSuci(imsi []byte, mncLen int) *nasType.MobileIdentity5GS {
 func ueRanEmulator() error {
 	var n int
 	var sendMsg []byte
-	var recvMsg = make([]byte, 2048)
+	recvMsg := make([]byte, 2048)
 
 	// RAN connect to AMF
 	conn, err := test.ConnectToAmf(
@@ -409,10 +409,11 @@ func main() {
 	app.Usage = "./ueranem"
 	app.Action = action
 	app.Flags = []cli.Flag{
-		cli.StringFlag{
-			Name:  "config, c",
-			Value: "./config/ueranem.yaml",
-			Usage: "Load configuration from `FILE`",
+		&cli.StringFlag{
+			Name:    "config",
+			Aliases: []string{"c"},
+			Value:   "./config/ueranem.yaml",
+			Usage:   "Load configuration from `FILE`",
 		},
 	}
 	if err := app.Run(os.Args); err != nil {

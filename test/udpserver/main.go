@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/calee0219/fatal"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
 func main() {
@@ -16,15 +16,17 @@ func main() {
 	app.Usage = "./udpecho"
 	app.Action = action
 	app.Flags = []cli.Flag{
-		cli.StringFlag{
-			Name:  "addr, a",
-			Value: "0.0.0.0",
-			Usage: "Set local UDP address to listen",
+		&cli.StringFlag{
+			Name:    "addr",
+			Aliases: []string{"a"},
+			Value:   "0.0.0.0",
+			Usage:   "Set local UDP address to listen",
 		},
-		cli.StringFlag{
-			Name:  "port, p",
-			Value: "30000",
-			Usage: "Set local UDP port to listen",
+		&cli.StringFlag{
+			Name:    "port",
+			Aliases: []string{"p"},
+			Value:   "30000",
+			Usage:   "Set local UDP port to listen",
 		},
 	}
 	if err := app.Run(os.Args); err != nil {
