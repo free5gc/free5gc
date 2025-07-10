@@ -11,12 +11,10 @@ assignees: ''
 <!-- Please, remove the warning above before submitting the issue -->
 
 ## Documentation Request
-
-What was unclear/insufficient/not covered in the documentation.
+What aspects of the documentation were unclear, insufficient, or not covered?
 
 ## Suggestion
-
-free5GC will appreciate it, if suggestion’s are forwarded on how documents can be enhance.
+free5GC would appreciate it if suggestions on how to enhance the documentation are shared.
 
 ## Additional Context
-Add any other context or screenshots about the issue here.
+It would be appreciated if you could provide any relevant additional context (e.g. screenshots) about the issue here.

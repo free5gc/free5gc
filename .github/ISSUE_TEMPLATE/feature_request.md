@@ -13,27 +13,29 @@ assignees: ''
 ## Issue or Enhancement Description
 
 ### free5GC Version
-Please describe the free5GC version using. If possible, the package, device or emulator description will be very supportive.
+Please describe the version of free5GC you are using. If possible, include details about the package, device, or emulator, as this information will be very helpful.
 
-### Is your feature request related to a problem? Please describe.
-A clear and concise description of what the problem might be. For instance, I'm always frustrated when [...]
+### Is your feature request related to a problem?
+If yes, please describe it. Provide a clear and concise explanation of the issue, such as: 'I am always frustrated when ...'
 
 ### Solution Description
-A clear and concise description of what is expected. How can the requested feature be used to approach the problem it's supposed to solve?
+Please provide a clear and concise description of what is expected. How can the requested feature be used to address the problem it aims to solve?
 
 ### Alternatives or Workarounds
-A clear and concise description of any alternative solutions or features considering. It will be highly appreciated, if existing workaround knowledge can be shared.
+Please provide a clear and concise description of any alternative solutions or features being considered. It would be greatly appreciated if you could share any knowledge of existing workarounds.
 
 ### Additional Context
-Please include additional context or screenshots on feature request.
+It would be appreciated if you could provide any relevant additional context (e.g. screenshots) about the feature request.
 
 ## Issue Template Checklist
 
-<!-- Please answer the questions below. If not the issue might be disregarded. -->
+<!-- Please answer the questions below; otherwise, the issue may be disregarded. -->
 
 ### Pull Request Questionary
 
-<!-- free5GC will be happy to welcome first contributor’s, in order to broaden the community. -->
+<!-- free5GC is excited to welcome first-time contributors in order to broaden the community -->
+
+If you are willing to resolve an issue or make an enhancement by submitting a Pull Request, please answer below.
 
 - [ ] Yes, I have the time and I know how to start.
 - [ ] Yes, I have the time but I don't know how to start, I would need guidance.

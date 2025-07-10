@@ -18,7 +18,7 @@ A clear and concise description of what the bug is.
 ## To Reproduce
 Steps to reproduce the behavior:
 1. Change config '...'
-2. Code patch '...' (You can fork the project and give us the patch diff you have modified)
+2. Code patch '...' (You may fork the project and link the modified patch diff here)
 3. Run command '...'
 4. Dump packet '...'
 
@@ -30,33 +30,33 @@ If applicable, add screenshots to help explain the problem.
 
 ## Environment
 **Please, complete the following information:**
- - free5GC Version: [e.g. v3.0.100]
- - OS: [e.g. Ubuntu 200.04 Server]
- - Kernel version: [e.g. 5.200.0-0-generic]
- - go version: [e.g. 1.10.0 linux/amd64]
- - c compiler version (Option): [e.g. gcc version 1.1.0]
+ - free5GC Version: [e.g. v4.0.1]
+ - OS: [e.g. Ubuntu 22.04 Server]
+ - Kernel version: [e.g. 5.15.0-0-generic]
+ - go version: [e.g. 1.21.8 linux/amd64]
+ - C compiler version (optional): [e.g. gcc version 1.1.0]
 
 ## Trace Files
 ### Configuration Files
-Provide the configuration file here.
+Provide the configuration files.
 
-If not clear of what to do, the `config` folder can be zip and upload it here.
+If you are unsure of what to do, please zip the free5gc's `config` folder and upload it here.
 
 ### PCAP File
-Dump the packet and provide the pcap file here.
+Dump the relevant packets and provide the PCAP file.
 
-If not clear of what to do, this command can be used `sudo tcpdump -i any -w free5gc.pcap` prior to running bug reproduce. Then upload the pcap file `free5gc.pcap`.
+If you are unsure of what to do, use the following command before reproducing the bug: `sudo tcpdump -i any -w free5gc.pcap`. Then, please upload the `free5gc.pcap` file here.
 
 ### Log File
-Provide the program log file here.
+Provide the program log file.
 
-If not clear of what to do, copy the printed log on the screen and upload it here.
+If you are unsure of what to do, please copy the printed log from the screen and upload it here.
 
 ## System Architecture (Optional)
-Please provide the draft architecture, including the scenario, use cases, installation environment(bare metal, vm, container, or k8s), etc.
+Please provide the draft architecture, including the scenario, use cases, installation environment (e.g. bare metal, VM, container, or k8s), etc.
 
 ## Walkthrough (Optional)
-free5GC will be interested on the research or finding in brief.
+free5GC is interested on a brief description of the research conducted or its findings.
 
 ## Additional Context
-It will be appreciated if other context can be added here.
+It would be appreciated if you could provide any relevant additional context here.
