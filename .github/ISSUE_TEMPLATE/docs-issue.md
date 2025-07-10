@@ -10,7 +10,7 @@ assignees: ''
 **Using the provided issue template is advised; otherwise, the issue may be disregarded.**
 <!-- Please, remove the warning above before submitting the issue -->
 
-## Documentation request
+## Documentation Request
 
 What was unclear/insufficient/not covered in the documentation.
 
@@ -18,5 +18,5 @@ What was unclear/insufficient/not covered in the documentation.
 
 free5GC will appreciate it, if suggestion’s are forwarded on how documents can be enhance.
 
-## Additional context
+## Additional Context
 Add any other context or screenshots about the issue here.

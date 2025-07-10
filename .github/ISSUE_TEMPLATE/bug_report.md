@@ -12,7 +12,7 @@ assignees: ''
 **We appreciate it if you could check the [Troubleshooting page](https://free5gc.org/guide/Troubleshooting/) and look for duplicates in the [forum](https://forum.free5gc.org) before reporting bugs.**
 <!-- Please, remove the warnings (the 3 lines above) before submitting the issue -->
 
-## Describe the bug
+## Bug Decription
 A clear and concise description of what the bug is.
 
 ## To Reproduce
@@ -22,21 +22,22 @@ Steps to reproduce the behavior:
 3. Run command '...'
 4. Dump packet '...'
 
-## Expected behavior
+## Expected Behavior
 A clear and concise description of what you expected to happen.
 
 ## Screenshots
 If applicable, add screenshots to help explain the problem.
 
-## Environment (please complete the following information):
+## Environment
+**Please, complete the following information:**
  - free5GC Version: [e.g. v3.0.100]
  - OS: [e.g. Ubuntu 200.04 Server]
  - Kernel version: [e.g. 5.200.0-0-generic]
  - go version: [e.g. 1.10.0 linux/amd64]
  - c compiler version (Option): [e.g. gcc version 1.1.0]
 
-## Trace File
-### Configuration File
+## Trace Files
+### Configuration Files
 Provide the configuration file here.
 
 If not clear of what to do, the `config` folder can be zip and upload it here.
@@ -51,11 +52,11 @@ Provide the program log file here.
 
 If not clear of what to do, copy the printed log on the screen and upload it here.
 
-## System architecture (Option)
+## System Architecture (Optional)
 Please provide the draft architecture, including the scenario, use cases, installation environment(bare metal, vm, container, or k8s), etc.
 
-## Walkthrough (Option)
+## Walkthrough (Optional)
 free5GC will be interested on the research or finding in brief.
 
-## Additional context
+## Additional Context
 It will be appreciated if other context can be added here.
