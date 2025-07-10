@@ -1,6 +1,6 @@
 ---
 name: Docs issue
-about: Documentation(wiki) is unclear, or otherwise insufficient/misleading.
+about: Documentation (wiki) is unclear, or otherwise insufficient or misleading.
 title: "[Docs]"
 labels: ''
 assignees: ''

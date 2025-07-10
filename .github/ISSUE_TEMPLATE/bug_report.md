@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Creating bug report is highly welcome for improvement. If not fully convince, it can be forward to free5GC forum for further discussion.
+about: Creating a bug report is highly encouraged for improvement. If you are not fully convinced, it can be forwarded to the free5GC forum for further discussion.
 title: "[Bugs]"
 labels: ''
 assignees: ''
