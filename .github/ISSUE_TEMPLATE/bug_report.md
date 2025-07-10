@@ -7,10 +7,10 @@ assignees: ''
 
 ---
 
-**We will advise people to follow the issue template set, otherwise the issue might be disregarded.**
-**free5GC mainly uses GitHub for issue tracking. Information regarding to general questions or technical support. It will be highly considered if forward to the [forum](https://forum.free5gc.org).**
-**free5GC will appreciate it, if people can refer to [TS](https://github.com/free5gc/free5gc/wiki/Trouble_Shooting) and [forum](https://forum.free5gc.org) prior to bug reporting**
-<!-- Remove warning (above 3 lines) while reporting the issue -->
+**Using the provided issue template is advised; otherwise, the issue may be disregarded.**
+**free5GC primarily uses GitHub for issue tracking. For general questions, information, or technical support, please consider submiting them to the [forum](https://forum.free5gc.org).**
+**We appreciate it if you could check the [Troubleshooting page](https://free5gc.org/guide/Troubleshooting/) and look for duplicates in the [forum](https://forum.free5gc.org) before reporting bugs.**
+<!-- Please, remove the warnings (the 3 lines above) before submitting the issue -->
 
 ## Describe the bug
 A clear and concise description of what the bug is.

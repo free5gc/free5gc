@@ -7,8 +7,8 @@ assignees: ''
 
 ---
 
-**If the design issue template is not followed, the issue might be closed.**
-<!-- Remove above warning line while reporting the issue -->
+**Using the provided issue template is advised; otherwise, the issue may be disregarded.**
+<!-- Please, remove the warning above before submitting the issue -->
 
 ## Issue Description
 
