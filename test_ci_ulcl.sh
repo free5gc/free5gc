@@ -142,7 +142,7 @@ function terminate()
     fi
 
     sudo ip netns del "${UPFNS}${i}"
-    sudo ip link del "br-veth${i}"
+    sudo ip link del "br-veth${i}" 2>/dev/null || true
     done
 }
 

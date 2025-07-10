@@ -25,7 +25,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get -y update
-        sudo apt-get -y install netcat psmisc iproute2 git gcc g++ cmake autoconf libtool pkg-config libmnl-dev libyaml-dev
+        sudo apt-get -y install netcat-openbsd psmisc iproute2 git gcc g++ cmake autoconf libtool pkg-config libmnl-dev libyaml-dev
 
     - name: Build
       run: |
@@ -61,6 +61,8 @@ jobs:
         ./test_ci.sh TestEAPAKAPrimeAuthentication
         sleep 1
         ./test_ci.sh TestMultiAmfRegistration
+        sleep 1
+        ./test_ci.sh TestDC
     - name: ULCL Test
       run: ./test_ci_ulcl.sh TestRequestTwoPDUSessions
     - name: Basic Test (OAuth)
@@ -91,6 +93,8 @@ jobs:
         ./test_ci.sh TestEAPAKAPrimeAuthentication oauth
         sleep 1
         ./test_ci.sh TestMultiAmfRegistration oauth
+        sleep 1
+        ./test_ci.sh TestDC oauth
     - name: ULCL Test (OAuth)
       run: ./test_ci_ulcl.sh TestRequestTwoPDUSessions oauth
     # - name: Non3GPP Test
