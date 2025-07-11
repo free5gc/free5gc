@@ -32,7 +32,7 @@ We welcome you for contribution via [GitHub Pull Request](https://github.com/fre
 
 ## Release Note
 
-Detailed changes for each release are documented in the release notes. Detailed changes for each release are documented in the [release notes](https://github.com/free5gc/free5gc/releases).
+Detailed changes for each release are documented in the [release notes](https://github.com/free5gc/free5gc/releases).
 
 ## License
 
