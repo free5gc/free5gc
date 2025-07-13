@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Creating a bug report is highly encouraged for improvement. If you are not fully convinced, it can be forwarded to the free5GC forum for further discussion.
+about: Creating a bug report is highly encouraged for improvement. If you are not fully convinced, it can be forwarded to free5GC forum for further discussion.
 title: "[Bugs]"
 labels: ''
 assignees: ''
@@ -40,7 +40,7 @@ If applicable, add screenshots to help explain the problem.
 ### Configuration Files
 Provide the configuration files.
 
-If you are unsure of what to do, please zip the free5gc's `config` folder and upload it here.
+If you are unsure of what to do, please zip free5gc's `config` folder and upload it here.
 
 ### PCAP File
 Dump the relevant packets and provide the PCAP file.
