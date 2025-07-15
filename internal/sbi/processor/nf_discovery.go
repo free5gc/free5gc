@@ -59,7 +59,7 @@ func validateQueryParameters(queryParameters url.Values) bool {
 		req = queryParameters["requester-nf-type"][0]
 	}
 
-	if !(NFs[tgt] && NFs[req]) {
+	if !NFs[tgt] || !NFs[req] {
 		return false
 	}
 

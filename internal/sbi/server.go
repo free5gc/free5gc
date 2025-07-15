@@ -130,7 +130,7 @@ func (s *Server) startServer(wg *sync.WaitGroup) {
 			cfg.GetNrfCertPemPath(),
 			cfg.GetNrfPrivKeyPath())
 	} else {
-		err = fmt.Errorf("No support this scheme[%s]", serverScheme)
+		err = fmt.Errorf("not support this scheme[%s]", serverScheme)
 	}
 
 	if err != nil && err != http.ErrServerClosed {
