@@ -53,9 +53,6 @@ linters:
       # List of functions to exclude from checking, where each entry is a single function to exclude.
       # See https://github.com/kisielk/errcheck#excluding-functions for details.
       exclude-functions: []
-      # Display function signature instead of selector.
-      # Default: false
-      verbose: false
 
     goconst:
       # minimal length of string constant, 3 by default
@@ -64,7 +61,7 @@ linters:
       min-occurrences: 3
       # Exclude strings matching the given regular expression.
       # Default: ""
-      ignore-string-values: "get|post|put|delete|patch|options|head"
+      ignore-string-values: ["get", "post", "put", "delete", "patch", "options", "head"]
 
     gocritic:
       # Enable all checks.
