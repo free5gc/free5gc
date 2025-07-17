@@ -36,7 +36,6 @@ import (
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/openapi/pcf/PolicyAuthorization"
 	"github.com/free5gc/util/httpwrapper"
-	"github.com/free5gc/util/milenage"
 )
 
 const ranN2Ipv4Addr string = "127.0.0.1"
@@ -2591,8 +2590,8 @@ func TestReSynchronization(t *testing.T) {
 	// Build AUTS
 	AK, MAC_S := make([]byte, 6), make([]byte, 8)
 	AMF, _ := hex.DecodeString("0000") // Re-Sync AMF
-	milenage.F1(OPC, K, rand[:], randomSqnMs[:], AMF, nil, MAC_S)
-	milenage.F2345(OPC, K, rand[:], nil, nil, nil, nil, AK)
+	test.MilenageF1(OPC, K, rand[:], randomSqnMs[:], AMF, nil, MAC_S)
+	test.MilenageF2345(OPC, K, rand[:], nil, nil, nil, nil, AK)
 	SQNmsxorAK := make([]byte, 6)
 	for i := 0; i < 6; i++ {
 		SQNmsxorAK[i] = randomSqnMs[i] ^ AK[i]
@@ -2625,7 +2624,7 @@ func TestReSynchronization(t *testing.T) {
 	rand = nasPdu.AuthenticationRequest.GetRANDValue()
 
 	// After re-synchronization, check if the SQN is updated
-	milenage.F2345(OPC, K, rand[:], nil, nil, nil, AK, nil)
+	test.MilenageF2345(OPC, K, rand[:], nil, nil, nil, AK, nil)
 	autn := nasPdu.AuthenticationRequest.GetAUTN()
 	SQNxorAK := autn[:6]
 

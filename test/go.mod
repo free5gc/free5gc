@@ -1,6 +1,6 @@
 module test
 
-go 1.21
+go 1.24
 
 require (
 	github.com/antihax/optional v1.0.0
@@ -11,18 +11,18 @@ require (
 	github.com/free5gc/ausf v0.0.0
 	github.com/free5gc/chf v1.1.1
 	github.com/free5gc/ike v1.1.1-0.20241014015325-083f89768f43
-	github.com/free5gc/nas v1.1.5
-	github.com/free5gc/ngap v1.0.10
+	github.com/free5gc/nas v1.2.0
+	github.com/free5gc/ngap v1.1.0
 	github.com/free5gc/nrf v0.0.0
 	github.com/free5gc/nssf v0.0.0
-	github.com/free5gc/openapi v1.1.0
+	github.com/free5gc/openapi v1.2.0
 	github.com/free5gc/pcf v0.0.0
-	github.com/free5gc/sctp v1.0.1
+	github.com/free5gc/sctp v1.1.0
 	github.com/free5gc/smf v1.2.4
 	github.com/free5gc/tngf v0.0.0-00010101000000-000000000000
 	github.com/free5gc/udm v0.0.0
 	github.com/free5gc/udr v0.0.0
-	github.com/free5gc/util v1.0.7-0.20240911054252-194b3b49aba9
+	github.com/free5gc/util v1.1.1
 	github.com/free5gc/webconsole v0.0.0
 	github.com/gin-gonic/gin v1.10.0
 	github.com/go-ping/ping v1.1.0
@@ -33,8 +33,8 @@ require (
 	github.com/urfave/cli/v2 v2.27.7
 	github.com/vishvananda/netlink v1.1.0
 	go.mongodb.org/mongo-driver v1.17.1
-	golang.org/x/net v0.33.0
-	golang.org/x/sys v0.28.0
+	golang.org/x/net v0.38.0
+	golang.org/x/sys v0.31.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
@@ -52,6 +52,7 @@ require (
 	github.com/cydev/zero v0.0.0-20160322155811-4a4535dd56e7 // indirect
 	github.com/dropbox/dropbox-sdk-go-unofficial v5.6.0+incompatible // indirect
 	github.com/evanphx/json-patch v4.9.0+incompatible // indirect
+	github.com/evanphx/json-patch/v5 v5.9.0 // indirect
 	github.com/fclairamb/afero-dropbox v0.1.0 // indirect
 	github.com/fclairamb/afero-gdrive v0.3.0 // indirect
 	github.com/fclairamb/afero-s3 v0.3.1 // indirect
@@ -61,8 +62,8 @@ require (
 	github.com/fclairamb/go-log v0.4.1 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fiorix/go-diameter v3.0.2+incompatible // indirect
-	github.com/free5gc/pfcp v1.0.7 // indirect
-	github.com/free5gc/tlv v1.0.3-0.20240503144839-e03d55722836 // indirect
+	github.com/free5gc/pfcp v1.1.0 // indirect
+	github.com/free5gc/tlv v1.0.3-0.20241204153300-1005a019612d // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
 	github.com/gin-contrib/cors v1.6.0 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
@@ -90,7 +91,7 @@ require (
 	github.com/jlaffaye/ftp v0.1.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/klauspost/compress v1.15.9 // indirect
+	github.com/klauspost/compress v1.16.7 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.7 // indirect
 	github.com/kr/fs v0.1.0 // indirect
 	github.com/kr/text v0.2.0 // indirect
@@ -128,11 +129,11 @@ require (
 	go.opentelemetry.io/otel/trace v1.24.0 // indirect
 	go.uber.org/mock v0.4.0 // indirect
 	golang.org/x/arch v0.8.0 // indirect
-	golang.org/x/crypto v0.31.0 // indirect
+	golang.org/x/crypto v0.36.0 // indirect
 	golang.org/x/exp v0.0.0-20231127185646-65229373498e // indirect
 	golang.org/x/oauth2 v0.21.0 // indirect
-	golang.org/x/sync v0.10.0 // indirect
-	golang.org/x/text v0.21.0 // indirect
+	golang.org/x/sync v0.12.0 // indirect
+	golang.org/x/text v0.23.0 // indirect
 	google.golang.org/api v0.126.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240528184218-531527333157 // indirect

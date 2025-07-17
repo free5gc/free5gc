@@ -18,7 +18,6 @@ import (
 	"github.com/free5gc/nas/nasType"
 	"github.com/free5gc/nas/security"
 	"github.com/free5gc/openapi/models"
-	"github.com/free5gc/util/milenage"
 	"github.com/free5gc/util/ueauth"
 	"github.com/free5gc/webconsole/backend/WebUI"
 )
@@ -160,13 +159,13 @@ func (ue *RanUeContext) DeriveRESstarAndSetKey(
 	}
 
 	// Generate MAC_A, MAC_S
-	err = milenage.F1(opc, k, rand, sqn, amf, macA, macS)
+	err = MilenageF1(opc, k, rand, sqn, amf, macA, macS)
 	if err != nil {
 		fatal.Fatalf("regexp Compile error: %+v", err)
 	}
 
 	// Generate RES, CK, IK, AK, AKstar
-	err = milenage.F2345(opc, k, rand, res, ck, ik, ak, akStar)
+	err = MilenageF2345(opc, k, rand, res, ck, ik, ak, akStar)
 	if err != nil {
 		fatal.Fatalf("regexp Compile error: %+v", err)
 	}
@@ -248,13 +247,13 @@ func (ue *RanUeContext) DeriveResEAPMessageAndSetKey(
 	}
 
 	// Generate MAC_A, MAC_S
-	err = milenage.F1(opc, k, rand, sqn, amf, macA, macS)
+	err = MilenageF1(opc, k, rand, sqn, amf, macA, macS)
 	if err != nil {
 		fatal.Fatalf("regexp Compile error: %+v", err)
 	}
 
 	// Generate RES, CK, IK, AK, AKstar
-	err = milenage.F2345(opc, k, rand, res, ck, ik, ak, akStar)
+	err = MilenageF2345(opc, k, rand, res, ck, ik, ak, akStar)
 	if err != nil {
 		fatal.Fatalf("regexp Compile error: %+v", err)
 	}
