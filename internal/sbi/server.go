@@ -122,14 +122,15 @@ func (s *Server) startServer(wg *sync.WaitGroup) {
 	serverScheme := cfg.GetSbiScheme()
 
 	var err error
-	if serverScheme == "http" {
+	switch serverScheme {
+	case "http":
 		err = s.httpServer.ListenAndServe()
-	} else if serverScheme == "https" {
+	case "https":
 		// TODO: support TLS mutual authentication for OAuth
 		err = s.httpServer.ListenAndServeTLS(
 			cfg.GetNrfCertPemPath(),
 			cfg.GetNrfPrivKeyPath())
-	} else {
+	default:
 		err = fmt.Errorf("not support this scheme[%s]", serverScheme)
 	}
 

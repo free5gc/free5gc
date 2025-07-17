@@ -110,7 +110,7 @@ func (p *Processor) NFDiscoveryProcedure(c *gin.Context, queryParameters url.Val
 	// Check ComplexQuery (FOR REPORT PROBLEM!)
 
 	// Build Query Filter
-	var filter bson.M = buildFilter(queryParameters)
+	filter := buildFilter(queryParameters)
 	logger.DiscLog.Traceln("Query filter: ", filter)
 
 	// Use the filter to find documents
@@ -378,7 +378,8 @@ func buildFilter(queryParameters url.Values) bson.M {
 	if queryParameters["dnn"] != nil {
 		dnn := queryParameters["dnn"][0]
 		var dnnFilter bson.M
-		if targetNfType == "SMF" {
+		switch targetNfType {
+		case "SMF":
 			dnnFilter = bson.M{
 				"smfInfo.sNssaiSmfInfoList": bson.M{
 					"$elemMatch": bson.M{
@@ -390,7 +391,7 @@ func buildFilter(queryParameters url.Values) bson.M {
 					},
 				},
 			}
-		} else if targetNfType == "UPF" {
+		case "UPF":
 			dnnFilter = bson.M{
 				"upfInfo.sNssaiUpfInfoList": bson.M{
 					"$elemMatch": bson.M{
@@ -402,7 +403,7 @@ func buildFilter(queryParameters url.Values) bson.M {
 					},
 				},
 			}
-		} else if targetNfType == "BSF" {
+		case "BSF":
 			dnnFilter = bson.M{
 				"$or": []bson.M{
 					{
@@ -415,7 +416,7 @@ func buildFilter(queryParameters url.Values) bson.M {
 					},
 				},
 			}
-		} else if targetNfType == "PCF" {
+		case "PCF":
 			dnnFilter = bson.M{
 				"$or": []bson.M{
 					{
@@ -474,13 +475,14 @@ func buildFilter(queryParameters url.Values) bson.M {
 		if err != nil {
 			logger.DiscLog.Warnln("Unmarshal Error in taiByteArray: ", err)
 		}
-		if targetNfType == "SMF" {
+		switch targetNfType {
+		case "SMF":
 			taiFilter = bson.M{
 				"smfInfo.taiList": bson.M{
 					"$elemMatch": taiBsonM,
 				},
 			}
-		} else if targetNfType == "AMF" {
+		case "AMF":
 			taiFilter = bson.M{
 				"amfInfo.taiList": bson.M{
 					"$elemMatch": taiBsonM,
@@ -792,7 +794,8 @@ func buildFilter(queryParameters url.Values) bson.M {
 		var gpsiFilter bson.M
 		gpsi := queryParameters["gpsi"][0]
 		gpsi = gpsi[7:]
-		if targetNfType == "CHF" {
+		switch targetNfType {
+		case "CHF":
 			gpsiFilter = bson.M{
 				"$or": []bson.M{
 					{
@@ -814,7 +817,7 @@ func buildFilter(queryParameters url.Values) bson.M {
 					},
 				},
 			}
-		} else if targetNfType == "UDM" {
+		case "UDM":
 			gpsiFilter = bson.M{
 				"$or": []bson.M{
 					{
@@ -844,7 +847,7 @@ func buildFilter(queryParameters url.Values) bson.M {
 					},
 				},
 			}
-		} else if targetNfType == "UDR" {
+		case "UDR":
 			gpsiFilter = bson.M{
 				"$or": []bson.M{
 					{
@@ -885,7 +888,8 @@ func buildFilter(queryParameters url.Values) bson.M {
 
 		encodedGroupId := nrf_context.EncodeGroupId(externalGroupIdentity)
 
-		if targetNfType == "UDM" {
+		switch targetNfType {
+		case "UDM":
 			externalGroupIdentityFilter = bson.M{
 				"$or": []bson.M{
 					{
@@ -915,7 +919,7 @@ func buildFilter(queryParameters url.Values) bson.M {
 					},
 				},
 			}
-		} else if targetNfType == "UDR" {
+		case "UDR":
 			externalGroupIdentityFilter = bson.M{
 				"$or": []bson.M{
 					{
@@ -974,7 +978,8 @@ func buildFilter(queryParameters url.Values) bson.M {
 	if queryParameters["routing-indicator"] != nil {
 		var routingIndicatorFilter bson.M
 		routingIndicator := queryParameters["routing-indicator"][0]
-		if targetNfType == "AUSF" {
+		switch targetNfType {
+		case "AUSF":
 			routingIndicatorFilter = bson.M{
 				"$or": []bson.M{
 					{
@@ -987,7 +992,7 @@ func buildFilter(queryParameters url.Values) bson.M {
 					},
 				},
 			}
-		} else if targetNfType == "UDM" {
+		case "UDM":
 			routingIndicatorFilter = bson.M{
 				"$or": []bson.M{
 					{
@@ -1016,19 +1021,20 @@ func buildFilter(queryParameters url.Values) bson.M {
 			groupIdListBsonArray = append(groupIdListBsonArray, v)
 		}
 
-		if targetNfType == "UDR" {
+		switch targetNfType {
+		case "UDR":
 			groupIdListFilter = bson.M{
 				"udrInfo.groupId": bson.M{
 					"$in": groupIdListBsonArray,
 				},
 			}
-		} else if targetNfType == "UDM" {
+		case "UDM":
 			groupIdListFilter = bson.M{
 				"udmInfo.groupId": bson.M{
 					"$in": groupIdListBsonArray,
 				},
 			}
-		} else if targetNfType == "AUSF" {
+		case "AUSF":
 			groupIdListFilter = bson.M{
 				"ausfInfo.groupId": bson.M{
 					"$in": groupIdListBsonArray,
@@ -1198,7 +1204,7 @@ func complexQueryFilter(complexQueryParameter *models.ComplexQuery) bson.M {
 			"$and": []bson.M{},
 		}
 		for _, cnfUnit := range complexQueryParameter.CnfUnits {
-			var queryParameters map[string]*AtomElem = make(map[string]*AtomElem)
+			queryParameters := make(map[string]*AtomElem)
 			var cnfUnitFilter bson.M
 			for _, atom := range cnfUnit.CnfUnit {
 				valueJson, err := json.Marshal(atom.Value)
@@ -1478,7 +1484,8 @@ func complexQueryFilterSubprocess(queryParameters map[string]*AtomElem, complexQ
 	if queryParameters["dnn"] != nil {
 		dnn := queryParameters["dnn"].value
 		var dnnFilter bson.M
-		if targetNfType == "SMF" {
+		switch targetNfType {
+		case "SMF":
 			dnnFilter = bson.M{
 				"smfInfo": bson.M{
 					"$elemMatch": bson.M{
@@ -1494,7 +1501,7 @@ func complexQueryFilterSubprocess(queryParameters map[string]*AtomElem, complexQ
 					},
 				},
 			}
-		} else if targetNfType == "UPF" {
+		case "UPF":
 			dnnFilter = bson.M{
 				"upfInfo": bson.M{
 					"$elemMatch": bson.M{
@@ -1510,7 +1517,7 @@ func complexQueryFilterSubprocess(queryParameters map[string]*AtomElem, complexQ
 					},
 				},
 			}
-		} else if targetNfType == "BSF" {
+		case "BSF":
 			dnnFilter = bson.M{
 				"bsfInfo": bson.M{
 					"$elemMatch": bson.M{
@@ -1571,7 +1578,8 @@ func complexQueryFilterSubprocess(queryParameters map[string]*AtomElem, complexQ
 		if err != nil {
 			logger.DiscLog.Warnln("Unmarshal Error in taiByteArray: ", err)
 		}
-		if targetNfType == "SMF" {
+		switch targetNfType {
+		case "SMF":
 			taiFilter = bson.M{
 				"smfInfo": bson.M{
 					"$elemMatch": bson.M{
@@ -1579,7 +1587,7 @@ func complexQueryFilterSubprocess(queryParameters map[string]*AtomElem, complexQ
 					},
 				},
 			}
-		} else if targetNfType == "AMF" {
+		case "AMF":
 			taiFilter = bson.M{
 				"amfInfo": bson.M{
 					"$elemMatch": bson.M{
@@ -1910,7 +1918,8 @@ func complexQueryFilterSubprocess(queryParameters map[string]*AtomElem, complexQ
 	if queryParameters["gpsi"] != nil {
 		var gpsiFilter bson.M
 		gpsi := queryParameters["gpsi"].value
-		if targetNfType == "CHF" {
+		switch targetNfType {
+		case "CHF":
 			gpsiFilter = bson.M{
 				"chfInfo": bson.M{
 					"$elemMatch": bson.M{
@@ -1927,7 +1936,7 @@ func complexQueryFilterSubprocess(queryParameters map[string]*AtomElem, complexQ
 					},
 				},
 			}
-		} else if targetNfType == "UDM" {
+		case "UDM":
 			gpsiFilter = bson.M{
 				"udmInfo": bson.M{
 					"$elemMatch": bson.M{
@@ -1944,7 +1953,7 @@ func complexQueryFilterSubprocess(queryParameters map[string]*AtomElem, complexQ
 					},
 				},
 			}
-		} else if targetNfType == "UDR" {
+		case "UDR":
 			gpsiFilter = bson.M{
 				"udrInfo": bson.M{
 					"$elemMatch": bson.M{
@@ -1974,7 +1983,8 @@ func complexQueryFilterSubprocess(queryParameters map[string]*AtomElem, complexQ
 	if queryParameters["external-group-identity"] != nil {
 		var externalGroupIdentityFilter bson.M
 		externalGroupIdentity := queryParameters["external-group-identity"].value
-		if targetNfType == "UDM" {
+		switch targetNfType {
+		case "UDM":
 			externalGroupIdentityFilter = bson.M{
 				"udmInfo": bson.M{
 					"$elemMatch": bson.M{
@@ -1982,7 +1992,7 @@ func complexQueryFilterSubprocess(queryParameters map[string]*AtomElem, complexQ
 					},
 				},
 			}
-		} else if targetNfType == "UDR" {
+		case "UDR":
 			externalGroupIdentityFilter = bson.M{
 				"udrInfo": bson.M{
 					"$elemMatch": bson.M{
@@ -2024,7 +2034,8 @@ func complexQueryFilterSubprocess(queryParameters map[string]*AtomElem, complexQ
 	if queryParameters["routing-indicator"] != nil {
 		var routingIndicatorFilter bson.M
 		routingIndicator := queryParameters["routing-indicator"].value
-		if targetNfType == "AUSF" {
+		switch targetNfType {
+		case "AUSF":
 			routingIndicatorFilter = bson.M{
 				"ausfInfo": bson.M{
 					"$elemMatch": bson.M{
@@ -2032,7 +2043,7 @@ func complexQueryFilterSubprocess(queryParameters map[string]*AtomElem, complexQ
 					},
 				},
 			}
-		} else if targetNfType == "UDM" {
+		case "UDM":
 			routingIndicatorFilter = bson.M{
 				"udmInfo": bson.M{
 					"$elemMatch": bson.M{
@@ -2061,7 +2072,8 @@ func complexQueryFilterSubprocess(queryParameters map[string]*AtomElem, complexQ
 			groupIdListBsonArray = append(groupIdListBsonArray, v)
 		}
 
-		if targetNfType == "UDR" {
+		switch targetNfType {
+		case "UDR":
 			groupIdListFilter = bson.M{
 				"udrInfo": bson.M{
 					"$elemMatch": bson.M{
@@ -2071,7 +2083,7 @@ func complexQueryFilterSubprocess(queryParameters map[string]*AtomElem, complexQ
 					},
 				},
 			}
-		} else if targetNfType == "UDM" {
+		case "UDM":
 			groupIdListFilter = bson.M{
 				"udmInfo": bson.M{
 					"$elemMatch": bson.M{
@@ -2081,7 +2093,7 @@ func complexQueryFilterSubprocess(queryParameters map[string]*AtomElem, complexQ
 					},
 				},
 			}
-		} else if targetNfType == "AUSF" {
+		case "AUSF":
 			groupIdListFilter = bson.M{
 				"ausfInfo": bson.M{
 					"$elemMatch": bson.M{
