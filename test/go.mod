@@ -9,7 +9,7 @@ require (
 	github.com/free5gc/amf v0.0.0
 	github.com/free5gc/aper v1.0.6-0.20250102035630-3ddc831eed6a
 	github.com/free5gc/ausf v0.0.0
-	github.com/free5gc/chf v1.1.1
+	github.com/free5gc/chf v1.1.2-0.20250718142832-7985bed2e1c7
 	github.com/free5gc/ike v1.1.1-0.20241014015325-083f89768f43
 	github.com/free5gc/nas v1.2.0
 	github.com/free5gc/ngap v1.1.0
@@ -18,7 +18,7 @@ require (
 	github.com/free5gc/openapi v1.2.0
 	github.com/free5gc/pcf v0.0.0
 	github.com/free5gc/sctp v1.1.0
-	github.com/free5gc/smf v1.2.4
+	github.com/free5gc/smf v1.3.3-0.20250718143453-8eae1979180a
 	github.com/free5gc/tngf v0.0.0-00010101000000-000000000000
 	github.com/free5gc/udm v0.0.0
 	github.com/free5gc/udr v0.0.0
@@ -94,7 +94,6 @@ require (
 	github.com/klauspost/compress v1.16.7 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.7 // indirect
 	github.com/kr/fs v0.1.0 // indirect
-	github.com/kr/text v0.2.0 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
