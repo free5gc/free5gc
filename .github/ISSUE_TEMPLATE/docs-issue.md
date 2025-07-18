@@ -1,22 +1,20 @@
 ---
 name: Docs issue
-about: Documentation(wiki) is unclear, or otherwise insufficient/misleading.
+about: Documentation (wiki) is unclear, or otherwise insufficient or misleading.
 title: "[Docs]"
 labels: ''
 assignees: ''
 
 ---
 
-**If the design issue template is not followed, the issue might be closed.**
-<!-- Remove above warning line while reporting the issue -->
+**Using the provided issue template is advised; otherwise, the issue may be disregarded.**
+<!-- Please, remove the warning above before submitting the issue -->
 
-## Documentation request
-
-What was unclear/insufficient/not covered in the documentation.
+## Documentation Request
+What aspects of the documentation were unclear, insufficient, or not covered?
 
 ## Suggestion
+free5GC would appreciate it if suggestions on how to enhance the documentation are shared.
 
-free5GC will appreciate it, if suggestion’s are forwarded on how documents can be enhance.
-
-## Additional context
-Add any other context or screenshots about the issue here.
+## Additional Context
+It would be appreciated if you could provide any relevant additional context (e.g. screenshots) about the issue here.
