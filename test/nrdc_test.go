@@ -75,7 +75,7 @@ func connectRANsToAMF(t *testing.T) (*sctp.SCTPConn, *sctp.SCTPConn) {
 	// Second RAN connect to AMF
 	SranConn, err := test.ConnectToAmf(amfN2Addr, sranN2Addr, amfPort, sranN2Port)
 	if err != nil {
-		t.Logf("Slave RAN connect to AMF failed: %v", err)
+		t.Logf("Secondary RAN connect to AMF failed: %v", err)
 		if MranConn != nil {
 			MranConn.Close()
 		}
@@ -98,7 +98,7 @@ func connectRANsToUPF(t *testing.T) (*net.UDPConn, *net.UDPConn) {
 	// Second RAN connect to UPF
 	SupfConn, err := test.ConnectToUpf(sranN3Addr, upfN3Addr, supfN3Port, sranN3Port)
 	if err != nil {
-		t.Errorf("Slave RAN connect to UPF failed: %v", err)
+		t.Errorf("Secondary RAN connect to UPF failed: %v", err)
 		if MupfConn != nil {
 			MupfConn.Close()
 		}
@@ -469,7 +469,7 @@ func TestDC(t *testing.T) {
 	}
 	defer MranConn.Close()
 	defer SranConn.Close()
-	t.Log("Master RAN and Slave RAN connect to AMF successfully")
+	t.Log("Master RAN and Secondary RAN connect to AMF successfully")
 
 	// RANs connect to UPF
 	MupfConn, SupfConn := connectRANsToUPF(t)
@@ -479,11 +479,11 @@ func TestDC(t *testing.T) {
 	}
 	defer MupfConn.Close()
 	defer SupfConn.Close()
-	t.Log("Master RAN and Slave RAN connect to UPF successfully")
+	t.Log("Master RAN and Secondary RAN connect to UPF successfully")
 
 	// NGSetup
 	nGsSetup(t, MranConn, SranConn)
-	t.Log("Master RAN and Slave RAN NGSetup successfully")
+	t.Log("Master RAN and Secondary RAN NGSetup successfully")
 
 	// New UE and initial registration(NAS/NGAP)
 	ue := newUEAndInitialRegistration(t, MranConn)
@@ -495,16 +495,16 @@ func TestDC(t *testing.T) {
 	t.Log("PDU Session Establishment successfully")
 
 	// ping test via master RAN
-	icmpTest(t, MupfConn, googleDNS, EXPECTED_NO_ERROR)
-	t.Log("ICMP test via master RAN successfully")
+	t.Run("ping test via master RAN", func(t *testing.T) {
+		icmpTest(t, MupfConn, googleDNS, EXPECTED_NO_ERROR)
+		t.Log("ICMP test via master RAN successfully")
+	})
 
-	// ping test via slave RAN
-	icmpTest(t, SupfConn, cloudFareDNS, EXPECTED_NO_ERROR)
-	t.Log("ICMP test via slave RAN successfully")
+	// ping test via Secondary RAN
+	t.Run("ping test via Secondary RAN", func(t *testing.T) {
+		icmpTest(t, SupfConn, cloudFareDNS, EXPECTED_NO_ERROR)
+		t.Log("ICMP test via Secondary RAN successfully")
+	})
 
 	NfTerminate()
-}
-
-func TestDynamicDC(t *testing.T) {
-
 }
