@@ -56,10 +56,13 @@ const (
 	mranDLTeid = "\x00\x00\x00\x01"
 	sranDLTeid = "\x00\x00\x00\x02"
 
-	ENABLE_DC_AT_PDU_SESSION_ESTABLISHMENT = true
+	ENABLE_DC_AT_PDU_SESSION_ESTABLISHMENT    = true
 	UN_ENABLE_DC_AT_PDU_SESSION_ESTABLISHMENT = false
 
-	EXPECTED_ERROR = true
+	ENABLE_DC_AT_PDU_SESSION_MODIFY_INDICATION  = true
+	DISABLE_DC_AT_PDU_SESSION_MODIFY_INDICATION = false
+
+	EXPECTED_ERROR    = true
 	EXPECTED_NO_ERROR = false
 )
 
@@ -408,8 +411,8 @@ func pduSessionEstablishment(t *testing.T, ue *test.RanUeContext, MranConn *sctp
 	time.Sleep(1 * time.Second)
 }
 
-func icmpTest(t *testing.T, upfConn *net.UDPConn, destIp string, expectedError bool) {
-	gtpHdr, err := hex.DecodeString(fmt.Sprintf("32ff0034%s00000000", mranULTeid))
+func icmpTest(t *testing.T, upfConn *net.UDPConn, ulTeid, destIp string, expectedError bool) {
+	gtpHdr, err := hex.DecodeString(fmt.Sprintf("32ff0034%s00000000", ulTeid))
 	assert.Nil(t, err)
 	icmpData, err := hex.DecodeString("8c870d0000000000101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f3031323334353637")
 	assert.Nil(t, err)
@@ -460,6 +463,153 @@ func icmpTest(t *testing.T, upfConn *net.UDPConn, destIp string, expectedError b
 	assert.Nil(t, err)
 }
 
+func pduSessionModifyIndication(t *testing.T, ue *test.RanUeContext, MranConn *sctp.SCTPConn, enableDC bool) {
+	var n int
+	var sendMsg []byte
+	var recvMsg = make([]byte, 2048)
+	var err error
+
+	buildPDUSessionResourceModifyIndicationTransferWithDC := func() ngapType.PDUSessionResourceModifyIndicationTransfer {
+		var data ngapType.PDUSessionResourceModifyIndicationTransfer
+		// QoS Flow per TNL Information
+		qosFlowPerTNLInformation := &data.DLQosFlowPerTNLInformation
+		qosFlowPerTNLInformation.UPTransportLayerInformation.Present = ngapType.UPTransportLayerInformationPresentGTPTunnel
+
+		// UP Transport Layer Information in QoS Flow per TNL Information
+		upTransportLayerInformation := &qosFlowPerTNLInformation.UPTransportLayerInformation
+		upTransportLayerInformation.Present = ngapType.UPTransportLayerInformationPresentGTPTunnel
+		upTransportLayerInformation.GTPTunnel = new(ngapType.GTPTunnel)
+		upTransportLayerInformation.GTPTunnel.GTPTEID.Value = aper.OctetString(mranDLTeid)
+		upTransportLayerInformation.GTPTunnel.TransportLayerAddress = ngapConvert.IPAddressToNgap(mranN3Addr, "")
+
+		// Associated QoS Flow List in QoS Flow per TNL Information
+		associatedQosFlowList := &qosFlowPerTNLInformation.AssociatedQosFlowList
+
+		associatedQosFlowItem := ngapType.AssociatedQosFlowItem{}
+		associatedQosFlowItem.QosFlowIdentifier.Value = 1
+		associatedQosFlowList.List = append(associatedQosFlowList.List, associatedQosFlowItem)
+
+		if enableDC {
+			// DC QoS Flow per TNL Information
+			DCQosFlowPerTNLInformationItem := ngapType.QosFlowPerTNLInformationItem{}
+			DCQosFlowPerTNLInformationItem.QosFlowPerTNLInformation.UPTransportLayerInformation.Present = ngapType.UPTransportLayerInformationPresentGTPTunnel
+
+			// DC Transport Layer Information in QoS Flow per TNL Information
+			DCUpTransportLayerInformation := &DCQosFlowPerTNLInformationItem.QosFlowPerTNLInformation.UPTransportLayerInformation
+			DCUpTransportLayerInformation.Present = ngapType.UPTransportLayerInformationPresentGTPTunnel
+			DCUpTransportLayerInformation.GTPTunnel = new(ngapType.GTPTunnel)
+			DCUpTransportLayerInformation.GTPTunnel.GTPTEID.Value = aper.OctetString(sranDLTeid)
+			DCUpTransportLayerInformation.GTPTunnel.TransportLayerAddress = ngapConvert.IPAddressToNgap(sranN3Addr, "")
+
+			// DC Associated QoS Flow List in QoS Flow per TNL Information
+			DCAssociatedQosFlowList := &DCQosFlowPerTNLInformationItem.QosFlowPerTNLInformation.AssociatedQosFlowList
+			DCAssociatedQosFlowItem := ngapType.AssociatedQosFlowItem{}
+			DCAssociatedQosFlowItem.QosFlowIdentifier.Value = 1
+			DCAssociatedQosFlowList.List = append(DCAssociatedQosFlowList.List, DCAssociatedQosFlowItem)
+
+			// Additional DL QoS Flow per TNL Information
+			data.AdditionalDLQosFlowPerTNLInformation = new(ngapType.QosFlowPerTNLInformationList)
+			data.AdditionalDLQosFlowPerTNLInformation.List = append(data.AdditionalDLQosFlowPerTNLInformation.List, DCQosFlowPerTNLInformationItem)
+		}
+
+		return data
+	}
+
+	getPDUSessionResourceModifyIndicationTransferWithDC := func() []byte {
+		data := buildPDUSessionResourceModifyIndicationTransferWithDC()
+		encodeData, err := aper.MarshalWithParams(data, "valueExt")
+		if err != nil {
+			fatal.Fatalf("aper MarshalWithParams error in GetPDUSessionResourceModifyIndicationTransfer: %+v", err)
+		}
+		return encodeData
+	}
+
+	buildPDUSessionResourceModifyIndication := func(pduSessionId int64, amfUeNgapId int64, ranUeNgapId int64) (pdu ngapType.NGAPPDU) {
+		pdu.Present = ngapType.NGAPPDUPresentInitiatingMessage
+		pdu.InitiatingMessage = new(ngapType.InitiatingMessage)
+
+		initiatingMessage := pdu.InitiatingMessage
+		initiatingMessage.ProcedureCode.Value = ngapType.ProcedureCodePDUSessionResourceModifyIndication
+		initiatingMessage.Criticality.Value = ngapType.CriticalityPresentReject
+
+		initiatingMessage.Value.Present = ngapType.InitiatingMessagePresentPDUSessionResourceModifyIndication
+		initiatingMessage.Value.PDUSessionResourceModifyIndication = new(ngapType.PDUSessionResourceModifyIndication)
+
+		indication := initiatingMessage.Value.PDUSessionResourceModifyIndication
+		indicationIEs := &indication.ProtocolIEs
+
+		// AMF UE NGAP ID
+		ie := ngapType.PDUSessionResourceModifyIndicationIEs{}
+		ie.Id.Value = ngapType.ProtocolIEIDAMFUENGAPID
+		ie.Criticality.Value = ngapType.CriticalityPresentIgnore
+		ie.Value.Present = ngapType.PDUSessionResourceModifyIndicationIEsPresentAMFUENGAPID
+		ie.Value.AMFUENGAPID = new(ngapType.AMFUENGAPID)
+		ie.Value.AMFUENGAPID.Value = amfUeNgapId
+		indicationIEs.List = append(indicationIEs.List, ie)
+
+		// RAN UE NGAP ID
+		ie = ngapType.PDUSessionResourceModifyIndicationIEs{}
+		ie.Id.Value = ngapType.ProtocolIEIDRANUENGAPID
+		ie.Criticality.Value = ngapType.CriticalityPresentIgnore
+		ie.Value.Present = ngapType.PDUSessionResourceModifyIndicationIEsPresentRANUENGAPID
+		ie.Value.RANUENGAPID = new(ngapType.RANUENGAPID)
+		ie.Value.RANUENGAPID.Value = ranUeNgapId
+		indicationIEs.List = append(indicationIEs.List, ie)
+
+		// PDU Session Resource Modify List
+		ie = ngapType.PDUSessionResourceModifyIndicationIEs{}
+		ie.Id.Value = ngapType.ProtocolIEIDPDUSessionResourceModifyListModInd
+		ie.Criticality.Value = ngapType.CriticalityPresentReject
+		ie.Value.Present = ngapType.PDUSessionResourceModifyIndicationIEsPresentPDUSessionResourceModifyListModInd
+		ie.Value.PDUSessionResourceModifyListModInd = new(ngapType.PDUSessionResourceModifyListModInd)
+
+		modifyItem := ngapType.PDUSessionResourceModifyItemModInd{}
+		modifyItem.PDUSessionID.Value = pduSessionId
+		modifyItem.PDUSessionResourceModifyIndicationTransfer = getPDUSessionResourceModifyIndicationTransferWithDC()
+
+		ie.Value.PDUSessionResourceModifyListModInd.List = append(
+			ie.Value.PDUSessionResourceModifyListModInd.List, modifyItem)
+
+		indicationIEs.List = append(indicationIEs.List, ie)
+
+		return pdu
+	}
+
+	getPDUSessionResourceModifyIndication := func(pduSessionId int64, amfUeNgapId int64, ranUeNgapId int64) ([]byte, error) {
+		message := buildPDUSessionResourceModifyIndication(pduSessionId, amfUeNgapId, ranUeNgapId)
+		return ngap.Encoder(message)
+	}
+
+	// send pdu session resource modify indication
+	sendMsg, err = getPDUSessionResourceModifyIndication(10, ue.AmfUeNgapId, ue.RanUeNgapId)
+	assert.Nil(t, err)
+	_, err = MranConn.Write(sendMsg)
+	assert.Nil(t, err)
+
+	// receive pdu session resource modify confirm
+	n, err = MranConn.Read(recvMsg)
+	assert.Nil(t, err)
+	ngapPdu, err := ngap.Decoder(recvMsg[:n])
+	assert.Nil(t, err)
+	assert.True(t, ngapPdu.Present == ngapType.NGAPPDUPresentSuccessfulOutcome &&
+		ngapPdu.SuccessfulOutcome.ProcedureCode.Value == ngapType.ProcedureCodePDUSessionResourceModifyIndication,
+		"No PDU Session Resource Modify Confirm received.")
+
+	// check successful outcome
+	for _, ie := range ngapPdu.SuccessfulOutcome.Value.PDUSessionResourceModifyConfirm.ProtocolIEs.List {
+		switch ie.Id.Value {
+		case ngapType.ProtocolIEIDAMFUENGAPID:
+		case ngapType.ProtocolIEIDRANUENGAPID:
+		case ngapType.ProtocolIEIDPDUSessionResourceModifyListModCfm:
+			t.Log("PDU session modify indication request successful")
+		case ngapType.ProtocolIEIDPDUSessionResourceFailedToModifyListModCfm:
+			t.Fatalf("PDU session modify indication request failed")
+		}
+	}
+
+	time.Sleep(1 * time.Second)
+}
+
 func TestDC(t *testing.T) {
 	// RANs connect to AMF
 	MranConn, SranConn := connectRANsToAMF(t)
@@ -496,15 +646,93 @@ func TestDC(t *testing.T) {
 
 	// ping test via master RAN
 	t.Run("ping test via master RAN", func(t *testing.T) {
-		icmpTest(t, MupfConn, googleDNS, EXPECTED_NO_ERROR)
+		icmpTest(t, MupfConn, mranULTeid, googleDNS, EXPECTED_NO_ERROR)
 		t.Log("ICMP test via master RAN successfully")
 	})
 
 	// ping test via Secondary RAN
 	t.Run("ping test via Secondary RAN", func(t *testing.T) {
-		icmpTest(t, SupfConn, cloudFareDNS, EXPECTED_NO_ERROR)
+		icmpTest(t, SupfConn, sranULTeid, cloudFareDNS, EXPECTED_NO_ERROR)
 		t.Log("ICMP test via Secondary RAN successfully")
 	})
 
 	NfTerminate()
+}
+
+func TestDynamicDC(t *testing.T) {
+	// RANs connect to AMF
+	MranConn, SranConn := connectRANsToAMF(t)
+	if MranConn == nil || SranConn == nil {
+		t.Fatal("Failed to connect to AMF")
+		return
+	}
+	defer MranConn.Close()
+	defer SranConn.Close()
+	t.Log("Master RAN and Secondary RAN connect to AMF successfully")
+
+	// RANs connect to UPF
+	MupfConn, SupfConn := connectRANsToUPF(t)
+	if MupfConn == nil || SupfConn == nil {
+		t.Fatal("Failed to connect to UPF")
+		return
+	}
+	defer MupfConn.Close()
+	defer SupfConn.Close()
+	t.Log("Master RAN and Secondary RAN connect to UPF successfully")
+
+	// NGSetup
+	nGsSetup(t, MranConn, SranConn)
+	t.Log("Master RAN and Secondary RAN NGSetup successfully")
+
+	// New UE and initial registration(NAS/NGAP)
+	ue := newUEAndInitialRegistration(t, MranConn)
+	defer test.DelUeFromMongoDB(t, ue, servingPlmnId)
+	t.Log("New UE and initial registration(NAS/NGAP) successfully")
+
+	// PDU Session Establishment
+	pduSessionEstablishment(t, ue, MranConn, UN_ENABLE_DC_AT_PDU_SESSION_ESTABLISHMENT)
+	t.Log("PDU Session Establishment successfully")
+
+	// ICMP test before DC is enabled
+	t.Run("ping test before DC is enabled", func(t *testing.T) {
+		t.Run("ping test via master RAN", func(t *testing.T) {
+			icmpTest(t, MupfConn, mranULTeid, googleDNS, EXPECTED_NO_ERROR)
+			icmpTest(t, MupfConn, mranULTeid, cloudFareDNS, EXPECTED_NO_ERROR)
+		})
+
+		t.Run("ping test via secondary RAN", func(t *testing.T) {
+			icmpTest(t, SupfConn, sranULTeid, cloudFareDNS, EXPECTED_ERROR)
+		})
+	})
+
+	// PDU Session Modify Indication Enable DC
+	pduSessionModifyIndication(t, ue, MranConn, ENABLE_DC_AT_PDU_SESSION_MODIFY_INDICATION)
+	t.Log("PDU Session Modify Indication successfully")
+
+	// ICMP test after DC is enabled
+	t.Run("ping test after DC is enabled", func(t *testing.T) {
+		t.Run("ping test via master RAN", func(t *testing.T) {
+			icmpTest(t, MupfConn, mranULTeid, googleDNS, EXPECTED_NO_ERROR)
+		})
+
+		t.Run("ping test via secondary RAN", func(t *testing.T) {
+			icmpTest(t, SupfConn, sranULTeid, cloudFareDNS, EXPECTED_NO_ERROR)
+		})
+	})
+
+	// PDU Session Modify Indication Disable DC
+	pduSessionModifyIndication(t, ue, MranConn, DISABLE_DC_AT_PDU_SESSION_MODIFY_INDICATION)
+	t.Log("PDU Session Modify Indication successfully")
+
+	// ICMP test after DC is disabled
+	t.Run("ping test after DC is disabled", func(t *testing.T) {
+		t.Run("ping test via master RAN", func(t *testing.T) {
+			icmpTest(t, MupfConn, mranULTeid, googleDNS, EXPECTED_NO_ERROR)
+			icmpTest(t, MupfConn, mranULTeid, cloudFareDNS, EXPECTED_NO_ERROR)
+		})
+
+		t.Run("ping test via secondary RAN", func(t *testing.T) {
+			icmpTest(t, SupfConn, sranULTeid, cloudFareDNS, EXPECTED_ERROR)
+		})
+	})
 }
