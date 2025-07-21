@@ -55,6 +55,12 @@ const (
 	sranULTeid = "00000003"
 	mranDLTeid = "\x00\x00\x00\x01"
 	sranDLTeid = "\x00\x00\x00\x02"
+
+	ENABLE_DC_AT_PDU_SESSION_ESTABLISHMENT = true
+	UN_ENABLE_DC_AT_PDU_SESSION_ESTABLISHMENT = false
+
+	EXPECTED_ERROR = true
+	EXPECTED_NO_ERROR = false
 )
 
 func connectRANsToAMF(t *testing.T) (*sctp.SCTPConn, *sctp.SCTPConn) {
@@ -244,7 +250,7 @@ func newUEAndInitialRegistration(t *testing.T, MranConn *sctp.SCTPConn) *test.Ra
 	return ue
 }
 
-func pduSessionEstablishment(t *testing.T, ue *test.RanUeContext, MranConn *sctp.SCTPConn) {
+func pduSessionEstablishment(t *testing.T, ue *test.RanUeContext, MranConn *sctp.SCTPConn, enableDC bool) {
 	var n int
 	var sendMsg []byte
 	var recvMsg = make([]byte, 2048)
@@ -270,26 +276,28 @@ func pduSessionEstablishment(t *testing.T, ue *test.RanUeContext, MranConn *sctp
 		associatedQosFlowItem.QosFlowIdentifier.Value = 1
 		associatedQosFlowList.List = append(associatedQosFlowList.List, associatedQosFlowItem)
 
-		// DC QoS Flow per TNL Information
-		DCQosFlowPerTNLInformationItem := ngapType.QosFlowPerTNLInformationItem{}
-		DCQosFlowPerTNLInformationItem.QosFlowPerTNLInformation.UPTransportLayerInformation.Present = ngapType.UPTransportLayerInformationPresentGTPTunnel
+		if enableDC {
+			// DC QoS Flow per TNL Information
+			DCQosFlowPerTNLInformationItem := ngapType.QosFlowPerTNLInformationItem{}
+			DCQosFlowPerTNLInformationItem.QosFlowPerTNLInformation.UPTransportLayerInformation.Present = ngapType.UPTransportLayerInformationPresentGTPTunnel
 
-		// DC Transport Layer Information in QoS Flow per TNL Information
-		DCUpTransportLayerInformation := &DCQosFlowPerTNLInformationItem.QosFlowPerTNLInformation.UPTransportLayerInformation
-		DCUpTransportLayerInformation.Present = ngapType.UPTransportLayerInformationPresentGTPTunnel
-		DCUpTransportLayerInformation.GTPTunnel = new(ngapType.GTPTunnel)
-		DCUpTransportLayerInformation.GTPTunnel.GTPTEID.Value = aper.OctetString(sranDLTeid)
-		DCUpTransportLayerInformation.GTPTunnel.TransportLayerAddress = ngapConvert.IPAddressToNgap(sranN3Addr, "")
+			// DC Transport Layer Information in QoS Flow per TNL Information
+			DCUpTransportLayerInformation := &DCQosFlowPerTNLInformationItem.QosFlowPerTNLInformation.UPTransportLayerInformation
+			DCUpTransportLayerInformation.Present = ngapType.UPTransportLayerInformationPresentGTPTunnel
+			DCUpTransportLayerInformation.GTPTunnel = new(ngapType.GTPTunnel)
+			DCUpTransportLayerInformation.GTPTunnel.GTPTEID.Value = aper.OctetString(sranDLTeid)
+			DCUpTransportLayerInformation.GTPTunnel.TransportLayerAddress = ngapConvert.IPAddressToNgap(sranN3Addr, "")
 
-		// DC Associated QoS Flow List in QoS Flow per TNL Information
-		DCAssociatedQosFlowList := &DCQosFlowPerTNLInformationItem.QosFlowPerTNLInformation.AssociatedQosFlowList
-		DCAssociatedQosFlowItem := ngapType.AssociatedQosFlowItem{}
-		DCAssociatedQosFlowItem.QosFlowIdentifier.Value = 1
-		DCAssociatedQosFlowList.List = append(DCAssociatedQosFlowList.List, DCAssociatedQosFlowItem)
+			// DC Associated QoS Flow List in QoS Flow per TNL Information
+			DCAssociatedQosFlowList := &DCQosFlowPerTNLInformationItem.QosFlowPerTNLInformation.AssociatedQosFlowList
+			DCAssociatedQosFlowItem := ngapType.AssociatedQosFlowItem{}
+			DCAssociatedQosFlowItem.QosFlowIdentifier.Value = 1
+			DCAssociatedQosFlowList.List = append(DCAssociatedQosFlowList.List, DCAssociatedQosFlowItem)
 
-		// Additional DL QoS Flow per TNL Information
-		data.AdditionalDLQosFlowPerTNLInformation = new(ngapType.QosFlowPerTNLInformationList)
-		data.AdditionalDLQosFlowPerTNLInformation.List = append(data.AdditionalDLQosFlowPerTNLInformation.List, DCQosFlowPerTNLInformationItem)
+			// Additional DL QoS Flow per TNL Information
+			data.AdditionalDLQosFlowPerTNLInformation = new(ngapType.QosFlowPerTNLInformationList)
+			data.AdditionalDLQosFlowPerTNLInformation.List = append(data.AdditionalDLQosFlowPerTNLInformation.List, DCQosFlowPerTNLInformationItem)
+		}
 
 		return data
 	}
@@ -400,14 +408,12 @@ func pduSessionEstablishment(t *testing.T, ue *test.RanUeContext, MranConn *sctp
 	time.Sleep(1 * time.Second)
 }
 
-func icmpTest(t *testing.T, MupfConn *net.UDPConn, SupfConn *net.UDPConn) {
-	// Send ICMP Echo Request through Master RAN
+func icmpTest(t *testing.T, upfConn *net.UDPConn, destIp string, expectedError bool) {
 	gtpHdr, err := hex.DecodeString(fmt.Sprintf("32ff0034%s00000000", mranULTeid))
 	assert.Nil(t, err)
 	icmpData, err := hex.DecodeString("8c870d0000000000101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f3031323334353637")
 	assert.Nil(t, err)
 
-	// Send through Master RAN
 	ipv4hdr := ipv4.Header{
 		Version:  4,
 		Len:      20,
@@ -416,7 +422,7 @@ func icmpTest(t *testing.T, MupfConn *net.UDPConn, SupfConn *net.UDPConn) {
 		TotalLen: 48,
 		TTL:      64,
 		Src:      net.ParseIP(ueIp).To4(),
-		Dst:      net.ParseIP(googleDNS).To4(),
+		Dst:      net.ParseIP(destIp).To4(),
 		ID:       1,
 	}
 	checksum := test.CalculateIpv4HeaderChecksum(&ipv4hdr)
@@ -437,64 +443,20 @@ func icmpTest(t *testing.T, MupfConn *net.UDPConn, SupfConn *net.UDPConn) {
 	assert.Nil(t, err)
 	b[2] = 0xaf
 	b[3] = 0x88
-	_, err = MupfConn.Write(append(tt, b...))
+	_, err = upfConn.Write(append(tt, b...))
 	assert.Nil(t, err)
 
-	// read from Master RAN
 	recvMsg := make([]byte, 2048)
-	err = MupfConn.SetReadDeadline(time.Now().Add(10 * time.Second))
+	err = upfConn.SetReadDeadline(time.Now().Add(2 * time.Second))
 	assert.Nil(t, err)
-	n, err := MupfConn.Read(recvMsg)
-	assert.Nil(t, err)
-	assert.Equal(t, 64, n)
-	err = MupfConn.SetReadDeadline(time.Time{})
-	assert.Nil(t, err)
-
-	// Send ICMP Echo Request through Second RAN
-	gtpHdr, err = hex.DecodeString(fmt.Sprintf("32ff0034%s00000000", sranULTeid))
-	assert.Nil(t, err)
-
-	// Send through Second RAN
-	ipv4hdr = ipv4.Header{
-		Version:  4,
-		Len:      20,
-		Protocol: 1,
-		Flags:    0,
-		TotalLen: 48,
-		TTL:      64,
-		Src:      net.ParseIP(ueIp).To4(),
-		Dst:      net.ParseIP(cloudFareDNS).To4(),
-		ID:       1,
+	n, err := upfConn.Read(recvMsg)
+	if expectedError {
+		assert.NotNil(t, err)
+	} else {
+		assert.Nil(t, err)
+		assert.Equal(t, 64, n)
 	}
-	checksum = test.CalculateIpv4HeaderChecksum(&ipv4hdr)
-	ipv4hdr.Checksum = int(checksum)
-
-	v4HdrBuf, err = ipv4hdr.Marshal()
-	assert.Nil(t, err)
-	tt = append(gtpHdr, v4HdrBuf...)
-
-	m = icmp.Message{
-		Type: ipv4.ICMPTypeEcho, Code: 0,
-		Body: &icmp.Echo{
-			ID: 12394, Seq: 1,
-			Data: icmpData,
-		},
-	}
-	b, err = m.Marshal(nil)
-	assert.Nil(t, err)
-	b[2] = 0xaf
-	b[3] = 0x88
-	_, err = SupfConn.Write(append(tt, b...))
-	assert.Nil(t, err)
-
-	// read from Second RAN
-	recvMsg = make([]byte, 2048)
-	err = SupfConn.SetReadDeadline(time.Now().Add(5 * time.Second))
-	assert.Nil(t, err)
-	n, err = SupfConn.Read(recvMsg)
-	assert.Nil(t, err)
-	assert.Equal(t, 64, n)
-	err = SupfConn.SetReadDeadline(time.Time{})
+	err = upfConn.SetReadDeadline(time.Time{})
 	assert.Nil(t, err)
 }
 
@@ -529,12 +491,20 @@ func TestDC(t *testing.T) {
 	t.Log("New UE and initial registration(NAS/NGAP) successfully")
 
 	// PDU Session Establishment
-	pduSessionEstablishment(t, ue, MranConn)
+	pduSessionEstablishment(t, ue, MranConn, ENABLE_DC_AT_PDU_SESSION_ESTABLISHMENT)
 	t.Log("PDU Session Establishment successfully")
 
-	// ping test
-	icmpTest(t, MupfConn, SupfConn)
-	t.Log("ICMP write to Master N3 and Second N3 tunnel successfully")
+	// ping test via master RAN
+	icmpTest(t, MupfConn, googleDNS, EXPECTED_NO_ERROR)
+	t.Log("ICMP test via master RAN successfully")
+
+	// ping test via slave RAN
+	icmpTest(t, SupfConn, cloudFareDNS, EXPECTED_NO_ERROR)
+	t.Log("ICMP test via slave RAN successfully")
 
 	NfTerminate()
+}
+
+func TestDynamicDC(t *testing.T) {
+
 }
