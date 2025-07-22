@@ -163,6 +163,10 @@ github.com/franela/goblin v0.0.0-20200105215937-c9ffbefa60db/go.mod h1:7dvUGVsVB
 github.com/franela/goreq v0.0.0-20171204163338-bcd34c9993f8/go.mod h1:ZhphrRTfi2rbfLwlschooIH4+wKKDR4Pdxhh+TRoA20=
 github.com/free5gc/aper v1.0.6-0.20250102035630-3ddc831eed6a h1:PRapMdjqo96T7y8PHShUlirRDI0EaJNVrmdfQaHxOKY=
 github.com/free5gc/aper v1.0.6-0.20250102035630-3ddc831eed6a/go.mod h1:L4d0BJpHVOgiOC49aCz44mF0Vja3l+bcVSAs7i3CZ8s=
+github.com/free5gc/go-gtp5gnl v1.4.7-0.20241008130314-a3088e4cb7fa h1:D5OzFSttS6WY2XRspxtPKoHyCVkRLH9kqteQ1bGfOg0=
+github.com/free5gc/go-gtp5gnl v1.4.7-0.20241008130314-a3088e4cb7fa/go.mod h1:TT5aXB90NuSPMehuIK9lV2yJFnq6Qjw37ZqNB1QAKh0=
+github.com/free5gc/go-upf v1.2.7-0.20250722100650-cd9386851cdc h1:qQyPjVFEiCax1mXfNcfx0qP+vjb47XrDgsTQ4FJXU44=
+github.com/free5gc/go-upf v1.2.7-0.20250722100650-cd9386851cdc/go.mod h1:lvqjDvjiBUI3o6ZbFMbKzi3bl9Cyts6LsPFiEibY7tU=
 github.com/free5gc/ike v1.1.1-0.20241014015325-083f89768f43 h1:cgpG06umqWTAwYy/bLXXcdNg+k7+qkinsElCVZzuOSI=
 github.com/free5gc/ike v1.1.1-0.20241014015325-083f89768f43/go.mod h1:57Ujd9Xjva02mt3OVfepYKiheFHO5Y0YCQyBgB1p1Qs=
 github.com/free5gc/nas v1.2.0 h1:pu0W1oDm2S8aeHdCo1n0zCbYu6R/ZTdZ/5lN3VYggMM=
@@ -348,6 +352,8 @@ github.com/hashicorp/go-sockaddr v1.0.0/go.mod h1:7Xibr9yA9JjQq1JpNB2Vw7kxv8xerX
 github.com/hashicorp/go-syslog v1.0.0/go.mod h1:qPfqrKkXGihmCqbJM2mZgkZGvKG1dFdvsLplgctolz4=
 github.com/hashicorp/go-uuid v1.0.0/go.mod h1:6SBZvOh/SIDV7/2o3Jml5SYk/TvGqwFJ/bN7x4byOro=
 github.com/hashicorp/go-uuid v1.0.1/go.mod h1:6SBZvOh/SIDV7/2o3Jml5SYk/TvGqwFJ/bN7x4byOro=
+github.com/hashicorp/go-version v1.6.0 h1:feTTfFNnjP967rlCxM/I9g701jU+RN74YKx2mOkIeek=
+github.com/hashicorp/go-version v1.6.0/go.mod h1:fltr4n8CU8Ke44wwGCBoEymUuxUHl09ZGVZPK5anwXA=
 github.com/hashicorp/golang-lru v0.5.0/go.mod h1:/m3WP610KZHVQ1SGc6re/UDhFvYD7pJ4Ao+sR/qLZy8=
 github.com/hashicorp/golang-lru v0.5.1/go.mod h1:/m3WP610KZHVQ1SGc6re/UDhFvYD7pJ4Ao+sR/qLZy8=
 github.com/hashicorp/logutils v1.0.0/go.mod h1:QIAnNjmIWmVIIkWDTG1z5v++HQmx9WQRO+LraFDTW64=
@@ -381,6 +387,15 @@ github.com/jtolds/gls v4.20.0+incompatible h1:xdiiI2gbIgH/gLH7ADydsJ1uDOEzR8yvV7
 github.com/jtolds/gls v4.20.0+incompatible/go.mod h1:QJZ7F/aHp+rZTRtaJ1ow/lLfFfVYBRgL+9YlvaHOwJU=
 github.com/julienschmidt/httprouter v1.2.0/go.mod h1:SYymIcj16QtmaHHD7aYtjjsJG7VTCxuUUipMqKk8s4w=
 github.com/julienschmidt/httprouter v1.3.0/go.mod h1:JR6WtHb+2LUe8TCKY3cZOxFyyO8IZAc4RVcycCCAKdM=
+github.com/khirono/go-genl v1.0.1 h1:9/7V52C/lkifC0zjZZaAN6GghQSLZkuNz87vxemyzeY=
+github.com/khirono/go-genl v1.0.1/go.mod h1:EQ4XpG8LUJTtozdrgcsAgJm++r3l94/LwCia4Rq4Scs=
+github.com/khirono/go-nl v1.0.4/go.mod h1:PzYeSjD38fzV7mX5DuaCZvnwx2kD/o7XgHyzuJxoi7U=
+github.com/khirono/go-nl v1.0.5 h1:ekOJy/0n/rwlPG732VEZvj4ogmVSLRBxKzb6ah5iwzU=
+github.com/khirono/go-nl v1.0.5/go.mod h1:PzYeSjD38fzV7mX5DuaCZvnwx2kD/o7XgHyzuJxoi7U=
+github.com/khirono/go-rtnllink v1.1.1 h1:VsJbbW2HbqIZ62qit5FsehxR0gnrfDp7GE9fSTqHUDY=
+github.com/khirono/go-rtnllink v1.1.1/go.mod h1:FqrOS6/iGjmK30oNB3snEtXXd0JRT9nJ/98/605IiO0=
+github.com/khirono/go-rtnlroute v1.0.1 h1:YgR085h06LTnQ0fekNyN3rA6dn7HUFv7dBpf41nEFeM=
+github.com/khirono/go-rtnlroute v1.0.1/go.mod h1:6GOI/cznMHo/kxpGZjwk0rseeVIcGmHNBHfbH3qhLWM=
 github.com/kisielk/errcheck v1.5.0/go.mod h1:pFxgyoBC7bSaBwPgfKdkLd5X25qrDl4LWUI2bnpBCr8=
 github.com/kisielk/gotool v1.0.0/go.mod h1:XhKaO+MFFWcvkIS/tQcRk01m1F5IRFswLeQ+oQHNcck=
 github.com/klauspost/compress v1.11.12/go.mod h1:aoV0uJVorq1K+umq18yTdKaF57EivdYsUV+/s2qKfXs=
@@ -455,8 +470,9 @@ github.com/op/go-logging v0.0.0-20160315200505-970db520ece7/go.mod h1:HzydrMdWEr
 github.com/opentracing/opentracing-go v1.2.0/go.mod h1:GxEUsuufX4nBwe+T+Wl9TAgYrxe9dPLANfrWvHYVTgc=
 github.com/openzipkin/zipkin-go v0.2.5/go.mod h1:KpXfKdgRDnnhsxw4pNIH9Md5lyFqKUa4YDFlwRYAMyE=
 github.com/pascaldekloe/goe v0.0.0-20180627143212-57f6aae5913c/go.mod h1:lzWF7FIEvWOWxwDKqyGYQf6ZUaNfKdP144TG7ZOy1lc=
-github.com/pascaldekloe/goe v0.1.0 h1:cBOtyMzM9HTpWjXfbbunk26uA6nG3a8n06Wieeh0MwY=
 github.com/pascaldekloe/goe v0.1.0/go.mod h1:lzWF7FIEvWOWxwDKqyGYQf6ZUaNfKdP144TG7ZOy1lc=
+github.com/pascaldekloe/goe v0.1.1 h1:Ah6WQ56rZONR3RW3qWa2NCZ6JAVvSpUcoLBaOmYFt9Q=
+github.com/pascaldekloe/goe v0.1.1/go.mod h1:KSyfaxQOh0HZPjDP1FL/kFtbqYqrALJTaMafFUIccqU=
 github.com/pelletier/go-toml/v2 v2.2.2 h1:aYUidT7k73Pcl9nb2gScu7NSrKCSHIDE89b3+6Wq+LM=
 github.com/pelletier/go-toml/v2 v2.2.2/go.mod h1:1t835xjRzz80PqgE6HHgN2JOsmgYu/h4qDAS4n929Rs=
 github.com/performancecopilot/speed v3.0.0+incompatible/go.mod h1:/CLtqpZ5gBg1M9iaPbIdPPGyKcA8hKdoy6hAWba7Yac=
@@ -563,6 +579,8 @@ github.com/vishvananda/netns v0.0.4 h1:Oeaw1EM2JMxD51g9uhtC0D7erkIjgmj8+JZc26m1Y
 github.com/vishvananda/netns v0.0.4/go.mod h1:SpkAiCQRtJ6TvvxPnOSyH3BMl6unz3xZlaprSwhNNJM=
 github.com/wmnsk/go-gtp v0.8.0 h1:KbvPh2nRGrB67w3k80YhIv6NkjKsZn20i0B5wCjhdDs=
 github.com/wmnsk/go-gtp v0.8.0/go.mod h1:Y0reWDB701yW31+HeZcHfO6dLVRfn/f017vH+7syqrg=
+github.com/wmnsk/go-pfcp v0.0.23-0.20231009074152-d5a9c1f47114 h1:8y4Hd1l92YQajB5s53suWTTbRRClaZWyDyYm9fl1RX0=
+github.com/wmnsk/go-pfcp v0.0.23-0.20231009074152-d5a9c1f47114/go.mod h1:C93sXfS7NGT9niMpb6K+pf/2GQTMBPFqZ5K2fmAtoA8=
 github.com/xdg-go/pbkdf2 v1.0.0 h1:Su7DPu48wXMwC3bs7MCNG+z4FhcyEuz5dlvchbq0B0c=
 github.com/xdg-go/pbkdf2 v1.0.0/go.mod h1:jrpuAogTd400dnrH08LKmI/xc1MbPOebTwRqcT5RDeI=
 github.com/xdg-go/scram v1.1.2 h1:FHX5I5B4i4hKRVRBCFRxq1iQRej7WO3hhBuJf+UUySY=

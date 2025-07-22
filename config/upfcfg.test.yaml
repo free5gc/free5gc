@@ -9,7 +9,7 @@ pfcp:
   maxRetrans: 3 # the max number of retransmission
 
 gtpu:
-  forwarder: gtp5g
+  forwarder: dummy
   # The IP list of the N3/N9 interfaces on this UPF
   # If there are multiple connection, set addr to 0.0.0.0 or list all the addresses
   ifList:

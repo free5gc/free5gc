@@ -10,6 +10,7 @@ require (
 	github.com/free5gc/aper v1.0.6-0.20250102035630-3ddc831eed6a
 	github.com/free5gc/ausf v0.0.0
 	github.com/free5gc/chf v1.1.2-0.20250718142832-7985bed2e1c7
+	github.com/free5gc/go-upf v1.2.7-0.20250722100650-cd9386851cdc
 	github.com/free5gc/ike v1.1.1-0.20241014015325-083f89768f43
 	github.com/free5gc/nas v1.2.0
 	github.com/free5gc/ngap v1.1.0
@@ -62,6 +63,7 @@ require (
 	github.com/fclairamb/go-log v0.4.1 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fiorix/go-diameter v3.0.2+incompatible // indirect
+	github.com/free5gc/go-gtp5gnl v1.4.7-0.20241008130314-a3088e4cb7fa // indirect
 	github.com/free5gc/pfcp v1.1.0 // indirect
 	github.com/free5gc/tlv v1.0.3-0.20241204153300-1005a019612d // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
@@ -87,10 +89,15 @@ require (
 	github.com/h2non/parth v0.0.0-20190131123155-b4df798d6542 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
+	github.com/hashicorp/go-version v1.6.0 // indirect
 	github.com/ishidawataru/sctp v0.0.0-20230406120618-7ff4192f6ff2 // indirect
 	github.com/jlaffaye/ftp v0.1.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
+	github.com/khirono/go-genl v1.0.1 // indirect
+	github.com/khirono/go-nl v1.0.5 // indirect
+	github.com/khirono/go-rtnllink v1.1.1 // indirect
+	github.com/khirono/go-rtnlroute v1.0.1 // indirect
 	github.com/klauspost/compress v1.16.7 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.7 // indirect
 	github.com/kr/fs v0.1.0 // indirect
@@ -115,6 +122,7 @@ require (
 	github.com/ugorji/go/codec v1.2.12 // indirect
 	github.com/vishvananda/netns v0.0.4 // indirect
 	github.com/wmnsk/go-gtp v0.8.0 // indirect
+	github.com/wmnsk/go-pfcp v0.0.23-0.20231009074152-d5a9c1f47114 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.1.2 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect

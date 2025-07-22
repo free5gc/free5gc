@@ -11,7 +11,7 @@ pfcp:
 
 # GTP-U Configuration
 gtpu:
-  forwarder: gtp5g
+  forwarder: dummy
   # The IP list of the N3/N9 interfaces on this UPF
   # You can bind this to a specific IP from your available subnets (e.g., 10.10.0.1).
   # Alternatively, you can bind it to all interfaces using 0.0.0.0.

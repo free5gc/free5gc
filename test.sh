@@ -75,9 +75,6 @@ export GIN_MODE=release
 
 function terminate()
 {
-    sleep 3
-    sudo killall -15 upf
-
     if [ ${DUMP_NS} ]
     then
         # kill all tcpdump processes in the default network namespace
@@ -86,35 +83,7 @@ function terminate()
     fi
 
     sudo ip link del veth0
-    sudo ip netns del ${UPFNS}
     sudo ip addr del 10.60.0.1/32 dev lo
-
-    if [[ "$1" == "TestNon3GPP" || "$1" == "TestTngf" ]]
-    then
-        if [ ${DUMP_NS} ]
-        then
-            cd .. && sudo ip xfrm state > ${PCAP_PATH}/NWu_SA_state.log
-        fi
-        sudo ip xfrm policy flush
-        sudo ip xfrm state flush
-        sudo ip netns del ${UENS}
-        removeN3iwfInterfaces
-        sudo ip link del veth2
-        sudo killall n3iwf tngf
-        ps aux | grep test.test | awk '{print $2}' | xargs sudo kill -SIGUSR1
-    fi
-
-    if [[ "$1" == "TestMultiAmfRegistration" ]]
-    then
-        cd .. && ./force_kill.sh
-    fi
-
-    if [[ "$1" == "TestNasReroute" ]]
-    then
-        cd .. && ./force_kill.sh
-    fi
-
-    sleep 5
 }
 
 function removeN3iwfInterfaces()
@@ -180,16 +149,6 @@ sudo ip link set veth0 up
 sudo ip addr add 10.60.0.1 dev lo
 sudo ip addr add 10.200.200.1/24 dev veth0
 sudo ip addr add 10.200.200.2/24 dev veth0
-
-sudo ip link set veth1 netns ${UPFNS}
-
-${EXEC_UPFNS} ip link set lo up
-${EXEC_UPFNS} ip link set veth1 up
-${EXEC_UPFNS} ip addr add 10.60.0.101 dev lo
-${EXEC_UPFNS} ip addr add 10.200.200.101/24 dev veth1
-${EXEC_UPFNS} ip addr add 10.200.200.102/24 dev veth1
-${EXEC_UPFNS} ip route add 10.200.200.1/32 dev veth1 src 10.200.200.102
-${EXEC_UPFNS} ip route add 10.200.200.2/32 dev veth1 src 10.200.200.102
 
 if [[ "$1" == "TestDC" ]]
 then

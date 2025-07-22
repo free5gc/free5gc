@@ -15,6 +15,8 @@ import (
 	ausf_service "github.com/free5gc/ausf/pkg/service"
 	chf_factory "github.com/free5gc/chf/pkg/factory"
 	chf_service "github.com/free5gc/chf/pkg/service"
+	upf_service "github.com/free5gc/go-upf/pkg/app"
+	upf_factory "github.com/free5gc/go-upf/pkg/factory"
 	nrf_factory "github.com/free5gc/nrf/pkg/factory"
 	nrf_service "github.com/free5gc/nrf/pkg/service"
 	nssf_factory "github.com/free5gc/nssf/pkg/factory"
@@ -49,6 +51,7 @@ type StartNFsConfig struct {
 	Nssf bool `yaml:"nssf,omitempty" default:"false"`
 	Ausf bool `yaml:"ausf,omitempty" default:"false"`
 	Chf  bool `yaml:"chf,omitempty" default:"false"`
+	Upf  bool `yaml:"upf,omitempty" default:"false"`
 
 	OAuth  bool   `yaml:"oauth,omitempty" default:"false"`
 	TestId TestId `yaml:"testId,omitempty"`
@@ -62,6 +65,9 @@ func CreateNFs(cfg StartNFsConfig) []app.NFstruct {
 
 	NfCtx, NfCancel = context.WithCancel(context.Background())
 
+	if cfg.Upf {
+		nfs = append(nfs, NewUpfStruct(NfCtx))
+	}
 	if cfg.Nrf {
 		nfs = append(nfs, NewNrfStruct(NfCtx, cfg.OAuth))
 	}
@@ -90,6 +96,23 @@ func CreateNFs(cfg StartNFsConfig) []app.NFstruct {
 		nfs = append(nfs, NewChfStruct(NfCtx))
 	}
 	return nfs
+}
+
+func NewUpfStruct(ctx context.Context) app.NFstruct {
+	if err := upfConfig(); err != nil {
+		fmt.Printf("UPF Config failed: %v\n", err)
+	}
+	upf_ctx, upf_cancel := context.WithCancel(ctx)
+	upfApp, errApp := upf_service.NewApp(upf_factory.UpfConfig)
+	if errApp != nil {
+		fmt.Printf("UPF NewApp failed: %v\n", errApp)
+	}
+
+	return app.NFstruct{
+		Nf:     upfApp,
+		Ctx:    &upf_ctx,
+		Cancel: &upf_cancel,
+	}
 }
 
 func NewNrfStruct(ctx context.Context, oauth bool) app.NFstruct {
@@ -245,6 +268,40 @@ func NewChfStruct(ctx context.Context) app.NFstruct {
 		Ctx:    &chf_ctx,
 		Cancel: &chf_cancel,
 	}
+}
+
+func upfConfig() error {
+	upf_factory.UpfConfig = &upf_factory.Config{
+		Version:     "1.0.3",
+		Description: "UPF initial test configuration",
+		Pfcp: &upf_factory.Pfcp{
+			Addr:           "10.200.200.2",
+			NodeID:         "10.200.200.2",
+			RetransTimeout: time.Second,
+			MaxRetrans:     3,
+		},
+		Gtpu: &upf_factory.Gtpu{
+			Forwarder: "dummy",
+			IfList: []upf_factory.IfInfo{
+				{
+					Addr: "10.200.200.102",
+					Type: "N3",
+				},
+			},
+		},
+		DnnList: []upf_factory.DnnList{
+			{
+				Dnn:  "internet",
+				Cidr: "10.60.0.0/16",
+			},
+		},
+		Logger: &upf_factory.Logger{
+			Enable:       true,
+			Level:        "info",
+			ReportCaller: false,
+		},
+	}
+	return nil
 }
 
 func nrfConfig(oauth bool) error {
@@ -521,8 +578,8 @@ func smfConfig(testID TestId) error {
 					},
 					"UPF": {
 						Type:   "UPF",
-						NodeID: "10.200.200.101",
-						Addr:   "10.200.200.101",
+						NodeID: "10.200.200.2",
+						Addr:   "10.200.200.2",
 						SNssaiInfos: []*smf_factory.SnssaiUpfInfoItem{{
 							SNssai: &models.Snssai{
 								Sst: 1,
