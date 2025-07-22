@@ -1,0 +1,12 @@
+name: 'Commit Message Check'
+
+on:
+  pull_request:
+
+jobs:
+  build:
+    name: Conventional Commits
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: webiny/action-conventional-commits@v1.3.0

@@ -1,0 +1,38 @@
+info:
+  version: 1.0.0
+  description: N3IWF initial local configuration
+
+configuration:
+  N3IWFInformation:
+    GlobalN3IWFID:
+      PLMNID:
+        MCC:
+          208
+        MNC:
+          93
+      N3IWFID:
+        135
+    Name:
+      free5GC_N3IWF
+    SupportedTAList:
+      - TAC:
+          1
+        BroadcastPLMNList:
+          - PLMNID:
+              MCC:
+                208
+              MNC:
+                93
+            TAISliceSupportList:
+              - SNSSAI:
+                  SST:
+                    1
+                  SD:
+                    010203
+              - SNSSAI:
+                  SST:
+                    1
+                  SD:
+                    112233
+  AMFAddress:
+    - IP: 127.0.0.1

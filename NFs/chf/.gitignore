@@ -1,0 +1,24 @@
+# Toolchain
+# Goland project folder
+.idea/
+# Visual Studio Code
+.vscode/
+# Build
+build/
+log/
+vendor/
+# emacs/vim
+GPATH
+GRTAGS
+GTAGS
+TAGS
+tags
+cscope.*
+*.sw*
+# mac
+.DS_Store
+
+# debug
+*.log
+*.pcap
+
