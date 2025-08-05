@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/sirupsen/logrus"
 
 	nrf_context "github.com/free5gc/nrf/internal/context"
@@ -17,6 +18,8 @@ import (
 	"github.com/free5gc/nrf/internal/sbi/processor"
 	"github.com/free5gc/nrf/pkg/app"
 	"github.com/free5gc/nrf/pkg/factory"
+	"github.com/free5gc/util/metrics"
+	"github.com/free5gc/util/metrics/utils"
 	"github.com/free5gc/util/mongoapi"
 )
 
@@ -32,9 +35,10 @@ type NrfApp struct {
 	cancel context.CancelFunc
 	wg     sync.WaitGroup
 
-	sbiServer *sbi.Server
-	processor *processor.Processor
-	consumer  *consumer.Consumer
+	sbiServer     *sbi.Server
+	metricsServer *metrics.Server
+	processor     *processor.Processor
+	consumer      *consumer.Consumer
 }
 
 func NewApp(ctx context.Context, cfg *factory.Config, tlsKeyLogPath string) (*NrfApp, error) {
@@ -70,9 +74,38 @@ func NewApp(ctx context.Context, cfg *factory.Config, tlsKeyLogPath string) (*Nr
 	if nrf.sbiServer, err = sbi.NewServer(nrf, tlsKeyLogPath); err != nil {
 		return nil, err
 	}
+
+	features := map[utils.MetricTypeEnabled]bool{utils.SBI: true}
+	customMetrics := make(map[utils.MetricTypeEnabled][]prometheus.Collector)
+	if cfg.AreMetricsEnabled() {
+		if nrf.metricsServer, err = metrics.NewServer(
+			getInitMetrics(cfg, features, customMetrics), tlsKeyLogPath, logger.InitLog); err != nil {
+			return nil, err
+		}
+	}
+
 	NRF = nrf
 
 	return nrf, nil
+}
+
+func getInitMetrics(
+	cfg *factory.Config,
+	features map[utils.MetricTypeEnabled]bool,
+	customMetrics map[utils.MetricTypeEnabled][]prometheus.Collector,
+) metrics.InitMetrics {
+	metricsInfo := metrics.Metrics{
+		BindingIPv4: cfg.GetMetricsBindingAddr(),
+		Scheme:      cfg.GetMetricsScheme(),
+		Namespace:   cfg.GetMetricsNamespace(),
+		Port:        cfg.GetMetricsPort(),
+		Tls: metrics.Tls{
+			Key: cfg.GetMetricsCertKeyPath(),
+			Pem: cfg.GetMetricsCertPemPath(),
+		},
+	}
+
+	return metrics.NewInitMetrics(metricsInfo, "nrf", features, customMetrics)
 }
 
 func (a *NrfApp) Context() *nrf_context.NRFContext {
@@ -148,6 +181,12 @@ func (a *NrfApp) Start() {
 	if err := a.sbiServer.Run(&a.wg); err != nil {
 		logger.MainLog.Fatalf("Run SBI server failed: %+v", err)
 	}
+
+	if a.cfg.AreMetricsEnabled() && a.metricsServer != nil {
+		go func() {
+			a.metricsServer.Run(&a.wg)
+		}()
+	}
 	a.WaitRoutineStopped()
 }
 
@@ -182,6 +221,11 @@ func (a *NrfApp) terminateProcedure() {
 	}
 
 	a.sbiServer.Stop()
+
+	if a.metricsServer != nil {
+		a.metricsServer.Stop()
+		logger.MainLog.Infof("NRF Metrics Server terminated")
+	}
 }
 
 func (a *NrfApp) waitNfDeregister(waitTime int) {
