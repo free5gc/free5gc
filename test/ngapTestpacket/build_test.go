@@ -116,8 +116,8 @@ func TestBuildNGSetupRequest(t *testing.T) {
 func TestBuildInitialUEMessage(t *testing.T) {
 
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
-		Len:    12, // suci
-		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
+		Len:    13, // suci
+		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
 	}
 	nasPdu := nasTestpacket.GetRegistrationRequest(1, mobileIdentity5GS, nil, nil, nil, nil, nil)
 	pdu := ngapTestpacket.BuildInitialUEMessage(123, nasPdu, "")

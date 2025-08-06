@@ -150,7 +150,7 @@ func newUEAndInitialRegistration(t *testing.T, MranConn *sctp.SCTPConn) *test.Ra
 	var err error
 
 	// New UE
-	ue := test.NewRanUeContext("imsi-2089300007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA2,
+	ue := test.NewRanUeContext("imsi-208930000007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA2,
 		models.AccessType__3_GPP_ACCESS)
 	ue.AmfUeNgapId = 1
 	ue.AuthenticationSubs = test.GetAuthSubscription(TestGenAuthData.MilenageTestSet19.K,
@@ -161,10 +161,10 @@ func newUEAndInitialRegistration(t *testing.T, MranConn *sctp.SCTPConn) *test.Ra
 	test.DelUeFromMongoDB(t, ue, servingPlmnId)
 	test.InsertUeToMongoDB(t, ue, servingPlmnId)
 
-	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
+	// send InitialUeMessage(Registration Request)(imsi-208930000007487)
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
-		Len:    12, // suci
-		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0xff, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
+		Len:    13, // suci
+		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
 	}
 
 	ueSecurityCapability := ue.GetUESecurityCapability()

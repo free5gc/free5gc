@@ -24,7 +24,7 @@ func init() {
 	ConsumerAMFCreateUEContextRequsetTable[CreateUEContext403] = models.CreateUeContextRequest{
 		JsonData: &models.UeContextCreateData{
 			UeContext: &models.UeContext{
-				Supi: "imsi-2089300007487",
+				Supi: "imsi-208930000007487",
 			},
 			TargetId:           &models.NgRanTargetId{},
 			SourceToTargetData: &models.N2InfoContent{},
@@ -38,7 +38,7 @@ func init() {
 	ConsumerAMFCreateUEContextRequsetTable[CreateUEContext201] = models.CreateUeContextRequest{
 		JsonData: &models.UeContextCreateData{
 			UeContext: &models.UeContext{
-				Supi: "imsi-2089300007487",
+				Supi: "imsi-208930000007487",
 				RestrictedRatList: []models.RatType{
 					models.RatType_NR,
 				},
@@ -102,7 +102,7 @@ func init() {
 		},
 	}
 	ConsumerAMFReleaseUEContextRequestTable[UeContextRelease201] = models.UeContextRelease{
-		Supi:                "imsi-2089300007487",
+		Supi:                "imsi-208930000007487",
 		UnauthenticatedSupi: true,
 		NgapCause: &models.NgApCause{
 			Group: 0,
