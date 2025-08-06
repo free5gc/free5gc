@@ -36,6 +36,27 @@ func InsertAuthSubscriptionToMongoDB(ueId string, authSubs models.Authentication
 	}
 }
 
+func InsertWebAuthSubscriptionToMongoDB(ueId string, authSubs models.AuthenticationSubscription) {
+	collName := "subscriptionData.authenticationData.webAuthenticationSubscription"
+	filter := bson.M{"ueId": ueId}
+	webAuthSubs := webui.WebAuthenticationSubscription{
+		AuthenticationManagementField: "8000",
+		AuthenticationMethod: models.AuthMethod__5_G_AKA,
+		PermanentKey: &webui.PermanentKey{
+			PermanentKeyValue: authSubs.EncPermanentKey,
+		},
+		SequenceNumber: authSubs.SequenceNumber.Sqn,
+		Opc: &webui.Opc{
+			OpcValue: authSubs.EncOpcKey,
+		},
+	}
+	putData := toBsonM(webAuthSubs)
+	putData["ueId"] = ueId
+	if _, err := mongoapi.RestfulAPIPutOne(collName, filter, putData); err != nil {
+		fatal.Fatalf("InsertWebAuthSubscriptionToMongoDB err: %+v", err)
+	}
+}
+
 func GetAuthSubscriptionFromMongoDB(ueId string) (authSubs *models.AuthenticationSubscription) {
 	collName := "subscriptionData.authenticationData.authenticationSubscription"
 	filter := bson.M{"ueId": ueId}
@@ -445,6 +466,7 @@ func DelQosFlowFromMongoDB(ueId string, servingPlmnId string) error {
 
 func InsertUeToMongoDB(t *testing.T, ue *RanUeContext, servingPlmnId string) {
 	InsertAuthSubscriptionToMongoDB(ue.Supi, ue.AuthenticationSubs)
+	InsertWebAuthSubscriptionToMongoDB(ue.Supi, ue.AuthenticationSubs)
 	getData := GetAuthSubscriptionFromMongoDB(ue.Supi)
 	assert.NotNil(t, getData)
 	{
