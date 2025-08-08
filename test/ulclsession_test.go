@@ -124,7 +124,7 @@ func testULCLSessionBase(t *testing.T, ueCount int, upfNum int) {
 		//i/100
 		i_e4 := 16*((i/100)%10) + ((i / 100) / 10)
 		mobileIdentity5GS := nasType.MobileIdentity5GS{
-			Len:    12, // suci
+			Len:    13, // suci
 			Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0xff, 0x00, 0x00, 0x00, 0x00, uint8(i_e4), uint8(i_e2)},
 		}
 		mobileIdentity5GSList[ue.Supi] = mobileIdentity5GS

@@ -61,7 +61,7 @@ func GetPostAppSessionsData_Normal() models.AppSessionContext {
 			},
 			NotifUri: "https://127.0.0.1:12345",
 			SuppFeat: "5", //b'0111'
-			Supi:     "imsi-2089300007487",
+			Supi:     "imsi-208930000007487",
 			UeIpv4:   "45.45.0.2",
 		},
 	}
@@ -74,7 +74,7 @@ func GetPostAppSessionsData_AFInfluenceOnTrafficRouting() models.AppSessionConte
 			AfAppId:  "edge",
 			Dnn:      "internet",
 			SuppFeat: "03",
-			Supi:     "imsi-2089300007487",
+			Supi:     "imsi-208930000007487",
 			UeIpv4:   "10.60.0.1",
 			SliceInfo: &models.Snssai{
 				Sst: 1, Sd: "010203",

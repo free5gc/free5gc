@@ -116,7 +116,7 @@ var ConsumerSMFPDUSessionSMContextCreateTable = make(map[string]models.SmfPduSes
 
 func init() {
 	ConsumerSMFPDUSessionSMContextCreateTable[SERVICE_REQUEST] = models.SmfPduSessionSmContextCreateData{
-		Supi:                "imsi-2089300007487",
+		Supi:                "imsi-208930000007487",
 		UnauthenticatedSupi: false,
 		PduSessionId:        2,
 		Dnn:                 "internet",
