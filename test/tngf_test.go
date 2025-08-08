@@ -356,7 +356,7 @@ func tngfBuildEAP5GANParameters(mobileIdentity5GS nasType.MobileIdentity5GS) []b
 	// Build UE ID
 	anParameter = make([]byte, 3)
 	anParameter[0] = radiusMessage.ANParametersTypeUEIdentity
-	anParameter[1] = byte(15)
+	anParameter[1] = byte(16)
 	anParameter[2] = mobileIdentity5GS.GetIei()
 	anParameterLength := make([]byte, 2)
 	binary.BigEndian.PutUint16(anParameterLength, mobileIdentity5GS.GetLen())
