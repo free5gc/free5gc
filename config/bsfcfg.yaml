@@ -1,0 +1,32 @@
+info:
+  version: 1.5.0
+  description: BSF initial local configuration
+
+configuration:
+  bsfName: BSF # the name of this BSF
+  sbi: # Service-based interface information
+    scheme: http # the protocol for sbi (http or https)
+    registerIPv4: 127.0.0.10 # IP used to register to NRF
+    bindingIPv4: 127.0.0.10  # IP used to bind the service
+    port: 8011 # Port used to bind the service
+    tls: # the local path of TLS key
+      pem: cert/bsf.pem # BSF TLS Certificate
+      key: cert/bsf.key # BSF TLS Private key
+  nrfUri: http://127.0.0.10:8000 # a valid URI of NRF
+  mongodb:
+    name: free5gc                      # name of the mongodb
+    url: mongodb://127.0.0.1:27017     # a valid URL of the mongodb
+
+# the kind of log output
+# debugLevel: how detailed to output, value: trace, debug, info, warn, error, fatal, panic
+# ReportCaller: enable the caller report or not, value: true or false
+logger:
+  BSF:
+    debugLevel: info
+    ReportCaller: false
+  OpenApi:
+    debugLevel: info
+    ReportCaller: false
+  MongoDBLibrary:
+    debugLevel: info
+    ReportCaller: false
