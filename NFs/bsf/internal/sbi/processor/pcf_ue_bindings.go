@@ -11,6 +11,7 @@ import (
 
 	bsfContext "github.com/free5gc/bsf/internal/context"
 	"github.com/free5gc/bsf/internal/logger"
+	"github.com/free5gc/bsf/internal/util"
 	"github.com/free5gc/openapi/models"
 )
 
@@ -31,13 +32,13 @@ func CreatePCFforUEBinding(c *gin.Context) {
 	// Convert to internal representation
 	binding := &bsfContext.PcfForUeBinding{
 		Supi:                request.Supi,
-		Gpsi:                stringToPtr(request.Gpsi),
-		PcfForUeFqdn:        stringToPtr(request.PcfForUeFqdn),
+		Gpsi:                util.StringToPtr(request.Gpsi),
+		PcfForUeFqdn:        util.StringToPtr(request.PcfForUeFqdn),
 		PcfForUeIpEndPoints: request.PcfForUeIpEndPoints,
-		PcfId:               stringToPtr(request.PcfId),
-		PcfSetId:            stringToPtr(request.PcfSetId),
+		PcfId:               util.StringToPtr(request.PcfId),
+		PcfSetId:            util.StringToPtr(request.PcfSetId),
 		BindLevel:           (*models.BindingLevel)(&request.BindLevel),
-		SuppFeat:            stringToPtr(request.SuppFeat),
+		SuppFeat:            util.StringToPtr(request.SuppFeat),
 	}
 
 	// Create new binding
@@ -46,13 +47,13 @@ func CreatePCFforUEBinding(c *gin.Context) {
 	// Convert back to response format
 	response := models.PcfForUeBinding{
 		Supi:                binding.Supi,
-		Gpsi:                ptrToString(binding.Gpsi),
-		PcfForUeFqdn:        ptrToString(binding.PcfForUeFqdn),
+		Gpsi:                util.PtrToString(binding.Gpsi),
+		PcfForUeFqdn:        util.PtrToString(binding.PcfForUeFqdn),
 		PcfForUeIpEndPoints: binding.PcfForUeIpEndPoints,
-		PcfId:               ptrToString(binding.PcfId),
-		PcfSetId:            ptrToString(binding.PcfSetId),
+		PcfId:               util.PtrToString(binding.PcfId),
+		PcfSetId:            util.PtrToString(binding.PcfSetId),
 		BindLevel:           (*binding.BindLevel),
-		SuppFeat:            ptrToString(binding.SuppFeat),
+		SuppFeat:            util.PtrToString(binding.SuppFeat),
 	}
 
 	locationHeader := "/nbsf-management/v1/pcf-ue-bindings/" + bindingId
@@ -81,13 +82,13 @@ func GetPCFForUeBindings(c *gin.Context) {
 	for _, binding := range bindings {
 		response = append(response, models.PcfForUeBinding{
 			Supi:                binding.Supi,
-			Gpsi:                ptrToString(binding.Gpsi),
-			PcfForUeFqdn:        ptrToString(binding.PcfForUeFqdn),
+			Gpsi:                util.PtrToString(binding.Gpsi),
+			PcfForUeFqdn:        util.PtrToString(binding.PcfForUeFqdn),
 			PcfForUeIpEndPoints: binding.PcfForUeIpEndPoints,
-			PcfId:               ptrToString(binding.PcfId),
-			PcfSetId:            ptrToString(binding.PcfSetId),
+			PcfId:               util.PtrToString(binding.PcfId),
+			PcfSetId:            util.PtrToString(binding.PcfSetId),
 			BindLevel:           (*binding.BindLevel),
-			SuppFeat:            ptrToString(binding.SuppFeat),
+			SuppFeat:            util.PtrToString(binding.SuppFeat),
 		})
 	}
 
@@ -139,13 +140,13 @@ func UpdateIndPCFforUEBinding(c *gin.Context) {
 
 	// Apply patch
 	if patchRequest.PcfForUeFqdn != "" {
-		binding.PcfForUeFqdn = stringToPtr(patchRequest.PcfForUeFqdn)
+		binding.PcfForUeFqdn = util.StringToPtr(patchRequest.PcfForUeFqdn)
 	}
 	if patchRequest.PcfForUeIpEndPoints != nil {
 		binding.PcfForUeIpEndPoints = patchRequest.PcfForUeIpEndPoints
 	}
 	if patchRequest.PcfId != "" {
-		binding.PcfId = stringToPtr(patchRequest.PcfId)
+		binding.PcfId = util.StringToPtr(patchRequest.PcfId)
 	}
 
 	// Update binding
@@ -154,13 +155,13 @@ func UpdateIndPCFforUEBinding(c *gin.Context) {
 	// Return updated binding
 	response := models.PcfForUeBinding{
 		Supi:                binding.Supi,
-		Gpsi:                ptrToString(binding.Gpsi),
-		PcfForUeFqdn:        ptrToString(binding.PcfForUeFqdn),
+		Gpsi:                util.PtrToString(binding.Gpsi),
+		PcfForUeFqdn:        util.PtrToString(binding.PcfForUeFqdn),
 		PcfForUeIpEndPoints: binding.PcfForUeIpEndPoints,
-		PcfId:               ptrToString(binding.PcfId),
-		PcfSetId:            ptrToString(binding.PcfSetId),
+		PcfId:               util.PtrToString(binding.PcfId),
+		PcfSetId:            util.PtrToString(binding.PcfSetId),
 		BindLevel:           (*binding.BindLevel),
-		SuppFeat:            ptrToString(binding.SuppFeat),
+		SuppFeat:            util.PtrToString(binding.SuppFeat),
 	}
 
 	c.JSON(http.StatusOK, response)

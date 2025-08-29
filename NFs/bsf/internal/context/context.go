@@ -191,6 +191,7 @@ func (c *BSFContext) CreatePcfBinding(binding *PcfBinding) string {
 	c.PcfBindings[bindingId] = binding
 
 	logger.CtxLog.Debugf("Created PCF binding with ID: %s", bindingId)
+
 	return bindingId
 }
 
@@ -222,6 +223,7 @@ func (c *BSFContext) DeletePcfBinding(bindingId string) bool {
 	if _, exists := c.PcfBindings[bindingId]; exists {
 		delete(c.PcfBindings, bindingId)
 		logger.CtxLog.Debugf("Deleted PCF binding with ID: %s", bindingId)
+
 		return true
 	}
 	return false

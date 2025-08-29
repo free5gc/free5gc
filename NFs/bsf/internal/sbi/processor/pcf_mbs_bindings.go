@@ -12,6 +12,7 @@ import (
 
 	bsfContext "github.com/free5gc/bsf/internal/context"
 	"github.com/free5gc/bsf/internal/logger"
+	"github.com/free5gc/bsf/internal/util"
 	"github.com/free5gc/openapi/models"
 )
 
@@ -44,12 +45,12 @@ func CreatePCFMbsBinding(c *gin.Context) {
 	// Convert to internal representation
 	binding := &bsfContext.PcfMbsBinding{
 		MbsSessionId:   request.MbsSessionId,
-		PcfFqdn:        stringToPtr(request.PcfFqdn),
+		PcfFqdn:        util.StringToPtr(request.PcfFqdn),
 		PcfIpEndPoints: request.PcfIpEndPoints,
-		PcfId:          stringToPtr(request.PcfId),
-		PcfSetId:       stringToPtr(request.PcfSetId),
+		PcfId:          util.StringToPtr(request.PcfId),
+		PcfSetId:       util.StringToPtr(request.PcfSetId),
 		BindLevel:      (*models.BindingLevel)(&request.BindLevel),
-		SuppFeat:       stringToPtr(request.SuppFeat),
+		SuppFeat:       util.StringToPtr(request.SuppFeat),
 	}
 
 	if request.RecoveryTime != nil {
@@ -62,12 +63,12 @@ func CreatePCFMbsBinding(c *gin.Context) {
 	// Convert back to response format
 	response := models.PcfMbsBinding{
 		MbsSessionId:   binding.MbsSessionId,
-		PcfFqdn:        ptrToString(binding.PcfFqdn),
+		PcfFqdn:        util.PtrToString(binding.PcfFqdn),
 		PcfIpEndPoints: binding.PcfIpEndPoints,
-		PcfId:          ptrToString(binding.PcfId),
-		PcfSetId:       ptrToString(binding.PcfSetId),
+		PcfId:          util.PtrToString(binding.PcfId),
+		PcfSetId:       util.PtrToString(binding.PcfSetId),
 		BindLevel:      (*binding.BindLevel),
-		SuppFeat:       ptrToString(binding.SuppFeat),
+		SuppFeat:       util.PtrToString(binding.SuppFeat),
 	}
 
 	if binding.RecoveryTime != nil {
@@ -117,12 +118,12 @@ func GetPCFMbsBinding(c *gin.Context) {
 	for _, binding := range bindings {
 		mbsBinding := models.PcfMbsBinding{
 			MbsSessionId:   binding.MbsSessionId,
-			PcfFqdn:        ptrToString(binding.PcfFqdn),
+			PcfFqdn:        util.PtrToString(binding.PcfFqdn),
 			PcfIpEndPoints: binding.PcfIpEndPoints,
-			PcfId:          ptrToString(binding.PcfId),
-			PcfSetId:       ptrToString(binding.PcfSetId),
+			PcfId:          util.PtrToString(binding.PcfId),
+			PcfSetId:       util.PtrToString(binding.PcfSetId),
 			BindLevel:      (*binding.BindLevel),
-			SuppFeat:       ptrToString(binding.SuppFeat),
+			SuppFeat:       util.PtrToString(binding.SuppFeat),
 		}
 
 		if binding.RecoveryTime != nil {
@@ -163,13 +164,13 @@ func ModifyIndPCFMbsBinding(c *gin.Context) {
 
 	// Apply patch
 	if patchRequest.PcfFqdn != "" {
-		binding.PcfFqdn = stringToPtr(patchRequest.PcfFqdn)
+		binding.PcfFqdn = util.StringToPtr(patchRequest.PcfFqdn)
 	}
 	if patchRequest.PcfIpEndPoints != nil {
 		binding.PcfIpEndPoints = patchRequest.PcfIpEndPoints
 	}
 	if patchRequest.PcfId != "" {
-		binding.PcfId = stringToPtr(patchRequest.PcfId)
+		binding.PcfId = util.StringToPtr(patchRequest.PcfId)
 	}
 
 	// Update binding
@@ -178,12 +179,12 @@ func ModifyIndPCFMbsBinding(c *gin.Context) {
 	// Return updated binding
 	response := models.PcfMbsBinding{
 		MbsSessionId:   binding.MbsSessionId,
-		PcfFqdn:        ptrToString(binding.PcfFqdn),
+		PcfFqdn:        util.PtrToString(binding.PcfFqdn),
 		PcfIpEndPoints: binding.PcfIpEndPoints,
-		PcfId:          ptrToString(binding.PcfId),
-		PcfSetId:       ptrToString(binding.PcfSetId),
+		PcfId:          util.PtrToString(binding.PcfId),
+		PcfSetId:       util.PtrToString(binding.PcfSetId),
 		BindLevel:      (*binding.BindLevel),
-		SuppFeat:       ptrToString(binding.SuppFeat),
+		SuppFeat:       util.PtrToString(binding.SuppFeat),
 	}
 
 	if binding.RecoveryTime != nil {

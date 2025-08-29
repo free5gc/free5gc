@@ -16,7 +16,7 @@ import (
 const (
 	BsfDefaultTLSKeyLogPath  = "./log/bsfsslkey.log"
 	BsfDefaultConfigPath     = "./config/bsfcfg.yaml"
-	BsfExpectedConfigVersion = "1.5.0"
+	BsfExpectedConfigVersion = "1.0.0"
 )
 
 type Config struct {
@@ -90,7 +90,7 @@ func ReadConfig(cfgPath string) (*Config, error) {
 func CheckConfigVersion() error {
 	currentVersion := BsfConfig.Info.Version
 	if currentVersion != BsfExpectedConfigVersion {
-		return fmt.Errorf("BSF config version [%s] is not supported; expected config version [%s].",
+		return fmt.Errorf("BSF config version [%s] is not supported; expected config version [%s]",
 			currentVersion, BsfExpectedConfigVersion)
 	}
 

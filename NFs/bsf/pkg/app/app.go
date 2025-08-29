@@ -61,9 +61,7 @@ func (a *App) Start() {
 
 	// Start SBI server
 	router := gin.Default()
-	sbi.AddService(router)
-
-	// Add CORS
+	sbi.AddService(router) // Add CORS
 	router.Use(cors.New(cors.Config{
 		AllowMethods: []string{"GET", "POST", "OPTIONS", "PUT", "PATCH", "DELETE"},
 		AllowHeaders: []string{

@@ -12,23 +12,9 @@ import (
 
 	bsfContext "github.com/free5gc/bsf/internal/context"
 	"github.com/free5gc/bsf/internal/logger"
+	"github.com/free5gc/bsf/internal/util"
 	"github.com/free5gc/openapi/models"
 )
-
-// Helper functions for type conversion
-func stringToPtr(s string) *string {
-	if s == "" {
-		return nil
-	}
-	return &s
-}
-
-func ptrToString(s *string) string {
-	if s == nil {
-		return ""
-	}
-	return *s
-}
 
 // CreatePCFBinding handles POST /pcfBindings
 func CreatePCFBinding(c *gin.Context) {
@@ -42,9 +28,7 @@ func CreatePCFBinding(c *gin.Context) {
 		}
 		c.JSON(http.StatusBadRequest, problemDetail)
 		return
-	}
-
-	// Validate required fields per 3GPP TS 29.521
+	} // Validate required fields per 3GPP TS 29.521
 	if request.Dnn == "" {
 		problemDetail := models.ProblemDetails{
 			Status: http.StatusBadRequest,
@@ -67,25 +51,25 @@ func CreatePCFBinding(c *gin.Context) {
 
 	// Convert to internal representation
 	binding := &bsfContext.PcfBinding{
-		Supi:               stringToPtr(request.Supi),
-		Gpsi:               stringToPtr(request.Gpsi),
-		Ipv4Addr:           stringToPtr(request.Ipv4Addr),
-		Ipv6Prefix:         stringToPtr(request.Ipv6Prefix),
+		Supi:               util.StringToPtr(request.Supi),
+		Gpsi:               util.StringToPtr(request.Gpsi),
+		Ipv4Addr:           util.StringToPtr(request.Ipv4Addr),
+		Ipv6Prefix:         util.StringToPtr(request.Ipv6Prefix),
 		AddIpv6Prefixes:    request.AddIpv6Prefixes,
-		IpDomain:           stringToPtr(request.IpDomain),
-		MacAddr48:          stringToPtr(request.MacAddr48),
+		IpDomain:           util.StringToPtr(request.IpDomain),
+		MacAddr48:          util.StringToPtr(request.MacAddr48),
 		AddMacAddrs:        request.AddMacAddrs,
 		Dnn:                request.Dnn,
-		PcfFqdn:            stringToPtr(request.PcfFqdn),
+		PcfFqdn:            util.StringToPtr(request.PcfFqdn),
 		PcfIpEndPoints:     request.PcfIpEndPoints,
-		PcfDiamHost:        stringToPtr(request.PcfDiamHost),
-		PcfDiamRealm:       stringToPtr(request.PcfDiamRealm),
-		PcfSmFqdn:          stringToPtr(request.PcfSmFqdn),
+		PcfDiamHost:        util.StringToPtr(request.PcfDiamHost),
+		PcfDiamRealm:       util.StringToPtr(request.PcfDiamRealm),
+		PcfSmFqdn:          util.StringToPtr(request.PcfSmFqdn),
 		PcfSmIpEndPoints:   request.PcfSmIpEndPoints,
 		Snssai:             request.Snssai,
-		SuppFeat:           stringToPtr(request.SuppFeat),
-		PcfId:              stringToPtr(request.PcfId),
-		PcfSetId:           stringToPtr(request.PcfSetId),
+		SuppFeat:           util.StringToPtr(request.SuppFeat),
+		PcfId:              util.StringToPtr(request.PcfId),
+		PcfSetId:           util.StringToPtr(request.PcfSetId),
 		ParaCom:            request.ParaCom,
 		BindLevel:          (*models.BindingLevel)(&request.BindLevel),
 		Ipv4FrameRouteList: request.Ipv4FrameRouteList,
@@ -124,25 +108,25 @@ func CreatePCFBinding(c *gin.Context) {
 
 	// Convert back to response format
 	response := models.PcfBinding{
-		Supi:               ptrToString(binding.Supi),
-		Gpsi:               ptrToString(binding.Gpsi),
-		Ipv4Addr:           ptrToString(binding.Ipv4Addr),
-		Ipv6Prefix:         ptrToString(binding.Ipv6Prefix),
+		Supi:               util.PtrToString(binding.Supi),
+		Gpsi:               util.PtrToString(binding.Gpsi),
+		Ipv4Addr:           util.PtrToString(binding.Ipv4Addr),
+		Ipv6Prefix:         util.PtrToString(binding.Ipv6Prefix),
 		AddIpv6Prefixes:    binding.AddIpv6Prefixes,
-		IpDomain:           ptrToString(binding.IpDomain),
-		MacAddr48:          ptrToString(binding.MacAddr48),
+		IpDomain:           util.PtrToString(binding.IpDomain),
+		MacAddr48:          util.PtrToString(binding.MacAddr48),
 		AddMacAddrs:        binding.AddMacAddrs,
 		Dnn:                binding.Dnn,
-		PcfFqdn:            ptrToString(binding.PcfFqdn),
+		PcfFqdn:            util.PtrToString(binding.PcfFqdn),
 		PcfIpEndPoints:     binding.PcfIpEndPoints,
-		PcfDiamHost:        ptrToString(binding.PcfDiamHost),
-		PcfDiamRealm:       ptrToString(binding.PcfDiamRealm),
-		PcfSmFqdn:          ptrToString(binding.PcfSmFqdn),
+		PcfDiamHost:        util.PtrToString(binding.PcfDiamHost),
+		PcfDiamRealm:       util.PtrToString(binding.PcfDiamRealm),
+		PcfSmFqdn:          util.PtrToString(binding.PcfSmFqdn),
 		PcfSmIpEndPoints:   binding.PcfSmIpEndPoints,
 		Snssai:             binding.Snssai,
-		SuppFeat:           ptrToString(binding.SuppFeat),
-		PcfId:              ptrToString(binding.PcfId),
-		PcfSetId:           ptrToString(binding.PcfSetId),
+		SuppFeat:           util.PtrToString(binding.SuppFeat),
+		PcfId:              util.PtrToString(binding.PcfId),
+		PcfSetId:           util.PtrToString(binding.PcfSetId),
 		ParaCom:            binding.ParaCom,
 		BindLevel:          (*binding.BindLevel),
 		Ipv4FrameRouteList: binding.Ipv4FrameRouteList,
@@ -171,6 +155,37 @@ func GetPCFBindings(c *gin.Context) {
 	gpsi := c.Query("gpsi")
 	ipDomain := c.Query("ipDomain")
 
+	// Validate conditional parameters as per 3GPP TS 29.521 Table 5.3.2.3.2-1
+	// NOTE 1: One and only one of query parameter ipv4Addr, ipv6Prefix or macAddr48 shall be present
+	ueAddressParams := []string{ipv4Addr, ipv6Prefix, macAddr48}
+	nonEmptyParams := 0
+	for _, param := range ueAddressParams {
+		if param != "" {
+			nonEmptyParams++
+		}
+	}
+
+	if nonEmptyParams > 1 {
+		problemDetail := models.ProblemDetails{
+			Status: http.StatusBadRequest,
+			Cause:  "MALFORMED_REQUEST",
+			Detail: "Only one of ipv4Addr, ipv6Prefix, or macAddr48 parameters shall be present (3GPP TS 29.521 NOTE 1)",
+		}
+		c.JSON(http.StatusBadRequest, problemDetail)
+		return
+	}
+
+	// NOTE 2: The query parameter ipDomain, if applicable, shall be present with query parameter ipv4Addr
+	if ipDomain != "" && ipv4Addr == "" {
+		problemDetail := models.ProblemDetails{
+			Status: http.StatusBadRequest,
+			Cause:  "MALFORMED_REQUEST",
+			Detail: "ipDomain parameter shall be present only with ipv4Addr parameter (3GPP TS 29.521 NOTE 2)",
+		}
+		c.JSON(http.StatusBadRequest, problemDetail)
+		return
+	}
+
 	var snssai *models.Snssai
 	if snssaiParam := c.Query("snssai"); snssaiParam != "" {
 		if err := json.Unmarshal([]byte(snssaiParam), &snssai); err != nil {
@@ -194,25 +209,25 @@ func GetPCFBindings(c *gin.Context) {
 	// Convert first match to response format
 	binding := bindings[0]
 	response := models.PcfBinding{
-		Supi:               ptrToString(binding.Supi),
-		Gpsi:               ptrToString(binding.Gpsi),
-		Ipv4Addr:           ptrToString(binding.Ipv4Addr),
-		Ipv6Prefix:         ptrToString(binding.Ipv6Prefix),
+		Supi:               util.PtrToString(binding.Supi),
+		Gpsi:               util.PtrToString(binding.Gpsi),
+		Ipv4Addr:           util.PtrToString(binding.Ipv4Addr),
+		Ipv6Prefix:         util.PtrToString(binding.Ipv6Prefix),
 		AddIpv6Prefixes:    binding.AddIpv6Prefixes,
-		IpDomain:           ptrToString(binding.IpDomain),
-		MacAddr48:          ptrToString(binding.MacAddr48),
+		IpDomain:           util.PtrToString(binding.IpDomain),
+		MacAddr48:          util.PtrToString(binding.MacAddr48),
 		AddMacAddrs:        binding.AddMacAddrs,
 		Dnn:                binding.Dnn,
-		PcfFqdn:            ptrToString(binding.PcfFqdn),
+		PcfFqdn:            util.PtrToString(binding.PcfFqdn),
 		PcfIpEndPoints:     binding.PcfIpEndPoints,
-		PcfDiamHost:        ptrToString(binding.PcfDiamHost),
-		PcfDiamRealm:       ptrToString(binding.PcfDiamRealm),
-		PcfSmFqdn:          ptrToString(binding.PcfSmFqdn),
+		PcfDiamHost:        util.PtrToString(binding.PcfDiamHost),
+		PcfDiamRealm:       util.PtrToString(binding.PcfDiamRealm),
+		PcfSmFqdn:          util.PtrToString(binding.PcfSmFqdn),
 		PcfSmIpEndPoints:   binding.PcfSmIpEndPoints,
 		Snssai:             binding.Snssai,
-		SuppFeat:           ptrToString(binding.SuppFeat),
-		PcfId:              ptrToString(binding.PcfId),
-		PcfSetId:           ptrToString(binding.PcfSetId),
+		SuppFeat:           util.PtrToString(binding.SuppFeat),
+		PcfId:              util.PtrToString(binding.PcfId),
+		PcfSetId:           util.PtrToString(binding.PcfSetId),
 		ParaCom:            binding.ParaCom,
 		BindLevel:          (*binding.BindLevel),
 		Ipv4FrameRouteList: binding.Ipv4FrameRouteList,
@@ -271,37 +286,37 @@ func UpdateIndPCFBinding(c *gin.Context) {
 
 	// Apply patch
 	if patchRequest.Ipv4Addr != "" {
-		binding.Ipv4Addr = stringToPtr(patchRequest.Ipv4Addr)
+		binding.Ipv4Addr = util.StringToPtr(patchRequest.Ipv4Addr)
 	}
 	if patchRequest.IpDomain != "" {
-		binding.IpDomain = stringToPtr(patchRequest.IpDomain)
+		binding.IpDomain = util.StringToPtr(patchRequest.IpDomain)
 	}
 	if patchRequest.Ipv6Prefix != "" {
-		binding.Ipv6Prefix = stringToPtr(patchRequest.Ipv6Prefix)
+		binding.Ipv6Prefix = util.StringToPtr(patchRequest.Ipv6Prefix)
 	}
 	if patchRequest.AddIpv6Prefixes != nil {
 		binding.AddIpv6Prefixes = patchRequest.AddIpv6Prefixes
 	}
 	if patchRequest.MacAddr48 != "" {
-		binding.MacAddr48 = stringToPtr(patchRequest.MacAddr48)
+		binding.MacAddr48 = util.StringToPtr(patchRequest.MacAddr48)
 	}
 	if patchRequest.AddMacAddrs != nil {
 		binding.AddMacAddrs = patchRequest.AddMacAddrs
 	}
 	if patchRequest.PcfId != "" {
-		binding.PcfId = stringToPtr(patchRequest.PcfId)
+		binding.PcfId = util.StringToPtr(patchRequest.PcfId)
 	}
 	if patchRequest.PcfFqdn != "" {
-		binding.PcfFqdn = stringToPtr(patchRequest.PcfFqdn)
+		binding.PcfFqdn = util.StringToPtr(patchRequest.PcfFqdn)
 	}
 	if patchRequest.PcfIpEndPoints != nil {
 		binding.PcfIpEndPoints = patchRequest.PcfIpEndPoints
 	}
 	if patchRequest.PcfDiamHost != "" {
-		binding.PcfDiamHost = stringToPtr(patchRequest.PcfDiamHost)
+		binding.PcfDiamHost = util.StringToPtr(patchRequest.PcfDiamHost)
 	}
 	if patchRequest.PcfDiamRealm != "" {
-		binding.PcfDiamRealm = stringToPtr(patchRequest.PcfDiamRealm)
+		binding.PcfDiamRealm = util.StringToPtr(patchRequest.PcfDiamRealm)
 	}
 
 	// Update binding
@@ -309,25 +324,25 @@ func UpdateIndPCFBinding(c *gin.Context) {
 
 	// Return updated binding
 	response := models.PcfBinding{
-		Supi:               ptrToString(binding.Supi),
-		Gpsi:               ptrToString(binding.Gpsi),
-		Ipv4Addr:           ptrToString(binding.Ipv4Addr),
-		Ipv6Prefix:         ptrToString(binding.Ipv6Prefix),
+		Supi:               util.PtrToString(binding.Supi),
+		Gpsi:               util.PtrToString(binding.Gpsi),
+		Ipv4Addr:           util.PtrToString(binding.Ipv4Addr),
+		Ipv6Prefix:         util.PtrToString(binding.Ipv6Prefix),
 		AddIpv6Prefixes:    binding.AddIpv6Prefixes,
-		IpDomain:           ptrToString(binding.IpDomain),
-		MacAddr48:          ptrToString(binding.MacAddr48),
+		IpDomain:           util.PtrToString(binding.IpDomain),
+		MacAddr48:          util.PtrToString(binding.MacAddr48),
 		AddMacAddrs:        binding.AddMacAddrs,
 		Dnn:                binding.Dnn,
-		PcfFqdn:            ptrToString(binding.PcfFqdn),
+		PcfFqdn:            util.PtrToString(binding.PcfFqdn),
 		PcfIpEndPoints:     binding.PcfIpEndPoints,
-		PcfDiamHost:        ptrToString(binding.PcfDiamHost),
-		PcfDiamRealm:       ptrToString(binding.PcfDiamRealm),
-		PcfSmFqdn:          ptrToString(binding.PcfSmFqdn),
+		PcfDiamHost:        util.PtrToString(binding.PcfDiamHost),
+		PcfDiamRealm:       util.PtrToString(binding.PcfDiamRealm),
+		PcfSmFqdn:          util.PtrToString(binding.PcfSmFqdn),
 		PcfSmIpEndPoints:   binding.PcfSmIpEndPoints,
 		Snssai:             binding.Snssai,
-		SuppFeat:           ptrToString(binding.SuppFeat),
-		PcfId:              ptrToString(binding.PcfId),
-		PcfSetId:           ptrToString(binding.PcfSetId),
+		SuppFeat:           util.PtrToString(binding.SuppFeat),
+		PcfId:              util.PtrToString(binding.PcfId),
+		PcfSetId:           util.PtrToString(binding.PcfSetId),
 		ParaCom:            binding.ParaCom,
 		BindLevel:          (*binding.BindLevel),
 		Ipv4FrameRouteList: binding.Ipv4FrameRouteList,
@@ -339,12 +354,4 @@ func UpdateIndPCFBinding(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, response)
-}
-
-// Helper function to safely get string value from pointer
-func getStringValue(ptr *string) string {
-	if ptr != nil {
-		return *ptr
-	}
-	return ""
 }

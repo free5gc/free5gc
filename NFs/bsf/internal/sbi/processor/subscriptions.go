@@ -11,6 +11,7 @@ import (
 
 	bsfContext "github.com/free5gc/bsf/internal/context"
 	"github.com/free5gc/bsf/internal/logger"
+	"github.com/free5gc/bsf/internal/util"
 	"github.com/free5gc/openapi/models"
 )
 
@@ -34,10 +35,10 @@ func CreateIndividualSubcription(c *gin.Context) {
 		NotifUri:          request.NotifUri,
 		NotifCorreId:      request.NotifCorreId,
 		Supi:              request.Supi,
-		Gpsi:              stringToPtr(request.Gpsi),
+		Gpsi:              util.StringToPtr(request.Gpsi),
 		SnssaiDnnPairs:    request.SnssaiDnnPairs,
 		AddSnssaiDnnPairs: request.AddSnssaiDnnPairs,
-		SuppFeat:          stringToPtr(request.SuppFeat),
+		SuppFeat:          util.StringToPtr(request.SuppFeat),
 	}
 
 	// Create new subscription
@@ -49,10 +50,10 @@ func CreateIndividualSubcription(c *gin.Context) {
 		NotifUri:          subscription.NotifUri,
 		NotifCorreId:      subscription.NotifCorreId,
 		Supi:              subscription.Supi,
-		Gpsi:              ptrToString(subscription.Gpsi),
+		Gpsi:              util.PtrToString(subscription.Gpsi),
 		SnssaiDnnPairs:    subscription.SnssaiDnnPairs,
 		AddSnssaiDnnPairs: subscription.AddSnssaiDnnPairs,
-		SuppFeat:          ptrToString(subscription.SuppFeat),
+		SuppFeat:          util.PtrToString(subscription.SuppFeat),
 	}
 
 	locationHeader := "/nbsf-management/v1/subscriptions/" + subId
@@ -85,10 +86,10 @@ func ReplaceIndividualSubcription(c *gin.Context) {
 		NotifUri:          request.NotifUri,
 		NotifCorreId:      request.NotifCorreId,
 		Supi:              request.Supi,
-		Gpsi:              stringToPtr(request.Gpsi),
+		Gpsi:              util.StringToPtr(request.Gpsi),
 		SnssaiDnnPairs:    request.SnssaiDnnPairs,
 		AddSnssaiDnnPairs: request.AddSnssaiDnnPairs,
-		SuppFeat:          stringToPtr(request.SuppFeat),
+		SuppFeat:          util.StringToPtr(request.SuppFeat),
 	}
 
 	if exists {
@@ -101,10 +102,10 @@ func ReplaceIndividualSubcription(c *gin.Context) {
 			NotifUri:          subscription.NotifUri,
 			NotifCorreId:      subscription.NotifCorreId,
 			Supi:              subscription.Supi,
-			Gpsi:              ptrToString(subscription.Gpsi),
+			Gpsi:              util.PtrToString(subscription.Gpsi),
 			SnssaiDnnPairs:    subscription.SnssaiDnnPairs,
 			AddSnssaiDnnPairs: subscription.AddSnssaiDnnPairs,
-			SuppFeat:          ptrToString(subscription.SuppFeat),
+			SuppFeat:          util.PtrToString(subscription.SuppFeat),
 		}
 		c.JSON(http.StatusOK, response)
 	} else {
