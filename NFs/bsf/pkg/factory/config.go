@@ -6,7 +6,7 @@ package factory
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	"gopkg.in/yaml.v2"
 
@@ -75,7 +75,7 @@ func ReadConfig(cfgPath string) (*Config, error) {
 		cfgPath = BsfDefaultConfigPath
 	}
 
-	if content, err := ioutil.ReadFile(cfgPath); err != nil {
+	if content, err := os.ReadFile(cfgPath); err != nil {
 		return nil, fmt.Errorf("[Configuration] %s: %+v", cfgPath, err)
 	} else {
 		logger.CfgLog.Infof("Read config from [%s]", cfgPath)

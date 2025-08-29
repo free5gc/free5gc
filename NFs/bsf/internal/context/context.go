@@ -477,7 +477,7 @@ func mbsSessionIdEquals(id1, id2 *models.MbsSessionId) bool {
 func (c *BSFContext) GetBsfProfile() models.NrfNfManagementNfProfile {
 	nfProfile := models.NrfNfManagementNfProfile{
 		NfInstanceId:  c.NfId,
-		NfType:        models.NrfNfManagementNfType_AUSF, // Temporarily using AUSF for testing registration
+		NfType:        models.NrfNfManagementNfType_BSF,
 		NfStatus:      models.NrfNfManagementNfStatus_REGISTERED,
 		PlmnList:      []models.PlmnId{{Mcc: "208", Mnc: "93"}}, // Default PLMN
 		Ipv4Addresses: []string{c.RegisterIPv4},
