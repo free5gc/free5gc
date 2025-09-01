@@ -9,32 +9,96 @@ import (
 	"fmt"
 	"net/http"
 	"runtime/debug"
+	"sync"
 	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus"
 
 	bsfContext "github.com/free5gc/bsf/internal/context"
 	"github.com/free5gc/bsf/internal/logger"
+	businessMetrics "github.com/free5gc/bsf/internal/metrics/business"
 	"github.com/free5gc/bsf/internal/sbi"
 	"github.com/free5gc/bsf/internal/sbi/consumer"
 	"github.com/free5gc/bsf/pkg/factory"
+	"github.com/free5gc/util/metrics"
+	sbiMetrics "github.com/free5gc/util/metrics/sbi"
+	"github.com/free5gc/util/metrics/utils"
 )
 
 type App struct {
-	cfg        *factory.Config
-	ctx        context.Context
-	tlsKeyPath string
-	bsfCtx     *bsfContext.BSFContext
+	cfg           *factory.Config
+	ctx           context.Context
+	tlsKeyPath    string
+	bsfCtx        *bsfContext.BSFContext
+	metricsServer *metrics.Server
+	wg            sync.WaitGroup
 }
 
 func NewApp(ctx context.Context, cfg *factory.Config, tlsKeyLogPath string) *App {
-	return &App{
+	a := &App{
 		cfg:        cfg,
 		ctx:        ctx,
 		tlsKeyPath: tlsKeyLogPath,
 		bsfCtx:     bsfContext.BsfSelf,
 	}
+
+	// Initialize metrics if enabled
+	if a.cfg.AreMetricsEnabled() {
+		sbiMetrics.EnableSbiMetrics()
+
+		features := map[utils.MetricTypeEnabled]bool{utils.SBI: true}
+		customMetrics := make(map[utils.MetricTypeEnabled][]prometheus.Collector)
+
+		var err error
+		if a.metricsServer, err = metrics.NewServer(
+			getInitMetrics(cfg, features, customMetrics), tlsKeyLogPath, logger.MainLog); err != nil {
+			logger.MainLog.Warnf("Failed to create metrics server: %+v", err)
+		}
+	}
+
+	return a
+}
+
+func getInitMetrics(
+	cfg *factory.Config,
+	features map[utils.MetricTypeEnabled]bool,
+	customMetrics map[utils.MetricTypeEnabled][]prometheus.Collector,
+) metrics.InitMetrics {
+	metricsInfo := metrics.Metrics{
+		BindingIPv4: cfg.GetMetricsBindingAddr(),
+		Scheme:      cfg.GetMetricsScheme(),
+		Namespace:   cfg.GetMetricsNamespace(),
+		Port:        cfg.GetMetricsPort(),
+		Tls: metrics.Tls{
+			Key: cfg.GetMetricsCertKeyPath(),
+			Pem: cfg.GetMetricsCertPemPath(),
+		},
+	}
+
+	// Enable business metrics if configured
+	if cfg.AreMetricsEnabled() {
+		businessMetrics.EnableBindingMetrics()
+		businessMetrics.EnableDiscoveryMetrics()
+
+		// Add BSF business metrics
+		if customMetrics == nil {
+			customMetrics = make(map[utils.MetricTypeEnabled][]prometheus.Collector)
+		}
+
+		// Add binding metrics
+		customMetrics[utils.SBI] = append(
+			customMetrics[utils.SBI],
+			businessMetrics.GetBindingHandlerMetrics(cfg.GetMetricsNamespace())...)
+
+		// Add discovery metrics
+		customMetrics[utils.SBI] = append(
+			customMetrics[utils.SBI],
+			businessMetrics.GetDiscoveryHandlerMetrics(cfg.GetMetricsNamespace())...)
+	}
+
+	return metrics.NewInitMetrics(metricsInfo, "bsf", features, customMetrics)
 }
 
 func (a *App) Start() {
@@ -48,6 +112,15 @@ func (a *App) Start() {
 	// Initialize MongoDB connection
 	if err := a.bsfCtx.ConnectMongoDB(); err != nil {
 		logger.MainLog.Warnf("MongoDB connection failed: %+v", err)
+	}
+
+	// Start metrics server if enabled
+	if a.cfg.AreMetricsEnabled() && a.metricsServer != nil {
+		go func() {
+			a.metricsServer.Run(&a.wg)
+		}()
+		logger.MainLog.Infof("BSF metrics server enabled on %s://%s",
+			a.cfg.GetMetricsScheme(), a.cfg.GetMetricsBindingAddr())
 	}
 
 	// Register with NRF

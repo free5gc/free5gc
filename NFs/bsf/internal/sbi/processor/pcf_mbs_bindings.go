@@ -12,6 +12,7 @@ import (
 
 	bsfContext "github.com/free5gc/bsf/internal/context"
 	"github.com/free5gc/bsf/internal/logger"
+	"github.com/free5gc/bsf/internal/metrics/business"
 	"github.com/free5gc/bsf/internal/util"
 	"github.com/free5gc/openapi/models"
 )
@@ -59,6 +60,10 @@ func CreatePCFMbsBinding(c *gin.Context) {
 
 	// Create new binding
 	bindingId := bsfContext.BsfSelf.CreatePcfMbsBinding(binding)
+
+	// Update metrics
+	business.IncrPCFBindingGauge(business.PCF_MBS_BINDING_TYPE_VALUE)
+	business.IncrPCFBindingEventCounter(business.PCF_MBS_BINDING_TYPE_VALUE, business.BINDING_EVENT_CREATE_VALUE, business.RESULT_SUCCESS_VALUE)
 
 	// Convert back to response format
 	response := models.PcfMbsBinding{
@@ -108,6 +113,13 @@ func GetPCFMbsBinding(c *gin.Context) {
 	// Query bindings
 	bindings := bsfContext.BsfSelf.QueryPcfMbsBindings(mbsSessionId)
 
+	// Update metrics
+	if len(bindings) > 0 {
+		business.IncrPCFBindingEventCounter(business.PCF_MBS_BINDING_TYPE_VALUE, business.BINDING_EVENT_QUERY_VALUE, business.RESULT_SUCCESS_VALUE)
+	} else {
+		business.IncrPCFBindingEventCounter(business.PCF_MBS_BINDING_TYPE_VALUE, business.BINDING_EVENT_QUERY_VALUE, business.RESULT_FAILURE_VALUE)
+	}
+
 	if len(bindings) == 0 {
 		c.JSON(http.StatusOK, []models.PcfMbsBinding{})
 		return
@@ -154,6 +166,7 @@ func ModifyIndPCFMbsBinding(c *gin.Context) {
 
 	binding, exists := bsfContext.BsfSelf.GetPcfMbsBinding(bindingId)
 	if !exists {
+		business.IncrPCFBindingEventCounter(business.PCF_MBS_BINDING_TYPE_VALUE, business.BINDING_EVENT_UPDATE_VALUE, business.RESULT_FAILURE_VALUE)
 		problemDetail := models.ProblemDetails{
 			Status: http.StatusNotFound,
 			Cause:  "RESOURCE_NOT_FOUND",
@@ -175,6 +188,9 @@ func ModifyIndPCFMbsBinding(c *gin.Context) {
 
 	// Update binding
 	bsfContext.BsfSelf.UpdatePcfMbsBinding(bindingId, binding)
+
+	// Update metrics
+	business.IncrPCFBindingEventCounter(business.PCF_MBS_BINDING_TYPE_VALUE, business.BINDING_EVENT_UPDATE_VALUE, business.RESULT_SUCCESS_VALUE)
 
 	// Return updated binding
 	response := models.PcfMbsBinding{
@@ -201,8 +217,12 @@ func DeleteIndPCFMbsBinding(c *gin.Context) {
 	bindingId := c.Param("bindingId")
 
 	if bsfContext.BsfSelf.DeletePcfMbsBinding(bindingId) {
+		// Update metrics
+		business.DecrPCFBindingGauge(business.PCF_MBS_BINDING_TYPE_VALUE)
+		business.IncrPCFBindingEventCounter(business.PCF_MBS_BINDING_TYPE_VALUE, business.BINDING_EVENT_DELETE_VALUE, business.RESULT_SUCCESS_VALUE)
 		c.Status(http.StatusNoContent)
 	} else {
+		business.IncrPCFBindingEventCounter(business.PCF_MBS_BINDING_TYPE_VALUE, business.BINDING_EVENT_DELETE_VALUE, business.RESULT_FAILURE_VALUE)
 		problemDetail := models.ProblemDetails{
 			Status: http.StatusNotFound,
 			Cause:  "RESOURCE_NOT_FOUND",

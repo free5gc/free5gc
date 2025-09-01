@@ -11,6 +11,7 @@ import (
 
 	bsfContext "github.com/free5gc/bsf/internal/context"
 	"github.com/free5gc/bsf/internal/logger"
+	"github.com/free5gc/bsf/internal/metrics/business"
 	"github.com/free5gc/bsf/internal/util"
 	"github.com/free5gc/openapi/models"
 )
@@ -44,6 +45,10 @@ func CreatePCFforUEBinding(c *gin.Context) {
 	// Create new binding
 	bindingId := bsfContext.BsfSelf.CreatePcfForUeBinding(binding)
 
+	// Update metrics
+	business.IncrPCFBindingGauge(business.PCF_UE_BINDING_TYPE_VALUE)
+	business.IncrPCFBindingEventCounter(business.PCF_UE_BINDING_TYPE_VALUE, business.BINDING_EVENT_CREATE_VALUE, business.RESULT_SUCCESS_VALUE)
+
 	// Convert back to response format
 	response := models.PcfForUeBinding{
 		Supi:                binding.Supi,
@@ -71,6 +76,13 @@ func GetPCFForUeBindings(c *gin.Context) {
 
 	// Query bindings
 	bindings := bsfContext.BsfSelf.QueryPcfForUeBindings(supi, gpsi)
+
+	// Update metrics
+	if len(bindings) > 0 {
+		business.IncrPCFBindingEventCounter(business.PCF_UE_BINDING_TYPE_VALUE, business.BINDING_EVENT_QUERY_VALUE, business.RESULT_SUCCESS_VALUE)
+	} else {
+		business.IncrPCFBindingEventCounter(business.PCF_UE_BINDING_TYPE_VALUE, business.BINDING_EVENT_QUERY_VALUE, business.RESULT_FAILURE_VALUE)
+	}
 
 	if len(bindings) == 0 {
 		c.JSON(http.StatusOK, []models.PcfForUeBinding{})
@@ -102,8 +114,12 @@ func DeleteIndPCFforUEBinding(c *gin.Context) {
 	bindingId := c.Param("bindingId")
 
 	if bsfContext.BsfSelf.DeletePcfForUeBinding(bindingId) {
+		// Update metrics
+		business.DecrPCFBindingGauge(business.PCF_UE_BINDING_TYPE_VALUE)
+		business.IncrPCFBindingEventCounter(business.PCF_UE_BINDING_TYPE_VALUE, business.BINDING_EVENT_DELETE_VALUE, business.RESULT_SUCCESS_VALUE)
 		c.Status(http.StatusNoContent)
 	} else {
+		business.IncrPCFBindingEventCounter(business.PCF_UE_BINDING_TYPE_VALUE, business.BINDING_EVENT_DELETE_VALUE, business.RESULT_FAILURE_VALUE)
 		problemDetail := models.ProblemDetails{
 			Status: http.StatusNotFound,
 			Cause:  "RESOURCE_NOT_FOUND",
@@ -130,6 +146,7 @@ func UpdateIndPCFforUEBinding(c *gin.Context) {
 
 	binding, exists := bsfContext.BsfSelf.GetPcfForUeBinding(bindingId)
 	if !exists {
+		business.IncrPCFBindingEventCounter(business.PCF_UE_BINDING_TYPE_VALUE, business.BINDING_EVENT_UPDATE_VALUE, business.RESULT_FAILURE_VALUE)
 		problemDetail := models.ProblemDetails{
 			Status: http.StatusNotFound,
 			Cause:  "RESOURCE_NOT_FOUND",
@@ -151,6 +168,9 @@ func UpdateIndPCFforUEBinding(c *gin.Context) {
 
 	// Update binding
 	bsfContext.BsfSelf.UpdatePcfForUeBinding(bindingId, binding)
+
+	// Update metrics
+	business.IncrPCFBindingEventCounter(business.PCF_UE_BINDING_TYPE_VALUE, business.BINDING_EVENT_UPDATE_VALUE, business.RESULT_SUCCESS_VALUE)
 
 	// Return updated binding
 	response := models.PcfForUeBinding{
