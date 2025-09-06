@@ -137,7 +137,7 @@ mongosh "$DB_NAME" --eval "$MONGO_SCRIPT"
 
 sleep 0.1
 
-NF_LIST="nrf amf smf udr pcf udm nssf ausf chf nef"
+NF_LIST="nrf amf smf udr pcf udm nssf ausf bsf chf nef"
 
 export GIN_MODE=release
 
