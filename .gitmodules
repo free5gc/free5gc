@@ -15,12 +15,10 @@
 	url = https://github.com/free5gc/nssf.git
 [submodule "pcf"]
 	path = NFs/pcf
-	url = https://github.com/usmanTheCoder/pcf.git
-	branch = feature/bsf-integration
+	url = https://github.com/free5gc/pcf.git
 [submodule "smf"]
 	path = NFs/smf
-	url = https://github.com/usmanTheCoder/smf.git
-	branch = feature/bsf-integration
+	url = https://github.com/free5gc/smf.git
 [submodule "udm"]
 	path = NFs/udm
 	url = https://github.com/free5gc/udm.git
