@@ -95,6 +95,15 @@ func (bsf *BsfApp) startProfile(profileApp *app.App) {
 
 func (bsf *BsfApp) Terminate() {
 	logger.MainLog.Infof("Terminating BSF...")
+
+	// Stop cleanup routine
+	bsfContext.BsfSelf.StopCleanupRoutine()
+
+	// Disconnect from MongoDB
+	if err := bsfContext.BsfSelf.DisconnectMongoDB(); err != nil {
+		logger.MainLog.Errorf("Error disconnecting from MongoDB: %+v", err)
+	}
+
 	bsf.cancel()
 }
 

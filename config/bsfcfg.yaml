@@ -31,11 +31,11 @@ configuration:
 # ReportCaller: enable the caller report or not, value: true or false
 logger:
   BSF:
-    debugLevel: info
+    debugLevel: debug
     ReportCaller: false
   OpenApi:
     debugLevel: info
     ReportCaller: false
   MongoDBLibrary:
-    debugLevel: info
+    debugLevel: debug
     ReportCaller: false

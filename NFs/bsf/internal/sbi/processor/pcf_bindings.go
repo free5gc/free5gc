@@ -253,6 +253,67 @@ func GetPCFBindings(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
+// GetIndPCFBinding handles GET /pcfBindings/{bindingId}
+func GetIndPCFBinding(c *gin.Context) {
+	logger.ProcLog.Infof("Handle GetIndPCFBinding")
+
+	bindingId := c.Param("bindingId")
+	if bindingId == "" {
+		problemDetail := models.ProblemDetails{
+			Status: http.StatusBadRequest,
+			Cause:  "MALFORMED_REQUEST",
+			Detail: "bindingId is required",
+		}
+		c.JSON(http.StatusBadRequest, problemDetail)
+		return
+	}
+
+	// Get binding by ID
+	binding, exists := bsfContext.BsfSelf.GetPcfBinding(bindingId)
+	if !exists {
+		problemDetail := models.ProblemDetails{
+			Status: http.StatusNotFound,
+			Cause:  "RESOURCE_NOT_FOUND",
+			Detail: "PCF binding not found",
+		}
+		c.JSON(http.StatusNotFound, problemDetail)
+		return
+	}
+
+	// Convert to response format
+	response := models.PcfBinding{
+		Supi:               util.PtrToString(binding.Supi),
+		Gpsi:               util.PtrToString(binding.Gpsi),
+		Ipv4Addr:           util.PtrToString(binding.Ipv4Addr),
+		Ipv6Prefix:         util.PtrToString(binding.Ipv6Prefix),
+		AddIpv6Prefixes:    binding.AddIpv6Prefixes,
+		IpDomain:           util.PtrToString(binding.IpDomain),
+		MacAddr48:          util.PtrToString(binding.MacAddr48),
+		AddMacAddrs:        binding.AddMacAddrs,
+		Dnn:                binding.Dnn,
+		PcfFqdn:            util.PtrToString(binding.PcfFqdn),
+		PcfIpEndPoints:     binding.PcfIpEndPoints,
+		PcfDiamHost:        util.PtrToString(binding.PcfDiamHost),
+		PcfDiamRealm:       util.PtrToString(binding.PcfDiamRealm),
+		PcfSmFqdn:          util.PtrToString(binding.PcfSmFqdn),
+		PcfSmIpEndPoints:   binding.PcfSmIpEndPoints,
+		Snssai:             binding.Snssai,
+		SuppFeat:           util.PtrToString(binding.SuppFeat),
+		PcfId:              util.PtrToString(binding.PcfId),
+		PcfSetId:           util.PtrToString(binding.PcfSetId),
+		ParaCom:            binding.ParaCom,
+		BindLevel:          (*binding.BindLevel),
+		Ipv4FrameRouteList: binding.Ipv4FrameRouteList,
+		Ipv6FrameRouteList: binding.Ipv6FrameRouteList,
+	}
+
+	if binding.RecoveryTime != nil {
+		response.RecoveryTime = binding.RecoveryTime
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
 // DeleteIndPCFBinding handles DELETE /pcfBindings/{bindingId}
 func DeleteIndPCFBinding(c *gin.Context) {
 	logger.ProcLog.Infof("Handle DeleteIndPCFBinding")

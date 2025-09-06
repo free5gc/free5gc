@@ -112,7 +112,15 @@ func (a *App) Start() {
 	// Initialize MongoDB connection
 	if err := a.bsfCtx.ConnectMongoDB(); err != nil {
 		logger.MainLog.Warnf("MongoDB connection failed: %+v", err)
+	} else {
+		// Load existing bindings from MongoDB
+		if err := a.bsfCtx.LoadPcfBindingsFromMongoDB(); err != nil {
+			logger.MainLog.Warnf("Failed to load PCF bindings from MongoDB: %+v", err)
+		}
 	}
+
+	// Start cleanup routine for expired and inactive bindings
+	a.bsfCtx.StartCleanupRoutine()
 
 	// Start metrics server if enabled
 	if a.cfg.AreMetricsEnabled() && a.metricsServer != nil {

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
@@ -24,6 +25,14 @@ var (
 	BsfSelf    = &bsfContext
 )
 
+// MongoDB collection names
+const (
+	PCF_BINDINGS_COLLECTION        = "pcfBindings"
+	PCF_FOR_UE_BINDINGS_COLLECTION = "pcfForUeBindings"
+	PCF_MBS_BINDINGS_COLLECTION    = "pcfMbsBindings"
+	SUBSCRIPTIONS_COLLECTION       = "subscriptions"
+)
+
 func init() {
 	BsfSelf.Name = "bsf"
 	BsfSelf.NfId = uuid.New().String()
@@ -32,6 +41,12 @@ func init() {
 	BsfSelf.PcfMbsBindings = make(map[string]*PcfMbsBinding)
 	BsfSelf.Subscriptions = make(map[string]*BsfSubscription)
 	BsfSelf.mutex = sync.RWMutex{}
+
+	// Initialize lifecycle management defaults
+	BsfSelf.DefaultBindingTTL = 24 * time.Hour // 24 hours default TTL
+	BsfSelf.CleanupInterval = 10 * time.Minute // Cleanup every 10 minutes
+	BsfSelf.MaxInactiveTime = 1 * time.Hour    // Delete if inactive for 1 hour
+	BsfSelf.ShutdownChannel = make(chan bool, 1)
 }
 
 type BSFContext struct {
@@ -45,42 +60,57 @@ type BSFContext struct {
 	NrfUri       string
 
 	// MongoDB
-	MongoDBName string
-	MongoDBUrl  string
+	MongoDBName   string
+	MongoDBUrl    string
+	MongoClient   *mongo.Client
+	MongoDatabase *mongo.Database
 
 	// BSF Business Logic
 	PcfBindings      map[string]*PcfBinding      // bindingId -> PcfBinding
 	PcfForUeBindings map[string]*PcfForUeBinding // bindingId -> PcfForUeBinding
 	PcfMbsBindings   map[string]*PcfMbsBinding   // bindingId -> PcfMbsBinding
 	Subscriptions    map[string]*BsfSubscription // subId -> BsfSubscription
+
+	// Lifecycle management
+	DefaultBindingTTL time.Duration // Default TTL for new bindings
+	CleanupInterval   time.Duration // How often to run cleanup
+	MaxInactiveTime   time.Duration // Max time without access before cleanup
+	CleanupTicker     *time.Ticker  // Ticker for periodic cleanup
+	ShutdownChannel   chan bool     // Channel for graceful shutdown
 }
 
 type PcfBinding struct {
-	BindingId          string
-	Supi               *string
-	Gpsi               *string
-	Ipv4Addr           *string
-	Ipv6Prefix         *string
-	AddIpv6Prefixes    []string
-	IpDomain           *string
-	MacAddr48          *string
-	AddMacAddrs        []string
-	Dnn                string
-	PcfFqdn            *string
-	PcfIpEndPoints     []models.IpEndPoint
-	PcfDiamHost        *string
-	PcfDiamRealm       *string
-	PcfSmFqdn          *string
-	PcfSmIpEndPoints   []models.IpEndPoint
-	Snssai             *models.Snssai
-	SuppFeat           *string
-	PcfId              *string
-	PcfSetId           *string
-	RecoveryTime       *time.Time
-	ParaCom            *models.ParameterCombination
-	BindLevel          *models.BindingLevel
-	Ipv4FrameRouteList []string
-	Ipv6FrameRouteList []string
+	BindingId          string                       `bson:"_id,omitempty"`
+	Supi               *string                      `bson:"supi,omitempty"`
+	Gpsi               *string                      `bson:"gpsi,omitempty"`
+	Ipv4Addr           *string                      `bson:"ipv4_addr,omitempty"`
+	Ipv6Prefix         *string                      `bson:"ipv6_prefix,omitempty"`
+	AddIpv6Prefixes    []string                     `bson:"add_ipv6_prefixes,omitempty"`
+	IpDomain           *string                      `bson:"ip_domain,omitempty"`
+	MacAddr48          *string                      `bson:"mac_addr48,omitempty"`
+	AddMacAddrs        []string                     `bson:"add_mac_addrs,omitempty"`
+	Dnn                string                       `bson:"dnn"`
+	PcfFqdn            *string                      `bson:"pcf_fqdn,omitempty"`
+	PcfIpEndPoints     []models.IpEndPoint          `bson:"pcf_ip_endpoints,omitempty"`
+	PcfDiamHost        *string                      `bson:"pcf_diam_host,omitempty"`
+	PcfDiamRealm       *string                      `bson:"pcf_diam_realm,omitempty"`
+	PcfSmFqdn          *string                      `bson:"pcf_sm_fqdn,omitempty"`
+	PcfSmIpEndPoints   []models.IpEndPoint          `bson:"pcf_sm_ip_endpoints,omitempty"`
+	Snssai             *models.Snssai               `bson:"snssai,omitempty"`
+	SuppFeat           *string                      `bson:"supp_feat,omitempty"`
+	PcfId              *string                      `bson:"pcf_id,omitempty"`
+	PcfSetId           *string                      `bson:"pcf_set_id,omitempty"`
+	RecoveryTime       *time.Time                   `bson:"recovery_time,omitempty"`
+	ParaCom            *models.ParameterCombination `bson:"para_com,omitempty"`
+	BindLevel          *models.BindingLevel         `bson:"bind_level,omitempty"`
+	Ipv4FrameRouteList []string                     `bson:"ipv4_frame_route_list,omitempty"`
+	Ipv6FrameRouteList []string                     `bson:"ipv6_frame_route_list,omitempty"`
+
+	// Lifecycle management fields
+	CreatedTime    time.Time  `bson:"created_time"`
+	LastAccessTime time.Time  `bson:"last_access_time"`
+	ExpiryTime     *time.Time `bson:"expiry_time,omitempty"`
+	IsActive       bool       `bson:"is_active"`
 }
 
 type PcfForUeBinding struct {
@@ -177,7 +207,28 @@ func (c *BSFContext) ConnectMongoDB() error {
 		return fmt.Errorf("failed to ping MongoDB: %+v", err)
 	}
 
-	logger.CtxLog.Infof("Connected to MongoDB at %s", c.MongoDBUrl)
+	// Store client and database references
+	c.MongoClient = client
+	c.MongoDatabase = client.Database(c.MongoDBName)
+
+	logger.CtxLog.Infof("Connected to MongoDB at %s, database: %s", c.MongoDBUrl, c.MongoDBName)
+	return nil
+}
+
+// DisconnectMongoDB gracefully disconnects from MongoDB
+func (c *BSFContext) DisconnectMongoDB() error {
+	if c.MongoClient != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		if err := c.MongoClient.Disconnect(ctx); err != nil {
+			return fmt.Errorf("failed to disconnect from MongoDB: %+v", err)
+		}
+
+		c.MongoClient = nil
+		c.MongoDatabase = nil
+		logger.CtxLog.Info("Disconnected from MongoDB")
+	}
 	return nil
 }
 
@@ -188,45 +239,351 @@ func (c *BSFContext) CreatePcfBinding(binding *PcfBinding) string {
 
 	bindingId := uuid.New().String()
 	binding.BindingId = bindingId
+
+	// Set lifecycle fields
+	now := time.Now()
+	binding.CreatedTime = now
+	binding.LastAccessTime = now
+	if binding.ExpiryTime == nil {
+		expiryTime := now.Add(c.DefaultBindingTTL)
+		binding.ExpiryTime = &expiryTime
+	}
+	binding.IsActive = true
+
+	// Store in memory for fast access
 	c.PcfBindings[bindingId] = binding
 
-	logger.CtxLog.Debugf("Created PCF binding with ID: %s", bindingId)
+	// Persist to MongoDB
+	if c.MongoDatabase != nil {
+		collection := c.MongoDatabase.Collection(PCF_BINDINGS_COLLECTION)
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
 
+		logger.CtxLog.Debugf("Attempting to insert PCF binding to MongoDB: %s", bindingId)
+		result, err := collection.InsertOne(ctx, binding)
+		if err != nil {
+			logger.CtxLog.Errorf("Failed to insert PCF binding to MongoDB: %+v", err)
+		} else {
+			logger.CtxLog.Infof("PCF binding persisted to MongoDB with ID: %s, InsertedID: %v", bindingId, result.InsertedID)
+		}
+	} else {
+		logger.CtxLog.Warnf("MongoDB database is nil, cannot persist PCF binding: %s", bindingId)
+	}
+
+	logger.CtxLog.Debugf("Created PCF binding with ID: %s", bindingId)
 	return bindingId
 }
 
 func (c *BSFContext) GetPcfBinding(bindingId string) (*PcfBinding, bool) {
 	c.mutex.RLock()
-	defer c.mutex.RUnlock()
 
+	// First check in-memory cache
 	binding, exists := c.PcfBindings[bindingId]
-	return binding, exists
+	if exists {
+		// Update last access time
+		binding.LastAccessTime = time.Now()
+		c.mutex.RUnlock()
+
+		// Update in MongoDB asynchronously
+		go c.updateLastAccessTimeInMongoDB(bindingId, binding.LastAccessTime)
+
+		return binding, true
+	}
+	c.mutex.RUnlock()
+
+	// If not in memory, try MongoDB
+	if c.MongoDatabase != nil {
+		collection := c.MongoDatabase.Collection(PCF_BINDINGS_COLLECTION)
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		var dbBinding PcfBinding
+		err := collection.FindOne(ctx, bson.M{"_id": bindingId}).Decode(&dbBinding)
+		if err == nil {
+			// Update last access time
+			dbBinding.LastAccessTime = time.Now()
+
+			// Load into memory cache for future access
+			c.mutex.Lock()
+			c.PcfBindings[bindingId] = &dbBinding
+			c.mutex.Unlock()
+
+			// Update in MongoDB asynchronously
+			go c.updateLastAccessTimeInMongoDB(bindingId, dbBinding.LastAccessTime)
+
+			logger.CtxLog.Debugf("PCF binding loaded from MongoDB: %s", bindingId)
+			return &dbBinding, true
+		} else if err != mongo.ErrNoDocuments {
+			logger.CtxLog.Errorf("Failed to query PCF binding from MongoDB: %+v", err)
+		}
+	}
+
+	return nil, false
 }
 
 func (c *BSFContext) UpdatePcfBinding(bindingId string, binding *PcfBinding) bool {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
-	if _, exists := c.PcfBindings[bindingId]; exists {
-		binding.BindingId = bindingId
-		c.PcfBindings[bindingId] = binding
-		logger.CtxLog.Debugf("Updated PCF binding with ID: %s", bindingId)
-		return true
+	// Check if binding exists (either in memory or MongoDB)
+	_, exists := c.GetPcfBindingUnsafe(bindingId)
+	if !exists {
+		return false
 	}
-	return false
+
+	binding.BindingId = bindingId
+	c.PcfBindings[bindingId] = binding
+
+	// Update in MongoDB
+	if c.MongoDatabase != nil {
+		collection := c.MongoDatabase.Collection(PCF_BINDINGS_COLLECTION)
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		filter := bson.M{"_id": bindingId}
+		_, err := collection.ReplaceOne(ctx, filter, binding)
+		if err != nil {
+			logger.CtxLog.Errorf("Failed to update PCF binding in MongoDB: %+v", err)
+		} else {
+			logger.CtxLog.Debugf("PCF binding updated in MongoDB: %s", bindingId)
+		}
+	}
+
+	logger.CtxLog.Debugf("Updated PCF binding with ID: %s", bindingId)
+	return true
+}
+
+// Helper function for internal use without additional locking
+func (c *BSFContext) GetPcfBindingUnsafe(bindingId string) (*PcfBinding, bool) {
+	// Check memory first
+	if binding, exists := c.PcfBindings[bindingId]; exists {
+		return binding, true
+	}
+
+	// Check MongoDB
+	if c.MongoDatabase != nil {
+		collection := c.MongoDatabase.Collection(PCF_BINDINGS_COLLECTION)
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		var dbBinding PcfBinding
+		err := collection.FindOne(ctx, bson.M{"_id": bindingId}).Decode(&dbBinding)
+		if err == nil {
+			return &dbBinding, true
+		}
+	}
+
+	return nil, false
 }
 
 func (c *BSFContext) DeletePcfBinding(bindingId string) bool {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
-	if _, exists := c.PcfBindings[bindingId]; exists {
-		delete(c.PcfBindings, bindingId)
-		logger.CtxLog.Debugf("Deleted PCF binding with ID: %s", bindingId)
-
-		return true
+	// Check if binding exists (either in memory or MongoDB)
+	_, exists := c.GetPcfBindingUnsafe(bindingId)
+	if !exists {
+		return false
 	}
-	return false
+
+	// Delete from memory
+	delete(c.PcfBindings, bindingId)
+
+	// Delete from MongoDB
+	if c.MongoDatabase != nil {
+		collection := c.MongoDatabase.Collection(PCF_BINDINGS_COLLECTION)
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		filter := bson.M{"_id": bindingId}
+		logger.CtxLog.Debugf("Attempting to delete PCF binding from MongoDB: %s", bindingId)
+		result, err := collection.DeleteOne(ctx, filter)
+		if err != nil {
+			logger.CtxLog.Errorf("Failed to delete PCF binding from MongoDB: %+v", err)
+		} else if result.DeletedCount > 0 {
+			logger.CtxLog.Infof("PCF binding deleted from MongoDB: %s, DeletedCount: %d", bindingId, result.DeletedCount)
+		} else {
+			logger.CtxLog.Warnf("PCF binding not found in MongoDB for deletion: %s", bindingId)
+		}
+	} else {
+		logger.CtxLog.Warnf("MongoDB database is nil, cannot delete PCF binding: %s", bindingId)
+	}
+
+	logger.CtxLog.Debugf("Deleted PCF binding with ID: %s", bindingId)
+	return true
+}
+
+// LoadPcfBindingsFromMongoDB loads all PCF bindings from MongoDB into memory cache
+func (c *BSFContext) LoadPcfBindingsFromMongoDB() error {
+	if c.MongoDatabase == nil {
+		return fmt.Errorf("MongoDB database not initialized")
+	}
+
+	collection := c.MongoDatabase.Collection(PCF_BINDINGS_COLLECTION)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	cursor, err := collection.Find(ctx, bson.M{})
+	if err != nil {
+		return fmt.Errorf("failed to query PCF bindings from MongoDB: %+v", err)
+	}
+	defer cursor.Close(ctx)
+
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+
+	count := 0
+	for cursor.Next(ctx) {
+		var binding PcfBinding
+		if err := cursor.Decode(&binding); err != nil {
+			logger.CtxLog.Errorf("Failed to decode PCF binding: %+v", err)
+			continue
+		}
+		c.PcfBindings[binding.BindingId] = &binding
+		count++
+	}
+
+	if err := cursor.Err(); err != nil {
+		return fmt.Errorf("cursor error while loading PCF bindings: %+v", err)
+	}
+
+	logger.CtxLog.Infof("Loaded %d PCF bindings from MongoDB", count)
+	return nil
+}
+
+// updateLastAccessTimeInMongoDB updates the last access time in MongoDB
+func (c *BSFContext) updateLastAccessTimeInMongoDB(bindingId string, lastAccessTime time.Time) {
+	if c.MongoDatabase == nil {
+		return
+	}
+
+	collection := c.MongoDatabase.Collection(PCF_BINDINGS_COLLECTION)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.M{"_id": bindingId}
+	update := bson.M{"$set": bson.M{"last_access_time": lastAccessTime}}
+
+	_, err := collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		logger.CtxLog.Errorf("Failed to update last access time in MongoDB for binding %s: %+v", bindingId, err)
+	}
+}
+
+// StartCleanupRoutine starts the periodic cleanup of expired and inactive bindings
+func (c *BSFContext) StartCleanupRoutine() {
+	logger.CtxLog.Infof("Starting PCF binding cleanup routine (interval: %v)", c.CleanupInterval)
+
+	c.CleanupTicker = time.NewTicker(c.CleanupInterval)
+
+	go func() {
+		for {
+			select {
+			case <-c.CleanupTicker.C:
+				c.CleanupExpiredBindings()
+			case <-c.ShutdownChannel:
+				logger.CtxLog.Info("Stopping PCF binding cleanup routine")
+				c.CleanupTicker.Stop()
+				return
+			}
+		}
+	}()
+}
+
+// StopCleanupRoutine stops the cleanup routine
+func (c *BSFContext) StopCleanupRoutine() {
+	if c.CleanupTicker != nil {
+		select {
+		case c.ShutdownChannel <- true:
+		default:
+		}
+	}
+}
+
+// CleanupExpiredBindings removes expired and inactive bindings
+func (c *BSFContext) CleanupExpiredBindings() {
+	logger.CtxLog.Debug("Running PCF binding cleanup")
+
+	now := time.Now()
+	expiredBindings := []string{}
+	inactiveBindings := []string{}
+
+	c.mutex.RLock()
+	for bindingId, binding := range c.PcfBindings {
+		// Check expiry time
+		if binding.ExpiryTime != nil && now.After(*binding.ExpiryTime) {
+			expiredBindings = append(expiredBindings, bindingId)
+			continue
+		}
+
+		// Check last access time for inactive bindings
+		if now.Sub(binding.LastAccessTime) > c.MaxInactiveTime {
+			inactiveBindings = append(inactiveBindings, bindingId)
+		}
+	}
+	c.mutex.RUnlock()
+
+	// Delete expired bindings
+	for _, bindingId := range expiredBindings {
+		logger.CtxLog.Infof("Deleting expired PCF binding: %s", bindingId)
+		c.DeletePcfBinding(bindingId)
+	}
+
+	// Delete inactive bindings
+	for _, bindingId := range inactiveBindings {
+		logger.CtxLog.Infof("Deleting inactive PCF binding: %s (last access: %v ago)",
+			bindingId, now.Sub(c.PcfBindings[bindingId].LastAccessTime))
+		c.DeletePcfBinding(bindingId)
+	}
+
+	if len(expiredBindings) > 0 || len(inactiveBindings) > 0 {
+		logger.CtxLog.Infof("Cleanup completed: %d expired, %d inactive bindings removed",
+			len(expiredBindings), len(inactiveBindings))
+	}
+}
+
+// CleanupBySupi removes all bindings for a specific SUPI (when UE deregisters)
+func (c *BSFContext) CleanupBySupi(supi string) {
+	logger.CtxLog.Infof("Cleaning up PCF bindings for SUPI: %s", supi)
+
+	bindingsToDelete := []string{}
+
+	c.mutex.RLock()
+	for bindingId, binding := range c.PcfBindings {
+		if binding.Supi != nil && *binding.Supi == supi {
+			bindingsToDelete = append(bindingsToDelete, bindingId)
+		}
+	}
+	c.mutex.RUnlock()
+
+	for _, bindingId := range bindingsToDelete {
+		logger.CtxLog.Infof("Deleting PCF binding for SUPI %s: %s", supi, bindingId)
+		c.DeletePcfBinding(bindingId)
+	}
+
+	logger.CtxLog.Infof("Cleaned up %d PCF bindings for SUPI: %s", len(bindingsToDelete), supi)
+}
+
+// CleanupByPcfId removes all bindings for a specific PCF (when PCF becomes unavailable)
+func (c *BSFContext) CleanupByPcfId(pcfId string) {
+	logger.CtxLog.Infof("Cleaning up PCF bindings for PCF ID: %s", pcfId)
+
+	bindingsToDelete := []string{}
+
+	c.mutex.RLock()
+	for bindingId, binding := range c.PcfBindings {
+		if binding.PcfId != nil && *binding.PcfId == pcfId {
+			bindingsToDelete = append(bindingsToDelete, bindingId)
+		}
+	}
+	c.mutex.RUnlock()
+
+	for _, bindingId := range bindingsToDelete {
+		logger.CtxLog.Infof("Deleting PCF binding for PCF ID %s: %s", pcfId, bindingId)
+		c.DeletePcfBinding(bindingId)
+	}
+
+	logger.CtxLog.Infof("Cleaned up %d PCF bindings for PCF ID: %s", len(bindingsToDelete), pcfId)
 }
 
 // PCF UE Binding Management
@@ -370,10 +727,9 @@ func (c *BSFContext) DeleteSubscription(subId string) bool {
 // Query functions for PCF bindings based on parameters
 func (c *BSFContext) QueryPcfBindings(supi, gpsi, dnn, ipv4Addr, ipv6Prefix, macAddr48, ipDomain string, snssai *models.Snssai) []*PcfBinding {
 	c.mutex.RLock()
-	defer c.mutex.RUnlock()
-
 	var result []*PcfBinding
 
+	// First search in-memory cache
 	for _, binding := range c.PcfBindings {
 		match := true
 
@@ -404,6 +760,73 @@ func (c *BSFContext) QueryPcfBindings(supi, gpsi, dnn, ipv4Addr, ipv6Prefix, mac
 
 		if match {
 			result = append(result, binding)
+		}
+	}
+	c.mutex.RUnlock()
+
+	// If no results found in memory and MongoDB is available, search MongoDB
+	if len(result) == 0 && c.MongoDatabase != nil {
+		logger.CtxLog.Debugf("No PCF bindings found in memory cache, searching MongoDB for SUPI: %s, DNN: %s", supi, dnn)
+
+		collection := c.MongoDatabase.Collection(PCF_BINDINGS_COLLECTION)
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		// Build MongoDB query filter
+		filter := bson.M{}
+		if supi != "" {
+			filter["supi"] = supi
+		}
+		if gpsi != "" {
+			filter["gpsi"] = gpsi
+		}
+		if dnn != "" {
+			filter["dnn"] = dnn
+		}
+		if ipv4Addr != "" {
+			filter["ipv4_addr"] = ipv4Addr
+		}
+		if ipv6Prefix != "" {
+			filter["ipv6_prefix"] = ipv6Prefix
+		}
+		if macAddr48 != "" {
+			filter["mac_addr48"] = macAddr48
+		}
+		if ipDomain != "" {
+			filter["ip_domain"] = ipDomain
+		}
+		if snssai != nil {
+			filter["snssai.sst"] = snssai.Sst
+			if snssai.Sd != "" {
+				filter["snssai.sd"] = snssai.Sd
+			}
+		}
+
+		cursor, err := collection.Find(ctx, filter)
+		if err != nil {
+			logger.CtxLog.Errorf("Failed to query PCF bindings from MongoDB: %+v", err)
+			return result
+		}
+		defer cursor.Close(ctx)
+
+		for cursor.Next(ctx) {
+			var dbBinding PcfBinding
+			if err := cursor.Decode(&dbBinding); err != nil {
+				logger.CtxLog.Errorf("Failed to decode PCF binding from MongoDB: %+v", err)
+				continue
+			}
+
+			// Load matching bindings into memory cache for future access
+			c.mutex.Lock()
+			c.PcfBindings[dbBinding.BindingId] = &dbBinding
+			c.mutex.Unlock()
+
+			result = append(result, &dbBinding)
+			logger.CtxLog.Infof("Loaded PCF binding from MongoDB into cache: %s", dbBinding.BindingId)
+		}
+
+		if err := cursor.Err(); err != nil {
+			logger.CtxLog.Errorf("Cursor error while querying PCF bindings: %+v", err)
 		}
 	}
 
