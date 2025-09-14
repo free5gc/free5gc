@@ -25,7 +25,7 @@ config/test/smfcfg.test.yaml
 
 # build
 bin/
-
+run.pid
 # release
 release/src
 
