@@ -246,6 +246,9 @@ func GetPCFBindings(c *gin.Context) {
 		Ipv6FrameRouteList: binding.Ipv6FrameRouteList,
 	}
 
+	// Add binding ID for reference (enhancement for query operations)
+	c.Header("X-BSF-Binding-ID", binding.BindingId)
+
 	if binding.RecoveryTime != nil {
 		response.RecoveryTime = binding.RecoveryTime
 	}
