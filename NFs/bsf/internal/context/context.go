@@ -27,10 +27,15 @@ var (
 
 // MongoDB collection names
 const (
-	PCF_BINDINGS_COLLECTION        = "pcfBindings"
-	PCF_FOR_UE_BINDINGS_COLLECTION = "pcfForUeBindings"
-	PCF_MBS_BINDINGS_COLLECTION    = "pcfMbsBindings"
-	SUBSCRIPTIONS_COLLECTION       = "subscriptions"
+	PCF_BINDINGS_COLLECTION = "pcfBindings"
+	// TODO: Implement persistence for UE-specific PCF binding management
+	// PCF_FOR_UE_BINDINGS_COLLECTION = "pcfForUeBindings"
+
+	// TODO: Implement persistence for MBS (Multicast/Broadcast Service) binding management
+	// PCF_MBS_BINDINGS_COLLECTION    = "pcfMbsBindings"
+
+	// TODO: Implement persistence  for subscription management for BSF events
+	// SUBSCRIPTIONS_COLLECTION       = "subscriptions"
 )
 
 func init() {
