@@ -1,11 +1,8 @@
-/*
- * BSF Service
- */
-
 package service
 
 import (
 	"context"
+	"fmt"
 	"runtime/debug"
 	"sync"
 
@@ -22,6 +19,7 @@ type BsfApp struct {
 	ctx        context.Context
 	cancel     context.CancelFunc
 	tlsKeyPath string
+	app        *app.App
 	wg         sync.WaitGroup
 }
 
@@ -34,7 +32,42 @@ func NewApp(ctx context.Context, cfg *factory.Config, tlsKeyLogPath string) (*Bs
 	bsf.ctx, bsf.cancel = context.WithCancel(ctx)
 
 	bsfContext.InitBsfContext()
+	var err error
+	if bsf.app, err = app.NewApp(bsf.cfg); err != nil {
+		return nil, fmt.Errorf("failed to create BSF app: %w", err)
+	}
 	return bsf, nil
+}
+
+func (bsf *BsfApp) Start() error {
+	defer func() {
+		if p := recover(); p != nil {
+			logger.MainLog.Fatalf("panic: %v\n%s", p, string(debug.Stack()))
+		}
+	}()
+
+	logger.MainLog.Infoln("BSF started")
+
+	if err := factory.CheckConfigVersion(); err != nil {
+		logger.MainLog.Warnf("Config version error: %v", err)
+	}
+
+	// Start the app and return error directly instead of using goroutine
+	return bsf.app.Start()
+}
+
+func (bsf *BsfApp) Terminate() error {
+	logger.MainLog.Infof("Terminating BSF...")
+
+	// Terminate app first
+	if err := bsf.app.Terminate(); err != nil {
+		logger.MainLog.Errorf("Error terminating app: %+v", err)
+		// Continue with cleanup even if app termination fails
+	}
+
+	bsf.cancel()
+	logger.MainLog.Infof("BSF App is terminated")
+	return nil
 }
 
 func (bsf *BsfApp) SetLogEnable(cfg *factory.LogSetting) {
@@ -58,58 +91,6 @@ func (bsf *BsfApp) SetLogEnable(cfg *factory.LogSetting) {
 func (bsf *BsfApp) SetLogLevel(level logrus.Level) {
 	logger.MainLog.Infof("set log level : %+v", level)
 	logger.Log.SetLevel(level)
-}
-
-func (bsf *BsfApp) Start() {
-	defer func() {
-		if p := recover(); p != nil {
-			// Print stack for panic to log. Fatalf() will let program exit.
-			logger.MainLog.Fatalf("panic: %v\n%s", p, string(debug.Stack()))
-		}
-	}()
-
-	logger.MainLog.Infoln("BSF started")
-
-	if err := factory.CheckConfigVersion(); err != nil {
-		logger.MainLog.Warnf("Config version error: %v", err)
-	}
-
-	profileApp := app.NewApp(bsf.ctx, bsf.cfg, bsf.tlsKeyPath)
-	bsf.wg.Add(1)
-	go bsf.startProfile(profileApp)
-
-	bsf.WaitRoutine()
-}
-
-func (bsf *BsfApp) startProfile(profileApp *app.App) {
-	defer func() {
-		if p := recover(); p != nil {
-			// Print stack for panic to log. Fatalf() will let program exit.
-			logger.MainLog.Fatalf("panic: %v\n%s", p, string(debug.Stack()))
-		}
-	}()
-
-	defer bsf.wg.Done()
-	profileApp.Start()
-}
-
-func (bsf *BsfApp) Terminate() {
-	logger.MainLog.Infof("Terminating BSF...")
-
-	// Stop cleanup routine
-	bsfContext.BsfSelf.StopCleanupRoutine()
-
-	// Disconnect from MongoDB
-	if err := bsfContext.BsfSelf.DisconnectMongoDB(); err != nil {
-		logger.MainLog.Errorf("Error disconnecting from MongoDB: %+v", err)
-	}
-
-	bsf.cancel()
-}
-
-func (bsf *BsfApp) WaitRoutine() {
-	bsf.wg.Wait()
-	logger.MainLog.Infof("BSF App is terminated")
 }
 
 func (bsf *BsfApp) GetContext() context.Context {

@@ -1,7 +1,3 @@
-/*
- * BSF App
- */
-
 package app
 
 import (
@@ -21,6 +17,7 @@ import (
 	businessMetrics "github.com/free5gc/bsf/internal/metrics/business"
 	"github.com/free5gc/bsf/internal/sbi"
 	"github.com/free5gc/bsf/internal/sbi/consumer"
+	"github.com/free5gc/bsf/internal/sbi/processor"
 	"github.com/free5gc/bsf/pkg/factory"
 	"github.com/free5gc/util/metrics"
 	sbiMetrics "github.com/free5gc/util/metrics/sbi"
@@ -28,37 +25,50 @@ import (
 )
 
 type App struct {
-	cfg           *factory.Config
 	ctx           context.Context
-	tlsKeyPath    string
+	config        *factory.Config
 	bsfCtx        *bsfContext.BSFContext
 	metricsServer *metrics.Server
+	consumer      *consumer.Consumer
 	wg            sync.WaitGroup
 }
 
-func NewApp(ctx context.Context, cfg *factory.Config, tlsKeyLogPath string) *App {
-	a := &App{
-		cfg:        cfg,
-		ctx:        ctx,
-		tlsKeyPath: tlsKeyLogPath,
-		bsfCtx:     bsfContext.BsfSelf,
+func NewApp(cfg *factory.Config) (*App, error) {
+	bsf := &App{
+		config: cfg,
+		bsfCtx: bsfContext.BsfSelf,
 	}
 
-	// Initialize metrics if enabled
-	if a.cfg.AreMetricsEnabled() {
+	// Initialize consumer
+	var err error
+	if bsf.consumer, err = consumer.NewConsumer(bsf); err != nil {
+		return nil, fmt.Errorf("failed to initialize consumer: %w", err)
+	}
+
+	// Initialize processor singleton
+	if _, err := processor.NewProcessor(bsf); err != nil {
+		return nil, fmt.Errorf("failed to initialize processor: %w", err)
+	}
+
+	// Set BSF context configuration
+	bsf.bsfCtx.NrfUri = cfg.Configuration.NrfUri
+
+	// Initialize metrics if enabled - need to check proper method name
+	var tlsKeyLogPath string
+	if cfg.AreMetricsEnabled() {
 		sbiMetrics.EnableSbiMetrics()
 
 		features := map[utils.MetricTypeEnabled]bool{utils.SBI: true}
 		customMetrics := make(map[utils.MetricTypeEnabled][]prometheus.Collector)
 
 		var err error
-		if a.metricsServer, err = metrics.NewServer(
+		if bsf.metricsServer, err = metrics.NewServer(
 			getInitMetrics(cfg, features, customMetrics), tlsKeyLogPath, logger.MainLog); err != nil {
 			logger.MainLog.Warnf("Failed to create metrics server: %+v", err)
 		}
 	}
 
-	return a
+	return bsf, nil
 }
 
 func getInitMetrics(
@@ -77,22 +87,22 @@ func getInitMetrics(
 		},
 	}
 
-	// Enable business metrics if configured
+	// Enable business metrics if configured - preserve your existing approach
 	if cfg.AreMetricsEnabled() {
 		businessMetrics.EnableBindingMetrics()
 		businessMetrics.EnableDiscoveryMetrics()
 
-		// Add BSF business metrics
+		// Add BSF business metrics using your existing functions
 		if customMetrics == nil {
 			customMetrics = make(map[utils.MetricTypeEnabled][]prometheus.Collector)
 		}
 
-		// Add binding metrics
+		// Add binding metrics using your existing function
 		customMetrics[utils.SBI] = append(
 			customMetrics[utils.SBI],
 			businessMetrics.GetBindingHandlerMetrics(cfg.GetMetricsNamespace())...)
 
-		// Add discovery metrics
+		// Add discovery metrics using your existing function
 		customMetrics[utils.SBI] = append(
 			customMetrics[utils.SBI],
 			businessMetrics.GetDiscoveryHandlerMetrics(cfg.GetMetricsNamespace())...)
@@ -101,10 +111,25 @@ func getInitMetrics(
 	return metrics.NewInitMetrics(metricsInfo, "bsf", features, customMetrics)
 }
 
-func (a *App) Start() {
+func (a *App) Config() *factory.Config {
+	return a.config
+}
+
+func (a *App) Context() *bsfContext.BSFContext {
+	return a.bsfCtx
+}
+
+func (a *App) CancelContext() context.Context {
+	return a.ctx
+}
+
+func (a *App) Consumer() *consumer.Consumer {
+	return a.consumer
+}
+
+func (a *App) Start() error {
 	defer func() {
 		if p := recover(); p != nil {
-			// Print stack for panic to log. Fatalf() will let program exit.
 			logger.MainLog.Fatalf("panic: %v\n%s", p, string(debug.Stack()))
 		}
 	}()
@@ -123,26 +148,26 @@ func (a *App) Start() {
 	a.bsfCtx.StartCleanupRoutine()
 
 	// Start metrics server if enabled
-	if a.cfg.AreMetricsEnabled() && a.metricsServer != nil {
+	if a.config.AreMetricsEnabled() && a.metricsServer != nil {
 		go func() {
 			a.metricsServer.Run(&a.wg)
 		}()
 		logger.MainLog.Infof("BSF metrics server enabled on %s://%s",
-			a.cfg.GetMetricsScheme(), a.cfg.GetMetricsBindingAddr())
+			a.config.GetMetricsScheme(), a.config.GetMetricsBindingAddr())
 	}
 
-	// Register with NRF
-	go func() {
-		if _, err := consumer.SendRegisterNFInstance(); err != nil {
-			logger.MainLog.Errorf("BSF register to NRF Error[%+v]", err)
-		} else {
-			logger.MainLog.Infof("BSF successfully registered with NRF")
-		}
-	}()
+	// Register with NRF - moved to consumer
+	if err := a.consumer.RegisterWithNRF(); err != nil {
+		logger.MainLog.Errorf("BSF register to NRF Error: %+v", err)
+		return fmt.Errorf("failed to register with NRF: %w", err)
+	}
+	logger.MainLog.Infof("BSF successfully registered with NRF")
 
 	// Start SBI server
 	router := gin.Default()
-	sbi.AddService(router) // Add CORS
+	sbi.AddService(router)
+
+	// Add CORS
 	router.Use(cors.New(cors.Config{
 		AllowMethods: []string{"GET", "POST", "OPTIONS", "PUT", "PATCH", "DELETE"},
 		AllowHeaders: []string{
@@ -156,7 +181,7 @@ func (a *App) Start() {
 		MaxAge:           86400,
 	}))
 
-	bindAddr := fmt.Sprintf("%s:%d", a.cfg.Configuration.Sbi.BindingIPv4, a.cfg.Configuration.Sbi.Port)
+	bindAddr := fmt.Sprintf("%s:%d", a.config.Configuration.Sbi.BindingIPv4, a.config.Configuration.Sbi.Port)
 	logger.MainLog.Infof("BSF SBI Server started on %s", bindAddr)
 
 	server := &http.Server{
@@ -167,18 +192,35 @@ func (a *App) Start() {
 		MaxHeaderBytes: 1 << 20,
 	}
 
-	if a.cfg.Configuration.Sbi.Scheme == "http" {
-		err := server.ListenAndServe()
-		if err != nil {
-			logger.MainLog.Fatalf("HTTP server setup failed: %+v", err)
-		}
-	} else if a.cfg.Configuration.Sbi.Scheme == "https" {
-		err := server.ListenAndServeTLS(
-			a.cfg.Configuration.Sbi.Tls.Pem,
-			a.cfg.Configuration.Sbi.Tls.Key,
+	if a.config.Configuration.Sbi.Scheme == "http" {
+		return server.ListenAndServe()
+	} else if a.config.Configuration.Sbi.Scheme == "https" {
+		return server.ListenAndServeTLS(
+			a.config.Configuration.Sbi.Tls.Pem,
+			a.config.Configuration.Sbi.Tls.Key,
 		)
-		if err != nil {
-			logger.MainLog.Fatalf("HTTPS server setup failed: %+v", err)
-		}
 	}
+
+	return fmt.Errorf("unsupported scheme: %s", a.config.Configuration.Sbi.Scheme)
+}
+
+func (a *App) Terminate() error {
+	logger.MainLog.Infof("Terminating BSF...")
+
+	// Deregister from NRF using consumer
+	if err := a.consumer.DeregisterWithNRF(); err != nil {
+		logger.MainLog.Errorf("BSF deregister from NRF Error: %+v", err)
+		// Don't return error here as termination should continue
+	}
+
+	// Stop cleanup routine
+	a.bsfCtx.StopCleanupRoutine()
+
+	// Disconnect from MongoDB
+	if err := a.bsfCtx.DisconnectMongoDB(); err != nil {
+		logger.MainLog.Errorf("Error disconnecting from MongoDB: %+v", err)
+		return fmt.Errorf("failed to disconnect from MongoDB: %w", err)
+	}
+
+	return nil
 }
