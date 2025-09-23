@@ -13,6 +13,8 @@ import (
 	amf_service "github.com/free5gc/amf/pkg/service"
 	ausf_factory "github.com/free5gc/ausf/pkg/factory"
 	ausf_service "github.com/free5gc/ausf/pkg/service"
+	bsf_factory "github.com/free5gc/bsf/pkg/factory"
+	bsf_service "github.com/free5gc/bsf/pkg/service"
 	chf_factory "github.com/free5gc/chf/pkg/factory"
 	chf_service "github.com/free5gc/chf/pkg/service"
 	nrf_factory "github.com/free5gc/nrf/pkg/factory"
@@ -49,6 +51,7 @@ type StartNFsConfig struct {
 	Nssf bool `yaml:"nssf,omitempty" default:"false"`
 	Ausf bool `yaml:"ausf,omitempty" default:"false"`
 	Chf  bool `yaml:"chf,omitempty" default:"false"`
+	Bsf  bool `yaml:"bsf,omitempty" default:"false"`
 
 	OAuth  bool   `yaml:"oauth,omitempty" default:"false"`
 	TestId TestId `yaml:"testId,omitempty"`
@@ -88,6 +91,9 @@ func CreateNFs(cfg StartNFsConfig) []app.NFstruct {
 	}
 	if cfg.Chf {
 		nfs = append(nfs, NewChfStruct(NfCtx))
+	}
+	if cfg.Bsf {
+		nfs = append(nfs, NewBsfStruct(NfCtx))
 	}
 	return nfs
 }
@@ -244,6 +250,23 @@ func NewChfStruct(ctx context.Context) app.NFstruct {
 		Nf:     chfApp,
 		Ctx:    &chf_ctx,
 		Cancel: &chf_cancel,
+	}
+}
+
+func NewBsfStruct(ctx context.Context) app.NFstruct {
+	if err := bsfConfig(); err != nil {
+		fmt.Printf("BSF Config failed: %v\n", err)
+	}
+	bsf_ctx, bsf_cancel := context.WithCancel(ctx)
+	bsfApp, errApp := bsf_service.NewApp(bsf_ctx, bsf_factory.BsfConfig, "")
+	if errApp != nil {
+		fmt.Printf("CHF NewApp failed: %v\n", errApp)
+	}
+
+	return app.NFstruct{
+		Nf:     bsfApp,
+		Ctx:    &bsf_ctx,
+		Cancel: &bsf_cancel,
 	}
 }
 
@@ -1383,6 +1406,39 @@ func ausfConfig() error {
 		return err
 	}
 
+	return nil
+}
+
+func bsfConfig() error {
+	bsf_factory.BsfConfig = &bsf_factory.Config{
+		Info: &bsf_factory.Info{
+			Version:     "1.0.0",
+			Description: "BSF initial test configuration",
+		},
+		Configuration: &bsf_factory.Configuration{
+			BsfName: "BSF",
+			Sbi: &bsf_factory.Sbi{
+				Scheme:       "http",
+				RegisterIPv4: "127.0.0.115",
+				BindingIPv4:  "127.0.0.115",
+				Port:         8000,
+				Tls: &bsf_factory.Tls{
+					Pem: "../cert/bsf.pem",
+					Key: "../cert/bsf.key",
+				},
+			},
+			NrfUri: "http://127.0.0.10:8000",
+			MongoDB: &bsf_factory.MongoDB{
+				Name: "free5gc",
+				Url:  "mongodb://localhost:27017",
+			},
+		},
+		Logger: &bsf_factory.Logger{
+			Enable:       true,
+			Level:        "info",
+			ReportCaller: false,
+		},
+	}
 	return nil
 }
 

@@ -26,16 +26,7 @@ configuration:
       pem: cert/bsf.pem                # BSF TLS Certificate for metrics
       key: cert/bsf.key                # BSF TLS Private key for metrics
 
-# the kind of log output
-# debugLevel: how detailed to output, value: trace, debug, info, warn, error, fatal, panic
-# ReportCaller: enable the caller report or not, value: true or false
-logger:
-  BSF:
-    debugLevel: debug
-    ReportCaller: false
-  OpenApi:
-    debugLevel: info
-    ReportCaller: false
-  MongoDBLibrary:
-    debugLevel: debug
-    ReportCaller: false
+logger: # log output setting
+  enable: true # true or false
+  level: info # how detailed to output, value: trace, debug, info, warn, error, fatal, panic
+  reportCaller: false # enable the caller report or not, value: true or false

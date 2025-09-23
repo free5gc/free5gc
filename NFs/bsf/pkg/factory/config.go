@@ -7,6 +7,7 @@ package factory
 import (
 	"fmt"
 	"os"
+	"sync"
 
 	"gopkg.in/yaml.v2"
 
@@ -31,6 +32,7 @@ type Config struct {
 	Info          *Info          `yaml:"info"`
 	Configuration *Configuration `yaml:"configuration"`
 	Logger        *Logger        `yaml:"logger"`
+	sync.RWMutex
 }
 
 type Info struct {
@@ -47,14 +49,9 @@ type Configuration struct {
 }
 
 type Logger struct {
-	BSF            *LogSetting `yaml:"BSF,omitempty"`
-	OpenApi        *LogSetting `yaml:"OpenApi,omitempty"`
-	MongoDBLibrary *LogSetting `yaml:"MongoDBLibrary,omitempty"`
-}
-
-type LogSetting struct {
-	DebugLevel   string `yaml:"debugLevel,omitempty"`
-	ReportCaller bool   `yaml:"ReportCaller,omitempty"`
+	Enable       bool   `yaml:"enable" valid:"type(bool)"`
+	Level        string `yaml:"level" valid:"required,in(trace|debug|info|warn|error|fatal|panic)"`
+	ReportCaller bool   `yaml:"reportCaller" valid:"type(bool)"`
 }
 
 type Sbi struct {
@@ -140,6 +137,50 @@ func (c *Config) GetMetricsCertPemPath() string {
 		return c.Configuration.Metrics.Tls.Pem
 	}
 	return BsfMetricsDefaultPemPath
+}
+
+func (c *Config) SetLogEnable(enable bool) {
+	c.RWMutex.Lock()
+	defer c.RWMutex.Unlock()
+
+	if c.Logger == nil {
+		logger.CfgLog.Warnf("Logger should not be nil")
+		c.Logger = &Logger{
+			Enable: enable,
+			Level:  "info",
+		}
+	} else {
+		c.Logger.Enable = enable
+	}
+}
+
+func (c *Config) SetLogLevel(level string) {
+	c.RWMutex.Lock()
+	defer c.RWMutex.Unlock()
+
+	if c.Logger == nil {
+		logger.CfgLog.Warnf("Logger should not be nil")
+		c.Logger = &Logger{
+			Level: level,
+		}
+	} else {
+		c.Logger.Level = level
+	}
+}
+
+func (c *Config) SetLogReportCaller(reportCaller bool) {
+	c.RWMutex.Lock()
+	defer c.RWMutex.Unlock()
+
+	if c.Logger == nil {
+		logger.CfgLog.Warnf("Logger should not be nil")
+		c.Logger = &Logger{
+			Level:        "info",
+			ReportCaller: reportCaller,
+		}
+	} else {
+		c.Logger.ReportCaller = reportCaller
+	}
 }
 
 func ReadConfig(cfgPath string) (*Config, error) {

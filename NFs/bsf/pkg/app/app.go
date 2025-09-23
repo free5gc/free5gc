@@ -31,10 +31,12 @@ type App struct {
 	metricsServer *metrics.Server
 	consumer      *consumer.Consumer
 	wg            sync.WaitGroup
+	server        *http.Server
 }
 
-func NewApp(cfg *factory.Config) (*App, error) {
+func NewApp(ctx context.Context, cfg *factory.Config) (*App, error) {
 	bsf := &App{
+		ctx:    ctx,
 		config: cfg,
 		bsfCtx: bsfContext.BsfSelf,
 	}
@@ -127,7 +129,7 @@ func (a *App) Consumer() *consumer.Consumer {
 	return a.consumer
 }
 
-func (a *App) Start() error {
+func (a *App) Start() {
 	defer func() {
 		if p := recover(); p != nil {
 			logger.MainLog.Fatalf("panic: %v\n%s", p, string(debug.Stack()))
@@ -135,7 +137,7 @@ func (a *App) Start() error {
 	}()
 
 	// Initialize MongoDB connection
-	if err := a.bsfCtx.ConnectMongoDB(); err != nil {
+	if err := a.bsfCtx.ConnectMongoDB(a.ctx); err != nil {
 		logger.MainLog.Warnf("MongoDB connection failed: %+v", err)
 	} else {
 		// Load existing bindings from MongoDB
@@ -157,11 +159,12 @@ func (a *App) Start() error {
 	}
 
 	// Register with NRF - moved to consumer
-	if err := a.consumer.RegisterWithNRF(); err != nil {
-		logger.MainLog.Errorf("BSF register to NRF Error: %+v", err)
-		return fmt.Errorf("failed to register with NRF: %w", err)
-	}
-	logger.MainLog.Infof("BSF successfully registered with NRF")
+	go func() {
+		if err := a.consumer.RegisterWithNRF(a.ctx); err != nil {
+			logger.MainLog.Errorf("BSF register to NRF Error: %+v", err)
+		}
+		logger.MainLog.Infof("BSF successfully registered with NRF")
+	}()
 
 	// Start SBI server
 	router := gin.Default()
@@ -191,17 +194,26 @@ func (a *App) Start() error {
 		WriteTimeout:   10 * time.Second,
 		MaxHeaderBytes: 1 << 20,
 	}
+	a.server = server
 
 	if a.config.Configuration.Sbi.Scheme == "http" {
-		return server.ListenAndServe()
+		err := server.ListenAndServe()
+		if err != nil {
+			logger.MainLog.Errorf("BSF Listen failed: %+v", err)
+		}
+		return
 	} else if a.config.Configuration.Sbi.Scheme == "https" {
-		return server.ListenAndServeTLS(
+		err := server.ListenAndServeTLS(
 			a.config.Configuration.Sbi.Tls.Pem,
 			a.config.Configuration.Sbi.Tls.Key,
 		)
+		if err != nil {
+			logger.MainLog.Errorf("BSF Listen failed: %+v", err)
+		}
+		return
 	}
 
-	return fmt.Errorf("unsupported scheme: %s", a.config.Configuration.Sbi.Scheme)
+	logger.MainLog.Errorf("unsupported scheme: %s", a.config.Configuration.Sbi.Scheme)
 }
 
 func (a *App) Terminate() error {
@@ -216,10 +228,16 @@ func (a *App) Terminate() error {
 	// Stop cleanup routine
 	a.bsfCtx.StopCleanupRoutine()
 
+	// Shutdown sbi server if running
+	if a.server != nil {
+		if err := a.server.Shutdown(a.ctx); err != nil {
+			logger.MainLog.Errorf("Error shutting down SBI server: %+v", err)
+		}
+	}
+
 	// Disconnect from MongoDB
 	if err := a.bsfCtx.DisconnectMongoDB(); err != nil {
 		logger.MainLog.Errorf("Error disconnecting from MongoDB: %+v", err)
-		return fmt.Errorf("failed to disconnect from MongoDB: %w", err)
 	}
 
 	return nil

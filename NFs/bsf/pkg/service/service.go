@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 	"fmt"
+	"io"
+	"os"
 	"runtime/debug"
 	"sync"
 
@@ -28,18 +30,20 @@ func NewApp(ctx context.Context, cfg *factory.Config, tlsKeyLogPath string) (*Bs
 		cfg:        cfg,
 		tlsKeyPath: tlsKeyLogPath,
 	}
-	bsf.SetLogEnable(cfg.Logger.BSF)
+	bsf.SetLogEnable(cfg.Logger.Enable)
+	bsf.SetLogLevel(cfg.Logger.Level)
+	bsf.SetReportCaller(cfg.Logger.ReportCaller)
 	bsf.ctx, bsf.cancel = context.WithCancel(ctx)
 
 	bsfContext.InitBsfContext()
 	var err error
-	if bsf.app, err = app.NewApp(bsf.cfg); err != nil {
+	if bsf.app, err = app.NewApp(bsf.ctx, bsf.cfg); err != nil {
 		return nil, fmt.Errorf("failed to create BSF app: %w", err)
 	}
 	return bsf, nil
 }
 
-func (bsf *BsfApp) Start() error {
+func (bsf *BsfApp) Start() {
 	defer func() {
 		if p := recover(); p != nil {
 			logger.MainLog.Fatalf("panic: %v\n%s", p, string(debug.Stack()))
@@ -53,10 +57,10 @@ func (bsf *BsfApp) Start() error {
 	}
 
 	// Start the app and return error directly instead of using goroutine
-	return bsf.app.Start()
+	bsf.app.Start()
 }
 
-func (bsf *BsfApp) Terminate() error {
+func (bsf *BsfApp) Terminate() {
 	logger.MainLog.Infof("Terminating BSF...")
 
 	// Terminate app first
@@ -67,30 +71,52 @@ func (bsf *BsfApp) Terminate() error {
 
 	bsf.cancel()
 	logger.MainLog.Infof("BSF App is terminated")
-	return nil
 }
 
-func (bsf *BsfApp) SetLogEnable(cfg *factory.LogSetting) {
-	logger.MainLog.Infof("BSF Log enable")
-	if cfg.DebugLevel != "" {
-		if level, err := logrus.ParseLevel(cfg.DebugLevel); err != nil {
-			logger.MainLog.Warnf("BSF Log level [%s] is invalid, set to [info] level",
-				cfg.DebugLevel)
-			logger.Log.SetLevel(logrus.InfoLevel)
-		} else {
-			logger.MainLog.Infof("BSF Log level is set to [%s] level", level)
-			logger.Log.SetLevel(level)
-		}
-	} else {
-		logger.MainLog.Infoln("BSF Log level not set. Default set to [info] level")
-		logger.Log.SetLevel(logrus.InfoLevel)
+func (bsf *BsfApp) Config() *factory.Config {
+	return bsf.cfg
+}
+
+func (bsf *BsfApp) SetLogEnable(enable bool) {
+	logger.MainLog.Infof("Log enable is set to [%v]", enable)
+	if enable && logger.Log.Out == os.Stderr {
+		return
+	} else if !enable && logger.Log.Out == io.Discard {
+		return
 	}
-	logger.Log.SetReportCaller(cfg.ReportCaller)
+
+	bsf.Config().SetLogEnable(enable)
+	if enable {
+		logger.Log.SetOutput(os.Stderr)
+	} else {
+		logger.Log.SetOutput(io.Discard)
+	}
 }
 
-func (bsf *BsfApp) SetLogLevel(level logrus.Level) {
-	logger.MainLog.Infof("set log level : %+v", level)
-	logger.Log.SetLevel(level)
+func (bsf *BsfApp) SetLogLevel(level string) {
+	lvl, err := logrus.ParseLevel(level)
+	if err != nil {
+		logger.MainLog.Warnf("Log level [%s] is invalid", level)
+		return
+	}
+
+	logger.MainLog.Infof("Log level is set to [%s]", level)
+	if lvl == logger.Log.GetLevel() {
+		return
+	}
+
+	bsf.Config().SetLogLevel(level)
+	logger.Log.SetLevel(lvl)
+}
+
+func (bsf *BsfApp) SetReportCaller(reportCaller bool) {
+	logger.MainLog.Infof("Report Caller is set to [%v]", reportCaller)
+	if reportCaller == logger.Log.ReportCaller {
+		return
+	}
+
+	bsf.Config().SetLogReportCaller(reportCaller)
+	logger.Log.SetReportCaller(reportCaller)
 }
 
 func (bsf *BsfApp) GetContext() context.Context {

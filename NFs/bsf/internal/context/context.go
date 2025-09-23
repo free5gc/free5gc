@@ -196,18 +196,18 @@ func InitBsfContext() {
 }
 
 // MongoDB related functions
-func (c *BSFContext) ConnectMongoDB() error {
+func (c *BSFContext) ConnectMongoDB(ctx context.Context) error {
 	if c.MongoDBUrl == "" {
 		return fmt.Errorf("MongoDB URL is empty")
 	}
 
-	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(c.MongoDBUrl))
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(c.MongoDBUrl))
 	if err != nil {
 		return fmt.Errorf("failed to connect to MongoDB: %+v", err)
 	}
 
 	// Test the connection
-	err = client.Ping(context.TODO(), nil)
+	err = client.Ping(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("failed to ping MongoDB: %+v", err)
 	}

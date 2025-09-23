@@ -44,8 +44,8 @@ func NewConsumer(bsf ConsumerBsf) (*Consumer, error) {
 }
 
 // RegisterWithNRF calls the existing NRF service registration function
-func (c *Consumer) RegisterWithNRF() error {
-	_, err := SendRegisterNFInstance()
+func (c *Consumer) RegisterWithNRF(ctx context.Context) error {
+	_, err := SendRegisterNFInstance(ctx)
 	return err
 }
 

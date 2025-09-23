@@ -19,13 +19,18 @@ func BuildNFProfile(bsfContext *bsfContext.BSFContext) models.NrfNfManagementNfP
 	return bsfContext.GetBsfProfile()
 }
 
-func SendRegisterNFInstance() (*models.NrfNfManagementNfProfile, error) {
+func SendRegisterNFInstance(ctx context.Context) (*models.NrfNfManagementNfProfile, error) {
 	// Set client and set url
 	configuration := Nnrf_NFManagement.NewConfiguration()
 	configuration.SetBasePath(bsfContext.BsfSelf.NrfUri)
 	client := Nnrf_NFManagement.NewAPIClient(configuration)
 
 	for {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+		}
 		nfProfile := BuildNFProfile(bsfContext.BsfSelf)
 
 		request := &Nnrf_NFManagement.RegisterNFInstanceRequest{

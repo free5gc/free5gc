@@ -75,6 +75,9 @@ func action(cliCtx *cli.Context) error {
 	go func() {
 		<-sigCh  // Wait for interrupt signal to gracefully shutdown BSF
 		cancel() // Notify each goroutine and wait them stopped
+		if BSF != nil {
+			BSF.Terminate()
+		}
 	}()
 
 	cfg, err := factory.ReadConfig(cliCtx.String("config"))
