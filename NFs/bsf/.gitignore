@@ -1,9 +1,16 @@
+<<<<<<< HEAD
+# If you prefer the allow list template instead of the deny list, see community template:
+# https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
+#
+# Binaries for programs and plugins
+=======
 # Binaries
 bin/
 *.log
 
 # Go
 vendor/
+>>>>>>> c5f2d9e (feat(BSF): Complete BSF implementation with 3GPP TS 29.521 compliance)
 *.exe
 *.exe~
 *.dll
@@ -13,6 +20,27 @@ vendor/
 # Test binary, built with `go test -c`
 *.test
 
+<<<<<<< HEAD
+# Code coverage profiles and other test artifacts
+*.out
+coverage.*
+*.coverprofile
+profile.cov
+
+# Dependency directories (remove the comment below to include it)
+# vendor/
+
+# Go workspace file
+go.work
+go.work.sum
+
+# env file
+.env
+
+# Editor/IDE
+# .idea/
+# .vscode/
+=======
 # Output of the go coverage tool
 *.out
 
@@ -31,3 +59,4 @@ vendor/
 .Trashes
 ehthumbs.db
 Thumbs.db
+>>>>>>> c5f2d9e (feat(BSF): Complete BSF implementation with 3GPP TS 29.521 compliance)
