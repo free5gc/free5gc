@@ -6,6 +6,7 @@ TODAY=$(date +"%Y%m%d_%H%M%S")
 PCAP_MODE=0
 N3IWF_ENABLE=0
 TNGF_ENABLE=0
+BSF_ENABLE=1
 
 PID_LIST=()
 echo $$ > run.pid
@@ -42,6 +43,12 @@ if [ $# -ne 0 ]; then
                 ;;
             -tngf)
                 TNGF_ENABLE=1
+                ;;
+            --enable-bsf)
+                BSF_ENABLE=1
+                ;;
+            --disable-bsf)
+                BSF_ENABLE=0
                 ;;
         esac
         shift
@@ -137,7 +144,15 @@ mongosh "$DB_NAME" --eval "$MONGO_SCRIPT"
 
 sleep 0.1
 
-NF_LIST="nrf amf smf udr pcf udm nssf ausf bsf chf nef"
+NF_LIST="nrf amf smf udr pcf udm nssf ausf chf nef"
+
+# Add BSF to the list only if enabled
+if [ $BSF_ENABLE -ne 0 ]; then
+    NF_LIST="$NF_LIST bsf"
+    echo "BSF enabled - will start BSF service"
+else
+    echo "BSF disabled - skipping BSF service"
+fi
 
 export GIN_MODE=release
 
