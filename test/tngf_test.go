@@ -1329,11 +1329,6 @@ func TestTngfUE(t *testing.T) {
 			t.Log("Get SA payload")
 		case message.TypeKE:
 			remotePublicKeyExchangeValue := ikePayload.(*message.KeyExchange).KeyExchangeData
-			var i = 0
-			for remotePublicKeyExchangeValue[i] == 0 {
-
-			}
-			remotePublicKeyExchangeValue = remotePublicKeyExchangeValue[i:]
 			remotePublicKeyExchangeValueBig := new(big.Int).SetBytes(remotePublicKeyExchangeValue)
 			sharedKeyExchangeData = new(big.Int).Exp(remotePublicKeyExchangeValueBig, secert, factor).Bytes()
 		case message.TypeNiNr:
