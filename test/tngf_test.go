@@ -230,12 +230,6 @@ func tngfDecryptProcedure(ikeSecurityAssociation *context.IKESecurityAssociation
 		return nil, errors.New("Error decrypting message")
 	}
 
-	// fmt.Printf("\n--- DEBUGGING DECRYPTION ---\n")
-	// fmt.Printf("Next Payload Type to Decode: %d (Expected: %d for Delete)\n", encryptedPayload.NextPayload, message.TypeD)
-	// fmt.Printf("Length of Plaintext before Decode: %d bytes\n", len(plainText))
-	// fmt.Printf("Plaintext Content (Hex Dump):\n%s", hex.Dump(plainText))
-	// fmt.Printf("--- END DEBUGGING DECRYPTION ---\n\n")
-
 	var decryptedIKEPayload message.IKEPayloadContainer
 	err = decryptedIKEPayload.Decode(encryptedPayload.NextPayload, plainText)
 	if err != nil {
