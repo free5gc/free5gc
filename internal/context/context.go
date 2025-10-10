@@ -12,6 +12,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 
+	"github.com/free5gc/nrf/internal/cert"
 	"github.com/free5gc/nrf/internal/logger"
 	"github.com/free5gc/nrf/pkg/factory"
 	"github.com/free5gc/openapi/models"
@@ -48,8 +49,7 @@ func InitNrfContext() error {
 		config.Info.Version, config.Info.Description)
 	configuration := config.Configuration
 
-	nrfContext.NrfNfProfile.NfInstanceId = uuid.New().String()
-	nrfContext.Nrf_NfInstanceID = nrfContext.NrfNfProfile.NfInstanceId // Fix Issue #682: Initialize Nrf_NfInstanceID
+	// 初始化 NF 類型和狀態
 	nrfContext.NrfNfProfile.NfType = models.NrfNfManagementNfType_NRF
 	nrfContext.NrfNfProfile.NfStatus = models.NrfNfManagementNfStatus_REGISTERED
 	nrfContext.NfRegistNum = 0
@@ -97,14 +97,40 @@ func InitNrfContext() error {
 		}
 		nrfContext.NrfPubKey = &nrfContext.NrfPrivKey.PublicKey
 
+		// 使用 CertificateManager 處理證書（支持外部證書）
 		nrfCertPath := config.GetNrfCertPemPath()
-		logger.InitLog.Infof("generate new NRF cert")
-		nrfContext.NrfCert, err = oauth.GenerateCertificate(
-			string(nrfContext.NrfNfProfile.NfType), nrfContext.Nrf_NfInstanceID,
-			nrfCertPath, nrfContext.NrfPubKey, nrfContext.RootCert, nrfContext.RootPrivKey)
+		certManager := cert.NewManager(nrfCertPath, nrfPrivKeyPath)
+		// 設置證書模式（默認 Auto，可從配置讀取）
+		certManager.SetMode(cert.ModeAuto)
+
+		// 載入或生成證書
+		logger.InitLog.Infof("Loading or generating NRF certificate...")
+		nrfCert, extractedUUID, err := certManager.LoadOrGenerateCertificate(func() (*x509.Certificate, error) {
+			// 生成新證書時使用新的 UUID
+			newUUID := uuid.New().String()
+			logger.InitLog.Infof("Generating new NRF certificate with UUID: %s", newUUID)
+			return oauth.GenerateCertificate(
+				string(nrfContext.NrfNfProfile.NfType),
+				newUUID,
+				nrfCertPath,
+				nrfContext.NrfPubKey,
+				nrfContext.RootCert,
+				nrfContext.RootPrivKey,
+			)
+		})
 		if err != nil {
-			return errors.Wrapf(err, "NRF init")
+			return errors.Wrapf(err, "NRF certificate management failed")
 		}
+
+		// 使用證書中的 UUID（外部證書）或生成的 UUID
+		nrfContext.NrfCert = nrfCert
+		nrfContext.Nrf_NfInstanceID = extractedUUID
+		nrfContext.NrfNfProfile.NfInstanceId = extractedUUID
+		logger.InitLog.Infof("Using NF Instance ID: %s", extractedUUID)
+	} else {
+		// OAuth 未啟用時，使用隨機 UUID
+		nrfContext.NrfNfProfile.NfInstanceId = uuid.New().String()
+		nrfContext.Nrf_NfInstanceID = nrfContext.NrfNfProfile.NfInstanceId
 	}
 
 	NFServices := InitNFService(serviceNameList, config.Info.Version)
