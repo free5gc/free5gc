@@ -49,6 +49,7 @@ func InitNrfContext() error {
 	configuration := config.Configuration
 
 	nrfContext.NrfNfProfile.NfInstanceId = uuid.New().String()
+	nrfContext.Nrf_NfInstanceID = nrfContext.NrfNfProfile.NfInstanceId // Fix Issue #682: Initialize Nrf_NfInstanceID
 	nrfContext.NrfNfProfile.NfType = models.NrfNfManagementNfType_NRF
 	nrfContext.NrfNfProfile.NfStatus = models.NrfNfManagementNfStatus_REGISTERED
 	nrfContext.NfRegistNum = 0
