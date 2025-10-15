@@ -736,3 +736,7 @@ func TestDynamicDC(t *testing.T) {
 		})
 	})
 }
+
+func TestDCHandover(t *testing.T) {
+
+}
