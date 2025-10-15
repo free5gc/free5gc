@@ -738,5 +738,48 @@ func TestDynamicDC(t *testing.T) {
 }
 
 func TestDCHandover(t *testing.T) {
+	// RANs connect to AMF
+	MranConn, SranConn := connectRANsToAMF(t)
+	if MranConn == nil || SranConn == nil {
+		t.Fatal("Failed to connect to AMF")
+		return
+	}
+	defer MranConn.Close()
+	defer SranConn.Close()
+	t.Log("Master RAN and Secondary RAN connect to AMF successfully")
 
+	// RANs connect to UPF
+	MupfConn, SupfConn := connectRANsToUPF(t)
+	if MupfConn == nil || SupfConn == nil {
+		t.Fatal("Failed to connect to UPF")
+		return
+	}
+	defer MupfConn.Close()
+	defer SupfConn.Close()
+	t.Log("Master RAN and Secondary RAN connect to UPF successfully")
+
+	// NGSetup
+	nGsSetup(t, MranConn, SranConn)
+	t.Log("Master RAN and Secondary RAN NGSetup successfully")
+
+	// New UE and initial registration(NAS/NGAP)
+	ue := newUEAndInitialRegistration(t, MranConn)
+	defer test.DelUeFromMongoDB(t, ue, servingPlmnId)
+	t.Log("New UE and initial registration(NAS/NGAP) successfully")
+
+	// PDU Session Establishment
+	pduSessionEstablishment(t, ue, MranConn, ENABLE_DC_AT_PDU_SESSION_ESTABLISHMENT)
+	t.Log("PDU Session Establishment successfully")
+
+	// ping test via master RAN
+	t.Run("ping test via master RAN", func(t *testing.T) {
+		icmpTest(t, MupfConn, mranULTeid, googleDNS, EXPECTED_NO_ERROR)
+		t.Log("ICMP test via master RAN successfully")
+	})
+
+	// ping test via secondary RAN
+	t.Run("ping test via secondary RAN", func(t *testing.T) {
+		icmpTest(t, SupfConn, sranULTeid, cloudFareDNS, EXPECTED_NO_ERROR)
+		t.Log("ICMP test via secondary RAN successfully")
+	})
 }
