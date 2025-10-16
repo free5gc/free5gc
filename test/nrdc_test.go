@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"net"
+	"sync"
 	"test"
 	"test/consumerTestdata/UDM/TestGenAuthData"
 	"test/nasTestpacket"
@@ -59,8 +60,8 @@ const (
 	mranDLTeid = "\x00\x00\x00\x01"
 	sranDLTeid = "\x00\x00\x00\x02"
 
-	tMranULTeid = ""
-	tSranULTeid = ""
+	tMranULTeid = "00000002"
+	tSranULTeid = "00000003"
 	tMranDLTeid = "\x00\x00\x00\x03"
 	tSranDLTeid = "\x00\x00\x00\x04"
 
@@ -790,11 +791,10 @@ func pathSwitchWithDC(t *testing.T, ue *test.RanUeContext, MranConn *sctp.SCTPCo
 
 		// pDUSessionResourceFailedToSetupListPSReq := ie.Value.PDUSessionResourceFailedToSetupListPSReq
 
-		// // PDU Session Resource Failed to Setup Item (in PDU Session Resource Failed to Setup List)
+		// PDU Session Resource Failed to Setup Item (in PDU Session Resource Failed to Setup List)
 		// pDUSessionResourceFailedToSetupItemPSReq := ngapType.PDUSessionResourceFailedToSetupItemPSReq{}
 		// pDUSessionResourceFailedToSetupItemPSReq.PDUSessionID.Value = 11
-		// pDUSessionResourceFailedToSetupItemPSReq.PathSwitchRequestSetupFailedTransfer =
-		// 	getPathSwitchRequestSetupFailedTransferWithDC()
+		// pDUSessionResourceFailedToSetupItemPSReq.PathSwitchRequestSetupFailedTransfer = nil
 
 		// pDUSessionResourceFailedToSetupListPSReq.List =
 		// 	append(pDUSessionResourceFailedToSetupListPSReq.List, pDUSessionResourceFailedToSetupItemPSReq)
@@ -825,10 +825,74 @@ func pathSwitchWithDC(t *testing.T, ue *test.RanUeContext, MranConn *sctp.SCTPCo
 	if err != nil {
 		t.Fatalf("Failed to receive path switch request acknowledge from Master RAN: %+v", err)
 	}
-	_, err = ngap.Decoder(recvMsg[:n])
+
+	var ngapPdu *ngapType.NGAPPDU
+	ngapPdu, err = ngap.Decoder(recvMsg[:n])
 	if err != nil {
 		t.Fatalf("Failed to decode path switch request acknowledge from Master RAN: %+v", err)
 	}
+
+	for _, ie := range ngapPdu.SuccessfulOutcome.Value.PathSwitchRequestAcknowledge.ProtocolIEs.List {
+		if ie.Id.Value == ngapType.ProtocolIEIDPDUSessionResourceSwitchedList {
+			pDUSessionResourceSwitchedList := ie.Value.PDUSessionResourceSwitchedList
+			for _, pDUSessionResourceSwitchedItem := range pDUSessionResourceSwitchedList.List {
+				var data ngapType.PathSwitchRequestAcknowledgeTransfer
+				err = aper.UnmarshalWithParams(pDUSessionResourceSwitchedItem.PathSwitchRequestAcknowledgeTransfer, &data, "valueExt")
+				if err != nil {
+					t.Fatalf("Failed to unmarshal path switch request acknowledge transfer: %+v", err)
+				}
+
+				uLNGUUPTNLInformation := data.ULNGUUPTNLInformation.GTPTunnel
+				assert.Equal(t, uLNGUUPTNLInformation.GTPTEID.Value, aper.OctetString("\x00\x00\x00\x02"))
+
+				additionalNGUUPTNLInformation := data.AdditionalNGUUPTNLInformation.List
+				for _, additionalNGUUPTNLInformationItem := range additionalNGUUPTNLInformation {
+					ulNGUUPTNLInformation := additionalNGUUPTNLInformationItem.ULNGUUPTNLInformation.GTPTunnel
+					assert.Equal(t, ulNGUUPTNLInformation.GTPTEID.Value, aper.OctetString("\x00\x00\x00\x03"))
+				}
+			}
+		}
+	}
+}
+
+func waitForGTPEndMarker(t *testing.T, MupfConn *net.UDPConn, SupfConn *net.UDPConn) {
+	/*
+		After successfully path switch, wait for GTP end marker to be sent by UPF
+		Packet format will be (totally 8 bytes):
+			- \x30 : GTP-U version 1
+			- \xfe : Message Type 254 (End Marker)
+			- \x00\x00 : Length 0 (no payload)
+			- \x00\x00\x00\x00 : TEID
+
+		Recv from MupfConn: "\x30\xfe\x00\x00\x00\x00\x00\x01"
+		Recv from SupfConn: "\x30\xfe\x00\x00\x00\x00\x00\x02"
+	*/
+
+	wg := sync.WaitGroup{}
+	wg.Add(2)
+
+	go func() {
+		defer wg.Done()
+
+		recvMsg := make([]byte, 2048)
+		n, err := MupfConn.Read(recvMsg)
+		if err != nil {
+			t.Fatalf("Failed to read from MupfConn: %+v", err)
+		}
+		assert.Equal(t, []byte{0x30, 0xfe, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}, recvMsg[:n])
+	}()
+
+	go func() {
+		defer wg.Done()
+
+		recvMsg := make([]byte, 2048)
+		n, err := SupfConn.Read(recvMsg)
+		if err != nil {
+			t.Fatalf("Failed to read from SupfConn: %+v", err)
+		}
+		assert.Equal(t, []byte{0x30, 0xfe, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02}, recvMsg[:n])
+	}()
+	wg.Wait()
 }
 
 func TestDC(t *testing.T) {
@@ -1011,6 +1075,10 @@ func TestXnDCHandover(t *testing.T) {
 	*/
 	pathSwitchWithDC(t, ue, MranConn, SranConn)
 	t.Log("Path Switch with DC successfully")
+
+	// After successfully path switch, wait for GTP end marker to be sent by UPF
+	waitForGTPEndMarker(t, MupfConn, SupfConn)
+	t.Log("Wait for GTP end marker successfully")
 
 	// ping test via new master RAN (original secondary RAN)
 	t.Run("ping test via new master RAN (original secondary RAN)", func(t *testing.T) {
