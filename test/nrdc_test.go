@@ -654,7 +654,6 @@ func pathSwitchWithDC(t *testing.T, ue *test.RanUeContext, MranConn *sctp.SCTPCo
 		// Additional DL QoS Flow per TNL Information
 		data.AdditionalDLQosFlowPerTNLInformation = new(ngapType.QosFlowPerTNLInformationList)
 		data.AdditionalDLQosFlowPerTNLInformation.List = append(data.AdditionalDLQosFlowPerTNLInformation.List, DCQosFlowPerTNLInformationItem)
-		
 
 		// Qos Flow Accepted List
 		qosFlowAcceptedList := &data.QosFlowAcceptedList
@@ -822,7 +821,7 @@ func pathSwitchWithDC(t *testing.T, ue *test.RanUeContext, MranConn *sctp.SCTPCo
 	}
 
 	// receive path switch request acknowledge
-	n, err = MranConn.Read(recvMsg)
+	n, err = SranConn.Read(recvMsg)
 	if err != nil {
 		t.Fatalf("Failed to receive path switch request acknowledge from Master RAN: %+v", err)
 	}
@@ -959,7 +958,7 @@ func TestDynamicDC(t *testing.T) {
 	})
 }
 
-func TestDCHandover(t *testing.T) {
+func TestXnDCHandover(t *testing.T) {
 	// RANs connect to AMF
 	MranConn, SranConn := connectRANsToAMF(t)
 	if MranConn == nil || SranConn == nil {

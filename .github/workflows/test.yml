@@ -66,7 +66,7 @@ jobs:
         sleep 1
         ./test_ci.sh TestDynamicDC
         sleep1
-        ./test_ci.sh TestDCHandover
+        ./test_ci.sh TestXnDCHandover
     - name: ULCL Test
       run: ./test_ci_ulcl.sh TestRequestTwoPDUSessions
     - name: Basic Test (OAuth)
@@ -102,7 +102,7 @@ jobs:
         sleep 1
         ./test_ci.sh TestDynamicDC oauth
         sleep 1
-        ./test_ci.sh TestDCHandover oauth
+        ./test_ci.sh TestXnDCHandover oauth
     - name: ULCL Test (OAuth)
       run: ./test_ci_ulcl.sh TestRequestTwoPDUSessions oauth
     # - name: Non3GPP Test
