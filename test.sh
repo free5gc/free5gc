@@ -29,7 +29,7 @@ do
 done
 shift $(($OPTIND - 1))
 
-TEST_POOL="All|TestRegistration|TestGUTIRegistration|TestServiceRequest|TestXnHandover|TestN2Handover|TestDeregistration|TestPDUSessionReleaseRequest|TestPaging|TestNon3GPP|TestReSynchronization|TestDuplicateRegistration|TestEAPAKAPrimeAuthentication|TestMultiAmfRegistration|TestNasReroute|TestTngf|TestDC|TestDynamicDC|TestDCHandover"
+TEST_POOL="All|TestRegistration|TestGUTIRegistration|TestServiceRequest|TestXnHandover|TestN2Handover|TestDeregistration|TestPDUSessionReleaseRequest|TestPaging|TestNon3GPP|TestReSynchronization|TestDuplicateRegistration|TestEAPAKAPrimeAuthentication|TestMultiAmfRegistration|TestNasReroute|TestTngf|TestDC|TestDynamicDC|TestXnDCHandover"
 if [[ ! "$1" =~ $TEST_POOL ]]
 then
     echo "Usage: $0 [ ${TEST_POOL//|/ | } ]"
@@ -191,7 +191,7 @@ ${EXEC_UPFNS} ip addr add 10.200.200.102/24 dev veth1
 ${EXEC_UPFNS} ip route add 10.200.200.1/32 dev veth1 src 10.200.200.102
 ${EXEC_UPFNS} ip route add 10.200.200.2/32 dev veth1 src 10.200.200.102
 
-if [[ "$1" == "TestDC" || "$1" == "TestDynamicDC" || "$1" == "TestDCHandover" ]]
+if [[ "$1" == "TestDC" || "$1" == "TestDynamicDC" || "$1" == "TestXnDCHandover" ]]
 then
     ${EXEC_UPFNS} ip tuntap add dev googleDNS mode tun
     ${EXEC_UPFNS} ip link set googleDNS up
