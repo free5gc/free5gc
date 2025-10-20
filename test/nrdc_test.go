@@ -635,27 +635,6 @@ func pathSwitchWithDC(t *testing.T, ue *test.RanUeContext, MranConn *sctp.SCTPCo
 		upTransportLayerInformation.GTPTunnel.GTPTEID.Value = aper.OctetString(tMranDLTeid)
 		upTransportLayerInformation.GTPTunnel.TransportLayerAddress = ngapConvert.IPAddressToNgap(tMranN3Addr, "")
 
-		// DC QoS Flow per TNL Information
-		DCQosFlowPerTNLInformationItem := ngapType.QosFlowPerTNLInformationItem{}
-		DCQosFlowPerTNLInformationItem.QosFlowPerTNLInformation.UPTransportLayerInformation.Present = ngapType.UPTransportLayerInformationPresentGTPTunnel
-
-		// DC Transport Layer Information in QoS Flow per TNL Information
-		DCUpTransportLayerInformation := &DCQosFlowPerTNLInformationItem.QosFlowPerTNLInformation.UPTransportLayerInformation
-		DCUpTransportLayerInformation.Present = ngapType.UPTransportLayerInformationPresentGTPTunnel
-		DCUpTransportLayerInformation.GTPTunnel = new(ngapType.GTPTunnel)
-		DCUpTransportLayerInformation.GTPTunnel.GTPTEID.Value = aper.OctetString(tSranDLTeid)
-		DCUpTransportLayerInformation.GTPTunnel.TransportLayerAddress = ngapConvert.IPAddressToNgap(tSranN3Addr, "")
-
-		// DC Associated QoS Flow List in QoS Flow per TNL Information
-		DCAssociatedQosFlowList := &DCQosFlowPerTNLInformationItem.QosFlowPerTNLInformation.AssociatedQosFlowList
-		DCAssociatedQosFlowItem := ngapType.AssociatedQosFlowItem{}
-		DCAssociatedQosFlowItem.QosFlowIdentifier.Value = 1
-		DCAssociatedQosFlowList.List = append(DCAssociatedQosFlowList.List, DCAssociatedQosFlowItem)
-
-		// Additional DL QoS Flow per TNL Information
-		data.AdditionalDLQosFlowPerTNLInformation = new(ngapType.QosFlowPerTNLInformationList)
-		data.AdditionalDLQosFlowPerTNLInformation.List = append(data.AdditionalDLQosFlowPerTNLInformation.List, DCQosFlowPerTNLInformationItem)
-
 		// Qos Flow Accepted List
 		qosFlowAcceptedList := &data.QosFlowAcceptedList
 		qosFlowAcceptedItem := ngapType.QosFlowAcceptedItem{
@@ -664,6 +643,46 @@ func pathSwitchWithDC(t *testing.T, ue *test.RanUeContext, MranConn *sctp.SCTPCo
 			},
 		}
 		qosFlowAcceptedList.List = append(qosFlowAcceptedList.List, qosFlowAcceptedItem)
+
+		// Additional DL QoS Flow per TNL Information at IE Extensions
+		data.IEExtensions = new(ngapType.ProtocolExtensionContainerPathSwitchRequestTransferExtIEs)
+		data.IEExtensions.List = append(data.IEExtensions.List, ngapType.PathSwitchRequestTransferExtIEs{
+			Id: ngapType.ProtocolExtensionID{
+				Value: ngapType.ProtocolIEIDAdditionalDLQosFlowPerTNLInformation,
+			},
+			Criticality: ngapType.Criticality{
+				Value: ngapType.CriticalityPresentIgnore,
+			},
+			ExtensionValue: ngapType.PathSwitchRequestTransferExtIEsExtensionValue{
+				Present: ngapType.PathSwitchRequestTransferExtIEsPresentAdditionalDLQosFlowPerTNLInformation,
+				AdditionalDLQosFlowPerTNLInformation: &ngapType.QosFlowPerTNLInformationList{
+					List: []ngapType.QosFlowPerTNLInformationItem{
+						{
+							QosFlowPerTNLInformation: ngapType.QosFlowPerTNLInformation{
+								UPTransportLayerInformation: ngapType.UPTransportLayerInformation{
+									Present: ngapType.UPTransportLayerInformationPresentGTPTunnel,
+									GTPTunnel: &ngapType.GTPTunnel{
+										GTPTEID: ngapType.GTPTEID{
+											Value: aper.OctetString(tSranDLTeid),
+										},
+										TransportLayerAddress: ngapConvert.IPAddressToNgap(tSranN3Addr, ""),
+									},
+								},
+								AssociatedQosFlowList: ngapType.AssociatedQosFlowList{
+									List: []ngapType.AssociatedQosFlowItem{
+										{
+											QosFlowIdentifier: ngapType.QosFlowIdentifier{
+												Value: 1,
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		})
 		return data
 	}
 
@@ -845,10 +864,11 @@ func pathSwitchWithDC(t *testing.T, ue *test.RanUeContext, MranConn *sctp.SCTPCo
 				uLNGUUPTNLInformation := data.ULNGUUPTNLInformation.GTPTunnel
 				assert.Equal(t, uLNGUUPTNLInformation.GTPTEID.Value, aper.OctetString("\x00\x00\x00\x02"))
 
-				additionalNGUUPTNLInformation := data.AdditionalNGUUPTNLInformation.List
-				for _, additionalNGUUPTNLInformationItem := range additionalNGUUPTNLInformation {
-					ulNGUUPTNLInformation := additionalNGUUPTNLInformationItem.ULNGUUPTNLInformation.GTPTunnel
-					assert.Equal(t, ulNGUUPTNLInformation.GTPTEID.Value, aper.OctetString("\x00\x00\x00\x03"))
+				for _, ieExt := range data.IEExtensions.List {
+					if ieExt.Id.Value == ngapType.ProtocolIEIDAdditionalNGUUPTNLInformation {
+						additionalULNGUUPTNLInformation := ieExt.ExtensionValue.AdditionalNGUUPTNLInformation.List[0].ULNGUUPTNLInformation
+						assert.Equal(t, additionalULNGUUPTNLInformation.GTPTunnel.GTPTEID.Value, aper.OctetString("\x00\x00\x00\x03"))
+					}
 				}
 			}
 		}
