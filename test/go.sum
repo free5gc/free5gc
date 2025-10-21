@@ -170,8 +170,8 @@ github.com/free5gc/ike v1.1.1-0.20241014015325-083f89768f43 h1:cgpG06umqWTAwYy/b
 github.com/free5gc/ike v1.1.1-0.20241014015325-083f89768f43/go.mod h1:57Ujd9Xjva02mt3OVfepYKiheFHO5Y0YCQyBgB1p1Qs=
 github.com/free5gc/nas v1.2.1 h1:jIXffRFXCuAEQs5j5NHlS+ugQBbReNe6q3NPxfrTZVo=
 github.com/free5gc/nas v1.2.1/go.mod h1:K14TWrOk7UXdLmZkP5uGCSf/0EYxrUOzpi/hlfJm40w=
-github.com/free5gc/ngap v1.1.1 h1:MBpB4bSYOE79T0XXBLY+lNKz77R5nCboLgiBKnBx4SY=
-github.com/free5gc/ngap v1.1.1/go.mod h1:L0FjR4QPpLrPyur9kiep8RSxeahK7HIBm4x9dybt1bA=
+github.com/free5gc/ngap v1.1.2-0.20251021092212-333b38ef1f93 h1:J7WclmsxThJ5qvSR7IdesKDpsv26sO3MO/yJq5VZlxw=
+github.com/free5gc/ngap v1.1.2-0.20251021092212-333b38ef1f93/go.mod h1:9HGdrc10JpAPLZTgXzD3CYiMtzK+RhIjMfrb31wwOA4=
 github.com/free5gc/openapi v1.2.2 h1:SoWkuI/QOWA22UgNuqtkeoKeLEjThziJYGQFh/1gxSQ=
 github.com/free5gc/openapi v1.2.2/go.mod h1:5HbgGqlhaTBwcOrXQLCOmpbQoX/ogKSg6+TAsR1VxUM=
 github.com/free5gc/pfcp v1.1.0 h1:Oee+QingsTjfqA2+FbUmcSFycbZI+J/34LbWCJJSkIg=
