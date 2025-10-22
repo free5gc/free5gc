@@ -6,7 +6,7 @@ TODAY=$(date +"%Y%m%d_%H%M%S")
 PCAP_MODE=0
 N3IWF_ENABLE=0
 TNGF_ENABLE=0
-BSF_ENABLE=1
+BSF_ENABLE=0
 
 PID_LIST=()
 echo $$ > run.pid
@@ -44,11 +44,8 @@ if [ $# -ne 0 ]; then
             -tngf)
                 TNGF_ENABLE=1
                 ;;
-            --enable-bsf)
+            -bsf)
                 BSF_ENABLE=1
-                ;;
-            --disable-bsf)
-                BSF_ENABLE=0
                 ;;
         esac
         shift
