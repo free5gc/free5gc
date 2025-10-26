@@ -3,10 +3,11 @@ name: CI Test
 on:
   schedule:
     - cron: '14 19 * * *'  # UTC 19:14 (Local 03:14)
-  # pull_request:
+  pull_request:
 
 env:
-  COMPOSE_FILE: ci-test/docker-compose-ci-ulcl.yaml
+  TI_COMPOSE_FILE: ci-test/docker-compose-ci-ulcl-ti.yaml
+  MP_COMPOSE_FILE: ci-test/docker-compose-ci-ulcl-mp.yaml
   MAX_RETRIES: 5
   RETRY_INTERVAL: 10
 
@@ -27,51 +28,29 @@ jobs:
           docker --version || exit 1
           docker compose version || exit 1
 
-      - name: Check if compose file exists
+      - name: Up TI docker compose
         run: |
-          if [ ! -f "${{ env.COMPOSE_FILE }}" ]; then
-            echo "Docker Compose file not found: ${{ env.COMPOSE_FILE }}"
+          if ! docker compose -f ${{ env.TI_COMPOSE_FILE }} up -d --wait --wait-timeout ${{ env.WAIT_TIMEOUT }}; then
+            echo "Failed to up docker compose TI"
             exit 1
           fi
 
-      - name: Start docker compose
-        id: docker_up
-        run: |
-          docker compose -f ${{ env.COMPOSE_FILE }} up -d
-          if [ $? -ne 0 ]; then
-            echo "Failed to start docker compose"
-            exit 1
-          fi
-
-      - name: Wait for services to be ready
-        run: |
-          attempt=1
-          while [ $attempt -le ${{ env.MAX_RETRIES }} ]; do
-            echo "Checking services health (Attempt $attempt/${{ env.MAX_RETRIES }})..."
-
-            if docker container inspect ci --format '{{.State.Status}}' | grep -q "running"; then
-              echo "CI container is ready!"
-              exit 0
-            fi
-
-            echo "Services not ready yet, waiting..."
-            sleep ${{ env.RETRY_INTERVAL }}
-            attempt=$((attempt + 1))
-          done
-
-          echo "Services failed to become ready in time"
-          exit 1
-
-      - name: Run ULCL test
-        id: test_run
+      - name: Run ULCL TI test
         run: |
           set -e
-          echo "Starting ULCL test..."
-          docker exec ci /bin/bash -c "cd /root/test && ./test-ulcl.sh TestULCLTrafficInfluence"
+          echo "Starting ULCL TI test..."
+          docker exec ci /bin/bash -c "cd /root/test && ./test-ulcl-ti.sh TestULCLTrafficInfluence"
 
-      - name: Cleanup docker compose
+      - name: Down TI docker compose
+        run: |
+          if ! docker compose -f ${{ env.TI_COMPOSE_FILE }} down; then
+            echo "Failed to down docker compose TI"
+            exit 1
+          fi
+
+      - name: Cleanup docker resources
         if: always()
         run: |
-          echo "Cleaning up resources..."
-          docker compose -f ${{ env.COMPOSE_FILE }} down -v
-          docker system prune -a -f --volumes
+          echo "Cleaning up docker resources..."
+          docker system prune -a -f
+          docker volume prune -f
