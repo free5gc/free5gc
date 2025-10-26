@@ -35,6 +35,7 @@ jobs:
             echo "Failed to up docker compose TI"
             exit 1
           fi
+          sleep 5 # wait for docker compose to finish
 
       - name: Run ULCL TI test
         run: |
@@ -43,6 +44,7 @@ jobs:
           docker exec ci /bin/bash -c "cd /root/test && ./test-ulcl-ti.sh TestULCLTrafficInfluence"
 
       - name: Down TI docker compose
+        if: always()
         run: |
           if ! docker compose -f ${{ env.TI_COMPOSE_FILE }} down; then
             echo "Failed to down docker compose TI"
