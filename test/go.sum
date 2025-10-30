@@ -170,8 +170,8 @@ github.com/free5gc/ike v1.1.1-0.20241014015325-083f89768f43 h1:cgpG06umqWTAwYy/b
 github.com/free5gc/ike v1.1.1-0.20241014015325-083f89768f43/go.mod h1:57Ujd9Xjva02mt3OVfepYKiheFHO5Y0YCQyBgB1p1Qs=
 github.com/free5gc/nas v1.2.1 h1:jIXffRFXCuAEQs5j5NHlS+ugQBbReNe6q3NPxfrTZVo=
 github.com/free5gc/nas v1.2.1/go.mod h1:K14TWrOk7UXdLmZkP5uGCSf/0EYxrUOzpi/hlfJm40w=
-github.com/free5gc/ngap v1.1.1 h1:MBpB4bSYOE79T0XXBLY+lNKz77R5nCboLgiBKnBx4SY=
-github.com/free5gc/ngap v1.1.1/go.mod h1:L0FjR4QPpLrPyur9kiep8RSxeahK7HIBm4x9dybt1bA=
+github.com/free5gc/ngap v1.1.2-0.20251021092212-333b38ef1f93 h1:J7WclmsxThJ5qvSR7IdesKDpsv26sO3MO/yJq5VZlxw=
+github.com/free5gc/ngap v1.1.2-0.20251021092212-333b38ef1f93/go.mod h1:9HGdrc10JpAPLZTgXzD3CYiMtzK+RhIjMfrb31wwOA4=
 github.com/free5gc/openapi v1.2.2 h1:SoWkuI/QOWA22UgNuqtkeoKeLEjThziJYGQFh/1gxSQ=
 github.com/free5gc/openapi v1.2.2/go.mod h1:5HbgGqlhaTBwcOrXQLCOmpbQoX/ogKSg6+TAsR1VxUM=
 github.com/free5gc/pfcp v1.1.0 h1:Oee+QingsTjfqA2+FbUmcSFycbZI+J/34LbWCJJSkIg=
@@ -1079,6 +1079,8 @@ gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c/go.mod h1:K4uyk7z7BCEPqu6E+C
 gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
 gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=
 gopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
+gotest.tools/v3 v3.5.2 h1:7koQfIKdy+I8UTetycgUqXWSDwpgv193Ka+qRsmBY8Q=
+gotest.tools/v3 v3.5.2/go.mod h1:LtdLGcnqToBH83WByAAi/wiwSFCArdFIUV/xxN4pcjA=
 honnef.co/go/tools v0.0.0-20190102054323-c2f93a96b099/go.mod h1:rf3lG4BRIbNafJWhAfAdb/ePZxsR/4RtNHQocxwk9r4=
 honnef.co/go/tools v0.0.0-20190106161140-3f1c8253044a/go.mod h1:rf3lG4BRIbNafJWhAfAdb/ePZxsR/4RtNHQocxwk9r4=
 honnef.co/go/tools v0.0.0-20190418001031-e561f6794a2a/go.mod h1:rf3lG4BRIbNafJWhAfAdb/ePZxsR/4RtNHQocxwk9r4=
