@@ -65,7 +65,7 @@ jobs:
         ./test_ci.sh TestDC
         sleep 1
         ./test_ci.sh TestDynamicDC
-        sleep1
+        sleep 1
         ./test_ci.sh TestXnDCHandover
     - name: ULCL Test
       run: ./test_ci_ulcl.sh TestRequestTwoPDUSessions
