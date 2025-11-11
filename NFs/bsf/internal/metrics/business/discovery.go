@@ -6,11 +6,9 @@ import (
 	"github.com/free5gc/util/metrics/utils"
 )
 
-var (
-	// pcfDiscoveryCounter Counter for PCF discovery requests processed by BSF
-	// labeled by discovery type and result
-	pcfDiscoveryCounter *prometheus.CounterVec
-)
+// pcfDiscoveryCounter Counter for PCF discovery requests processed by BSF
+// labeled by discovery type and result
+var pcfDiscoveryCounter *prometheus.CounterVec
 
 func GetDiscoveryHandlerMetrics(namespace string) []prometheus.Collector {
 	var collectors []prometheus.Collector

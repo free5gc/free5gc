@@ -6,6 +6,7 @@ package processor_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -46,7 +47,7 @@ func TestCreatePCFBinding(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Create HTTP request
-	req, err := http.NewRequest("POST", "/pcfBindings", bytes.NewBuffer(jsonData))
+	req, err := http.NewRequestWithContext(context.Background(), "POST", "/pcfBindings", bytes.NewBuffer(jsonData))
 	assert.NoError(t, err)
 	req.Header.Set("Content-Type", "application/json")
 
@@ -89,7 +90,12 @@ func TestGetPCFBindings(t *testing.T) {
 	router.GET("/pcfBindings", processor.GetPCFBindings)
 
 	// Create HTTP request with query parameters
-	req, err := http.NewRequest("GET", "/pcfBindings?supi=imsi-208930000000001&dnn=internet", nil)
+	req, err := http.NewRequestWithContext(
+		context.Background(),
+		"GET",
+		"/pcfBindings?supi=imsi-208930000000001&dnn=internet",
+		nil,
+	)
 	assert.NoError(t, err)
 
 	// Create response recorder
@@ -130,7 +136,7 @@ func TestDeleteIndPCFBinding(t *testing.T) {
 	router.DELETE("/pcfBindings/:bindingId", processor.DeleteIndPCFBinding)
 
 	// Create HTTP request
-	req, err := http.NewRequest("DELETE", "/pcfBindings/"+bindingId, nil)
+	req, err := http.NewRequestWithContext(context.Background(), "DELETE", "/pcfBindings/"+bindingId, nil)
 	assert.NoError(t, err)
 
 	// Create response recorder

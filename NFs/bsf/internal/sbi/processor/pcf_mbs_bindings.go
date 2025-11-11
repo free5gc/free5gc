@@ -50,7 +50,7 @@ func CreatePCFMbsBinding(c *gin.Context) {
 		PcfIpEndPoints: request.PcfIpEndPoints,
 		PcfId:          util.StringToPtr(request.PcfId),
 		PcfSetId:       util.StringToPtr(request.PcfSetId),
-		BindLevel:      (*models.BindingLevel)(&request.BindLevel),
+		BindLevel:      &request.BindLevel,
 		SuppFeat:       util.StringToPtr(request.SuppFeat),
 	}
 
@@ -63,7 +63,11 @@ func CreatePCFMbsBinding(c *gin.Context) {
 
 	// Update metrics
 	business.IncrPCFBindingGauge(business.PCF_MBS_BINDING_TYPE_VALUE)
-	business.IncrPCFBindingEventCounter(business.PCF_MBS_BINDING_TYPE_VALUE, business.BINDING_EVENT_CREATE_VALUE, business.RESULT_SUCCESS_VALUE)
+	business.IncrPCFBindingEventCounter(
+		business.PCF_MBS_BINDING_TYPE_VALUE,
+		business.BINDING_EVENT_CREATE_VALUE,
+		business.RESULT_SUCCESS_VALUE,
+	)
 
 	// Convert back to response format
 	response := models.PcfMbsBinding{
@@ -115,9 +119,17 @@ func GetPCFMbsBinding(c *gin.Context) {
 
 	// Update metrics
 	if len(bindings) > 0 {
-		business.IncrPCFBindingEventCounter(business.PCF_MBS_BINDING_TYPE_VALUE, business.BINDING_EVENT_QUERY_VALUE, business.RESULT_SUCCESS_VALUE)
+		business.IncrPCFBindingEventCounter(
+			business.PCF_MBS_BINDING_TYPE_VALUE,
+			business.BINDING_EVENT_QUERY_VALUE,
+			business.RESULT_SUCCESS_VALUE,
+		)
 	} else {
-		business.IncrPCFBindingEventCounter(business.PCF_MBS_BINDING_TYPE_VALUE, business.BINDING_EVENT_QUERY_VALUE, business.RESULT_FAILURE_VALUE)
+		business.IncrPCFBindingEventCounter(
+			business.PCF_MBS_BINDING_TYPE_VALUE,
+			business.BINDING_EVENT_QUERY_VALUE,
+			business.RESULT_FAILURE_VALUE,
+		)
 	}
 
 	if len(bindings) == 0 {
@@ -166,7 +178,11 @@ func ModifyIndPCFMbsBinding(c *gin.Context) {
 
 	binding, exists := bsfContext.BsfSelf.GetPcfMbsBinding(bindingId)
 	if !exists {
-		business.IncrPCFBindingEventCounter(business.PCF_MBS_BINDING_TYPE_VALUE, business.BINDING_EVENT_UPDATE_VALUE, business.RESULT_FAILURE_VALUE)
+		business.IncrPCFBindingEventCounter(
+			business.PCF_MBS_BINDING_TYPE_VALUE,
+			business.BINDING_EVENT_UPDATE_VALUE,
+			business.RESULT_FAILURE_VALUE,
+		)
 		problemDetail := models.ProblemDetails{
 			Status: http.StatusNotFound,
 			Cause:  "RESOURCE_NOT_FOUND",
@@ -190,7 +206,11 @@ func ModifyIndPCFMbsBinding(c *gin.Context) {
 	bsfContext.BsfSelf.UpdatePcfMbsBinding(bindingId, binding)
 
 	// Update metrics
-	business.IncrPCFBindingEventCounter(business.PCF_MBS_BINDING_TYPE_VALUE, business.BINDING_EVENT_UPDATE_VALUE, business.RESULT_SUCCESS_VALUE)
+	business.IncrPCFBindingEventCounter(
+		business.PCF_MBS_BINDING_TYPE_VALUE,
+		business.BINDING_EVENT_UPDATE_VALUE,
+		business.RESULT_SUCCESS_VALUE,
+	)
 
 	// Return updated binding
 	response := models.PcfMbsBinding{
@@ -219,10 +239,18 @@ func DeleteIndPCFMbsBinding(c *gin.Context) {
 	if bsfContext.BsfSelf.DeletePcfMbsBinding(bindingId) {
 		// Update metrics
 		business.DecrPCFBindingGauge(business.PCF_MBS_BINDING_TYPE_VALUE)
-		business.IncrPCFBindingEventCounter(business.PCF_MBS_BINDING_TYPE_VALUE, business.BINDING_EVENT_DELETE_VALUE, business.RESULT_SUCCESS_VALUE)
+		business.IncrPCFBindingEventCounter(
+			business.PCF_MBS_BINDING_TYPE_VALUE,
+			business.BINDING_EVENT_DELETE_VALUE,
+			business.RESULT_SUCCESS_VALUE,
+		)
 		c.Status(http.StatusNoContent)
 	} else {
-		business.IncrPCFBindingEventCounter(business.PCF_MBS_BINDING_TYPE_VALUE, business.BINDING_EVENT_DELETE_VALUE, business.RESULT_FAILURE_VALUE)
+		business.IncrPCFBindingEventCounter(
+			business.PCF_MBS_BINDING_TYPE_VALUE,
+			business.BINDING_EVENT_DELETE_VALUE,
+			business.RESULT_FAILURE_VALUE,
+		)
 		problemDetail := models.ProblemDetails{
 			Status: http.StatusNotFound,
 			Cause:  "RESOURCE_NOT_FOUND",

@@ -48,8 +48,8 @@ func NewApp(ctx context.Context, cfg *factory.Config) (*App, error) {
 	}
 
 	// Initialize processor singleton
-	if _, err := processor.NewProcessor(bsf); err != nil {
-		return nil, fmt.Errorf("failed to initialize processor: %w", err)
+	if _, procErr := processor.NewProcessor(bsf); procErr != nil {
+		return nil, fmt.Errorf("failed to initialize processor: %w", procErr)
 	}
 
 	// Set BSF context configuration
@@ -63,10 +63,10 @@ func NewApp(ctx context.Context, cfg *factory.Config) (*App, error) {
 		features := map[utils.MetricTypeEnabled]bool{utils.SBI: true}
 		customMetrics := make(map[utils.MetricTypeEnabled][]prometheus.Collector)
 
-		var err error
-		if bsf.metricsServer, err = metrics.NewServer(
-			getInitMetrics(cfg, features, customMetrics), tlsKeyLogPath, logger.MainLog); err != nil {
-			logger.MainLog.Warnf("Failed to create metrics server: %+v", err)
+		var metricsErr error
+		if bsf.metricsServer, metricsErr = metrics.NewServer(
+			getInitMetrics(cfg, features, customMetrics), tlsKeyLogPath, logger.MainLog); metricsErr != nil {
+			logger.MainLog.Warnf("Failed to create metrics server: %+v", metricsErr)
 		}
 	}
 
@@ -137,12 +137,12 @@ func (a *App) Start() {
 	}()
 
 	// Initialize MongoDB connection
-	if err := a.bsfCtx.ConnectMongoDB(a.ctx); err != nil {
-		logger.MainLog.Warnf("MongoDB connection failed: %+v", err)
+	if mongoErr := a.bsfCtx.ConnectMongoDB(a.ctx); mongoErr != nil {
+		logger.MainLog.Warnf("MongoDB connection failed: %+v", mongoErr)
 	} else {
 		// Load existing bindings from MongoDB
-		if err := a.bsfCtx.LoadPcfBindingsFromMongoDB(); err != nil {
-			logger.MainLog.Warnf("Failed to load PCF bindings from MongoDB: %+v", err)
+		if loadErr := a.bsfCtx.LoadPcfBindingsFromMongoDB(); loadErr != nil {
+			logger.MainLog.Warnf("Failed to load PCF bindings from MongoDB: %+v", loadErr)
 		}
 	}
 
@@ -196,13 +196,14 @@ func (a *App) Start() {
 	}
 	a.server = server
 
-	if a.config.Configuration.Sbi.Scheme == "http" {
+	switch a.config.Configuration.Sbi.Scheme {
+	case "http":
 		err := server.ListenAndServe()
 		if err != nil {
 			logger.MainLog.Errorf("BSF Listen failed: %+v", err)
 		}
 		return
-	} else if a.config.Configuration.Sbi.Scheme == "https" {
+	case "https":
 		err := server.ListenAndServeTLS(
 			a.config.Configuration.Sbi.Tls.Pem,
 			a.config.Configuration.Sbi.Tls.Key,

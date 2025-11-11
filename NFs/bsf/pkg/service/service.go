@@ -6,7 +6,6 @@ import (
 	"io"
 	"os"
 	"runtime/debug"
-	"sync"
 
 	"github.com/sirupsen/logrus"
 
@@ -22,7 +21,6 @@ type BsfApp struct {
 	cancel     context.CancelFunc
 	tlsKeyPath string
 	app        *app.App
-	wg         sync.WaitGroup
 }
 
 func NewApp(ctx context.Context, cfg *factory.Config, tlsKeyLogPath string) (*BsfApp, error) {

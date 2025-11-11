@@ -432,7 +432,11 @@ func (c *BSFContext) LoadPcfBindingsFromMongoDB() error {
 	if err != nil {
 		return fmt.Errorf("failed to query PCF bindings from MongoDB: %+v", err)
 	}
-	defer cursor.Close(ctx)
+	defer func() {
+		if closeErr := cursor.Close(ctx); closeErr != nil {
+			logger.CtxLog.Errorf("Failed to close cursor: %+v", closeErr)
+		}
+	}()
 
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
@@ -440,16 +444,16 @@ func (c *BSFContext) LoadPcfBindingsFromMongoDB() error {
 	count := 0
 	for cursor.Next(ctx) {
 		var binding PcfBinding
-		if err := cursor.Decode(&binding); err != nil {
-			logger.CtxLog.Errorf("Failed to decode PCF binding: %+v", err)
+		if decodeErr := cursor.Decode(&binding); decodeErr != nil {
+			logger.CtxLog.Errorf("Failed to decode PCF binding: %+v", decodeErr)
 			continue
 		}
 		c.PcfBindings[binding.BindingId] = &binding
 		count++
 	}
 
-	if err := cursor.Err(); err != nil {
-		return fmt.Errorf("cursor error while loading PCF bindings: %+v", err)
+	if cursorErr := cursor.Err(); cursorErr != nil {
+		return fmt.Errorf("cursor error while loading PCF bindings: %+v", cursorErr)
 	}
 
 	logger.CtxLog.Infof("Loaded %d PCF bindings from MongoDB", count)
@@ -730,7 +734,10 @@ func (c *BSFContext) DeleteSubscription(subId string) bool {
 }
 
 // Query functions for PCF bindings based on parameters
-func (c *BSFContext) QueryPcfBindings(supi, gpsi, dnn, ipv4Addr, ipv6Prefix, macAddr48, ipDomain string, snssai *models.Snssai) []*PcfBinding {
+func (c *BSFContext) QueryPcfBindings(
+	supi, gpsi, dnn, ipv4Addr, ipv6Prefix, macAddr48, ipDomain string,
+	snssai *models.Snssai,
+) []*PcfBinding {
 	c.mutex.RLock()
 	var result []*PcfBinding
 
@@ -812,12 +819,16 @@ func (c *BSFContext) QueryPcfBindings(supi, gpsi, dnn, ipv4Addr, ipv6Prefix, mac
 			logger.CtxLog.Errorf("Failed to query PCF bindings from MongoDB: %+v", err)
 			return result
 		}
-		defer cursor.Close(ctx)
+		defer func() {
+			if closeErr := cursor.Close(ctx); closeErr != nil {
+				logger.CtxLog.Errorf("Failed to close cursor: %+v", closeErr)
+			}
+		}()
 
 		for cursor.Next(ctx) {
 			var dbBinding PcfBinding
-			if err := cursor.Decode(&dbBinding); err != nil {
-				logger.CtxLog.Errorf("Failed to decode PCF binding from MongoDB: %+v", err)
+			if decodeErr := cursor.Decode(&dbBinding); decodeErr != nil {
+				logger.CtxLog.Errorf("Failed to decode PCF binding from MongoDB: %+v", decodeErr)
 				continue
 			}
 
@@ -830,8 +841,8 @@ func (c *BSFContext) QueryPcfBindings(supi, gpsi, dnn, ipv4Addr, ipv6Prefix, mac
 			logger.CtxLog.Infof("Loaded PCF binding from MongoDB into cache: %s", dbBinding.BindingId)
 		}
 
-		if err := cursor.Err(); err != nil {
-			logger.CtxLog.Errorf("Cursor error while querying PCF bindings: %+v", err)
+		if cursorErr := cursor.Err(); cursorErr != nil {
+			logger.CtxLog.Errorf("Cursor error while querying PCF bindings: %+v", cursorErr)
 		}
 	}
 

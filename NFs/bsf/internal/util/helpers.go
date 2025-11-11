@@ -4,6 +4,8 @@
 
 package util
 
+import "github.com/free5gc/openapi/models"
+
 // Helper functions for type conversion
 func StringToPtr(s string) *string {
 	if s == "" {
@@ -17,4 +19,11 @@ func PtrToString(s *string) string {
 		return ""
 	}
 	return *s
+}
+
+func PtrToBindingLevel(b *models.BindingLevel) models.BindingLevel {
+	if b == nil {
+		return models.BindingLevel("")
+	}
+	return *b
 }
