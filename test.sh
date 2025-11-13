@@ -49,7 +49,12 @@ if [ $1 == "All" ]; then
             echo "    Output saved to testing_output/$i.log"
             exec $(realpath $0) $i &> testing_output/$i.log &
             wait
-            STATUS=$(grep -E "\-\-\-.*:" testing_output/$i.log)
+            # Extra cleanup for tests that might leave residual processes
+            if [[ "$i" == "TestTngf" || "$i" == "TestNon3GPP" ]]; then
+                sudo killall -9 n3iwf tngf 2>/dev/null
+                sleep 2
+            fi
+            STATUS=$(grep -a -E "\-\-\-.*:" testing_output/$i.log)
             if [ ! -z "$STATUS" ]; then
                 echo "$STATUS" | while read -r a; do echo "    ${a:4}"; done
             else
@@ -100,8 +105,16 @@ function terminate()
         sudo ip netns del ${UENS}
         removeN3iwfInterfaces
         sudo ip link del veth2
-        sudo killall n3iwf tngf
-        ps aux | grep test.test | awk '{print $2}' | xargs sudo kill -SIGUSR1
+        # Kill n3iwf and tngf processes more aggressively
+        sudo killall -15 n3iwf tngf 2>/dev/null
+        sleep 1
+        sudo killall -9 n3iwf tngf 2>/dev/null
+        sleep 1
+        # Also kill any remaining processes by name pattern (including sudo wrapper processes)
+        ps aux | grep -E "[n]3iwf|[t]ngf" | awk '{print $2}' | xargs -r sudo kill -9 2>/dev/null
+        # Kill test processes
+        ps aux | grep "[t]est.test" | awk '{print $2}' | xargs -r sudo kill -SIGUSR1 2>/dev/null
+        sleep 1
     fi
 
     if [[ "$1" == "TestMultiAmfRegistration" ]]
