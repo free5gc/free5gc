@@ -270,7 +270,7 @@ then
     fi
 else
     cd test
-    if ! timeout 300 go test -v -vet=off -run $1 -args $2; then
+    if ! go test -v -vet=off -run $1 -args $2; then
         echo "Test result: Failed"
         terminate $1
         exit 1

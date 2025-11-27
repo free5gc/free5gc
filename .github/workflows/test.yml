@@ -18,20 +18,14 @@ jobs:
         go-version: 1.24.5
 
     - name: Start MongoDB
-      run: |
-        docker run -d --name mongodb-test -p 27017:27017 mongo:4.4
-        sleep 10
-        docker ps
-
-    - name: Verify MongoDB
-      run: |
-        sleep 5
-        mongosh --eval "db.runCommand('ping')" || mongo --eval "db.runCommand('ping')"
+      uses: supercharge/mongodb-github-action@1.7.0
+      with:
+        mongodb-version: 4.4
 
     - name: Install dependencies
       run: |
         sudo apt-get -y update
-        sudo apt-get -y install netcat-openbsd psmisc iproute2 git gcc g++ cmake autoconf libtool pkg-config libmnl-dev libyaml-dev docker.io
+        sudo apt-get -y install netcat-openbsd psmisc iproute2 git gcc g++ cmake autoconf libtool pkg-config libmnl-dev libyaml-dev
 
     - name: Build
       run: |
@@ -42,81 +36,76 @@ jobs:
     - name: Basic Test
       run: |
         ls bin/ -al
-        timeout 300 ./test_ci.sh TestNasReroute || echo "TestNasReroute timed out"
+        ./test_ci.sh TestNasReroute
         sleep 1
-        timeout 300 ./test_ci.sh TestRegistration || echo "TestRegistration timed out"
+        ./test_ci.sh TestRegistration
         sleep 1
-        timeout 300 ./test_ci.sh TestGUTIRegistration || echo "TestGUTIRegistration timed out"
+        ./test_ci.sh TestGUTIRegistration
         sleep 1
-        timeout 300 ./test_ci.sh TestServiceRequest || echo "TestServiceRequest timed out"
+        ./test_ci.sh TestServiceRequest
         sleep 1
-        timeout 300 ./test_ci.sh TestXnHandover || echo "TestXnHandover timed out"
+        ./test_ci.sh TestXnHandover
         sleep 1
-        timeout 300 ./test_ci.sh TestDeregistration || echo "TestDeregistration timed out"
+        ./test_ci.sh TestDeregistration
         sleep 1
-        timeout 300 ./test_ci.sh TestPDUSessionReleaseRequest || echo "TestPDUSessionReleaseRequest timed out"
+        ./test_ci.sh TestPDUSessionReleaseRequest
         sleep 1
-        timeout 300 ./test_ci.sh TestPaging || echo "TestPaging timed out"
+        ./test_ci.sh TestPaging
         sleep 1
-        timeout 300 ./test_ci.sh TestN2Handover || echo "TestN2Handover timed out"
+        ./test_ci.sh TestN2Handover
         sleep 1
-        timeout 300 ./test_ci.sh TestReSynchronization || echo "TestReSynchronization timed out"
+        ./test_ci.sh TestReSynchronization
         sleep 1
-        timeout 300 ./test_ci.sh TestDuplicateRegistration || echo "TestDuplicateRegistration timed out"
+        ./test_ci.sh TestDuplicateRegistration
         sleep 1
-        timeout 300 ./test_ci.sh TestEAPAKAPrimeAuthentication || echo "TestEAPAKAPrimeAuthentication timed out"
+        ./test_ci.sh TestEAPAKAPrimeAuthentication
         sleep 1
-        timeout 300 ./test_ci.sh TestMultiAmfRegistration || echo "TestMultiAmfRegistration timed out"
+        ./test_ci.sh TestMultiAmfRegistration
         sleep 1
-        timeout 300 ./test_ci.sh TestDC || echo "TestDC timed out"
+        ./test_ci.sh TestDC
         sleep 1
-        timeout 300 ./test_ci.sh TestDynamicDC || echo "TestDynamicDC timed out"
+        ./test_ci.sh TestDynamicDC
         sleep 1
-        timeout 300 ./test_ci.sh TestXnDCHandover || echo "TestXnDCHandover timed out"
+        ./test_ci.sh TestXnDCHandover
     - name: ULCL Test
       run: ./test_ci_ulcl.sh TestRequestTwoPDUSessions
     - name: Basic Test (OAuth)
       run: |
         ls bin/ -al
-        timeout 300 ./test_ci.sh TestNasReroute oauth || echo "TestNasReroute oauth timed out"
+        ./test_ci.sh TestNasReroute oauth
         sleep 1
-        timeout 300 ./test_ci.sh TestRegistration oauth || echo "TestRegistration oauth timed out"
+        ./test_ci.sh TestRegistration oauth
         sleep 1
-        timeout 300 ./test_ci.sh TestGUTIRegistration oauth || echo "TestGUTIRegistration oauth timed out"
+        ./test_ci.sh TestGUTIRegistration oauth
         sleep 1
-        timeout 300 ./test_ci.sh TestServiceRequest oauth || echo "TestServiceRequest oauth timed out"
+        ./test_ci.sh TestServiceRequest oauth
         sleep 1
-        timeout 300 ./test_ci.sh TestXnHandover oauth || echo "TestXnHandover oauth timed out"
+        ./test_ci.sh TestXnHandover oauth
         sleep 1
-        timeout 300 ./test_ci.sh TestDeregistration oauth || echo "TestDeregistration oauth timed out"
+        ./test_ci.sh TestDeregistration oauth
         sleep 1
-        timeout 300 ./test_ci.sh TestPDUSessionReleaseRequest oauth || echo "TestPDUSessionReleaseRequest oauth timed out"
+        ./test_ci.sh TestPDUSessionReleaseRequest oauth
         sleep 1
-        timeout 300 ./test_ci.sh TestPaging oauth || echo "TestPaging oauth timed out"
+        ./test_ci.sh TestPaging oauth
         sleep 1
-        timeout 300 ./test_ci.sh TestN2Handover oauth || echo "TestN2Handover oauth timed out"
+        ./test_ci.sh TestN2Handover oauth
         sleep 1
-        timeout 300 ./test_ci.sh TestReSynchronization oauth || echo "TestReSynchronization oauth timed out"
+        ./test_ci.sh TestReSynchronization oauth
         sleep 1
-        timeout 300 ./test_ci.sh TestDuplicateRegistration oauth || echo "TestDuplicateRegistration oauth timed out"
+        ./test_ci.sh TestDuplicateRegistration oauth
         sleep 1
-        timeout 300 ./test_ci.sh TestEAPAKAPrimeAuthentication oauth || echo "TestEAPAKAPrimeAuthentication oauth timed out"
+        ./test_ci.sh TestEAPAKAPrimeAuthentication oauth
         sleep 1
-        timeout 300 ./test_ci.sh TestMultiAmfRegistration oauth || echo "TestMultiAmfRegistration oauth timed out"
+        ./test_ci.sh TestMultiAmfRegistration oauth
         sleep 1
-        timeout 300 ./test_ci.sh TestDC oauth || echo "TestDC oauth timed out"
+        ./test_ci.sh TestDC oauth
         sleep 1
-        timeout 300 ./test_ci.sh TestDynamicDC oauth || echo "TestDynamicDC oauth timed out"
+        ./test_ci.sh TestDynamicDC oauth
         sleep 1
-        timeout 300 ./test_ci.sh TestXnDCHandover oauth || echo "TestXnDCHandover oauth timed out"
+        ./test_ci.sh TestXnDCHandover oauth
     - name: ULCL Test (OAuth)
       run: ./test_ci_ulcl.sh TestRequestTwoPDUSessions oauth
     # - name: Non3GPP Test
     #  run: ./test_ci.sh TestNon3GPP
     - name: TNGF Registration Test
       run: ./test_ci.sh TestTngf
-    - name: Cleanup
-      if: always()
-      run: |
-        docker stop mongodb-test || true
-        docker rm mongodb-test || true
