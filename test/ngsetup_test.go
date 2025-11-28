@@ -1,6 +1,7 @@
 package test_test
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/signal"
@@ -19,6 +20,8 @@ import (
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/util/mongoapi"
 	"github.com/stretchr/testify/assert"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 var NFstructs = []app.NFstruct{}
@@ -121,10 +124,38 @@ func initLogPath() {
 }
 
 func setMongoDB() {
-	if err := mongoapi.SetMongoDB("free5gc", "mongodb://127.0.0.1:27017"); err != nil {
-		fmt.Printf("SetMongoDB failed: %v\n", err)
-		return
+	// Create context with timeout for MongoDB connection verification
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// Configure MongoDB client with proper timeouts
+	clientOpts := options.Client().
+		ApplyURI("mongodb://127.0.0.1:27017").
+		SetServerSelectionTimeout(10 * time.Second).
+		SetConnectTimeout(10 * time.Second).
+		SetSocketTimeout(30 * time.Second)
+
+	// Attempt to connect to MongoDB
+	client, err := mongo.Connect(ctx, clientOpts)
+	if err != nil {
+		panic(fmt.Sprintf("MongoDB connection failed: %v\nEnsure MongoDB is running at 127.0.0.1:27017", err))
 	}
+
+	// Verify connection with ping
+	if err := client.Ping(ctx, nil); err != nil {
+		panic(fmt.Sprintf("MongoDB ping failed: %v\nMongoDB may be unreachable or not ready", err))
+	}
+
+	// Close the test connection since mongoapi.SetMongoDB will create its own
+	if err := client.Disconnect(ctx); err != nil {
+		fmt.Printf("Warning: failed to disconnect test MongoDB client: %v\n", err)
+	}
+
+	// Set up MongoDB for the test framework
+	if err := mongoapi.SetMongoDB("free5gc", "mongodb://127.0.0.1:27017"); err != nil {
+		panic(fmt.Sprintf("SetMongoDB failed: %v", err))
+	}
+
 	fmt.Println("MongoDB Set")
 }
 
