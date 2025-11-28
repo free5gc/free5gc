@@ -52,12 +52,10 @@ then
 fi
 
 GOPATH=$HOME/go
-if [ -z "$GOROOT" ]; then
-    if [ $OS == "Ubuntu" ]; then
-        GOROOT=/usr/local/go
-    elif [ $OS == "Fedora" ]; then
-        GOROOT=/usr/lib/golang
-    fi
+if [ $OS == "Ubuntu" ]; then
+    GOROOT=/usr/local/go
+elif [ $OS == "Fedora" ]; then
+    GOROOT=/usr/lib/golang
 fi
 PATH=$PATH:$GOPATH/bin:$GOROOT/bin
 
