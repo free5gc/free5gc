@@ -9,6 +9,7 @@ require (
 	github.com/free5gc/amf v0.0.0
 	github.com/free5gc/aper v1.0.6-0.20250102035630-3ddc831eed6a
 	github.com/free5gc/ausf v0.0.0
+	github.com/free5gc/bsf v0.0.0
 	github.com/free5gc/chf v1.1.2-0.20250718142832-7985bed2e1c7
 	github.com/free5gc/ike v1.1.1-0.20241014015325-083f89768f43
 	github.com/free5gc/nas v1.2.1
@@ -22,14 +23,14 @@ require (
 	github.com/free5gc/tngf v0.0.0-00010101000000-000000000000
 	github.com/free5gc/udm v0.0.0
 	github.com/free5gc/udr v0.0.0
-	github.com/free5gc/util v1.2.0
+	github.com/free5gc/util v1.3.0
 	github.com/free5gc/webconsole v0.0.0
 	github.com/gin-gonic/gin v1.10.0
 	github.com/go-ping/ping v1.1.0
 	github.com/google/uuid v1.6.0
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
 	github.com/pkg/errors v0.9.1
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.0
 	github.com/urfave/cli/v2 v2.27.7
 	github.com/vishvananda/netlink v1.1.0
 	go.mongodb.org/mongo-driver v1.17.1
@@ -93,7 +94,7 @@ require (
 	github.com/jlaffaye/ftp v0.1.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/klauspost/compress v1.17.11 // indirect
+	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.7 // indirect
 	github.com/kr/fs v0.1.0 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
@@ -137,14 +138,14 @@ require (
 	golang.org/x/arch v0.8.0 // indirect
 	golang.org/x/crypto v0.45.0 // indirect
 	golang.org/x/exp v0.0.0-20231127185646-65229373498e // indirect
-	golang.org/x/oauth2 v0.27.0 // indirect
+	golang.org/x/oauth2 v0.30.0 // indirect
 	golang.org/x/sync v0.18.0 // indirect
 	golang.org/x/text v0.31.0 // indirect
 	google.golang.org/api v0.126.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240528184218-531527333157 // indirect
 	google.golang.org/grpc v1.65.0 // indirect
-	google.golang.org/protobuf v1.36.1 // indirect
+	google.golang.org/protobuf v1.36.6 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
@@ -152,6 +153,7 @@ require (
 replace (
 	github.com/free5gc/amf => ../NFs/amf
 	github.com/free5gc/ausf => ../NFs/ausf
+	github.com/free5gc/bsf => ../NFs/bsf
 	github.com/free5gc/chf => ../NFs/chf
 	github.com/free5gc/n3iwf => ../NFs/n3iwf
 	github.com/free5gc/nrf => ../NFs/nrf

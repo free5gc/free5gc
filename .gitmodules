@@ -43,3 +43,6 @@
 [submodule "ci-test"]
 	path = ci-test
 	url = https://github.com/free5gc/ci-test.git
+[submodule "NFs/bsf"]
+	path = NFs/bsf
+	url = https://github.com/free5gc/bsf.git
