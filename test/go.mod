@@ -1,29 +1,29 @@
 module test
 
-go 1.24.0
+go 1.25.5
 
 require (
 	github.com/antihax/optional v1.0.0
 	github.com/calee0219/fatal v0.0.1
 	github.com/davecgh/go-spew v1.1.1
 	github.com/free5gc/amf v0.0.0
-	github.com/free5gc/aper v1.0.6-0.20250102035630-3ddc831eed6a
+	github.com/free5gc/aper v1.1.0
 	github.com/free5gc/ausf v0.0.0
 	github.com/free5gc/bsf v0.0.0
 	github.com/free5gc/chf v1.1.2-0.20250718142832-7985bed2e1c7
 	github.com/free5gc/ike v1.1.1-0.20241014015325-083f89768f43
-	github.com/free5gc/nas v1.2.1
-	github.com/free5gc/ngap v1.1.2-0.20251021092212-333b38ef1f93
+	github.com/free5gc/nas v1.2.2
+	github.com/free5gc/ngap v1.1.2
 	github.com/free5gc/nrf v0.0.0
 	github.com/free5gc/nssf v0.0.0
-	github.com/free5gc/openapi v1.2.2
+	github.com/free5gc/openapi v1.2.3
 	github.com/free5gc/pcf v0.0.0
 	github.com/free5gc/sctp v1.1.0
 	github.com/free5gc/smf v1.3.3-0.20250718143453-8eae1979180a
 	github.com/free5gc/tngf v0.0.0-00010101000000-000000000000
 	github.com/free5gc/udm v0.0.0
 	github.com/free5gc/udr v0.0.0
-	github.com/free5gc/util v1.3.0
+	github.com/free5gc/util v1.3.2-0.20260102062829-eaf663340255
 	github.com/free5gc/webconsole v0.0.0
 	github.com/gin-gonic/gin v1.10.0
 	github.com/go-ping/ping v1.1.0
