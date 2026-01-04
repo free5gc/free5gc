@@ -30,10 +30,10 @@ If applicable, add screenshots to help explain the problem.
 
 ## Environment
 **Please, complete the following information:**
- - free5GC Version: [e.g. v4.0.1]
+ - free5GC Version: [e.g. v4.1.0]
  - OS: [e.g. Ubuntu 20.04 Server]
  - Kernel version: [e.g. 5.15.0-0-generic]
- - go version: [e.g. 1.21.8 linux/amd64]
+ - go version: [e.g. 1.25.5 linux/amd64]
  - C compiler version (optional): [e.g. gcc version 1.1.0]
 
 ## Trace Files
