@@ -1361,6 +1361,10 @@ func nssfConfig() error {
 		},
 	}
 
+	if _, err := nssf_factory.NssfConfig.Validate(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
