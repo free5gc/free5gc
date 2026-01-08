@@ -52,6 +52,7 @@ jobs:
 
       - name: Up Basic docker compose
         run: |
+          cd ${{ env.CI_TEST_DIR }}
           if ! docker compose -f ${{ env.BASIC_CI_COMPOSE_FILE }} up -d --wait --wait-timeout ${{ env.WAIT_CI_TIMEOUT }}; then
             echo "Failed to up docker compose Basic"
             exit 1
@@ -60,6 +61,7 @@ jobs:
       
       - name: Run Basic test
         run: |
+          cd ${{ env.CI_TEST_DIR }}
           echo "Starting Basic test..."
           for test in ${{ env.BASIC_TEST_POOL }}; do
             echo "Running test: $test"
@@ -69,6 +71,7 @@ jobs:
       - name: Down Basic docker compose
         if: always()
         run: |
+          cd ${{ env.CI_TEST_DIR }}
           if ! docker compose -f ${{ env.BASIC_CI_COMPOSE_FILE }} down; then
             echo "Failed to down docker compose Basic"
             exit 1
@@ -76,6 +79,7 @@ jobs:
 
       - name: Up TI docker compose
         run: |
+          cd ${{ env.CI_TEST_DIR }}
           if ! docker compose -f ${{ env.TI_CI_COMPOSE_FILE }} up -d --wait --wait-timeout ${{ env.WAIT_CI_TIMEOUT }}; then
             echo "Failed to up docker compose TI"
             exit 1
@@ -84,6 +88,7 @@ jobs:
 
       - name: Run ULCL TI test
         run: |
+          cd ${{ env.CI_TEST_DIR }}
           echo "Starting ULCL TI test..."
           for test in ${{ env.TI_TEST_POOL }}; do
             echo "Running test: $test"
@@ -93,6 +98,7 @@ jobs:
       - name: Down TI docker compose
         if: always()
         run: |
+          cd ${{ env.CI_TEST_DIR }}
           if ! docker compose -f ${{ env.TI_CI_COMPOSE_FILE }} down; then
             echo "Failed to down docker compose TI"
             exit 1
@@ -100,6 +106,7 @@ jobs:
 
       - name: Up MP docker compose
         run: |
+          cd ${{ env.CI_TEST_DIR }}
           if ! docker compose -f ${{ env.MP_CI_COMPOSE_FILE }} up -d --wait --wait-timeout ${{ env.WAIT_CI_TIMEOUT }}; then
             echo "Failed to up docker compose MP"
             exit 1
@@ -108,6 +115,7 @@ jobs:
 
       - name: Run ULCL MP test
         run: |
+          cd ${{ env.CI_TEST_DIR }}
           echo "Starting ULCL MP test..."
           for test in ${{ env.MP_TEST_POOL }}; do
             echo "Running test: $test"
@@ -117,6 +125,7 @@ jobs:
       - name: Down MP docker compose
         if: always()
         run: |
+          cd ${{ env.CI_TEST_DIR }}
           if ! docker compose -f ${{ env.MP_CI_COMPOSE_FILE }} down; then
             echo "Failed to down docker compose MP"
             exit 1
@@ -176,6 +185,7 @@ jobs:
 
       - name: Run Basic test
         run: |
+          cd ${{ env.CI_TEST_DIR }}
           for test in ${{ env.BASIC_TEST_POOL }}; do
             echo "Running test: $test"
             ./ci-test-basic.sh $test
