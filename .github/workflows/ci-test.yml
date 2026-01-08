@@ -5,6 +5,7 @@ on:
     - cron: '14 19 * * *'  # UTC 19:14 (Local 03:14)
   issue_comment:
     types: [created] # when user comment "#ci-test" in the PR, the workflow will be triggered
+  pull_request:
 
 env:
   FREE5GC_REPO: https://github.com/free5gc/free5gc
@@ -28,6 +29,8 @@ env:
 
   WAIT_TIMEOUT: 1800 # 30 minutes
   WAIT_CI_TIMEOUT: 300 # 5 minutes
+
+  TRIGGER_MESSAGE: "#ci-test"
 
 
 jobs:
@@ -128,7 +131,7 @@ jobs:
 
   pr-test:
     name: Check PR
-    if: github.event_name == 'issue_comment' && github.event.issue.pull_request && contains(github.event.comment.body, '#ci-test')
+    if: github.event_name == 'pull_request' || (github.event_name == 'issue_comment' && github.event.issue.pull_request && contains(github.event.comment.body, ${{ env.TRIGGER_MESSAGE }))
     runs-on: [self-hosted, linux, x64]
     steps:
       - name: Check Command:
