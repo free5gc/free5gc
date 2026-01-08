@@ -136,7 +136,7 @@ jobs:
         run: |
           echo "Cleaning up docker resources..."
           docker system prune -a -f
-          docker volume prune -f
+          docker volume prune -a -f
 
       - name: Clean up clone repositories
         if: always()
@@ -200,12 +200,12 @@ jobs:
             exit 1
           fi
 
-      - name: Cleanup docker resources
-        if: always()
-        run: |
-          echo "Cleaning up docker resources..."
-          docker system prune -a -f
-          docker volume prune -f
+      # - name: Cleanup docker resources
+      #   if: always()
+      #   run: |
+      #     echo "Cleaning up docker resources..."
+      #     docker system prune -a -f
+      #     docker volume prune -a -f
 
       - name: Clean up clone repositories
         if: always()
