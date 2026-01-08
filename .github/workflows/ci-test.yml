@@ -130,8 +130,9 @@ jobs:
           docker volume prune -f
 
       - name: Clean up clone repositories
+        if: always()
         run: |
-        rm -rf ${{ env.CI_TEST_DIR }}
+          rm -rf ${{ env.CI_TEST_DIR }}
 
 
   pr-test:
@@ -197,5 +198,6 @@ jobs:
           docker volume prune -f
 
       - name: Clean up clone repositories
+        if: always()
         run: |
-        rm -rf ${{ env.CI_TEST_DIR }}
+          rm -rf ${{ env.CI_TEST_DIR }}
