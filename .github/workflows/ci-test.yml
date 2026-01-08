@@ -39,7 +39,7 @@ jobs:
     if: github.event_name == 'schedule'
     runs-on: [self-hosted, linux, x64]
     steps:
-      - name: Check Command:
+      - name: Check Command
         run: |
           docker --version
           curl --version
@@ -134,7 +134,7 @@ jobs:
     if: github.event_name == 'pull_request' || (github.event_name == 'issue_comment' && github.event.issue.pull_request && contains(github.event.comment.body, ${{ env.TRIGGER_MESSAGE }))
     runs-on: [self-hosted, linux, x64]
     steps:
-      - name: Check Command:
+      - name: Check Command
         run: |
           docker --version
           curl --version
