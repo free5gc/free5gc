@@ -16,7 +16,7 @@ env:
   CI_TEST_BASE_FREE5GC_DIR: free5gc
 
   BASIC_COMPOSE_FILE: docker-compose-basic.yaml
-  BASIC_CI_COMPOSE_FILE: docker-compose-basic-ci.yaml
+  BASIC_CI_COMPOSE_FILE: docker-compose-ci-basic.yaml
   BASIC_TEST_POOL: "TestBasicCharging"
 
   TI_COMPOSE_FILE: docker-compose-ulcl-ti.yaml
