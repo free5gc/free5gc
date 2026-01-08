@@ -25,7 +25,7 @@ env:
 
   MP_COMPOSE_FILE: docker-compose-ulcl-mp.yaml
   MP_CI_COMPOSE_FILE: docker-compose-ci-ulcl-mp.yaml
-  MP_TEST_POOL: "TestULCLMultiPathUe1|TestULCLMultiPathUe2"
+  MP_TEST_POOL: "TestULCLMultiPathUe1 TestULCLMultiPathUe2"
 
   WAIT_TIMEOUT: 1800 # 30 minutes
   WAIT_CI_TIMEOUT: 300 # 5 minutes
