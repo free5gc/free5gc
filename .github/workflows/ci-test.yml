@@ -30,8 +30,6 @@ env:
   WAIT_TIMEOUT: 1800 # 30 minutes
   WAIT_CI_TIMEOUT: 300 # 5 minutes
 
-  TRIGGER_MESSAGE: "#ci-test"
-
 
 jobs:
   daily-check:
@@ -144,7 +142,7 @@ jobs:
 
   pr-test:
     name: Check PR
-    if: github.event_name == 'issue_comment' && github.event.issue.pull_request && contains(github.event.comment.body, ${{ env.TRIGGER_MESSAGE }})
+    if: github.event_name == 'issue_comment' && github.event.issue.pull_request && contains(github.event.comment.body, '#ci-test')
     # if: github.event_name == 'pull_request'
     runs-on: [self-hosted, linux, x64]
     steps:
