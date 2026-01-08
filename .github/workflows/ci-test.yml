@@ -153,6 +153,11 @@ jobs:
           git submodule sync
           git submodule update
 
+      - name: Build Base Images
+        run: |
+          cd ${{ env.CI_TEST_DIR }}
+          make
+
       - name: Up Basic docker compose
         run: |
           cd ${{ env.CI_TEST_DIR }}
