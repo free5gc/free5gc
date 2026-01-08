@@ -47,7 +47,8 @@ jobs:
       
       - name: Clone free5gc/ci-test
         run: |
-          git clone https://github.com/free5gc/ci-test.git
+          rm -rf ${{ env.CI_TEST_DIR }}
+          git clone ${{ env.CI_TEST_REPO }}
 
       - name: Up Basic docker compose
         run: |
@@ -128,6 +129,10 @@ jobs:
           docker system prune -a -f
           docker volume prune -f
 
+      - name: Clean up clone repositories
+        run: |
+        rm -rf ${{ env.CI_TEST_DIR }}
+
 
   pr-test:
     name: Check PR
@@ -143,6 +148,7 @@ jobs:
 
       - name: Clone free5gc/ci-test && init base/free5gc
         run: |
+          rm -rf ${{ env.CI_TEST_DIR }}
           git clone ${{ env.CI_TEST_REPO }}
           cd ${{ env.CI_TEST_DIR }}/${{ env.CI_TEST_BASE_DIR }}
           git clone ${{ env.FREE5GC_REPO }}
@@ -190,3 +196,6 @@ jobs:
           docker system prune -a -f
           docker volume prune -f
 
+      - name: Clean up clone repositories
+        run: |
+        rm -rf ${{ env.CI_TEST_DIR }}
