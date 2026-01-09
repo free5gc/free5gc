@@ -34,8 +34,8 @@ env:
 jobs:
   daily-check:
     name: Daily Check
-    # if: github.event_name == 'schedule'
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'schedule'
+    # if: github.event_name == 'pull_request'
     runs-on: [self-hosted, linux, x64]
     steps:
       - name: Check Command
@@ -142,8 +142,8 @@ jobs:
 
   pr-test:
     name: Check PR
-    if: github.event_name == 'issue_comment' && github.event.issue.pull_request && contains(github.event.comment.body, '#ci-test')
-    # if: github.event_name == 'pull_request'
+    # if: github.event_name == 'issue_comment' && github.event.issue.pull_request && contains(github.event.comment.body, '#ci-test')
+    if: github.event_name == 'pull_request'
     runs-on: [self-hosted, linux, x64]
     steps:
       - name: Check Command
