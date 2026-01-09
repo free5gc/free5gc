@@ -5,7 +5,7 @@ on:
     - cron: '14 19 * * *'  # UTC 19:14 (Local 03:14)
   issue_comment:
     types: [created] # when user comment "#ci-test" in the PR, the workflow will be triggered
-  pull_request:
+  # pull_request:
 
 env:
   FREE5GC_REPO: https://github.com/free5gc/free5gc
