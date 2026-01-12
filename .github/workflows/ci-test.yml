@@ -1,0 +1,261 @@
+name: CI Test
+
+on:
+  schedule:
+    - cron: '14 19 * * *'  # UTC 19:14 (Local 03:14)
+  issue_comment:
+    types: [created] # when user comment "#ci-test" in the PR, the workflow will be triggered
+  # pull_request:
+
+env:
+  FREE5GC_REPO: https://github.com/free5gc/free5gc
+  CI_TEST_REPO: https://github.com/free5gc/ci-test
+
+  CI_TEST_DIR: ci-test
+  CI_TEST_BASE_DIR: base
+  CI_TEST_BASE_FREE5GC_DIR: free5gc
+
+  BASIC_COMPOSE_FILE: docker-compose-basic.yaml
+  BASIC_CI_COMPOSE_FILE: docker-compose-ci-basic.yaml
+  BASIC_TEST_POOL: "TestBasicCharging"
+
+  TI_COMPOSE_FILE: docker-compose-ulcl-ti.yaml
+  TI_CI_COMPOSE_FILE: docker-compose-ci-ulcl-ti.yaml
+  TI_TEST_POOL: "TestULCLTrafficInfluence"
+
+  MP_COMPOSE_FILE: docker-compose-ulcl-mp.yaml
+  MP_CI_COMPOSE_FILE: docker-compose-ci-ulcl-mp.yaml
+  MP_TEST_POOL: "TestULCLMultiPathUe1 TestULCLMultiPathUe2"
+
+  WAIT_TIMEOUT: 1800 # 30 minutes
+  WAIT_CI_TIMEOUT: 300 # 5 minutes
+
+
+jobs:
+  daily-check:
+    name: Daily Check
+    if: github.event_name == 'schedule'
+    # if: github.event_name == 'pull_request'
+    runs-on: [self-hosted, linux, x64]
+    steps:
+      - name: Check Command
+        run: |
+          docker --version
+          curl --version
+          jq --version
+      
+      - name: Clone free5gc/ci-test
+        run: |
+          rm -rf ${{ env.CI_TEST_DIR }}
+          git clone ${{ env.CI_TEST_REPO }}
+
+      - name: Up Basic docker compose
+        run: |
+          cd ${{ env.CI_TEST_DIR }}
+          if ! docker compose -f ${{ env.BASIC_CI_COMPOSE_FILE }} up -d --wait --wait-timeout ${{ env.WAIT_CI_TIMEOUT }}; then
+            echo "Failed to up docker compose Basic"
+            exit 1
+          fi
+          sleep 5
+      
+      - name: Run Basic test
+        run: |
+          cd ${{ env.CI_TEST_DIR }}
+          for test in ${{ env.BASIC_TEST_POOL }}; do
+            echo "Running test: $test"
+            ./ci-test-basic.sh $test
+          done
+
+      - name: Down Basic docker compose
+        if: always()
+        run: |
+          cd ${{ env.CI_TEST_DIR }}
+          if ! docker compose -f ${{ env.BASIC_CI_COMPOSE_FILE }} down; then
+            echo "Failed to down docker compose Basic"
+            exit 1
+          fi
+
+      - name: Up TI docker compose
+        run: |
+          cd ${{ env.CI_TEST_DIR }}
+          if ! docker compose -f ${{ env.TI_CI_COMPOSE_FILE }} up -d --wait --wait-timeout ${{ env.WAIT_CI_TIMEOUT }}; then
+            echo "Failed to up docker compose TI"
+            exit 1
+          fi
+          sleep 5
+
+      - name: Run TI test
+        run: |
+          cd ${{ env.CI_TEST_DIR }}
+          for test in ${{ env.TI_TEST_POOL }}; do
+            echo "Running test: $test"
+            ./ci-test-ulcl-ti.sh $test
+          done
+
+      - name: Down TI docker compose
+        if: always()
+        run: |
+          cd ${{ env.CI_TEST_DIR }}
+          if ! docker compose -f ${{ env.TI_CI_COMPOSE_FILE }} down; then
+            echo "Failed to down docker compose TI"
+            exit 1
+          fi
+
+      - name: Up MP docker compose
+        run: |
+          cd ${{ env.CI_TEST_DIR }}
+          if ! docker compose -f ${{ env.MP_CI_COMPOSE_FILE }} up -d --wait --wait-timeout ${{ env.WAIT_CI_TIMEOUT }}; then
+            echo "Failed to up docker compose MP"
+            exit 1
+          fi
+          sleep 5
+
+      - name: Run MP test
+        run: |
+          cd ${{ env.CI_TEST_DIR }}
+          for test in ${{ env.MP_TEST_POOL }}; do
+            echo "Running test: $test"
+            ./ci-test-ulcl-mp.sh $test
+          done
+
+      - name: Down MP docker compose
+        if: always()
+        run: |
+          cd ${{ env.CI_TEST_DIR }}
+          if ! docker compose -f ${{ env.MP_CI_COMPOSE_FILE }} down; then
+            echo "Failed to down docker compose MP"
+            exit 1
+          fi
+
+      - name: Cleanup docker resources
+        if: always()
+        run: |
+          echo "Cleaning up docker resources..."
+          docker system prune -a -f
+          docker volume prune -a -f
+
+      - name: Clean up clone repositories
+        if: always()
+        run: |
+          rm -rf ${{ env.CI_TEST_DIR }}
+
+
+  pr-test:
+    name: Check PR
+    if: github.event_name == 'issue_comment' && github.event.issue.pull_request && contains(github.event.comment.body, '#ci-test')
+    # if: github.event_name == 'pull_request'
+    runs-on: [self-hosted, linux, x64]
+    steps:
+      - name: Check Command
+        run: |
+          docker --version
+          curl --version
+          jq --version
+
+      - name: Clone free5gc/ci-test && init base/free5gc
+        run: |
+          rm -rf ${{ env.CI_TEST_DIR }}
+          git clone ${{ env.CI_TEST_REPO }}
+          cd ${{ env.CI_TEST_DIR }}/${{ env.CI_TEST_BASE_DIR }}
+          git clone ${{ env.FREE5GC_REPO }}
+          cd ${{ env.CI_TEST_BASE_FREE5GC_DIR }}
+          git fetch origin +${{ github.ref }}:refs/remotes/origin/pr
+          git checkout origin/pr
+          git submodule init
+          git submodule sync
+          git submodule update
+
+      - name: Build Base Images
+        run: |
+          cd ${{ env.CI_TEST_DIR }}
+          make
+
+      - name: Up Basic docker compose
+        run: |
+          cd ${{ env.CI_TEST_DIR }}
+          if ! docker compose -f ${{ env.BASIC_COMPOSE_FILE }} up -d --wait --wait-timeout ${{ env.WAIT_TIMEOUT }}; then
+            echo "Failed to up docker compose Basic"
+            exit 1
+          fi
+          sleep 5
+
+      - name: Run Basic test
+        run: |
+          cd ${{ env.CI_TEST_DIR }}
+          for test in ${{ env.BASIC_TEST_POOL }}; do
+            echo "Running test: $test"
+            ./ci-test-basic.sh $test
+          done
+
+      - name: Down Basic docker compose
+        if: always()
+        run: |
+          cd ${{ env.CI_TEST_DIR }}
+          if ! docker compose -f ${{ env.BASIC_COMPOSE_FILE }} down; then
+            echo "Failed to down docker compose Basic"
+            exit 1
+          fi
+
+      - name: Up TI docker compose
+        run: |
+          cd ${{ env.CI_TEST_DIR }}
+          if ! docker compose -f ${{ env.TI_COMPOSE_FILE }} up -d --wait --wait-timeout ${{ env.WAIT_TIMEOUT }}; then
+            echo "Failed to up docker compose TI"
+            exit 1
+          fi
+          sleep 5
+
+      - name: Run TI test
+        run: |
+          cd ${{ env.CI_TEST_DIR }}
+          for test in ${{ env.TI_TEST_POOL }}; do
+            echo "Running test: $test"
+            ./ci-test-ulcl-ti.sh $test
+          done
+
+      - name: Down TI docker compose
+        if: always()
+        run: |
+          cd ${{ env.CI_TEST_DIR }}
+          if ! docker compose -f ${{ env.TI_COMPOSE_FILE }} down; then
+            echo "Failed to down docker compose TI"
+            exit 1
+          fi
+
+      - name: Up MP docker compose
+        run: |
+          cd ${{ env.CI_TEST_DIR }}
+          if ! docker compose -f ${{ env.MP_COMPOSE_FILE }} up -d --wait --wait-timeout ${{ env.WAIT_TIMEOUT }}; then
+            echo "Failed to up docker compose MP"
+            exit 1
+          fi
+          sleep 5
+
+      - name: Run MP test
+        run: |
+          cd ${{ env.CI_TEST_DIR }}
+          for test in ${{ env.MP_TEST_POOL }}; do
+            echo "Running test: $test"
+            ./ci-test-ulcl-mp.sh $test
+          done
+
+      - name: Down MP docker compose
+        if: always()
+        run: |
+          cd ${{ env.CI_TEST_DIR }}
+          if ! docker compose -f ${{ env.MP_COMPOSE_FILE }} down; then
+            echo "Failed to down docker compose MP"
+            exit 1
+          fi
+
+      - name: Cleanup docker resources
+        if: always()
+        run: |
+          echo "Cleaning up docker resources..."
+          docker system prune -a -f
+          docker volume prune -a -f
+
+      - name: Clean up clone repositories
+        if: always()
+        run: |
+          rm -rf ${{ env.CI_TEST_DIR }}
