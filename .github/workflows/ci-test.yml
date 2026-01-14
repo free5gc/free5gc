@@ -159,11 +159,8 @@ jobs:
           cd ${{ env.CI_TEST_DIR }}/${{ env.CI_TEST_BASE_DIR }}
           git clone ${{ env.FREE5GC_REPO }}
           cd ${{ env.CI_TEST_BASE_FREE5GC_DIR }}
-          git fetch origin +${{ github.ref }}:refs/remotes/origin/pr
-          git checkout origin/pr
-          git submodule init
-          git submodule sync
-          git submodule update
+          git submodule foreach git checkout main
+          git submodule foreach git pull origin main
 
       - name: Build Base Images
         run: |
