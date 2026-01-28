@@ -1,0 +1,180 @@
+name: PR Test via Comment
+
+# This workflow allows maintainers to test specific PRs by commenting on any issue or PR.
+# 
+# Usage:
+#   Comment "#test <NF1> <PR1> [<PR2> ...] [<NF2> <PR3> ...]" in any issue or PR comment.
+#
+# Examples:
+#   #test smf 187 188 amf 142
+#   #test amf 193
+#   #test smf 170 183 192 udm 80 81 amf 50
+#
+# This triggers the ci-operation-pr.sh script from free5gc/ci-test repository.
+#
+# Organization Runner Setup:
+#   1. Go to Organization Settings > Actions > Runners
+#   2. Click "New self-hosted runner"
+#   3. Follow the instructions to install and configure the runner
+#   4. Add labels: self-hosted, linux, x64
+#   5. For repository access, select "All repositories" or specific repos
+#   6. Runner must have: Docker, curl, jq, Go environment installed
+
+on:
+  issue_comment:
+    types: [created]
+
+env:
+  CI_TEST_REPO: https://github.com/free5gc/ci-test
+  CI_TEST_DIR: ci-test
+
+jobs:
+  pr-test:
+    name: PR Test from Comment
+    # Trigger only when:
+    # 1. Comment contains "#test" pattern
+    # 2. Commenter has write permission or higher (member/admin)
+    if: |
+      contains(github.event.comment.body, '#test ')
+    runs-on: [self-hosted, linux, x64]
+    
+    steps:
+      - name: Check user permission
+        id: check_permission
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: permission } = await github.rest.repos.getCollaboratorPermissionLevel({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              username: context.payload.comment.user.login
+            });
+            
+            const allowedPermissions = ['admin', 'write', 'maintain'];
+            if (!allowedPermissions.includes(permission.permission)) {
+              core.setFailed(`User ${context.payload.comment.user.login} does not have permission to trigger this workflow.`);
+              return;
+            }
+            
+            console.log(`User ${context.payload.comment.user.login} has ${permission.permission} permission. Allowed.`);
+
+      - name: Parse test command
+        id: parse
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const comment = context.payload.comment.body;
+            
+            // Match #test followed by arguments (NF names and PR numbers)
+            // Pattern: #test <args>
+            const match = comment.match(/#test\s+(.+?)(?:\n|$)/);
+            
+            if (!match) {
+              core.setFailed('Could not parse test command. Expected format: #test <NF> <PR#> [<PR#> ...] [<NF2> <PR#> ...]');
+              return;
+            }
+            
+            const args = match[1].trim();
+            console.log(`Parsed arguments: ${args}`);
+            
+            // Validate the arguments contain at least one NF and one PR number
+            const parts = args.split(/\s+/);
+            const supportedNFs = ['amf', 'ausf', 'bsf', 'chf', 'n3iwf', 'nef', 'nrf', 'nssf', 'pcf', 'smf', 'tngf', 'udm', 'udr', 'upf', 'webconsole'];
+            
+            let hasNF = false;
+            let hasPR = false;
+            
+            for (const part of parts) {
+              if (supportedNFs.includes(part.toLowerCase())) {
+                hasNF = true;
+              } else if (/^\d+$/.test(part)) {
+                hasPR = true;
+              }
+            }
+            
+            if (!hasNF || !hasPR) {
+              core.setFailed('Invalid arguments. Must include at least one NF name and one PR number.');
+              return;
+            }
+            
+            core.setOutput('args', args);
+            core.setOutput('valid', 'true');
+
+      - name: Add reaction to comment
+        if: steps.parse.outputs.valid == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.reactions.createForIssueComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: context.payload.comment.id,
+              content: 'rocket'
+            });
+
+      - name: Check system commands
+        if: steps.parse.outputs.valid == 'true'
+        run: |
+          echo "Checking required commands..."
+          docker --version
+          curl --version
+          jq --version
+          go version
+
+      - name: Clone free5gc/ci-test
+        if: steps.parse.outputs.valid == 'true'
+        run: |
+          rm -rf ${{ env.CI_TEST_DIR }}
+          git clone ${{ env.CI_TEST_REPO }}
+
+      - name: Run ci-operation-pr.sh
+        if: steps.parse.outputs.valid == 'true'
+        run: |
+          cd ${{ env.CI_TEST_DIR }}
+          chmod +x ci-operation-pr.sh
+          echo "Running: ./ci-operation-pr.sh nf ${{ steps.parse.outputs.args }}"
+          ./ci-operation-pr.sh nf ${{ steps.parse.outputs.args }}
+
+      - name: Upload test report
+        if: always() && steps.parse.outputs.valid == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-test-report-${{ github.run_id }}
+          path: ${{ env.CI_TEST_DIR }}/testing_output/
+          if-no-files-found: ignore
+
+      - name: Add success comment
+        if: success() && steps.parse.outputs.valid == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              body: `✅ PR Test completed successfully!\n\nTest arguments: \`${{ steps.parse.outputs.args }}\`\n\nSee [workflow run](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}) for details.`
+            });
+
+      - name: Add failure comment
+        if: failure() && steps.parse.outputs.valid == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              body: `❌ PR Test failed!\n\nTest arguments: \`${{ steps.parse.outputs.args }}\`\n\nSee [workflow run](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}) for details.`
+            });
+
+      - name: Cleanup docker resources
+        if: always()
+        run: |
+          echo "Cleaning up docker resources..."
+          docker system prune -a -f || true
+          docker volume prune -a -f || true
+
+      - name: Clean up clone repositories
+        if: always()
+        run: |
+          rm -rf ${{ env.CI_TEST_DIR }}
