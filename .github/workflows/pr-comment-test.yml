@@ -37,6 +37,10 @@ jobs:
     if: |
       contains(github.event.comment.body, '#test')
     runs-on: [self-hosted, linux, x64]
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
     
     steps:
       - name: Check user permission
