@@ -157,7 +157,7 @@ jobs:
           rm -rf ${{ env.CI_TEST_DIR }}
           git clone ${{ env.CI_TEST_REPO }}
           cd ${{ env.CI_TEST_DIR }}/${{ env.CI_TEST_BASE_DIR }}
-          git clone ${{ env.FREE5GC_REPO }}
+          git clone -j `nproc` --recursive ${{ env.FREE5GC_REPO }}
           cd ${{ env.CI_TEST_BASE_FREE5GC_DIR }}
           git submodule foreach git checkout main
           git submodule foreach git pull origin main
