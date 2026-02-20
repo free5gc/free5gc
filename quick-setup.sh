@@ -216,9 +216,9 @@ install_yarn() {
 
 print_counts() {
     log_info "Task Summary:"
-    log_info "Success: $SUCCESS_COUNT"
-    log_info "Skip: $SKIP_COUNT"
-    log_info "Fail: $FAIL_COUNT"
+    log_info "  Success: $SUCCESS_COUNT"
+    log_info "  Skip: $SKIP_COUNT"
+    log_info "  Fail: $FAIL_COUNT"
 }
 
 main() {
