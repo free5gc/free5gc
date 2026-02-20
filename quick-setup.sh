@@ -51,17 +51,29 @@ usage() {
     echo "Example:"
     echo "  $0 -i eno1"
     echo
-    exit 1
 }
 
 check_interface_and_get_ip() {
     if ! ip link show "$1" &>/dev/null; then
         log_error "Interface $1 does not exist."
-        usage
+        return 1
     fi
     NETWORK_INTERFACE=$1
     IP_ADDRESS=$(ip addr show "$1" | grep -oP '(?<=inet )\S+' | head -n 1 | cut -d/ -f1)
     log_info "Use interface $1 as N2/N3/N6 interface with IP address $IP_ADDRESS."
+}
+
+network_config() {
+    log_info "Configuring network..."
+
+    sudo systemctl stop ufw
+    sudo systemctl disable ufw
+
+    sudo sysctl -w net.ipv4.ip_forward=1
+    sudo iptables -t nat -A POSTROUTING -o ${NETWORK_INTERFACE} -j MASQUERADE
+    sudo iptables -I FORWARD 1 -j ACCEPT
+
+    log_success "Network configured with interface ${NETWORK_INTERFACE}"
 }
 
 install_golang() {
@@ -137,7 +149,7 @@ install_mongodb() {
             ;;
         *)
             log_error "Unsupported Ubuntu version: $ubuntu_version"
-            exit 1
+            return 1
             ;;
     esac
     sudo apt-get update
@@ -167,19 +179,6 @@ install_gtp5g() {
     log_success "GTP5G installed"
 }
 
-network_config() {
-    log_info "Configuring network..."
-
-    sudo systemctl stop ufw
-    sudo systemctl disable ufw
-
-    sudo sysctl -w net.ipv4.ip_forward=1
-    sudo iptables -t nat -A POSTROUTING -o ${NETWORK_INTERFACE} -j MASQUERADE
-    sudo iptables -I FORWARD 1 -j ACCEPT
-
-    log_success "Network configured with interface ${NETWORK_INTERFACE}"
-}
-
 install_yarn() {
     log_info "Installing Yarn..."
 
@@ -201,8 +200,9 @@ main() {
             -i|--interface)
                 if [[ -z $2 ]]; then
                     usage
+                    return 1
                 fi
-                check_interface_and_get_ip "$2"
+                check_interface_and_get_ip "$2" || return 1
                 shift 2
                 ;;
             -l|--lint)
@@ -211,9 +211,11 @@ main() {
                 ;;
             -h|--help)
                 usage
+                return 0
                 ;;
             *)
                 usage
+                return 1
                 ;;
         esac
     done
@@ -234,7 +236,7 @@ main() {
         separate_stars
     fi
 
-    install_mongodb
+    install_mongodb || return 1
     separate_stars
 
     install_gtp5g
