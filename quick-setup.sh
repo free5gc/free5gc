@@ -7,6 +7,8 @@ NETWORK_INTERFACE=""
 IP_ADDRESS=""
 LINT=false
 
+GTP5G_PATH="$HOME/gtp5g"
+
 COLOR_RED="\033[31m"
 COLOR_GREEN="\033[32m"
 COLOR_YELLOW="\033[33m"
@@ -143,6 +145,25 @@ install_mongodb() {
     log_success "MongoDB installed"
 }
 
+install_gtp5g() {
+    log_info "Installing gtp5g..."
+    if lsmod | grep -q gtp5g; then
+        log_info "GTP5G already installed"
+        return
+    fi
+
+    sudo apt -y update
+    sudo apt -y install gcc g++ cmake autoconf libtool pkg-config libmnl-dev libyaml-dev
+
+    git clone https://github.com/free5gc/gtp5g.git $GTP5G_PATH
+    pushd $GTP5G_PATH
+    make
+    sudo make install
+    popd
+
+    log_success "GTP5G installed"
+}
+
 main() {
     while [[ $# -gt 0 ]]; do
         case $1 in
@@ -179,6 +200,9 @@ main() {
     fi
 
     install_mongodb
+    separate_stars
+
+    install_gtp5g
     separate_stars
 }
 
