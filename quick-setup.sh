@@ -164,6 +164,19 @@ install_gtp5g() {
     log_success "GTP5G installed"
 }
 
+network_config() {
+    log_info "Configuring network..."
+
+    sudo systemctl stop ufw
+    sudo systemctl disable ufw
+
+    sudo sysctl -w net.ipv4.ip_forward=1
+    sudo iptables -t nat -A POSTROUTING -o ${NETWORK_INTERFACE} -j MASQUERADE
+    sudo iptables -I FORWARD 1 -j ACCEPT
+
+    log_success "Network configured with interface ${NETWORK_INTERFACE}"
+}
+
 main() {
     while [[ $# -gt 0 ]]; do
         case $1 in
@@ -204,6 +217,13 @@ main() {
 
     install_gtp5g
     separate_stars
+
+    if [[ ${NETWORK_INTERFACE} ]]; then
+        network_config
+        separate_stars
+    else
+        log_warn "Network interface is not set. Skip network configuration."
+    fi
 }
 
 main "$@"
