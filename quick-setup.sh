@@ -138,6 +138,7 @@ install_mongodb() {
     esac
     sudo apt-get update
     sudo apt-get install -y mongodb-org
+    sudo systemctl enable --now mongod
 
     log_success "MongoDB installed"
 }
