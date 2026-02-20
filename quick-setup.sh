@@ -223,6 +223,7 @@ main() {
         separate_stars
     else
         log_warn "Network interface is not set. Skip network configuration."
+        separate_stars
     fi
 }
 
