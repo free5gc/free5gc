@@ -100,6 +100,7 @@ install_golang() {
 
 install_golangci_lint() {
     log_info "Installing golangci-lint..."
+
     if golangci-lint version > /dev/null 2>&1; then
         log_info "Golangci-lint already installed"
         return
@@ -111,6 +112,7 @@ install_golangci_lint() {
 
 install_mongodb() {
     log_info "Installing mongoDB..."
+
     if mongosh --version > /dev/null 2>&1; then
         log_info "MongoDB already installed"
         return
@@ -147,6 +149,7 @@ install_mongodb() {
 
 install_gtp5g() {
     log_info "Installing gtp5g..."
+
     if lsmod | grep -q gtp5g; then
         log_info "GTP5G already installed"
         return
@@ -175,6 +178,21 @@ network_config() {
     sudo iptables -I FORWARD 1 -j ACCEPT
 
     log_success "Network configured with interface ${NETWORK_INTERFACE}"
+}
+
+install_yarn() {
+    log_info "Installing Yarn..."
+
+    if yarn --version > /dev/null 2>&1; then
+        log_info "Yarn already installed"
+        return
+    fi
+    curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - 
+    sudo apt update
+    sudo apt install -y nodejs
+    sudo corepack enable
+
+    log_success "Yarn installed"
 }
 
 main() {
@@ -225,6 +243,9 @@ main() {
         log_warn "Network interface is not set. Skip network configuration."
         separate_stars
     fi
+
+    install_yarn
+    separate_stars
 }
 
 main "$@"
