@@ -23,6 +23,10 @@ log_warn() {
     echo -e "${COLOR_YELLOW}[!]${COLOR_RESET} $1"
 }
 
+log_question() {
+    echo -e "${COLOR_YELLOW}[?]${COLOR_RESET} $1"
+}
+
 log_error() {
     echo -e "${COLOR_RED}[-]${COLOR_RESET} $1"
 }
@@ -62,12 +66,14 @@ install_golang() {
         log_info "Go $current_version has already installed."
 
         if [[ $current_version != $GO_VERSION ]]; then
-            read -p "${COLOR_YELLOW}[?]${COLOR_RESET} Go $GO_VERSION is already installed. Do you want to upgrade to $GO_VERSION? [Y/n]" upgrade
+            upgrade="y"
+            log_question "Go $current_version is already installed. Do you want to upgrade to $GO_VERSION? [Y/n] "
+            read upgrade
             if [[ $upgrade == "Y" || $upgrade == "y" ]]; then
                 sudo rm -rf /usr/local/go
-                wget https://dl.google.com/go/go$GO_VERSION.linux-amd64.tar.gz
-                sudo tar -C /usr/local -zxvf go$GO_VERSION.linux-amd64.tar.gz
-                rm go$GO_VERSION.linux-amd64.tar.gz
+                wget https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz
+                sudo tar -C /usr/local -zxvf go${GO_VERSION}.linux-amd64.tar.gz
+                rm go${GO_VERSION}.linux-amd64.tar.gz
             fi
         fi
         return
