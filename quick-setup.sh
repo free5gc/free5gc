@@ -209,6 +209,8 @@ install_yarn() {
     sudo apt update
     sudo apt install -y nodejs
     sudo corepack enable
+    echo 'export COREPACK_ENABLE_DOWNLOAD_PROMPT=0' >> ~/.bashrc
+    export COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 
     log_success "Yarn installed"
     SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
