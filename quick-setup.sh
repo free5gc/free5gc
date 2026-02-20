@@ -9,6 +9,10 @@ LINT=false
 
 GTP5G_PATH="$HOME/gtp5g"
 
+SUCCESS_COUNT=0
+FAIL_COUNT=0
+SKIP_COUNT=0
+
 COLOR_RED="\033[31m"
 COLOR_GREEN="\033[32m"
 COLOR_YELLOW="\033[33m"
@@ -74,6 +78,7 @@ network_config() {
     sudo iptables -I FORWARD 1 -j ACCEPT
 
     log_success "Network configured with interface ${NETWORK_INTERFACE}"
+    SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
 }
 
 install_golang() {
@@ -93,6 +98,11 @@ install_golang() {
                 sudo tar -C /usr/local -zxvf go${GO_VERSION}.linux-amd64.tar.gz
                 rm go${GO_VERSION}.linux-amd64.tar.gz
             fi
+
+            log_success "Golang upgraded"
+            SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+        else
+            SKIP_COUNT=$((SKIP_COUNT + 1))
         fi
         return
     fi
@@ -108,6 +118,7 @@ install_golang() {
     rm go${GO_VERSION}.linux-amd64.tar.gz
 
     log_success "Golang installed"
+    SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
 }
 
 install_golangci_lint() {
@@ -115,11 +126,13 @@ install_golangci_lint() {
 
     if golangci-lint version > /dev/null 2>&1; then
         log_info "Golangci-lint already installed"
+        SKIP_COUNT=$((SKIP_COUNT + 1))
         return
     fi
     curl -sSfL https://golangci-lint.run/install.sh | sh -s -- -b $(go env GOPATH)/bin $GOLANGCI_LINT_VERSION
 
     log_success "Golangci-lint installed"
+    SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
 }
 
 install_mongodb() {
@@ -127,6 +140,7 @@ install_mongodb() {
 
     if mongosh --version > /dev/null 2>&1; then
         log_info "MongoDB already installed"
+        SKIP_COUNT=$((SKIP_COUNT + 1))
         return
     fi
 
@@ -149,6 +163,7 @@ install_mongodb() {
             ;;
         *)
             log_error "Unsupported Ubuntu version: $ubuntu_version"
+            FAIL_COUNT=$((FAIL_COUNT + 1))
             return 1
             ;;
     esac
@@ -157,6 +172,7 @@ install_mongodb() {
     sudo systemctl enable --now mongod
 
     log_success "MongoDB installed"
+    SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
 }
 
 install_gtp5g() {
@@ -164,6 +180,7 @@ install_gtp5g() {
 
     if lsmod | grep -q gtp5g; then
         log_info "GTP5G already installed"
+        SKIP_COUNT=$((SKIP_COUNT + 1))
         return
     fi
 
@@ -177,6 +194,7 @@ install_gtp5g() {
     popd
 
     log_success "GTP5G installed"
+    SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
 }
 
 install_yarn() {
@@ -184,6 +202,7 @@ install_yarn() {
 
     if yarn --version > /dev/null 2>&1; then
         log_info "Yarn already installed"
+        SKIP_COUNT=$((SKIP_COUNT + 1))
         return
     fi
     curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - 
@@ -192,6 +211,14 @@ install_yarn() {
     sudo corepack enable
 
     log_success "Yarn installed"
+    SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+}
+
+print_counts() {
+    log_info "Task Summary:"
+    log_info "Success: $SUCCESS_COUNT"
+    log_info "Skip: $SKIP_COUNT"
+    log_info "Fail: $FAIL_COUNT"
 }
 
 main() {
@@ -244,6 +271,8 @@ main() {
 
     install_yarn
     separate_stars
+
+    print_counts
 }
 
 main "$@"
