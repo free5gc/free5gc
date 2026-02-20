@@ -1,9 +1,11 @@
 #!/bin/bash
 
 GO_VERSION="1.25.5"
+GOLANGCI_LINT_VERSION="2.7.2"
 
 NETWORK_INTERFACE=""
 IP_ADDRESS=""
+LINT=false
 
 COLOR_RED="\033[31m"
 COLOR_GREEN="\033[32m"
@@ -41,6 +43,8 @@ usage() {
     echo ""
     echo "Options:"
     echo "  -i, --interface <network interface>   Setup the network interface for N2/N3/N6"
+    echo "  -l, --lint                            Enable lint"
+    echo "  -h, --help                            Show this help message"
     echo
     echo "Example:"
     echo "  $0 -i eno1"
@@ -63,7 +67,7 @@ install_golang() {
 
     if go version > /dev/null 2>&1; then
         current_version=$(go version | awk '{print $3}' | sed 's/^go//')
-        log_info "Go $current_version has already installed."
+        log_info "Go $current_version already installed."
 
         if [[ $current_version != $GO_VERSION ]]; then
             log_question "Go $current_version is already installed. Do you want to upgrade to $GO_VERSION? [Y/n] "
@@ -88,6 +92,54 @@ install_golang() {
     echo 'export GO111MODULE=auto' >> ~/.bashrc
     source ~/.bashrc
     rm go${GO_VERSION}.linux-amd64.tar.gz
+
+    log_success "Golang installed"
+}
+
+install_golangci_lint() {
+    log_info "Installing golangci-lint..."
+    if golangci-lint version > /dev/null 2>&1; then
+        log_info "Golangci-lint already installed"
+        return
+    fi
+    curl -sSfL https://golangci-lint.run/install.sh | sh -s -- -b $(go env GOPATH)/bin $GOLANGCI_LINT_VERSION
+
+    log_success "Golangci-lint installed"
+}
+
+install_mongodb() {
+    log_info "Installing mongoDB..."
+    if mongosh --version > /dev/null 2>&1; then
+        log_info "MongoDB already installed"
+        return
+    fi
+
+    sudo apt-get install gnupg curl
+    curl -fsSL https://www.mongodb.org/static/pgp/server-8.0.asc | sudo gpg -o /usr/share/keyrings/mongodb-server-8.0.gpg --dearmor
+
+    ubuntu_version=$(lsb_release -rs)
+    case $ubuntu_version in
+        20.04)
+            echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-8.0.gpg ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/8.2 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-8.2.list
+            ;;
+        22.04)
+            echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-8.0.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/8.2 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-8.2.list
+            ;;
+        24.04)
+            echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-8.0.gpg ] https://repo.mongodb.org/apt/ubuntu noble/mongodb-org/8.2 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-8.2.list
+            ;;
+        25.04)
+            echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-8.0.gpg ] https://repo.mongodb.org/apt/ubuntu noble/mongodb-org/8.2 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-8.2.list
+            ;;
+        *)
+            log_error "Unsupported Ubuntu version: $ubuntu_version"
+            exit 1
+            ;;
+    esac
+    sudo apt-get update
+    sudo apt-get install -y mongodb-org
+
+    log_success "MongoDB installed"
 }
 
 main() {
@@ -100,6 +152,13 @@ main() {
                 check_interface_and_get_ip "$2"
                 shift 2
                 ;;
+            -l|--lint)
+                LINT=true
+                shift
+                ;;
+            -h|--help)
+                usage
+                ;;
             *)
                 usage
                 ;;
@@ -111,6 +170,14 @@ main() {
     separate_stars
 
     install_golang
+    separate_stars
+
+    if $LINT; then
+        install_golangci_lint
+        separate_stars
+    fi
+
+    install_mongodb
     separate_stars
 }
 
