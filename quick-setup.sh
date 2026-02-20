@@ -217,10 +217,14 @@ main() {
                 ;;
         esac
     done
-    if [[ -z $NETWORK_INTERFACE ]]; then
-        log_warn "Network interface is not set."
+
+    if [[ ${NETWORK_INTERFACE} ]]; then
+        network_config
+        separate_stars
+    else
+        log_warn "Network interface is not set. Skip network configuration."
+        separate_stars
     fi
-    separate_stars
 
     install_golang
     separate_stars
@@ -235,14 +239,6 @@ main() {
 
     install_gtp5g
     separate_stars
-
-    if [[ ${NETWORK_INTERFACE} ]]; then
-        network_config
-        separate_stars
-    else
-        log_warn "Network interface is not set. Skip network configuration."
-        separate_stars
-    fi
 
     install_yarn
     separate_stars
