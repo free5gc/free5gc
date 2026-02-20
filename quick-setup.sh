@@ -66,9 +66,9 @@ install_golang() {
         log_info "Go $current_version has already installed."
 
         if [[ $current_version != $GO_VERSION ]]; then
-            upgrade="y"
             log_question "Go $current_version is already installed. Do you want to upgrade to $GO_VERSION? [Y/n] "
             read upgrade
+            upgrade=${upgrade:-Y}
             if [[ $upgrade == "Y" || $upgrade == "y" ]]; then
                 sudo rm -rf /usr/local/go
                 wget https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz
