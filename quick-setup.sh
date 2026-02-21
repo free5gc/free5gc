@@ -216,6 +216,24 @@ install_yarn() {
     SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
 }
 
+submodule_init() {
+    log_info "Initializing submodules..."
+
+    git submodule update --init --recursive
+
+    log_success "Submodules initialized"
+    SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+}
+
+make_free5gc() {
+    log_info "Making free5gc..."
+
+    make all
+
+    log_success "Free5gc made"
+    SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+}
+
 print_counts() {
     log_info "Task Summary:"
     log_success "  Success: $SUCCESS_COUNT"
@@ -272,6 +290,12 @@ main() {
     separate_stars
 
     install_yarn
+    separate_stars
+
+    submodule_init
+    separate_stars
+
+    make_free5gc
     separate_stars
 
     print_counts
