@@ -261,11 +261,11 @@ submodule_init() {
 }
 
 make_free5gc() {
-    log_info "Making free5gc..."
+    log_info "Making free5GC..."
 
     make all
 
-    log_success "Free5gc made"
+    log_success "free5GC made"
     SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
 }
 
