@@ -369,6 +369,12 @@ main() {
     if $DOCKER; then
         log_info "Docker is installed. Please log out and log in again to use Docker without sudo."
     fi
+
+    log_info "Setup completed. Now you can run free5GC with these commands:"
+    log_info "  NFs:  ./run.sh"
+    log_info "  Webconsole: ./webconsole/bin/webconsole"
+    echo
+    log_info "To test with ue simulator, please refer to: https://free-ran-ue.github.io/doc-user-guide/02-free-ran-ue/"
 }
 
 main "$@"
