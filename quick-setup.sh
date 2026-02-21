@@ -6,6 +6,7 @@ GOLANGCI_LINT_VERSION="2.7.2"
 NETWORK_INTERFACE=""
 IP_ADDRESS=""
 LINT=false
+DOCKER=false
 
 GTP5G_PATH="$HOME/gtp5g"
 
@@ -49,11 +50,12 @@ usage() {
     echo ""
     echo "Options:"
     echo "  -i, --interface <network interface>   Setup the network interface for N2/N3/N6"
-    echo "  -l, --lint                            Enable lint"
+    echo "  -l, --lint                            Enable golangci-lint installation"
+    echo "  -d, --docker                          Enable docker installation"
     echo "  -h, --help                            Show this help message"
     echo
     echo "Example:"
-    echo "  $0 -i eno1"
+    echo "  $0 -i eno1 -l -d"
     echo
 }
 
@@ -216,6 +218,39 @@ install_yarn() {
     SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
 }
 
+install_docker() {
+    log_info "Installing Docker..."
+
+    if docker --version > /dev/null 2>&1; then
+        log_info "Docker already installed"
+        SKIP_COUNT=$((SKIP_COUNT + 1))
+        return
+    fi
+
+    sudo apt update
+    sudo apt install ca-certificates curl
+    sudo install -m 0755 -d /etc/apt/keyrings
+    sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+    sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+    sudo tee /etc/apt/sources.list.d/docker.sources <<EOF
+Types: deb
+URIs: https://download.docker.com/linux/ubuntu
+Suites: $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")
+Components: stable
+Signed-By: /etc/apt/keyrings/docker.asc
+EOF
+
+    sudo apt update
+    sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+    sudo groupadd docker
+    sudo usermod -aG docker $USER
+
+    log_success "Docker installed"
+    SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+}
+
 submodule_init() {
     log_info "Initializing submodules..."
 
@@ -256,6 +291,10 @@ main() {
                 LINT=true
                 shift
                 ;;
+            -d|--docker)
+                DOCKER=true
+                shift
+                ;;
             -h|--help)
                 usage
                 return 0
@@ -292,6 +331,11 @@ main() {
     install_yarn
     separate_stars
 
+    if $DOCKER; then
+        install_docker
+        separate_stars
+    fi
+
     submodule_init
     separate_stars
 
@@ -299,6 +343,11 @@ main() {
     separate_stars
 
     print_counts
+    separate_stars
+
+    if $DOCKER; then
+        log_info "Docker is installed. Please log out and log in again to use Docker without sudo."
+    fi
 }
 
 main "$@"
