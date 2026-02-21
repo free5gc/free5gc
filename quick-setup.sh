@@ -255,7 +255,6 @@ submodule_init() {
     log_info "Initializing submodules..."
 
     git submodule update --init --recursive
-
     log_success "Submodules initialized"
     SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
 }
@@ -266,6 +265,17 @@ make_free5gc() {
     make all
 
     log_success "free5GC made"
+    SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+}
+
+substitute_ip() {
+    log_info "Substituting IP addresses in config files..."
+
+    sed -i -e '/ngapIpList:/!b;n;s/- .*/- '"$IP_ADDRESS"'/' config/amfcfg.yaml
+    sed -i -e '/endpoints:/!b;n;s/- .*/- '"$IP_ADDRESS"'/' config/smfcfg.yaml
+    sed -i -e '/ifList:/!b;n;s/addr: .*/addr: '"$IP_ADDRESS"'/' config/upfcfg.yaml
+
+    log_success "IP addresses substituted"
     SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
 }
 
@@ -309,6 +319,9 @@ main() {
     if [[ ${NETWORK_INTERFACE} ]]; then
         network_config
         separate_stars
+
+        substitute_ip
+        separate_stars
     else
         log_warn "Network interface is not set. Skip network configuration."
         separate_stars
@@ -341,6 +354,14 @@ main() {
 
     make_free5gc
     separate_stars
+
+    if [[ ${NETWORK_INTERFACE} ]]; then
+        substitute_ip
+        separate_stars
+    else
+        log_warn "Network interface is not set. Skip N2/N3 IP substitution."
+        separate_stars
+    fi
 
     print_counts
     separate_stars
