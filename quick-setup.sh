@@ -254,7 +254,8 @@ EOF
 submodule_init() {
     log_info "Initializing submodules..."
 
-    git submodule update --init --recursive
+    git submodule update --init --recursive -j `nproc`
+
     log_success "Submodules initialized"
     SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
 }
