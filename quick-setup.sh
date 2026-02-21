@@ -373,7 +373,7 @@ main() {
 
     log_info "Setup completed. Now you can run free5GC with these commands:"
     log_info "  NFs:  ./run.sh"
-    log_info "  Webconsole: ./webconsole/bin/webconsole"
+    log_info "  Webconsole: cd webconsole && ./bin/webconsole"
     echo
     log_info "To test with ue simulator, please refer to: https://free-ran-ue.github.io/doc-user-guide/02-free-ran-ue/"
 }
