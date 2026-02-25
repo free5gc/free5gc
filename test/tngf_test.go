@@ -258,7 +258,17 @@ func tngfEncryptProcedure(ikeSecurityAssociation *context.IKESecurityAssociation
 	}
 
 	encryptedData = append(encryptedData, make([]byte, checksumLength)...)
-	sk := responseIKEMessage.Payloads.BuildEncrypted(ikePayload[0].Type(), encryptedData)
+
+	var nextPayloadType message.IKEPayloadType
+	if len(ikePayload) == 0 {
+		// Encrypting an empty container, the Next Payload type is NONE (0).
+		nextPayloadType = message.TypeNone
+	} else {
+		// Otherwise, use the type of the first payload in the container.
+		nextPayloadType = ikePayload[0].Type()
+	}
+
+	sk := responseIKEMessage.Payloads.BuildEncrypted(nextPayloadType, encryptedData)
 
 	// Calculate checksum
 	responseIKEMessageData, err := responseIKEMessage.Encode()
@@ -395,7 +405,7 @@ func tngfParseIPAddressInformationToChildSecurityAssociation(
 
 func tngfParse5GQoSInfoNotify(n *message.Notification) (info *PDUQoSInfo, err error) {
 	info = new(PDUQoSInfo)
-	var offset int = 0
+	var offset = 0
 	data := n.NotificationData
 	dataLen := int(data[0])
 	info.pduSessionID = data[1]
@@ -765,7 +775,7 @@ func tngfSendPduSessionEstablishmentRequest(
 		nasStr := spew.Sdump(nasMsg)
 		t.Log("Dump DecodePDUSessionEstablishmentAccept:\n", nasStr)
 
-		pduAddr, err = GetPDUAddress(nasMsg.GsmMessage.PDUSessionEstablishmentAccept)
+		pduAddr, err = GetPDUAddress(nasMsg.PDUSessionEstablishmentAccept)
 		if err != nil {
 			t.Errorf("GetPDUAddress Fail: %+v", err)
 		}
@@ -1076,7 +1086,7 @@ func TestTngfUE(t *testing.T) {
 
 	// Calculate for RES*
 	assert.NotNil(t, decodedNAS)
-	rand := decodedNAS.AuthenticationRequest.GetRANDValue()
+	rand := decodedNAS.GetRANDValue()
 	resStat := ue.DeriveRESstarAndSetKey(ue.AuthenticationSubs, rand[:], "5G:mnc093.mcc208.3gppnetwork.org")
 
 	// Send Authentication
@@ -1313,13 +1323,6 @@ func TestTngfUE(t *testing.T) {
 			t.Log("Get SA payload")
 		case message.TypeKE:
 			remotePublicKeyExchangeValue := ikePayload.(*message.KeyExchange).KeyExchangeData
-			var i int = 0
-			for {
-				if remotePublicKeyExchangeValue[i] != 0 {
-					break
-				}
-			}
-			remotePublicKeyExchangeValue = remotePublicKeyExchangeValue[i:]
 			remotePublicKeyExchangeValueBig := new(big.Int).SetBytes(remotePublicKeyExchangeValue)
 			sharedKeyExchangeData = new(big.Int).Exp(remotePublicKeyExchangeValueBig, secert, factor).Bytes()
 		case message.TypeNiNr:
@@ -1780,7 +1783,7 @@ func TestTngfUE(t *testing.T) {
 		spew.Config.Indent = "\t"
 		nasStr := spew.Sdump(nasMsg)
 		t.Log("Dump DecodePDUSessionEstablishmentAccept:\n", nasStr)
-		pduAddress, err = GetPDUAddress(nasMsg.GsmMessage.PDUSessionEstablishmentAccept)
+		pduAddress, err = GetPDUAddress(nasMsg.PDUSessionEstablishmentAccept)
 		if err != nil {
 			t.Fatalf("GetPDUAddress Fail: %+v", err)
 		}
@@ -1850,4 +1853,94 @@ func TestTngfUE(t *testing.T) {
 		t.Fatal("Ping Failed")
 		return
 	}
+	t.Log("====== UE Initiated Deregistration ======")
+
+	// Non3GPPtype (0xf2) and the GUTI value.
+	mobileIdentity5GS = nasType.MobileIdentity5GS{
+		Len:    11, // 5g-guti
+		Buffer: []uint8{0xf2, 0x02, 0xf8, 0x39, 0xca, 0xfe, 0x00, 0x00, 0x00, 0x00, 0x01},
+	}
+
+	deregistrationRequest := nasTestpacket.GetDeregistrationRequest(0x02, 0x01, 0x00, mobileIdentity5GS)
+
+	// Encrypt and integrity protect the message using the existing security context.
+	pdu, err = EncodeNasPduInEnvelopeWithSecurity(ue, deregistrationRequest, nas.SecurityHeaderTypeIntegrityProtectedAndCiphered, true, false)
+
+	if err != nil {
+		t.Fatalf("Failed to encode Deregistration Request with security: %+v", err)
+	}
+
+	// Send the message over the established TCP connection.
+	_, err = tcpConnWithTNGF.Write(pdu)
+	if err != nil {
+		t.Fatalf("Failed to write Deregistration Request to TCP connection: %+v", err)
+	}
+
+	t.Log("Deregistration Request sent successfully.")
+
+	// handle ike delete message
+	t.Log("--- Waiting for TNGF to send IKE INFORMATIONAL (DELETE) Request ---")
+
+	udpConnection.SetReadDeadline(time.Now().Add(5 * time.Second))
+
+	n, _, err = udpConnection.ReadFromUDP(buffer)
+	if err != nil {
+		t.Fatalf("Failed to read IKE message from TNGF: %+v", err)
+	}
+
+	ikeDeleteReq := new(message.IKEMessage)
+	err = ikeDeleteReq.Decode(buffer[:n])
+	if err != nil {
+		t.Fatalf("Failed to decode IKE Delete Request: %+v", err)
+	}
+	t.Logf("Received IKE message from TNGF. Exchange Type: %d, Message ID: %d", ikeDeleteReq.ExchangeType, ikeDeleteReq.MessageID)
+
+	encryptedPayload, ok = ikeDeleteReq.Payloads[0].(*message.Encrypted)
+	if !ok {
+		t.Fatal("Received IKE message is not an encrypted payload")
+	}
+
+	decryptedPayload, err := tngfDecryptProcedure(ikeSecurityAssociation, ikeDeleteReq, encryptedPayload)
+	if err != nil {
+		t.Fatalf("Failed to decrypt IKE Delete Request: %+v", err)
+	}
+
+	isDelete := false
+	for _, payload := range decryptedPayload {
+		if payload.Type() == message.TypeD {
+			t.Log("Received IKE payload is Delete")
+			isDelete = true
+			break
+		}
+	}
+	assert.True(t, isDelete, "The received IKE payload should be a DELETE payload")
+
+	// create and response ike delete to tngf
+	t.Logf("--- Building and Sending IKE INFORMATIONAL Response ---")
+
+	responseIKEMessage := new(message.IKEMessage)
+	responseIKEMessage.BuildIKEHeader(ikeDeleteReq.ResponderSPI, ikeDeleteReq.InitiatorSPI,
+		message.INFORMATIONAL, message.ResponseBitCheck, ikeDeleteReq.MessageID)
+
+	// [RFC 7296 - 1.4.1]
+	// Deleting an IKE SA implicitly closes any remaining Child SAs negotiated under it.
+	// The response to a request that deletes the IKE SA is an empty INFORMATIONAL response.
+	var responseIKEPayload message.IKEPayloadContainer // payload is empty
+
+	err = tngfEncryptProcedure(ikeSecurityAssociation, responseIKEPayload, responseIKEMessage)
+	if err != nil {
+		t.Fatalf("Failed to encrypt IKE INFORMATIONAL Response: %+v", err)
+	}
+
+	ikeMessageData, err = responseIKEMessage.Encode()
+	if err != nil {
+		t.Fatalf("Failed to encode IKE INFORMATIONAL Response: %+v", err)
+	}
+
+	_, err = udpConnection.WriteToUDP(ikeMessageData, tngfUDPAddr)
+	if err != nil {
+		t.Fatalf("Failed to write IKE INFORMATIONAL Response to TNGF: %+v", err)
+	}
+
+	t.Log("Successfully sent IKE INFORMATIONAL Response to TNGF.")
 }
