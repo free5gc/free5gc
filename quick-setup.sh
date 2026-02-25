@@ -9,6 +9,7 @@ LINT=false
 DOCKER=false
 
 GTP5G_PATH="$HOME/gtp5g"
+GTP5G_VERSION="v0.9.16"
 
 SUCCESS_COUNT=0
 FAIL_COUNT=0
@@ -189,7 +190,7 @@ install_gtp5g() {
     sudo apt -y update
     sudo apt -y install gcc g++ cmake autoconf libtool pkg-config libmnl-dev libyaml-dev
 
-    git clone https://github.com/free5gc/gtp5g.git $GTP5G_PATH
+    git clone --branch ${GTP5G_VERSION} https://github.com/free5gc/gtp5g.git $GTP5G_PATH
     pushd $GTP5G_PATH
     make
     sudo make install
