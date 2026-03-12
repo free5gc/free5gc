@@ -27,6 +27,7 @@ configuration:
       suppFeat: 3    # the features supported by Npcf_PolicyAuthorization, name defined in TS 29.514 5.8-1, value defined in TS 29.571 5.2.2
     - serviceName: npcf-eventexposure       # Npcf_EventExposure service
     - serviceName: npcf-ue-policy-control   # Npcf_UEPolicyControl service
+    - serviceName: npcf-callback            # Npcf callback service
   mongodb:       # the mongodb connected by this PCF
     name: free5gc                  # name of the mongodb
     url: mongodb://localhost:27017 # a valid URL of the mongodb
