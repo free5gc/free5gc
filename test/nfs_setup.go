@@ -501,6 +501,7 @@ func smfConfig(testID TestId) error {
 				"nsmf-pdusession",
 				"nsmf-event-exposure",
 				"nsmf-oam",
+				"nsmf-callback",
 			},
 			SNssaiInfo: []*smf_factory.SnssaiInfoItem{{
 				SNssai: &models.Snssai{
@@ -1440,7 +1441,6 @@ func bsfConfig() error {
 				},
 			},
 			NrfUri:     "http://127.0.0.10:8000",
-			NrfCertPem: "../cert/nrf.pem",
 			MongoDB: &bsf_factory.MongoDB{
 				Name: "free5gc",
 				Url:  "mongodb://localhost:27017",
