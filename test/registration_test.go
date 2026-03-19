@@ -2621,15 +2621,9 @@ func TestReSynchronization(t *testing.T) {
 
 	// After re-synchronization, check if the SQN is updated
 	// Use AK (from f5, not f5*) to de-conceal SQN from AUTN
-	AK := make([]byte, 6)
-	test.MilenageF2345(OPC, K, rand[:], nil, nil, nil, AK, nil)
 	autn := nasPdu.AuthenticationRequest.GetAUTN()
-	SQNxorAK := autn[:6]
-
-	SQN := make([]byte, 6)
-	for i := 0; i < 6; i++ {
-		SQN[i] = AK[i] ^ SQNxorAK[i]
-	}
+	SQN, _, _, _, _, err := milenage.GenerateKeysWithAUTN(OPC, K, rand[:], autn[:])
+	assert.Nil(t, err)
 	fmt.Printf("retrieve SQN %x\n", SQN)
 	ue.AuthenticationSubs.SequenceNumber.Sqn = hex.EncodeToString(SQN)
 	resStar := ue.DeriveRESstarAndSetKey(ue.AuthenticationSubs, rand[:], "5G:mnc093.mcc208.3gppnetwork.org")
