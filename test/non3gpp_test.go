@@ -25,6 +25,7 @@ import (
 	ike_security "github.com/free5gc/ike/security"
 	"github.com/free5gc/ngap/ngapType"
 
+	eap "github.com/free5gc/ike/eap"
 	ike_message "github.com/free5gc/ike/message"
 	"github.com/free5gc/ike/security/dh"
 	"github.com/free5gc/ike/security/encr"
@@ -909,7 +910,7 @@ func TestNon3GPPUE(t *testing.T) {
 	localPublicKeyExchangeValue := new(big.Int).Exp(generator, secert, factor).Bytes()
 	prependZero := make([]byte, len(factor.Bytes())-len(localPublicKeyExchangeValue))
 	localPublicKeyExchangeValue = append(prependZero, localPublicKeyExchangeValue...)
-	payload.BUildKeyExchange(ike_message.DH_2048_BIT_MODP, localPublicKeyExchangeValue)
+	payload.BuildKeyExchange(ike_message.DH_2048_BIT_MODP, localPublicKeyExchangeValue)
 
 	// Nonce
 	localNonceBigInt, err := ike_security.GenerateRandomNumber()
@@ -1067,7 +1068,7 @@ func TestNon3GPPUE(t *testing.T) {
 		case ike_message.TypeCERT:
 			t.Log("Get CERT")
 		case ike_message.TypeEAP:
-			eapIdentifier = ikePayload.(*ike_message.EAP).Identifier
+			eapIdentifier = ikePayload.(*ike_message.PayloadEap).Identifier
 			t.Log("Get EAP")
 		}
 	}
@@ -1099,8 +1100,8 @@ func TestNon3GPPUE(t *testing.T) {
 	eapVendorTypeData = append(eapVendorTypeData, nasLength...)
 	eapVendorTypeData = append(eapVendorTypeData, registrationRequest...)
 
-	eap := ikePayload.BuildEAP(ike_message.EAPCodeResponse, eapIdentifier)
-	eap.EAPTypeData.BuildEAPExpanded(ike_message.VendorID3GPP, ike_message.VendorTypeEAP5G, eapVendorTypeData)
+	eapPayload := ikePayload.BuildEAP(eap.EapCodeResponse, eapIdentifier)
+	eapPayload.EapTypeData = ike_message.BuildEapExpanded(eap.VendorId3GPP, eap.VendorTypeEAP5G, eapVendorTypeData)
 
 	ikeMessage = ike_message.NewMessage(
 		ikeSecurityAssociation.LocalSPI,
@@ -1135,17 +1136,17 @@ func TestNon3GPPUE(t *testing.T) {
 		t.Fatalf("Decode IKE meesage: %v", err)
 	}
 
-	var eapReq *ike_message.EAP
-	var eapExpanded *ike_message.EAPExpanded
+	var eapReq *ike_message.PayloadEap
+	var eapExpanded *eap.EapExpanded
 
-	eapReq, ok = ikeMessage.Payloads[0].(*ike_message.EAP)
+	eapReq, ok = ikeMessage.Payloads[0].(*ike_message.PayloadEap)
 	if !ok {
 		t.Fatalf("Received packet is not an EAP payload")
 	}
 
 	var decodedNAS *nas.Message
 
-	eapExpanded, ok = eapReq.EAPTypeData[0].(*ike_message.EAPExpanded)
+	eapExpanded, ok = eapReq.EapTypeData.(*eap.EapExpanded)
 	if !ok {
 		t.Fatalf("The EAP data is not an EAP expended.")
 	}
@@ -1181,8 +1182,8 @@ func TestNon3GPPUE(t *testing.T) {
 	eapVendorTypeData = append(eapVendorTypeData, nasLength...)
 	eapVendorTypeData = append(eapVendorTypeData, pdu...)
 
-	eap = ikePayload.BuildEAP(ike_message.EAPCodeResponse, eapReq.Identifier)
-	eap.EAPTypeData.BuildEAPExpanded(ike_message.VendorID3GPP, ike_message.VendorTypeEAP5G, eapVendorTypeData)
+	eapPayload = ikePayload.BuildEAP(eap.EapCodeResponse, eapReq.Identifier)
+	eapPayload.EapTypeData = ike_message.BuildEapExpanded(eap.VendorId3GPP, eap.VendorTypeEAP5G, eapVendorTypeData)
 
 	ikeMessage = ike_message.NewMessage(
 		ikeSecurityAssociation.LocalSPI,
@@ -1215,12 +1216,12 @@ func TestNon3GPPUE(t *testing.T) {
 		t.Fatalf("Decode IKE meesage: %v", err)
 	}
 
-	eapReq, ok = ikeMessage.Payloads[0].(*ike_message.EAP)
+	eapReq, ok = ikeMessage.Payloads[0].(*ike_message.PayloadEap)
 	if !ok {
 		t.Fatal("Received packet is not an EAP payload")
 		return
 	}
-	eapExpanded, ok = eapReq.EAPTypeData[0].(*ike_message.EAPExpanded)
+	eapExpanded, ok = eapReq.EapTypeData.(*eap.EapExpanded)
 	if !ok {
 		t.Fatal("Received packet is not an EAP expended payload")
 		return
@@ -1251,8 +1252,8 @@ func TestNon3GPPUE(t *testing.T) {
 	eapVendorTypeData = append(eapVendorTypeData, nasLength...)
 	eapVendorTypeData = append(eapVendorTypeData, pdu...)
 
-	eap = ikePayload.BuildEAP(ike_message.EAPCodeResponse, eapReq.Identifier)
-	eap.EAPTypeData.BuildEAPExpanded(ike_message.VendorID3GPP, ike_message.VendorTypeEAP5G, eapVendorTypeData)
+	eapPayload = ikePayload.BuildEAP(eap.EapCodeResponse, eapReq.Identifier)
+	eapPayload.EapTypeData = ike_message.BuildEapExpanded(eap.VendorId3GPP, eap.VendorTypeEAP5G, eapVendorTypeData)
 
 	ikeMessage = ike_message.NewMessage(
 		ikeSecurityAssociation.LocalSPI,
@@ -1288,11 +1289,11 @@ func TestNon3GPPUE(t *testing.T) {
 		t.Fatalf("Decode IKE meesage: %v", err)
 	}
 
-	eapReq, ok = ikeMessage.Payloads[0].(*ike_message.EAP)
+	eapReq, ok = ikeMessage.Payloads[0].(*ike_message.PayloadEap)
 	if !ok {
 		t.Fatal("Received packet is not an EAP payload")
 	}
-	if eapReq.Code != ike_message.EAPCodeSuccess {
+	if eapReq.Code != eap.EapCodeSuccess {
 		t.Fatal("Not Success")
 	}
 
