@@ -11,7 +11,7 @@ require (
 	github.com/free5gc/ausf v0.0.0
 	github.com/free5gc/bsf v0.0.0
 	github.com/free5gc/chf v1.2.1-0.20260104073217-9fbf02ffd990
-	github.com/free5gc/ike v1.1.1-0.20241014015325-083f89768f43
+	github.com/free5gc/ike v1.2.0
 	github.com/free5gc/nas v1.2.2
 	github.com/free5gc/ngap v1.1.2
 	github.com/free5gc/nrf v0.0.0
