@@ -77,7 +77,7 @@ func GetPostAppSessionsData_AFInfluenceOnTrafficRouting() models.AppSessionConte
 			Supi:     "imsi-208930000007487",
 			UeIpv4:   "10.60.0.1",
 			SliceInfo: &models.Snssai{
-				Sst: 1, Sd: "010203",
+				Sst: 1, Sd: "fedcba",
 			},
 			AfRoutReq: &models.AfRoutingRequirement{
 				AppReloc: false,

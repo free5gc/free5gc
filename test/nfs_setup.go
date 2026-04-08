@@ -354,6 +354,7 @@ func amfConfig(testID TestId) error {
 				"namf-mt",
 				"namf-loc",
 				"namf-oam",
+				"namf-callback",
 			},
 			ServedGumaiList: []models.Guami{{
 				PlmnId: &models.PlmnIdNid{
@@ -452,6 +453,11 @@ func amfConfig(testID TestId) error {
 				ExpireTime:    6000000000,
 				MaxRetryTimes: 4,
 			},
+			T3555: amf_factory.TimerValue{
+				Enable:        true,
+				ExpireTime:    6000000000,
+				MaxRetryTimes: 4,
+			},
 		},
 		Logger: &amf_factory.Logger{
 			Enable:       true,
@@ -495,6 +501,7 @@ func smfConfig(testID TestId) error {
 				"nsmf-pdusession",
 				"nsmf-event-exposure",
 				"nsmf-oam",
+				"nsmf-callback",
 			},
 			SNssaiInfo: []*smf_factory.SnssaiInfoItem{{
 				SNssai: &models.Snssai{
@@ -801,6 +808,8 @@ func pcfConfig() error {
 				ServiceName: "npcf-eventexposure",
 			}, {
 				ServiceName: "npcf-ue-policy-control",
+			}, {
+				ServiceName: "npcf-callback",
 			}},
 			Mongodb: &pcf_factory.Mongodb{
 				Name: "free5gc",
@@ -1431,7 +1440,7 @@ func bsfConfig() error {
 					Key: "../cert/bsf.key",
 				},
 			},
-			NrfUri: "http://127.0.0.10:8000",
+			NrfUri:     "http://127.0.0.10:8000",
 			MongoDB: &bsf_factory.MongoDB{
 				Name: "free5gc",
 				Url:  "mongodb://localhost:27017",
