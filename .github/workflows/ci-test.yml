@@ -52,6 +52,7 @@ jobs:
       - name: Up Basic docker compose
         run: |
           cd ${{ env.CI_TEST_DIR }}
+          docker rm -f mongodb ci-mongodb || true
           if ! docker compose -f ${{ env.BASIC_CI_COMPOSE_FILE }} up -d --wait --wait-timeout ${{ env.WAIT_CI_TIMEOUT }}; then
             echo "Failed to up docker compose Basic"
             exit 1
@@ -78,6 +79,7 @@ jobs:
       - name: Up TI docker compose
         run: |
           cd ${{ env.CI_TEST_DIR }}
+          docker rm -f mongodb ci-mongodb || true
           if ! docker compose -f ${{ env.TI_CI_COMPOSE_FILE }} up -d --wait --wait-timeout ${{ env.WAIT_CI_TIMEOUT }}; then
             echo "Failed to up docker compose TI"
             exit 1
@@ -104,6 +106,7 @@ jobs:
       - name: Up MP docker compose
         run: |
           cd ${{ env.CI_TEST_DIR }}
+          docker rm -f mongodb ci-mongodb || true
           if ! docker compose -f ${{ env.MP_CI_COMPOSE_FILE }} up -d --wait --wait-timeout ${{ env.WAIT_CI_TIMEOUT }}; then
             echo "Failed to up docker compose MP"
             exit 1
@@ -170,6 +173,7 @@ jobs:
       - name: Up Basic docker compose
         run: |
           cd ${{ env.CI_TEST_DIR }}
+          docker rm -f mongodb ci-mongodb || true
           if ! docker compose -f ${{ env.BASIC_COMPOSE_FILE }} up -d --wait --wait-timeout ${{ env.WAIT_TIMEOUT }}; then
             echo "Failed to up docker compose Basic"
             exit 1
@@ -196,6 +200,7 @@ jobs:
       - name: Up TI docker compose
         run: |
           cd ${{ env.CI_TEST_DIR }}
+          docker rm -f mongodb ci-mongodb || true
           if ! docker compose -f ${{ env.TI_COMPOSE_FILE }} up -d --wait --wait-timeout ${{ env.WAIT_TIMEOUT }}; then
             echo "Failed to up docker compose TI"
             exit 1
@@ -222,6 +227,7 @@ jobs:
       - name: Up MP docker compose
         run: |
           cd ${{ env.CI_TEST_DIR }}
+          docker rm -f mongodb ci-mongodb || true
           if ! docker compose -f ${{ env.MP_COMPOSE_FILE }} up -d --wait --wait-timeout ${{ env.WAIT_TIMEOUT }}; then
             echo "Failed to up docker compose MP"
             exit 1
