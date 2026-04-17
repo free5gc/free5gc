@@ -368,6 +368,12 @@ func amfConfig(testID TestId) error {
 					Mnc: "93",
 				},
 				Tac: "000001",
+			}, {
+				PlmnId: &models.PlmnId{
+					Mcc: "208",
+					Mnc: "93",
+				},
+				Tac: "000011",
 			}},
 			PlmnSupportList: []amf_factory.PlmnSupportItem{{
 				PlmnId: &models.PlmnId{
