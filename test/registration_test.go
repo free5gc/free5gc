@@ -70,7 +70,7 @@ func TestRegistration(t *testing.T) {
 	assert.Nil(t, err)
 
 	// send NGSetupRequest Msg
-	sendMsg, err = test.GetNGSetupRequest([]byte("\x00\x01\x02"), 24, "free5gc")
+	sendMsg, err = test.GetNGSetupRequest([]byte("\x00\x01\x02"), 24, "free5gc", "", "", "")
 	assert.Nil(t, err)
 	_, err = conn.Write(sendMsg)
 	assert.Nil(t, err)
@@ -276,7 +276,7 @@ func TestDeregistration(t *testing.T) {
 	assert.Nil(t, err)
 
 	// send NGSetupRequest Msg
-	sendMsg, err = test.GetNGSetupRequest([]byte("\x00\x01\x02"), 24, "free5gc")
+	sendMsg, err = test.GetNGSetupRequest([]byte("\x00\x01\x02"), 24, "free5gc", "", "", "")
 	assert.Nil(t, err)
 	_, err = conn.Write(sendMsg)
 	assert.Nil(t, err)
@@ -450,7 +450,7 @@ func TestServiceRequest(t *testing.T) {
 	assert.Nil(t, err)
 
 	// send NGSetupRequest Msg
-	sendMsg, err = test.GetNGSetupRequest([]byte("\x00\x01\x02"), 24, "free5gc")
+	sendMsg, err = test.GetNGSetupRequest([]byte("\x00\x01\x02"), 24, "free5gc", "", "", "")
 	assert.Nil(t, err)
 	_, err = conn.Write(sendMsg)
 	assert.Nil(t, err)
@@ -652,7 +652,7 @@ func TestGUTIRegistration(t *testing.T) {
 	require.Nil(t, err)
 
 	// send NGSetupRequest Msg
-	sendMsg, err = test.GetNGSetupRequest([]byte("\x00\x01\x02"), 24, "free5gc")
+	sendMsg, err = test.GetNGSetupRequest([]byte("\x00\x01\x02"), 24, "free5gc", "", "", "")
 	require.Nil(t, err)
 	_, err = conn.Write(sendMsg)
 	require.Nil(t, err)
@@ -948,7 +948,7 @@ func TestPDUSessionReleaseRequest(t *testing.T) {
 	assert.Nil(t, err)
 
 	// send NGSetupRequest Msg
-	sendMsg, err = test.GetNGSetupRequest([]byte("\x00\x01\x02"), 24, "free5gc")
+	sendMsg, err = test.GetNGSetupRequest([]byte("\x00\x01\x02"), 24, "free5gc", "", "", "")
 	assert.Nil(t, err)
 	_, err = conn.Write(sendMsg)
 	assert.Nil(t, err)
@@ -1129,7 +1129,7 @@ func TestPDUSessionReleaseAbnormal(t *testing.T) {
 	assert.Nil(t, err)
 
 	// send NGSetupRequest Msg
-	sendMsg, err = test.GetNGSetupRequest([]byte("\x00\x01\x02"), 24, "free5gc")
+	sendMsg, err = test.GetNGSetupRequest([]byte("\x00\x01\x02"), 24, "free5gc", "", "", "")
 	assert.Nil(t, err)
 	_, err = conn.Write(sendMsg)
 	assert.Nil(t, err)
@@ -1364,7 +1364,7 @@ func TestXnHandover(t *testing.T) {
 	assert.Nil(t, err)
 
 	// send NGSetupRequest Msg
-	sendMsg, err = test.GetNGSetupRequest([]byte("\x00\x01\x01"), 24, "free5gc")
+	sendMsg, err = test.GetNGSetupRequest([]byte("\x00\x01\x01"), 24, "free5gc", "", "", "")
 	assert.Nil(t, err)
 	_, err = conn.Write(sendMsg)
 	assert.Nil(t, err)
@@ -1381,7 +1381,7 @@ func TestXnHandover(t *testing.T) {
 	assert.Nil(t, err1)
 
 	// send Second NGSetupRequest Msg
-	sendMsg, err = test.GetNGSetupRequest([]byte("\x00\x01\x02"), 24, "nctu")
+	sendMsg, err = test.GetNGSetupRequest([]byte("\x00\x01\x02"), 24, "nctu", "", "", "")
 	assert.Nil(t, err)
 	_, err = conn2.Write(sendMsg)
 	assert.Nil(t, err)
@@ -1548,7 +1548,7 @@ func TestPaging(t *testing.T) {
 	assert.Nil(t, err)
 
 	// send NGSetupRequest Msg
-	sendMsg, err = test.GetNGSetupRequest([]byte("\x00\x01\x02"), 24, "free5gc")
+	sendMsg, err = test.GetNGSetupRequest([]byte("\x00\x01\x02"), 24, "free5gc", "", "\x01", "\xfe\xdc\xba")
 	assert.Nil(t, err)
 	_, err = conn.Write(sendMsg)
 	assert.Nil(t, err)
@@ -1778,7 +1778,7 @@ func TestN2Handover(t *testing.T) {
 	assert.Nil(t, err)
 
 	// RAN1 send NGSetupRequest Msg
-	sendMsg, err = test.GetNGSetupRequest([]byte("\x00\x01\x01"), 24, "free5gc")
+	sendMsg, err = test.GetNGSetupRequest([]byte("\x00\x01\x01"), 24, "free5gc", "", "\x01", "\xfe\xdc\xba")
 	assert.Nil(t, err)
 	_, err = conn.Write(sendMsg)
 	assert.Nil(t, err)
@@ -1800,7 +1800,7 @@ func TestN2Handover(t *testing.T) {
 	assert.Nil(t, err)
 
 	// RAN2 send Second NGSetupRequest Msg
-	sendMsg, err = test.GetNGSetupRequest([]byte("\x00\x01\x02"), 24, "nctu")
+	sendMsg, err = test.GetNGSetupRequest([]byte("\x00\x01\x02"), 24, "nctu", "", "\x01", "\xfe\xdc\xba")
 	assert.Nil(t, err)
 	_, err = conn2.Write(sendMsg)
 	assert.Nil(t, err)
@@ -2107,7 +2107,7 @@ func TestDuplicateRegistration(t *testing.T) {
 	assert.Nil(t, err)
 
 	// send NGSetupRequest Msg
-	sendMsg, err = test.GetNGSetupRequest([]byte("\x00\x01\x02"), 24, "free5gc")
+	sendMsg, err = test.GetNGSetupRequest([]byte("\x00\x01\x02"), 24, "free5gc", "", "", "")
 	assert.Nil(t, err)
 	_, err = conn.Write(sendMsg)
 	assert.Nil(t, err)
@@ -2349,7 +2349,7 @@ func TestAFInfluenceOnTrafficRouting(t *testing.T) {
 	assert.Nil(t, err)
 
 	// send NGSetupRequest Msg
-	sendMsg, err = test.GetNGSetupRequest([]byte("\x00\x01\x02"), 24, "free5gc")
+	sendMsg, err = test.GetNGSetupRequest([]byte("\x00\x01\x02"), 24, "free5gc", "", "", "")
 	assert.Nil(t, err)
 	_, err = conn.Write(sendMsg)
 	assert.Nil(t, err)
@@ -2521,7 +2521,7 @@ func TestReSynchronization(t *testing.T) {
 	assert.Nil(t, err)
 
 	// send NGSetupRequest Msg
-	sendMsg, err = test.GetNGSetupRequest([]byte("\x00\x01\x02"), 24, "free5gc")
+	sendMsg, err = test.GetNGSetupRequest([]byte("\x00\x01\x02"), 24, "free5gc", "", "", "")
 	assert.Nil(t, err)
 	_, err = conn.Write(sendMsg)
 	assert.Nil(t, err)
@@ -2778,7 +2778,7 @@ func TestRequestTwoPDUSessions(t *testing.T) {
 	assert.Nil(t, err)
 
 	// send NGSetupRequest Msg
-	sendMsg, err = test.GetNGSetupRequest([]byte("\x00\x01\x02"), 24, "free5gc")
+	sendMsg, err = test.GetNGSetupRequest([]byte("\x00\x01\x02"), 24, "free5gc", "", "", "")
 	assert.Nil(t, err)
 	_, err = conn.Write(sendMsg)
 	assert.Nil(t, err)
@@ -3082,7 +3082,7 @@ func TestEAPAKAPrimeAuthentication(t *testing.T) {
 	assert.Nil(t, err)
 
 	// send NGSetupRequest Msg
-	sendMsg, err = test.GetNGSetupRequest([]byte("\x00\x01\x02"), 24, "free5gc")
+	sendMsg, err = test.GetNGSetupRequest([]byte("\x00\x01\x02"), 24, "free5gc", "", "", "")
 	assert.Nil(t, err)
 	_, err = conn.Write(sendMsg)
 	assert.Nil(t, err)
@@ -3291,7 +3291,7 @@ func TestMultiAmfRegistration(t *testing.T) {
 	assert.Nil(t, err)
 
 	// send NGSetupRequest Msg
-	sendMsg, err = test.GetNGSetupRequest([]byte("\x00\x01\x02"), 24, "free5gc")
+	sendMsg, err = test.GetNGSetupRequest([]byte("\x00\x01\x02"), 24, "free5gc", "", "", "")
 	assert.Nil(t, err)
 	_, err = conn.Write(sendMsg)
 	assert.Nil(t, err)
@@ -3308,7 +3308,7 @@ func TestMultiAmfRegistration(t *testing.T) {
 	assert.Nil(t, err)
 
 	// send NGSetupRequest Msg
-	sendMsg, err = test.GetNGSetupRequest([]byte("\x00\x01\x02"), 24, "free5gc")
+	sendMsg, err = test.GetNGSetupRequest([]byte("\x00\x01\x02"), 24, "free5gc", "", "", "")
 	assert.Nil(t, err)
 	_, err = conn2.Write(sendMsg)
 	assert.Nil(t, err)
@@ -3501,7 +3501,7 @@ func TestNasReroute(t *testing.T) {
 	assert.Nil(t, err)
 
 	// send NGSetupRequest Msg
-	sendMsg, err = test.GetNGSetupRequest([]byte("\x00\x01\x02"), 24, "free5gc")
+	sendMsg, err = test.GetNGSetupRequest([]byte("\x00\x01\x02"), 24, "free5gc", "", "", "")
 	assert.Nil(t, err)
 	_, err = conn.Write(sendMsg)
 	assert.Nil(t, err)
@@ -3518,7 +3518,7 @@ func TestNasReroute(t *testing.T) {
 	assert.Nil(t, err)
 
 	// send NGSetupRequest Msg
-	sendMsg, err = test.GetNGSetupRequest([]byte("\x00\x01\x02"), 24, "free5gc")
+	sendMsg, err = test.GetNGSetupRequest([]byte("\x00\x01\x02"), 24, "free5gc", "", "", "")
 	assert.Nil(t, err)
 	_, err = conn2.Write(sendMsg)
 	assert.Nil(t, err)

@@ -12,7 +12,7 @@ require (
 	github.com/free5gc/bsf v0.0.0
 	github.com/free5gc/chf v1.2.2
 	github.com/free5gc/ike v1.2.1
-	github.com/free5gc/nas v1.2.3
+	github.com/free5gc/nas v1.2.4-0.20260707010827-03622ac0336e
 	github.com/free5gc/nef v1.2.4
 	github.com/free5gc/ngap v1.1.3
 	github.com/free5gc/nrf v0.0.0
