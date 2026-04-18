@@ -10,9 +10,9 @@ require (
 	github.com/free5gc/aper v1.1.0
 	github.com/free5gc/ausf v0.0.0
 	github.com/free5gc/bsf v0.0.0
-	github.com/free5gc/chf v1.2.1-0.20260104073217-9fbf02ffd990
+	github.com/free5gc/chf v1.2.2
 	github.com/free5gc/ike v1.2.0
-	github.com/free5gc/nas v1.2.2
+	github.com/free5gc/nas v1.2.3-0.20260121015506-0329a7ac3f31
 	github.com/free5gc/ngap v1.1.2
 	github.com/free5gc/nrf v0.0.0
 	github.com/free5gc/nssf v0.0.0
@@ -23,7 +23,7 @@ require (
 	github.com/free5gc/tngf v0.0.0-00010101000000-000000000000
 	github.com/free5gc/udm v0.0.0
 	github.com/free5gc/udr v0.0.0
-	github.com/free5gc/util v1.3.2-0.20260319090834-b2a2938f37b4
+	github.com/free5gc/util v1.3.2-0.20260331093717-98c25b027c49
 	github.com/free5gc/webconsole v0.0.0
 	github.com/gin-gonic/gin v1.10.0
 	github.com/go-ping/ping v1.1.0
