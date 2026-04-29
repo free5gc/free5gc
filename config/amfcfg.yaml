@@ -25,6 +25,7 @@ configuration:
     - namf-mt   # Namf_MT service
     - namf-loc  # Namf_Location service
     - namf-oam  # OAM service
+    - namf-callback # Namf_Callback service
 
   # Guami (Globally Unique AMF ID) list supported by this AMF
   servedGuamiList:
