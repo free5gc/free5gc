@@ -1,0 +1,243 @@
+# Ansible Playbook
+
+- name: Fix system time
+  hosts: all
+  become: yes
+  tasks:
+    - name: Enable NTP
+      shell: |
+        timedatectl set-ntp true
+        systemctl restart systemd-timesyncd
+
+- name: Install microk8s
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Install microk8s via snap
+      command: snap install microk8s --classic --channel=1.28/stable
+
+- name: Install kubectl
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Install kubectl via snap
+      command: snap install kubectl --classic
+
+- name: Setup kubeconfig for microk8s
+  hosts: k8s
+  become: no
+
+  tasks:
+    - name: Create kube directory
+      file:
+        path: "~/.kube"
+        state: directory
+        mode: '0700'
+
+    - name: Generate kubeconfig
+      become: yes
+      command: microk8s config
+      register: microk8s_kubeconfig
+      changed_when: false
+
+    - name: Write kubeconfig
+      copy:
+        content: "{{ microk8s_kubeconfig.stdout }}\n"
+        dest: "~/.kube/config"
+        mode: '0600'
+
+- name: Install helm
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Install helm via snap
+      command: snap install helm --classic
+
+- name: Install k9s
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Download and install k9s
+      shell: |
+        wget -O /tmp/k9s.deb https://github.com/derailed/k9s/releases/latest/download/k9s_linux_amd64.deb
+        apt install -y /tmp/k9s.deb
+      args:
+        creates: /usr/bin/k9s
+
+- name: Enable required microk8s addons
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Wait microk8s ready
+      command: microk8s status --wait-ready
+
+    - name: Enable hostpath-storage
+      command: microk8s enable hostpath-storage
+
+    - name: Enable community
+      command: microk8s enable community
+      ignore_errors: yes
+
+    - name: Enable multus
+      command: microk8s enable multus
+
+- name: Configure microk8s kubelet
+  hosts: k8s
+  become: yes
+
+  tasks:
+    - name: Add unsafe sysctl
+      lineinfile:
+        path: /var/snap/microk8s/current/args/kubelet
+        regexp: '--allowed-unsafe-sysctls'
+        line: '--allowed-unsafe-sysctls "net.ipv4.ip_forward"'
+      notify: Restart microk8s
+
+    - name: Wait microk8s ready
+      command: microk8s status --wait-ready
+
+  handlers:
+    - name: Restart microk8s
+      shell: |
+        microk8s stop
+        microk8s start
+
+- name: Install gtp5g kernel module
+  hosts: k8s
+  become: yes
+
+  vars:
+    gtp5g_dir: "/home/{{ ansible_user }}/gtp5g"
+
+  tasks:
+    - name: Install build dependencies
+      apt:
+        name:
+          - git
+          - gcc
+          - g++
+          - cmake
+          - autoconf
+          - libtool
+          - pkg-config
+          - libmnl-dev
+          - libyaml-dev
+        state: present
+        update_cache: yes
+
+    - name: Clone gtp5g repo
+      become: no
+      git:
+        repo: https://github.com/free5gc/gtp5g.git
+        dest: "{{ gtp5g_dir }}"
+        version: v0.9.14
+
+    - name: Build gtp5g
+      become: no
+      command: make
+      args:
+        chdir: "{{ gtp5g_dir }}"
+
+    - name: Uninstall gtp5g if exists
+      become: yes
+      command: make uninstall
+      args:
+        chdir: "{{ gtp5g_dir }}"
+      register: uninstall_gtp5g_result
+      failed_when: false
+      changed_when: uninstall_gtp5g_result.rc == 0
+
+    - name: Install gtp5g
+      become: yes
+      command: make install
+      args:
+        chdir: "{{ gtp5g_dir }}"
+
+- name: Setup free5gc helm repo
+  hosts: all
+  become: yes
+
+  vars:
+    helm_dir: "/home/{{ ansible_user }}/free5gc-helm"
+
+  tasks:
+    - name: Install git
+      apt:
+        name: git
+        state: present
+        update_cache: yes
+
+    - name: Clone repo
+      become: no
+      git:
+        repo: https://github.com/free5gc/free5gc-helm.git
+        dest: "{{ helm_dir }}"
+        version: main
+
+- name: Setup mongodb
+  hosts: all
+  become: yes
+
+  vars:
+    helm_dir: "/home/{{ ansible_user }}/free5gc-helm"
+    mongodb_dir: "/home/{{ ansible_user }}/mongodb"
+    work_node_: "{{ work_node}}"
+
+  tasks:
+    - name: Ensure mongo storage dir exists
+      file:
+        path: "{{ mongodb_dir }}"
+        state: directory
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: '0755'
+
+    - name: Replace mongo path
+      become: no
+      replace:
+        path: "{{ helm_dir }}/charts/free5gc/charts/mongodb-15.6.0/values.yaml"
+        regexp: 'path: /home/free5gc/mongo'
+        replace: 'path: {{ mongodb_dir }}'
+
+    - name: Replace node name
+      become: no
+      replace:
+        path: "{{ helm_dir }}/charts/free5gc/charts/mongodb-15.6.0/values.yaml"
+        regexp: '- free5gc'
+        replace: '- {{ work_node_ }}'
+
+- name: Deploy free5GC full stack
+  hosts: k8s
+  become: yes
+
+  vars:
+    ns: free5gc
+    helm_dir: "/home/{{ ansible_user }}/free5gc-helm"
+
+  tasks:
+    - name: Ensure namespace
+      command: kubectl create ns {{ ns }}
+      environment:
+        KUBECONFIG: /var/snap/microk8s/current/credentials/client.config
+      register: ns_result
+      failed_when: ns_result.rc != 0 and "AlreadyExists" not in ns_result.stderr
+      changed_when: "'AlreadyExists' not in ns_result.stderr"
+
+    - name: Install free5gc
+      command: helm upgrade --install free5gc-helm ./free5gc -n {{ ns }}
+      environment:
+        KUBECONFIG: /var/snap/microk8s/current/credentials/client.config
+      args:
+        chdir: "{{ helm_dir }}/charts"
+
+    - name: Install ueransim
+      command: helm upgrade --install ueransim ./ueransim -n {{ ns }}
+      environment:
+        KUBECONFIG: /var/snap/microk8s/current/credentials/client.config
+      args:
+        chdir: "{{ helm_dir }}/charts"

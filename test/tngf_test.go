@@ -879,6 +879,22 @@ func GetMessageAuthenticator(message *radiusMessage.RadiusMessage) []byte {
 	return hmacFun.Sum(nil)
 }
 
+func AppendMessageAuthenticator(
+	message *radiusMessage.RadiusMessage,
+	payloadContainer *radiusMessage.RadiusPayloadContainer,
+) {
+	authPayload := new(radiusMessage.RadiusPayload)
+	authPayload.Type = radiusMessage.TypeMessageAuthenticator
+	authPayload.Length = uint8(18)
+	authPayload.Val = make([]byte, 16)
+
+	message.Payloads = *payloadContainer
+	message.Payloads = append(message.Payloads, *authPayload)
+	authPayload.Val = GetMessageAuthenticator(message)
+	*payloadContainer = append(*payloadContainer, *authPayload)
+	message.Payloads = *payloadContainer
+}
+
 func TestTngfUE(t *testing.T) {
 	// New UE
 	ue := NewRanUeContext("imsi-208930000007487", 1, nasSecurity.AlgCiphering128NEA0, nasSecurity.AlgIntegrity128NIA2,
@@ -954,18 +970,7 @@ func TestTngfUE(t *testing.T) {
 		return
 	}
 	BuildEAPIdentity(ueRadiusPayload, identifier, []byte("tngfue"))
-
-	// create Authenticator payload
-	authPayload := new(radiusMessage.RadiusPayload)
-	authPayload.Type = radiusMessage.TypeMessageAuthenticator
-	authPayload.Length = uint8(18)
-	authPayload.Val = make([]byte, 16)
-
-	ueRadiusMessage.Payloads = *ueRadiusPayload
-	ueRadiusMessage.Payloads = append(ueRadiusMessage.Payloads, *authPayload)
-	authPayload.Val = GetMessageAuthenticator(ueRadiusMessage)
-	*ueRadiusPayload = append(*ueRadiusPayload, *authPayload)
-	ueRadiusMessage.Payloads = *ueRadiusPayload
+	AppendMessageAuthenticator(ueRadiusMessage, ueRadiusPayload)
 
 	pkt, err = UEencode(ueRadiusMessage)
 
@@ -1024,9 +1029,8 @@ func TestTngfUE(t *testing.T) {
 	eapVendorTypeData = append(eapVendorTypeData, registrationRequest...)
 
 	BuildEAP5GNAS(ueRadiusPayload, identifier, eapVendorTypeData)
-
-	ueRadiusMessage.Payloads = *ueRadiusPayload
-	pkt, err = ueRadiusMessage.Encode()
+	AppendMessageAuthenticator(ueRadiusMessage, ueRadiusPayload)
+	pkt, err = UEencode(ueRadiusMessage)
 	if err != nil {
 		t.Fatalf("Radius Message Encoding error: %+v", err)
 	}
@@ -1112,9 +1116,8 @@ func TestTngfUE(t *testing.T) {
 	eapVendorTypeData = append(eapVendorTypeData, authenticationResponse...)
 
 	BuildEAP5GNAS(ueRadiusPayload, identifier, eapVendorTypeData)
-
-	ueRadiusMessage.Payloads = *ueRadiusPayload
-	pkt, err = ueRadiusMessage.Encode()
+	AppendMessageAuthenticator(ueRadiusMessage, ueRadiusPayload)
+	pkt, err = UEencode(ueRadiusMessage)
 	if err != nil {
 		t.Fatalf("Radius Message Encoding error: %+v", err)
 	}
@@ -1177,9 +1180,8 @@ func TestTngfUE(t *testing.T) {
 	eapVendorTypeData = append(eapVendorTypeData, smcComplete...)
 
 	BuildEAP5GNAS(ueRadiusPayload, identifier, eapVendorTypeData)
-
-	ueRadiusMessage.Payloads = *ueRadiusPayload
-	pkt, err = ueRadiusMessage.Encode()
+	AppendMessageAuthenticator(ueRadiusMessage, ueRadiusPayload)
+	pkt, err = UEencode(ueRadiusMessage)
 	if err != nil {
 		t.Fatalf("Radius Message Encoding error: %+v", err)
 	}
@@ -1220,9 +1222,8 @@ func TestTngfUE(t *testing.T) {
 		return
 	}
 	BuildEAP5GNotification(ueRadiusPayload, identifier)
-
-	ueRadiusMessage.Payloads = *ueRadiusPayload
-	pkt, err = ueRadiusMessage.Encode()
+	AppendMessageAuthenticator(ueRadiusMessage, ueRadiusPayload)
+	pkt, err = UEencode(ueRadiusMessage)
 	if err != nil {
 		t.Fatalf("Radius Message Encoding error: %+v", err)
 	}

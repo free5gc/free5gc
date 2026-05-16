@@ -18,6 +18,7 @@ import (
 	"github.com/free5gc/nas/nasType"
 	"github.com/free5gc/nas/security"
 	"github.com/free5gc/openapi/models"
+	"github.com/free5gc/util/milenage"
 	"github.com/free5gc/util/ueauth"
 	"github.com/free5gc/webconsole/backend/WebUI"
 )
@@ -137,13 +138,7 @@ func (ue *RanUeContext) DeriveRESstarAndSetKey(
 	}
 
 	// Run milenage
-	macA, macS := make([]byte, 8), make([]byte, 8)
-	ck, ik := make([]byte, 16), make([]byte, 16)
-	res := make([]byte, 8)
-	ak, akStar := make([]byte, 6), make([]byte, 6)
-
 	opc := make([]byte, 16)
-	_ = opc
 	k, err := hex.DecodeString(authSubs.EncPermanentKey)
 	if err != nil {
 		fatal.Fatalf("DecodeString error: %+v", err)
@@ -158,16 +153,15 @@ func (ue *RanUeContext) DeriveRESstarAndSetKey(
 		}
 	}
 
-	// Generate MAC_A, MAC_S
-	err = MilenageF1(opc, k, rand, sqn, amf, macA, macS)
+	// Run milenage
+	ik, ck, res, autn, err := milenage.GenerateAKAParameters(opc, k, rand, sqn, amf)
 	if err != nil {
-		fatal.Fatalf("regexp Compile error: %+v", err)
+		fatal.Fatalf("GenerateAKAParameters error: %+v", err)
 	}
 
-	// Generate RES, CK, IK, AK, AKstar
-	err = MilenageF2345(opc, k, rand, res, ck, ik, ak, akStar)
-	if err != nil {
-		fatal.Fatalf("regexp Compile error: %+v", err)
+	ak := make([]byte, len(sqn))
+	for i := 0; i < len(sqn); i++ {
+		ak[i] = sqn[i] ^ autn[i]
 	}
 
 	// derive RES*
@@ -225,13 +219,7 @@ func (ue *RanUeContext) DeriveResEAPMessageAndSetKey(
 	}
 
 	// Run milenage
-	macA, macS := make([]byte, 8), make([]byte, 8)
-	ck, ik := make([]byte, 16), make([]byte, 16)
-	res := make([]byte, 8)
-	ak, akStar := make([]byte, 6), make([]byte, 6)
-
 	opc := make([]byte, 16)
-	_ = opc
 	k, err := hex.DecodeString(authSubs.EncPermanentKey)
 	if err != nil {
 		fatal.Fatalf("DecodeString error: %+v", err)
@@ -246,16 +234,10 @@ func (ue *RanUeContext) DeriveResEAPMessageAndSetKey(
 		}
 	}
 
-	// Generate MAC_A, MAC_S
-	err = MilenageF1(opc, k, rand, sqn, amf, macA, macS)
+	// Run milenage
+	ik, ck, res, _, err := milenage.GenerateAKAParameters(opc, k, rand, sqn, amf)
 	if err != nil {
-		fatal.Fatalf("regexp Compile error: %+v", err)
-	}
-
-	// Generate RES, CK, IK, AK, AKstar
-	err = MilenageF2345(opc, k, rand, res, ck, ik, ak, akStar)
-	if err != nil {
-		fatal.Fatalf("regexp Compile error: %+v", err)
+		fatal.Fatalf("GenerateAKAParameters error: %+v", err)
 	}
 
 	// derive CK' IK'

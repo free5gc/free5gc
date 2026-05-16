@@ -52,6 +52,7 @@ jobs:
       - name: Up Basic docker compose
         run: |
           cd ${{ env.CI_TEST_DIR }}
+          docker rm -f mongodb ci-mongodb || true
           if ! docker compose -f ${{ env.BASIC_CI_COMPOSE_FILE }} up -d --wait --wait-timeout ${{ env.WAIT_CI_TIMEOUT }}; then
             echo "Failed to up docker compose Basic"
             exit 1
@@ -78,6 +79,7 @@ jobs:
       - name: Up TI docker compose
         run: |
           cd ${{ env.CI_TEST_DIR }}
+          docker rm -f mongodb ci-mongodb || true
           if ! docker compose -f ${{ env.TI_CI_COMPOSE_FILE }} up -d --wait --wait-timeout ${{ env.WAIT_CI_TIMEOUT }}; then
             echo "Failed to up docker compose TI"
             exit 1
@@ -104,6 +106,7 @@ jobs:
       - name: Up MP docker compose
         run: |
           cd ${{ env.CI_TEST_DIR }}
+          docker rm -f mongodb ci-mongodb || true
           if ! docker compose -f ${{ env.MP_CI_COMPOSE_FILE }} up -d --wait --wait-timeout ${{ env.WAIT_CI_TIMEOUT }}; then
             echo "Failed to up docker compose MP"
             exit 1
@@ -157,13 +160,10 @@ jobs:
           rm -rf ${{ env.CI_TEST_DIR }}
           git clone ${{ env.CI_TEST_REPO }}
           cd ${{ env.CI_TEST_DIR }}/${{ env.CI_TEST_BASE_DIR }}
-          git clone ${{ env.FREE5GC_REPO }}
+          git clone -j `nproc` --recursive ${{ env.FREE5GC_REPO }}
           cd ${{ env.CI_TEST_BASE_FREE5GC_DIR }}
-          git fetch origin +${{ github.ref }}:refs/remotes/origin/pr
-          git checkout origin/pr
-          git submodule init
-          git submodule sync
-          git submodule update
+          git submodule foreach git checkout main
+          git submodule foreach git pull origin main
 
       - name: Build Base Images
         run: |
@@ -173,6 +173,7 @@ jobs:
       - name: Up Basic docker compose
         run: |
           cd ${{ env.CI_TEST_DIR }}
+          docker rm -f mongodb ci-mongodb || true
           if ! docker compose -f ${{ env.BASIC_COMPOSE_FILE }} up -d --wait --wait-timeout ${{ env.WAIT_TIMEOUT }}; then
             echo "Failed to up docker compose Basic"
             exit 1
@@ -199,6 +200,7 @@ jobs:
       - name: Up TI docker compose
         run: |
           cd ${{ env.CI_TEST_DIR }}
+          docker rm -f mongodb ci-mongodb || true
           if ! docker compose -f ${{ env.TI_COMPOSE_FILE }} up -d --wait --wait-timeout ${{ env.WAIT_TIMEOUT }}; then
             echo "Failed to up docker compose TI"
             exit 1
@@ -225,6 +227,7 @@ jobs:
       - name: Up MP docker compose
         run: |
           cd ${{ env.CI_TEST_DIR }}
+          docker rm -f mongodb ci-mongodb || true
           if ! docker compose -f ${{ env.MP_COMPOSE_FILE }} up -d --wait --wait-timeout ${{ env.WAIT_TIMEOUT }}; then
             echo "Failed to up docker compose MP"
             exit 1
