@@ -103,6 +103,7 @@ func init() {
 			Ausf: true,
 			Chf:  true,
 			Bsf:  true,
+			Nef:  true,
 		}
 		NFstructs = test.CreateNFs(startNfCfg)
 		NfStart()
