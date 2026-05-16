@@ -13,10 +13,7 @@ require (
 	github.com/free5gc/chf v1.2.2
 	github.com/free5gc/ike v1.2.1
 	github.com/free5gc/nas v1.2.3
-<<<<<<< HEAD
 	github.com/free5gc/nef v0.0.0
-=======
->>>>>>> refs/remotes/upstream/main
 	github.com/free5gc/ngap v1.1.3
 	github.com/free5gc/nrf v0.0.0
 	github.com/free5gc/nssf v0.0.0

@@ -174,21 +174,12 @@ github.com/free5gc/ngap v1.1.3 h1:uT+IE5PkWOYjPdxCyOAwLDOXUiADcOQCs05CudyC36s=
 github.com/free5gc/ngap v1.1.3/go.mod h1:yGMO2GYV5DbbmudwD7Oo6dXQgz2ON29GhqtXDeXdyvA=
 github.com/free5gc/openapi v1.2.4 h1:uhyaTggUhd9xgMFcs5y2rCqFOfXuv6Zsr+cLUU/x6gs=
 github.com/free5gc/openapi v1.2.4/go.mod h1:V9CKQUqWp6kXL3SDtaIs4ZWeLipk5TSRXCnt+ntNceg=
-<<<<<<< HEAD
-github.com/free5gc/pfcp v1.1.1 h1:ew3G7ybvyn5jTEa8BASM2Tk+E1m8Hl92c3J6PyTGdJo=
-github.com/free5gc/pfcp v1.1.1/go.mod h1:QmqXS6WmU5UeAa/Ucfxf01zBTaZhniATrNzUh2um12A=
-github.com/free5gc/sctp v1.1.1 h1:FfoQjIwMDL+IfD3YWx/+S2nO7fFVi/5FZ11xJQ/gRi0=
-github.com/free5gc/sctp v1.1.1/go.mod h1:th0y/MUwlqBcoy9nY65VEOdoCgu3ObV1ADAicgkpLl0=
-github.com/free5gc/tlv v1.1.0 h1:1pUjI0f+xD4S4a1TJ/bFLvgIwJ5k6G9rv/UETtgVw70=
-github.com/free5gc/tlv v1.1.0/go.mod h1:fD4OWzUASStt4x32wBceQZE8wFjgmCNNPsmku7Qm9YA=
-=======
 github.com/free5gc/pfcp v1.1.2 h1:onqDTlZok41OiagZxzw9+2c5bxMSOwqHOYxbORRYUTw=
 github.com/free5gc/pfcp v1.1.2/go.mod h1:Odjw78gt0DYEbwUQD4w/vU+GvfrRZLgqyaL+AvwD4ww=
 github.com/free5gc/sctp v1.1.2 h1:nNEr4uywIFmVBZauaNVJRkIDXr4nrpMmM0TPIck5QPA=
 github.com/free5gc/sctp v1.1.2/go.mod h1:wOvct9P1T6DGk1fxkleF7zeTHsU8ZKxKzewu2ciZh/4=
 github.com/free5gc/tlv v1.1.1 h1:P4dsVdVqMwwHVlOG4ESeQAfDU9T11IKh242VOVHRr0M=
 github.com/free5gc/tlv v1.1.1/go.mod h1:b1ipPTEeJEylQEeIC2JzCaTvRmh5InGhvnRn3AwJE0E=
->>>>>>> refs/remotes/upstream/main
 github.com/free5gc/util v1.3.2 h1:3BjZq050WbaLJY0w1Bn51YZlCirs2ARoCUxD3LDSdbo=
 github.com/free5gc/util v1.3.2/go.mod h1:wXObe2iF465VRdkE1Z5YkiSuHXlCT8HJ+yc7p9t5hMs=
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=

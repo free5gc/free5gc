@@ -1,25 +1,26 @@
 package test_test
 
 import (
-	"bytes"
+"bytes"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func getOAuthToken(t *testing.T, targetNfType, scope string) string {
+func getOAuthToken(t *testing.T, clientNfID, targetNfType, scope string) string {
 	t.Helper()
-	nfID := "88924b10-60b6-455b-9d41-356c3ee72e1f"
 	nfProfile := map[string]interface{}{
-		"nfInstanceId": nfID,
+		"nfInstanceId": clientNfID,
 		"nfType":       "AF",
 		"nfStatus":     "REGISTERED",
 		"nfServices": []map[string]interface{}{
@@ -37,7 +38,7 @@ func getOAuthToken(t *testing.T, targetNfType, scope string) string {
 	b, _ := json.Marshal(nfProfile)
 	// Register AF in NRF
 	req, _ := http.NewRequest(http.MethodPut,
-		"http://127.0.0.10:8000/nnrf-nfm/v1/nf-instances/"+nfID, bytes.NewReader(b))
+		"http://127.0.0.10:8000/nnrf-nfm/v1/nf-instances/"+clientNfID, bytes.NewReader(b))
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := http.DefaultClient.Do(req)
 	require.NoError(t, err)
@@ -45,7 +46,7 @@ func getOAuthToken(t *testing.T, targetNfType, scope string) string {
 
 	data := url.Values{}
 	data.Set("grant_type", "client_credentials")
-	data.Set("nfInstanceId", nfID)
+	data.Set("nfInstanceId", clientNfID)
 	data.Set("nfType", "AF")
 	data.Set("targetNfType", targetNfType)
 	data.Set("scope", scope)
@@ -72,6 +73,19 @@ func getOAuthToken(t *testing.T, targetNfType, scope string) string {
 
 func TestOAuth2Callback(t *testing.T) {
 	t.Log("[TestOAuth2Callback] Running in STRICT OAuth2 mode.")
+	
+	if _, err := os.Stat("../cert/af.pem"); os.IsNotExist(err) {
+		t.Log("[Setup] Copying nef.pem to af.pem for NRF verification...")
+		certData, err := os.ReadFile("../cert/nef.pem")
+		if err == nil {
+			_ = os.WriteFile("../cert/af.pem", certData, 0644)
+		} else {
+			t.Logf("[Warning] Failed to read nef.pem: %v", err)
+		}
+	}
+
+	clientNfID := uuid.New().String()
+	t.Logf("[TestOAuth2Callback] Using dynamic AF Instance ID: %s", clientNfID)
 
 	var afCallCount int64
 	afMock := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -105,7 +119,7 @@ func TestOAuth2Callback(t *testing.T) {
 	subReqURL := "http://127.0.0.5:8000/3gpp-traffic-influence/v1/" + afID + "/subscriptions"
 	reqSub, _ := http.NewRequest(http.MethodPost, subReqURL, bytes.NewReader(subBodyJSON))
 	reqSub.Header.Set("Content-Type", "application/json")
-	reqSub.Header.Set("Authorization", "Bearer "+getOAuthToken(t, "NEF", "3gpp-traffic-influence"))
+	reqSub.Header.Set("Authorization", "Bearer "+getOAuthToken(t, clientNfID, "NEF", "3gpp-traffic-influence"))
 
 	subResp, err := http.DefaultClient.Do(reqSub)
 	require.NoError(t, err)
@@ -125,7 +139,7 @@ func TestOAuth2Callback(t *testing.T) {
 	callbackURL := "http://127.0.0.5:8000/nnef-callback/v1/notification/smf"
 	reqNotif, _ := http.NewRequest(http.MethodPost, callbackURL, bytes.NewReader(notifBody))
 	reqNotif.Header.Set("Content-Type", "application/json")
-	reqNotif.Header.Set("Authorization", "Bearer "+getOAuthToken(t, "NEF", "nnef-callback"))
+	reqNotif.Header.Set("Authorization", "Bearer "+getOAuthToken(t, clientNfID, "NEF", "nnef-callback"))
 
 	notifResp, err := http.DefaultClient.Do(reqNotif)
 	require.NoError(t, err)
@@ -139,7 +153,7 @@ func TestOAuth2Callback(t *testing.T) {
 	loc := subResp.Header.Get("Location")
 	if loc != "" {
 		delReq, _ := http.NewRequest(http.MethodDelete, loc, nil)
-		delReq.Header.Set("Authorization", "Bearer "+getOAuthToken(t, "NEF", "3gpp-traffic-influence"))
+		delReq.Header.Set("Authorization", "Bearer "+getOAuthToken(t, clientNfID, "NEF", "3gpp-traffic-influence"))
 		delResp, err := http.DefaultClient.Do(delReq)
 		if err == nil {
 			defer delResp.Body.Close()
@@ -155,7 +169,7 @@ func TestOAuth2Callback(t *testing.T) {
 
 	for nfType, scope := range nfCallbacks {
 		t.Logf("[Strict Check] Verifying OAuth2 registration for %s service: %s", nfType, scope)
-		token := getOAuthToken(t, nfType, scope)
+		token := getOAuthToken(t, clientNfID, nfType, scope)
 		require.NotEmpty(t, token)
 		t.Logf("[Strict Check] Success: %s has registered %s and NRF issued a token.", nfType, scope)
 	}
