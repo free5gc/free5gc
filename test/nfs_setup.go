@@ -1447,7 +1447,6 @@ func bsfConfig() error {
 				},
 			},
 			NrfUri: "http://127.0.0.10:8000",
-			NrfCertPem: "../cert/nrf.pem",
 			MongoDB: &bsf_factory.MongoDB{
 				Name: "free5gc",
 				Url:  "mongodb://localhost:27017",
