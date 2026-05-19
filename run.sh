@@ -141,7 +141,7 @@ mongosh "$DB_NAME" --eval "$MONGO_SCRIPT"
 
 sleep 0.1
 
-NF_LIST="nrf amf smf udr pcf udm nssf ausf chf nef"
+NF_LIST="nrf scp amf smf udr pcf udm nssf ausf chf nef"
 
 # Add BSF to the list only if enabled
 if [ $BSF_ENABLE -ne 0 ]; then

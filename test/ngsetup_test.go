@@ -103,6 +103,15 @@ func init() {
 			Ausf: true,
 			Chf:  true,
 			Bsf:  true,
+			Scp:  initNfCfg.TestId == test.TestSCPDirectProxy,
+		}
+		if initNfCfg.TestId == test.TestSCPDirectProxy {
+			startNfCfg.Amf = false
+			startNfCfg.Smf = false
+			startNfCfg.Pcf = false
+			startNfCfg.Nssf = false
+			startNfCfg.Chf = false
+			startNfCfg.Bsf = false
 		}
 		NFstructs = test.CreateNFs(startNfCfg)
 		NfStart()
