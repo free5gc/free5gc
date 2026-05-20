@@ -20,6 +20,14 @@ const (
 	testAusfInstanceID = "00000000-0000-4000-8000-000000000000"
 )
 
+// TestSCPDirectProxy verifies that the SCP direct proxy can route service API
+// requests to the expected NF producers. It prepares a UE authentication
+// subscription in MongoDB, then sends requests through the SCP endpoint for:
+// 1. UDR authentication subscription lookup,
+// 2. UDM authentication vector generation, and
+// 3. AUSF UE authentication context creation.
+// Each subtest confirms both the HTTP status returned by the proxied NF and
+// the key response fields needed by the authentication flow.
 func TestSCPDirectProxy(t *testing.T) {
 	ue := test.NewRanUeContext("imsi-208930000007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA2,
 		models.AccessType__3_GPP_ACCESS)
