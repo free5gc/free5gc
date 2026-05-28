@@ -18,6 +18,7 @@ require (
 	github.com/free5gc/nssf v0.0.0
 	github.com/free5gc/openapi v1.2.5-0.20260527003827-02dc71b4d94f
 	github.com/free5gc/pcf v0.0.0
+	github.com/free5gc/scp v0.0.0
 	github.com/free5gc/sctp v1.1.2
 	github.com/free5gc/smf v1.4.3
 	github.com/free5gc/tngf v0.0.0-00010101000000-000000000000
@@ -68,7 +69,7 @@ require (
 	github.com/free5gc/pfcp v1.1.2 // indirect
 	github.com/free5gc/tlv v1.1.1 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
-	github.com/gin-contrib/cors v1.6.0 // indirect
+	github.com/gin-contrib/cors v1.7.2 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
@@ -160,6 +161,7 @@ replace (
 	github.com/free5gc/nrf => ../NFs/nrf
 	github.com/free5gc/nssf => ../NFs/nssf
 	github.com/free5gc/pcf => ../NFs/pcf
+	github.com/free5gc/scp => ../NFs/scp
 	github.com/free5gc/smf => ../NFs/smf
 	github.com/free5gc/tngf => ../NFs/tngf
 	github.com/free5gc/udm => ../NFs/udm

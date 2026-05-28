@@ -7,6 +7,7 @@ PCAP_MODE=0
 N3IWF_ENABLE=0
 TNGF_ENABLE=0
 BSF_ENABLE=0
+SCP_ENABLE=0
 
 PID_LIST=()
 echo $$ > run.pid
@@ -46,6 +47,9 @@ if [ $# -ne 0 ]; then
                 ;;
             -bsf)
                 BSF_ENABLE=1
+                ;;
+            -scp)
+                SCP_ENABLE=1
                 ;;
         esac
         shift
@@ -142,6 +146,14 @@ mongosh "$DB_NAME" --eval "$MONGO_SCRIPT"
 sleep 0.1
 
 NF_LIST="nrf amf smf udr pcf udm nssf ausf chf nef"
+
+# Add SCP to the list only if enabled
+if [ $SCP_ENABLE -ne 0 ]; then
+    NF_LIST="$NF_LIST scp"
+    echo "SCP enabled - will start SCP service"
+else
+    echo "SCP disabled - skipping SCP service"
+fi
 
 # Add BSF to the list only if enabled
 if [ $BSF_ENABLE -ne 0 ]; then
