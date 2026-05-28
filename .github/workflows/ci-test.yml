@@ -49,7 +49,7 @@ jobs:
           rm -rf ${{ env.CI_TEST_DIR }}
           git clone ${{ env.CI_TEST_REPO }}
 
-      - name: Up Basic docker compose
+      - name: Basic test
         run: |
           cd ${{ env.CI_TEST_DIR }}
           docker rm -f mongodb ci-mongodb || true
@@ -58,16 +58,13 @@ jobs:
             exit 1
           fi
           sleep 5
-      
-      - name: Run Basic test
-        run: |
-          cd ${{ env.CI_TEST_DIR }}
+
           for test in ${{ env.BASIC_TEST_POOL }}; do
             echo "Running test: $test"
             ./ci-test-basic.sh $test
           done
 
-      - name: Down Basic docker compose
+      - name: Clean Basic test environment
         if: always()
         run: |
           cd ${{ env.CI_TEST_DIR }}
@@ -76,7 +73,7 @@ jobs:
             exit 1
           fi
 
-      - name: Up TI docker compose
+      - name: ULCL TI test
         run: |
           cd ${{ env.CI_TEST_DIR }}
           docker rm -f mongodb ci-mongodb || true
@@ -86,15 +83,12 @@ jobs:
           fi
           sleep 5
 
-      - name: Run TI test
-        run: |
-          cd ${{ env.CI_TEST_DIR }}
           for test in ${{ env.TI_TEST_POOL }}; do
             echo "Running test: $test"
             ./ci-test-ulcl-ti.sh $test
           done
 
-      - name: Down TI docker compose
+      - name: Clean TI test environment
         if: always()
         run: |
           cd ${{ env.CI_TEST_DIR }}
@@ -103,7 +97,7 @@ jobs:
             exit 1
           fi
 
-      - name: Up MP docker compose
+      - name: ULCL MP test
         run: |
           cd ${{ env.CI_TEST_DIR }}
           docker rm -f mongodb ci-mongodb || true
@@ -113,15 +107,12 @@ jobs:
           fi
           sleep 5
 
-      - name: Run MP test
-        run: |
-          cd ${{ env.CI_TEST_DIR }}
           for test in ${{ env.MP_TEST_POOL }}; do
             echo "Running test: $test"
             ./ci-test-ulcl-mp.sh $test
           done
 
-      - name: Down MP docker compose
+      - name: Clean MP test environment
         if: always()
         run: |
           cd ${{ env.CI_TEST_DIR }}
@@ -170,7 +161,7 @@ jobs:
           cd ${{ env.CI_TEST_DIR }}
           make
 
-      - name: Up Basic docker compose
+      - name: Basic test
         run: |
           cd ${{ env.CI_TEST_DIR }}
           docker rm -f mongodb ci-mongodb || true
@@ -180,15 +171,12 @@ jobs:
           fi
           sleep 5
 
-      - name: Run Basic test
-        run: |
-          cd ${{ env.CI_TEST_DIR }}
           for test in ${{ env.BASIC_TEST_POOL }}; do
             echo "Running test: $test"
             ./ci-test-basic.sh $test
           done
 
-      - name: Down Basic docker compose
+      - name: Clean Basic test environment
         if: always()
         run: |
           cd ${{ env.CI_TEST_DIR }}
@@ -197,7 +185,7 @@ jobs:
             exit 1
           fi
 
-      - name: Up TI docker compose
+      - name: ULCL TI test
         run: |
           cd ${{ env.CI_TEST_DIR }}
           docker rm -f mongodb ci-mongodb || true
@@ -205,17 +193,13 @@ jobs:
             echo "Failed to up docker compose TI"
             exit 1
           fi
-          sleep 5
 
-      - name: Run TI test
-        run: |
-          cd ${{ env.CI_TEST_DIR }}
           for test in ${{ env.TI_TEST_POOL }}; do
             echo "Running test: $test"
             ./ci-test-ulcl-ti.sh $test
           done
 
-      - name: Down TI docker compose
+      - name: Clean TI test environment
         if: always()
         run: |
           cd ${{ env.CI_TEST_DIR }}
@@ -224,7 +208,7 @@ jobs:
             exit 1
           fi
 
-      - name: Up MP docker compose
+      - name: ULCL MP test
         run: |
           cd ${{ env.CI_TEST_DIR }}
           docker rm -f mongodb ci-mongodb || true
@@ -234,15 +218,12 @@ jobs:
           fi
           sleep 5
 
-      - name: Run MP test
-        run: |
-          cd ${{ env.CI_TEST_DIR }}
           for test in ${{ env.MP_TEST_POOL }}; do
             echo "Running test: $test"
             ./ci-test-ulcl-mp.sh $test
           done
 
-      - name: Down MP docker compose
+      - name: Clean MP test environment
         if: always()
         run: |
           cd ${{ env.CI_TEST_DIR }}
