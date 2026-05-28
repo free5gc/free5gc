@@ -13,6 +13,7 @@ require (
 	github.com/free5gc/chf v1.2.2
 	github.com/free5gc/ike v1.2.1
 	github.com/free5gc/nas v1.2.3
+	github.com/free5gc/nef v1.2.4
 	github.com/free5gc/ngap v1.1.3
 	github.com/free5gc/nrf v0.0.0
 	github.com/free5gc/nssf v0.0.0
@@ -157,6 +158,7 @@ replace (
 	github.com/free5gc/bsf => ../NFs/bsf
 	github.com/free5gc/chf => ../NFs/chf
 	github.com/free5gc/n3iwf => ../NFs/n3iwf
+	github.com/free5gc/nef => ../NFs/nef
 	github.com/free5gc/nrf => ../NFs/nrf
 	github.com/free5gc/nssf => ../NFs/nssf
 	github.com/free5gc/pcf => ../NFs/pcf

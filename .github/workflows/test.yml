@@ -103,6 +103,8 @@ jobs:
         ./test_ci.sh TestDynamicDC oauth
         sleep 1
         ./test_ci.sh TestXnDCHandover oauth
+        sleep 1
+        ./test_ci.sh TestOAuth2Callback oauth
     - name: ULCL Test (OAuth)
       run: ./test_ci_ulcl.sh TestRequestTwoPDUSessions oauth
     # - name: Non3GPP Test
