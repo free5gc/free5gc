@@ -48,14 +48,20 @@ sudo rm -f test/cert/*_*
 sudo rm -f /tmp/config.json # CHF ChargingGatway FTP config
 
 if [ $DROP_ALL_DB -eq 1 ]; then
-    mongo --eval "db.dropDatabase()" "$DB_NAME"
-    mongosh --eval "db.dropDatabase()" "$DB_NAME"
+    if command -v mongosh &> /dev/null; then
+        mongosh --eval "db.dropDatabase()" "$DB_NAME"
+    else
+        mongo --eval "db.dropDatabase()" "$DB_NAME"
+    fi
 else
     MONGO_SCRIPT=""
     for COLLECTION in "${DB_DROP_COLLECTION[@]}"
     do
         MONGO_SCRIPT+="db.$COLLECTION.drop();"
     done
-    mongo "$DB_NAME" --eval "$MONGO_SCRIPT"
-    mongosh "$DB_NAME" --eval "$MONGO_SCRIPT" 
+    if command -v mongosh &> /dev/null; then
+        mongosh "$DB_NAME" --eval "$MONGO_SCRIPT" 
+    else
+        mongo "$DB_NAME" --eval "$MONGO_SCRIPT"
+    fi
 fi
