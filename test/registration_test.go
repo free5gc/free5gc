@@ -1800,7 +1800,7 @@ func TestN2Handover(t *testing.T) {
 	assert.Nil(t, err)
 
 	// RAN2 send Second NGSetupRequest Msg
-	sendMsg, err = test.GetNGSetupRequest([]byte("\x00\x01\x02"), 24, "nctu", "", "\x01", "\xfe\xdc\xba")
+	sendMsg, err = test.GetNGSetupRequest([]byte("\x00\x01\x02"), 24, "nctu", "\x30\x33\x99", "\x01", "\xfe\xdc\xba")
 	assert.Nil(t, err)
 	_, err = conn2.Write(sendMsg)
 	assert.Nil(t, err)
