@@ -1,29 +1,30 @@
 module test
 
-go 1.25.5
+go 1.26.2
 
 require (
 	github.com/antihax/optional v1.0.0
 	github.com/calee0219/fatal v0.0.1
 	github.com/davecgh/go-spew v1.1.1
 	github.com/free5gc/amf v0.0.0
-	github.com/free5gc/aper v1.1.0
+	github.com/free5gc/aper v1.1.1
 	github.com/free5gc/ausf v0.0.0
 	github.com/free5gc/bsf v0.0.0
-	github.com/free5gc/chf v1.2.1-0.20260104073217-9fbf02ffd990
-	github.com/free5gc/ike v1.2.0
-	github.com/free5gc/nas v1.2.3-0.20260121015506-0329a7ac3f31
-	github.com/free5gc/ngap v1.1.2
+	github.com/free5gc/chf v1.2.2
+	github.com/free5gc/ike v1.2.1
+	github.com/free5gc/nas v1.2.3
+	github.com/free5gc/nef v1.2.4
+	github.com/free5gc/ngap v1.1.3
 	github.com/free5gc/nrf v0.0.0
 	github.com/free5gc/nssf v0.0.0
-	github.com/free5gc/openapi v1.2.3
+	github.com/free5gc/openapi v1.2.5-0.20260527003827-02dc71b4d94f
 	github.com/free5gc/pcf v0.0.0
-	github.com/free5gc/sctp v1.1.1
-	github.com/free5gc/smf v1.4.1-0.20260104075605-df5818d03d12
+	github.com/free5gc/sctp v1.1.2
+	github.com/free5gc/smf v1.4.3
 	github.com/free5gc/tngf v0.0.0-00010101000000-000000000000
 	github.com/free5gc/udm v0.0.0
 	github.com/free5gc/udr v0.0.0
-	github.com/free5gc/util v1.3.2-0.20260319090834-b2a2938f37b4
+	github.com/free5gc/util v1.3.2
 	github.com/free5gc/webconsole v0.0.0
 	github.com/gin-gonic/gin v1.10.0
 	github.com/go-ping/ping v1.1.0
@@ -65,8 +66,8 @@ require (
 	github.com/fclairamb/go-log v0.4.1 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fiorix/go-diameter v3.0.2+incompatible // indirect
-	github.com/free5gc/pfcp v1.1.1 // indirect
-	github.com/free5gc/tlv v1.1.0 // indirect
+	github.com/free5gc/pfcp v1.1.2 // indirect
+	github.com/free5gc/tlv v1.1.1 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
 	github.com/gin-contrib/cors v1.6.0 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
@@ -132,9 +133,9 @@ require (
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace v0.49.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.49.0 // indirect
-	go.opentelemetry.io/otel v1.39.0 // indirect
-	go.opentelemetry.io/otel/metric v1.39.0 // indirect
-	go.opentelemetry.io/otel/trace v1.39.0 // indirect
+	go.opentelemetry.io/otel v1.41.0 // indirect
+	go.opentelemetry.io/otel/metric v1.41.0 // indirect
+	go.opentelemetry.io/otel/trace v1.41.0 // indirect
 	go.uber.org/mock v0.4.0 // indirect
 	golang.org/x/arch v0.8.0 // indirect
 	golang.org/x/crypto v0.46.0 // indirect
@@ -157,6 +158,7 @@ replace (
 	github.com/free5gc/bsf => ../NFs/bsf
 	github.com/free5gc/chf => ../NFs/chf
 	github.com/free5gc/n3iwf => ../NFs/n3iwf
+	github.com/free5gc/nef => ../NFs/nef
 	github.com/free5gc/nrf => ../NFs/nrf
 	github.com/free5gc/nssf => ../NFs/nssf
 	github.com/free5gc/pcf => ../NFs/pcf

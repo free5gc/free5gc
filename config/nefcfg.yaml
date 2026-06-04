@@ -14,8 +14,10 @@ configuration:
   nrfUri: http://127.0.0.10:8000 # A valid URI of NRF
   nrfCertPem: cert/nrf.pem # NRF Certificate
   serviceList: # the SBI services provided by this NEF
-    - serviceName: nnef-pfdmanagement # Nnef_PFDManagement Service
+    - serviceName: nnef-pfdmanagement # Nnef_PFDManagement Service (also mounts /3gpp-pfd-management)
     - serviceName: nnef-oam # OAM service
+    - serviceName: 3gpp-traffic-influence # AF-facing Traffic Influence API
+    - serviceName: nnef-callback # Inbound SMF event notification callback
 
 logger: # log output setting
   enable: true # true or false
