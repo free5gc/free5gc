@@ -1000,7 +1000,14 @@ func TestNon3GPPUE(t *testing.T) {
 	var ikePayload ike_message.IKEPayloadContainer
 
 	// Identification
-	ikePayload.BuildIdentificationInitiator(ike_message.ID_KEY_ID, []byte("UE"))
+	idByte := make([]byte, 8)
+	id, err := ike_security.GenerateRandomNumber()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	binary.BigEndian.PutUint64(idByte, id.Uint64())
+	ikePayload.BuildIdentificationInitiator(ike_message.ID_KEY_ID, idByte)
 
 	// Security Association
 	securityAssociation = ikePayload.BuildSecurityAssociation()
@@ -1317,7 +1324,7 @@ func TestNon3GPPUE(t *testing.T) {
 	}
 
 	var idPayload ike_message.IKEPayloadContainer
-	idPayload.BuildIdentificationInitiator(ike_message.ID_KEY_ID, []byte("UE"))
+	idPayload.BuildIdentificationInitiator(ike_message.ID_KEY_ID, idByte)
 	idPayloadData, err := idPayload.Encode()
 	if err != nil {
 		t.Fatalf("Encode IKE payload failed : %+v", err)
