@@ -730,7 +730,7 @@ func sendPduSessionEstablishmentRequest(
 		ikeSA.RemoteSPI,
 		ike_message.CREATE_CHILD_SA,
 		true, true,
-		ikeSA.InitiatorMessageID,
+		ikeSA.ResponderMessageID,
 		ikePayload,
 	)
 
@@ -1618,7 +1618,7 @@ func TestNon3GPPUE(t *testing.T) {
 		ikeSecurityAssociation.RemoteSPI,
 		ike_message.CREATE_CHILD_SA,
 		true, true,
-		ikeSecurityAssociation.InitiatorMessageID,
+		ikeSecurityAssociation.ResponderMessageID,
 		ikePayload,
 	)
 
