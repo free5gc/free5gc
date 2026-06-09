@@ -168,7 +168,7 @@ func ueRanEmulator() error {
 	fmt.Printf("[UERANEM] Connect to UPF successfully\n")
 
 	// send NGSetupRequest Msg
-	sendMsg, err = test.GetNGSetupRequest([]byte("\x00\x01\x02"), 24, "free5gc")
+	sendMsg, err = test.GetNGSetupRequest([]byte("\x00\x01\x02"), 24, "free5gc", "", "", "")
 	if err != nil {
 		err = fmt.Errorf("GetNGSetupRequest: %v", err)
 		return err

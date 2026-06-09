@@ -9,6 +9,7 @@ import (
 	"net"
 	"test/ngapTestpacket"
 
+	"github.com/free5gc/aper"
 	"github.com/free5gc/nas"
 	"github.com/free5gc/nas/nasMessage"
 	"github.com/free5gc/ngap"
@@ -56,7 +57,7 @@ func GetPDUAddress(accept *nasMessage.PDUSessionEstablishmentAccept) (net.IP, er
 	return nil, fmt.Errorf("PDUAddress is nil")
 }
 
-func GetNGSetupRequest(gnbId []byte, bitlength uint64, name string) ([]byte, error) {
+func GetNGSetupRequest(gnbId []byte, bitlength uint64, name string, tac string, sst string, sd string) ([]byte, error) {
 	message := ngapTestpacket.BuildNGSetupRequest()
 	// GlobalRANNodeID
 	ie := message.InitiatingMessage.Value.NGSetupRequest.ProtocolIEs.List[0]
@@ -66,6 +67,18 @@ func GetNGSetupRequest(gnbId []byte, bitlength uint64, name string) ([]byte, err
 	// RANNodeName
 	ie = message.InitiatingMessage.Value.NGSetupRequest.ProtocolIEs.List[1]
 	ie.Value.RANNodeName.Value = name
+	if tac != "" {
+		ie = message.InitiatingMessage.Value.NGSetupRequest.ProtocolIEs.List[2]
+		ie.Value.SupportedTAList.List[0].TAC.Value = aper.OctetString(tac)
+	}
+	if sst != "" {
+		ie = message.InitiatingMessage.Value.NGSetupRequest.ProtocolIEs.List[2]
+		ie.Value.SupportedTAList.List[0].BroadcastPLMNList.List[0].TAISliceSupportList.List[0].SNSSAI.SST.Value = aper.OctetString(sst)
+	}
+	if sd != "" {
+		ie = message.InitiatingMessage.Value.NGSetupRequest.ProtocolIEs.List[2]
+		ie.Value.SupportedTAList.List[0].BroadcastPLMNList.List[0].TAISliceSupportList.List[0].SNSSAI.SD.Value = aper.OctetString(sd)
+	}
 
 	return ngap.Encoder(message)
 }
