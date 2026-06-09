@@ -180,7 +180,7 @@ func generateSPI(n3ue *N3IWFUe) ([]byte, error) {
 			return nil, errors.Wrapf(err, "GenerateSPI()")
 		}
 		randomUint64 := randomBigInt.Uint64()
-		if _, ok := n3ue.N3IWFIkeUe.N3IWFChildSecurityAssociation[uint32(randomUint64)]; !ok {
+		if _, ok := n3ue.N3IWFChildSecurityAssociation[uint32(randomUint64)]; !ok {
 			spi = uint32(randomUint64)
 			binary.BigEndian.PutUint32(spiByte, spi)
 			break
@@ -424,7 +424,7 @@ func parseIPAddressInformationToChildSecurityAssociation(
 
 func parse5GQoSInfoNotify(n *ike_message.Notification) (info *PDUQoSInfo, err error) {
 	info = new(PDUQoSInfo)
-	var offset int = 0
+	var offset = 0
 	data := n.NotificationData
 	dataLen := int(data[0])
 	info.pduSessionID = data[1]
@@ -697,7 +697,7 @@ func sendPduSessionEstablishmentRequest(
 
 	// IKE CREATE_CHILD_SA response
 	ikeMessage.Payloads.Reset()
-	n3Info.N3IWFIkeUe.N3IWFIKESecurityAssociation.ResponderMessageID = ikeMessage.MessageID
+	n3Info.N3IWFIKESecurityAssociation.ResponderMessageID = ikeMessage.MessageID
 
 	var ikePayload ike_message.IKEPayloadContainer
 	ikePayload.Reset()
@@ -752,9 +752,9 @@ func sendPduSessionEstablishmentRequest(
 		return ifaces, err
 	}
 
-	n3Info.N3IWFIkeUe.CreateHalfChildSA(n3Info.N3IWFIkeUe.N3IWFIKESecurityAssociation.ResponderMessageID, binary.BigEndian.Uint32(inboundSPI), int64(pduSessionId))
-	childSecurityAssociationContextUserPlane, err := n3Info.N3IWFIkeUe.CompleteChildSA(
-		n3Info.N3IWFIkeUe.N3IWFIKESecurityAssociation.ResponderMessageID, outboundSPI, responseSecurityAssociation)
+	n3Info.CreateHalfChildSA(n3Info.N3IWFIKESecurityAssociation.ResponderMessageID, binary.BigEndian.Uint32(inboundSPI), int64(pduSessionId))
+	childSecurityAssociationContextUserPlane, err := n3Info.CompleteChildSA(
+		n3Info.N3IWFIKESecurityAssociation.ResponderMessageID, outboundSPI, responseSecurityAssociation)
 	if err != nil {
 		return ifaces, fmt.Errorf("Create child security association context failed: %+v", err)
 	}
@@ -831,7 +831,7 @@ func sendPduSessionEstablishmentRequest(
 		nasStr := spew.Sdump(nasMsg)
 		t.Log("Dump DecodePDUSessionEstablishmentAccept:\n", nasStr)
 
-		pduAddr, err = GetPDUAddress(nasMsg.GsmMessage.PDUSessionEstablishmentAccept)
+		pduAddr, err = GetPDUAddress(nasMsg.PDUSessionEstablishmentAccept)
 		if err != nil {
 			t.Errorf("GetPDUAddress Fail: %+v", err)
 		}
@@ -865,8 +865,8 @@ func TestNon3GPPUE(t *testing.T) {
 
 	// Used to save IPsec/IKE related data
 	n3ue := new(N3IWFUe)
-	n3ue.N3IWFIkeUe.N3IWFChildSecurityAssociation = make(map[uint32]*ChildSecurityAssociation)
-	n3ue.N3IWFIkeUe.TemporaryExchangeMsgIDChildSAMapping = make(map[uint32]*ChildSecurityAssociation)
+	n3ue.N3IWFChildSecurityAssociation = make(map[uint32]*ChildSecurityAssociation)
+	n3ue.TemporaryExchangeMsgIDChildSAMapping = make(map[uint32]*ChildSecurityAssociation)
 
 	n3iwfUDPAddr, err := net.ResolveUDPAddr("udp", n3iwfInfo_IPSecIfaceAddr+":500")
 	if err != nil {
@@ -956,11 +956,9 @@ func TestNon3GPPUE(t *testing.T) {
 			t.Log("Get SA payload")
 		case ike_message.TypeKE:
 			remotePublicKeyExchangeValue := ikePayload.(*ike_message.KeyExchange).KeyExchangeData
-			var i int = 0
-			for {
-				if remotePublicKeyExchangeValue[i] != 0 {
-					break
-				}
+			var i = 0
+			for remotePublicKeyExchangeValue[i] == 0 {
+
 			}
 			remotePublicKeyExchangeValue = remotePublicKeyExchangeValue[i:]
 			remotePublicKeyExchangeValueBig := new(big.Int).SetBytes(remotePublicKeyExchangeValue)
@@ -985,13 +983,13 @@ func TestNon3GPPUE(t *testing.T) {
 		ResponderSignedOctets: append(ikeSecurityAssociation.ResponderSignedOctets, remoteNonce...),
 	}
 
-	err = ikeSecurityAssociation.IKESAKey.GenerateKeyForIKESA(ikeSecurityAssociation.ConcatenatedNonce,
+	err = ikeSecurityAssociation.GenerateKeyForIKESA(ikeSecurityAssociation.ConcatenatedNonce,
 		sharedKeyExchangeData, ikeSecurityAssociation.LocalSPI, ikeSecurityAssociation.RemoteSPI)
 	if err != nil {
 		t.Fatalf("Generate key for IKE SA failed: %+v", err)
 	}
 
-	n3ue.N3IWFIkeUe.N3IWFIKESecurityAssociation = ikeSecurityAssociation
+	n3ue.N3IWFIKESecurityAssociation = ikeSecurityAssociation
 
 	// IKE_AUTH
 	ikeMessage.Payloads.Reset()
@@ -1048,7 +1046,7 @@ func TestNon3GPPUE(t *testing.T) {
 		t.Fatalf("Write IKE message failed: %+v", err)
 	}
 
-	n3ue.N3IWFIkeUe.CreateHalfChildSA(ikeSecurityAssociation.InitiatorMessageID,
+	n3ue.CreateHalfChildSA(ikeSecurityAssociation.InitiatorMessageID,
 		binary.BigEndian.Uint32(inboundSPI), -1)
 
 	// Receive N3IWF reply
@@ -1167,7 +1165,7 @@ func TestNon3GPPUE(t *testing.T) {
 
 	// Calculate for RES*
 	assert.NotNil(t, decodedNAS)
-	rand := decodedNAS.AuthenticationRequest.GetRANDValue()
+	rand := decodedNAS.GetRANDValue()
 	resStat := ue.DeriveRESstarAndSetKey(ue.AuthenticationSubs, rand[:], "5G:mnc093.mcc208.3gppnetwork.org")
 
 	// send NAS Authentication Response
@@ -1426,7 +1424,7 @@ func TestNon3GPPUE(t *testing.T) {
 	}
 
 	OutboundSPI := binary.BigEndian.Uint32(ikeSecurityAssociation.IKEAuthResponseSA.Proposals[0].SPI)
-	childSecurityAssociationContext, err := n3ue.N3IWFIkeUe.CompleteChildSA(
+	childSecurityAssociationContext, err := n3ue.CompleteChildSA(
 		0x01, OutboundSPI, ikeSecurityAssociation.IKEAuthResponseSA)
 	if err != nil {
 		t.Fatalf("Create child security association context failed: %+v", err)
@@ -1632,9 +1630,9 @@ func TestNon3GPPUE(t *testing.T) {
 		t.Fatalf("Write IKE message failed: %+v", err)
 	}
 
-	n3ue.N3IWFIkeUe.CreateHalfChildSA(ikeSecurityAssociation.ResponderMessageID,
+	n3ue.CreateHalfChildSA(ikeSecurityAssociation.ResponderMessageID,
 		binary.BigEndian.Uint32(inboundSPI), -1)
-	childSecurityAssociationContextUserPlane, err := n3ue.N3IWFIkeUe.CompleteChildSA(
+	childSecurityAssociationContextUserPlane, err := n3ue.CompleteChildSA(
 		ikeSecurityAssociation.ResponderMessageID, OutboundSPI, responseSecurityAssociation)
 
 	if err != nil {
@@ -1681,7 +1679,7 @@ func TestNon3GPPUE(t *testing.T) {
 		spew.Config.Indent = "\t"
 		nasStr := spew.Sdump(nasMsg)
 		t.Log("Dump DecodePDUSessionEstablishmentAccept:\n", nasStr)
-		pduAddress, err = GetPDUAddress(nasMsg.GsmMessage.PDUSessionEstablishmentAccept)
+		pduAddress, err = GetPDUAddress(nasMsg.PDUSessionEstablishmentAccept)
 		if err != nil {
 			t.Fatalf("GetPDUAddress Fail: %+v", err)
 		}
