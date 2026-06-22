@@ -20,7 +20,7 @@ env:
 
   E2E_BASIC_COMPOSE_FILE: composes/build/docker-compose-e2e-basic.yaml
   E2E_BASIC_CI_COMPOSE_FILE: composes/docker-compose-ci-e2e-basic.yaml
-  E2E_BASIC_TEST_POOL: "TestBasicCharging"
+  E2E_BASIC_TEST_POOL: "TestRegPduCharging"
 
   E2E_TI_COMPOSE_FILE: composes/build/docker-compose-e2e-ulcl-ti.yaml
   E2E_TI_CI_COMPOSE_FILE: composes/docker-compose-ci-e2e-ulcl-ti.yaml
