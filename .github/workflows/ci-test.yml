@@ -12,19 +12,21 @@ env:
   CI_TEST_REPO: https://github.com/free5gc/ci-test
 
   CI_TEST_DIR: ci-test
-  CI_TEST_BASE_DIR: base
-  CI_TEST_BASE_FREE5GC_DIR: free5gc
+  CI_TEST_FREE5GC_DIR: free5gc
 
-  BASIC_COMPOSE_FILE: docker-compose-basic.yaml
-  BASIC_CI_COMPOSE_FILE: docker-compose-ci-basic.yaml
+  CI_TEST_COMPOSE_DIR: composes
+  CI_TEST_COMPOSE_BUILD_DIR: ${{ env.CI_TEST_COMPOSE_DIR }}/build
+
+  BASIC_COMPOSE_FILE: ${{ env.CI_TEST_COMPOSE_BUILD_DIR }}/docker-compose-basic.yaml
+  BASIC_CI_COMPOSE_FILE: ${{ env.CI_TEST_COMPOSE_DIR }}/docker-compose-ci-basic.yaml
   BASIC_TEST_POOL: "TestBasicCharging"
 
-  TI_COMPOSE_FILE: docker-compose-ulcl-ti.yaml
-  TI_CI_COMPOSE_FILE: docker-compose-ci-ulcl-ti.yaml
+  TI_COMPOSE_FILE: ${{ env.CI_TEST_COMPOSE_BUILD_DIR }}/docker-compose-ulcl-ti.yaml
+  TI_CI_COMPOSE_FILE: ${{ env.CI_TEST_COMPOSE_DIR }}/docker-compose-ci-ulcl-ti.yaml
   TI_TEST_POOL: "TestULCLTrafficInfluence"
 
-  MP_COMPOSE_FILE: docker-compose-ulcl-mp.yaml
-  MP_CI_COMPOSE_FILE: docker-compose-ci-ulcl-mp.yaml
+  MP_COMPOSE_FILE: ${{ env.CI_TEST_COMPOSE_BUILD_DIR }}/docker-compose-ulcl-mp.yaml
+  MP_CI_COMPOSE_FILE: ${{ env.CI_TEST_COMPOSE_DIR }}/docker-compose-ci-ulcl-mp.yaml
   MP_TEST_POOL: "TestULCLMultiPathUe1 TestULCLMultiPathUe2"
 
   WAIT_TIMEOUT: 1800 # 30 minutes
@@ -150,9 +152,9 @@ jobs:
         run: |
           rm -rf ${{ env.CI_TEST_DIR }}
           git clone ${{ env.CI_TEST_REPO }}
-          cd ${{ env.CI_TEST_DIR }}/${{ env.CI_TEST_BASE_DIR }}
+          cd ${{ env.CI_TEST_DIR }}
           git clone -j `nproc` --recursive ${{ env.FREE5GC_REPO }}
-          cd ${{ env.CI_TEST_BASE_FREE5GC_DIR }}
+          cd ${{ env.CI_TEST_FREE5GC_DIR }}
           git submodule foreach git checkout main
           git submodule foreach git pull origin main
 
