@@ -149,7 +149,7 @@ jobs:
           curl --version
           jq --version
 
-      - name: Clone free5gc/ci-test && init base/free5gc
+      - name: Clone free5gc/ci-test & init free5gc
         run: |
           rm -rf ${{ env.CI_TEST_DIR }}
           git clone ${{ env.CI_TEST_REPO }}
