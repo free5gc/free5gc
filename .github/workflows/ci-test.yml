@@ -6,6 +6,7 @@ on:
   issue_comment:
     types: [created] # when user comment "#ci-test" in the PR, the workflow will be triggered
   # pull_request:
+  workflow_dispatch:
 
 env:
   FREE5GC_REPO: https://github.com/free5gc/free5gc
@@ -138,7 +139,7 @@ jobs:
 
   pr-test:
     name: Check PR
-    if: github.event_name == 'issue_comment' && github.event.issue.pull_request && contains(github.event.comment.body, '#ci-test')
+    if: (github.event_name == 'issue_comment' && github.event.issue.pull_request && contains(github.event.comment.body, '#ci-test')) || github.event_name == 'workflow_dispatch'
     # if: github.event_name == 'pull_request'
     runs-on: [self-hosted, linux, x64]
     steps:
