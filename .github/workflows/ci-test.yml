@@ -15,18 +15,18 @@ env:
   CI_TEST_FREE5GC_DIR: free5gc
 
   CI_TEST_COMPOSE_DIR: composes
-  CI_TEST_COMPOSE_BUILD_DIR: ${{ env.CI_TEST_COMPOSE_DIR }}/build
+  CI_TEST_COMPOSE_BUILD_DIR: composes/build
 
-  BASIC_COMPOSE_FILE: ${{ env.CI_TEST_COMPOSE_BUILD_DIR }}/docker-compose-basic.yaml
-  BASIC_CI_COMPOSE_FILE: ${{ env.CI_TEST_COMPOSE_DIR }}/docker-compose-ci-basic.yaml
+  BASIC_COMPOSE_FILE: composes/build/docker-compose-basic.yaml
+  BASIC_CI_COMPOSE_FILE: composes/docker-compose-ci-basic.yaml
   BASIC_TEST_POOL: "TestBasicCharging"
 
-  TI_COMPOSE_FILE: ${{ env.CI_TEST_COMPOSE_BUILD_DIR }}/docker-compose-ulcl-ti.yaml
-  TI_CI_COMPOSE_FILE: ${{ env.CI_TEST_COMPOSE_DIR }}/docker-compose-ci-ulcl-ti.yaml
+  TI_COMPOSE_FILE: composes/build/docker-compose-ulcl-ti.yaml
+  TI_CI_COMPOSE_FILE: composes/docker-compose-ci-ulcl-ti.yaml
   TI_TEST_POOL: "TestULCLTrafficInfluence"
 
-  MP_COMPOSE_FILE: ${{ env.CI_TEST_COMPOSE_BUILD_DIR }}/docker-compose-ulcl-mp.yaml
-  MP_CI_COMPOSE_FILE: ${{ env.CI_TEST_COMPOSE_DIR }}/docker-compose-ci-ulcl-mp.yaml
+  MP_COMPOSE_FILE: composes/build/docker-compose-ulcl-mp.yaml
+  MP_CI_COMPOSE_FILE: composes/docker-compose-ci-ulcl-mp.yaml
   MP_TEST_POOL: "TestULCLMultiPathUe1 TestULCLMultiPathUe2"
 
   WAIT_TIMEOUT: 1800 # 30 minutes
