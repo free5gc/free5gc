@@ -22,13 +22,9 @@ env:
   E2E_BASIC_CI_COMPOSE_FILE: composes/docker-compose-ci-e2e-basic.yaml
   E2E_BASIC_TEST_POOL: "TestRegPduCharging"
 
-  E2E_TI_COMPOSE_FILE: composes/build/docker-compose-e2e-ulcl-ti.yaml
-  E2E_TI_CI_COMPOSE_FILE: composes/docker-compose-ci-e2e-ulcl-ti.yaml
-  E2E_TI_TEST_POOL: "TestULCLTrafficInfluence"
-
-  E2E_MP_COMPOSE_FILE: composes/build/docker-compose-e2e-ulcl-mp.yaml
-  E2E_MP_CI_COMPOSE_FILE: composes/docker-compose-ci-e2e-ulcl-mp.yaml
-  E2E_MP_TEST_POOL: "TestULCLMultiPathUe1 TestULCLMultiPathUe2"
+  E2E_ULCL_COMPOSE_FILE: composes/build/docker-compose-e2e-ulcl.yaml
+  E2E_ULCL_CI_COMPOSE_FILE: composes/docker-compose-ci-e2e-ulcl.yaml
+  E2E_ULCL_TEST_POOL: "TestULCLTrafficInfluence TestULCLMultiPathUe1 TestULCLMultiPathUe2"
 
   WAIT_TIMEOUT: 1800 # 30 minutes
   WAIT_CI_TIMEOUT: 300 # 5 minutes
@@ -76,17 +72,17 @@ jobs:
             exit 1
           fi
 
-      - name: E2E ULCL TI test
+      - name: E2E ULCL test
         run: |
           cd ${{ env.CI_TEST_DIR }}
           docker rm -f mongodb ci-mongodb || true
-          if ! docker compose -f ${{ env.E2E_TI_CI_COMPOSE_FILE }} up -d --wait --wait-timeout ${{ env.WAIT_CI_TIMEOUT }}; then
-            echo "Failed to up docker compose TI"
+          if ! docker compose -f ${{ env.E2E_ULCL_CI_COMPOSE_FILE }} up -d --wait --wait-timeout ${{ env.WAIT_CI_TIMEOUT }}; then
+            echo "Failed to up docker compose ULCL"
             exit 1
           fi
           sleep 5
 
-          for test in ${{ env.E2E_TI_TEST_POOL }}; do
+          for test in ${{ env.E2E_ULCL_TEST_POOL }}; do
             echo "Running test: $test"
             ./ci-test-e2e-ulcl-ti.sh $test
           done
@@ -95,32 +91,8 @@ jobs:
         if: always()
         run: |
           cd ${{ env.CI_TEST_DIR }}
-          if ! docker compose -f ${{ env.E2E_TI_CI_COMPOSE_FILE }} down; then
-            echo "Failed to down docker compose TI"
-            exit 1
-          fi
-
-      - name: E2E ULCL MP test
-        run: |
-          cd ${{ env.CI_TEST_DIR }}
-          docker rm -f mongodb ci-mongodb || true
-          if ! docker compose -f ${{ env.E2E_MP_CI_COMPOSE_FILE }} up -d --wait --wait-timeout ${{ env.WAIT_CI_TIMEOUT }}; then
-            echo "Failed to up docker compose MP"
-            exit 1
-          fi
-          sleep 5
-
-          for test in ${{ env.E2E_MP_TEST_POOL }}; do
-            echo "Running test: $test"
-            ./ci-test-e2e-ulcl-mp.sh $test
-          done
-
-      - name: Clean E2E ULCL MP test environment
-        if: always()
-        run: |
-          cd ${{ env.CI_TEST_DIR }}
-          if ! docker compose -f ${{ env.E2E_MP_CI_COMPOSE_FILE }} down; then
-            echo "Failed to down docker compose MP"
+          if ! docker compose -f ${{ env.E2E_ULCL_CI_COMPOSE_FILE }} down; then
+            echo "Failed to down docker compose ULCL"
             exit 1
           fi
 
@@ -188,50 +160,26 @@ jobs:
             exit 1
           fi
 
-      - name: E2E ULCL TI test
+      - name: E2E ULCL test
         run: |
           cd ${{ env.CI_TEST_DIR }}
           docker rm -f mongodb ci-mongodb || true
-          if ! docker compose -f ${{ env.E2E_TI_COMPOSE_FILE }} up -d --wait --wait-timeout ${{ env.WAIT_TIMEOUT }}; then
-            echo "Failed to up docker compose TI"
+          if ! docker compose -f ${{ env.E2E_ULCL_COMPOSE_FILE }} up -d --wait --wait-timeout ${{ env.WAIT_TIMEOUT }}; then
+            echo "Failed to up docker compose ULCL"
             exit 1
           fi
 
-          for test in ${{ env.E2E_TI_TEST_POOL }}; do
+          for test in ${{ env.E2E_ULCL_TEST_POOL }}; do
             echo "Running test: $test"
-            ./ci-test-e2e-ulcl-ti.sh $test
+            ./ci-test-e2e-ulcl.sh $test
           done
 
-      - name: Clean E2E ULCL TI test environment
+      - name: Clean E2E ULCL test environment
         if: always()
         run: |
           cd ${{ env.CI_TEST_DIR }}
-          if ! docker compose -f ${{ env.E2E_TI_COMPOSE_FILE }} down; then
-            echo "Failed to down docker compose TI"
-            exit 1
-          fi
-
-      - name: E2E ULCL MP test
-        run: |
-          cd ${{ env.CI_TEST_DIR }}
-          docker rm -f mongodb ci-mongodb || true
-          if ! docker compose -f ${{ env.E2E_MP_COMPOSE_FILE }} up -d --wait --wait-timeout ${{ env.WAIT_TIMEOUT }}; then
-            echo "Failed to up docker compose MP"
-            exit 1
-          fi
-          sleep 5
-
-          for test in ${{ env.E2E_MP_TEST_POOL }}; do
-            echo "Running test: $test"
-            ./ci-test-e2e-ulcl-mp.sh $test
-          done
-
-      - name: Clean E2E ULCL MP test environment
-        if: always()
-        run: |
-          cd ${{ env.CI_TEST_DIR }}
-          if ! docker compose -f ${{ env.E2E_MP_COMPOSE_FILE }} down; then
-            echo "Failed to down docker compose MP"
+          if ! docker compose -f ${{ env.E2E_ULCL_COMPOSE_FILE }} down; then
+            echo "Failed to down docker compose ULCL"
             exit 1
           fi
 
