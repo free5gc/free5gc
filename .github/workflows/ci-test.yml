@@ -84,10 +84,10 @@ jobs:
 
           for test in ${{ env.E2E_ULCL_TEST_POOL }}; do
             echo "Running test: $test"
-            ./ci-test-e2e-ulcl-ti.sh $test
+            ./ci-test-e2e-ulcl.sh $test
           done
 
-      - name: Clean E2E ULCL TI test environment
+      - name: Clean E2E ULCL test environment
         if: always()
         run: |
           cd ${{ env.CI_TEST_DIR }}
