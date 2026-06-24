@@ -136,8 +136,11 @@ for COLLECTION in "${DB_DROP_COLLECTION[@]}"
 do
     MONGO_SCRIPT+="db.$COLLECTION.drop();"
 done
-mongo "$DB_NAME" --eval "$MONGO_SCRIPT"
-mongosh "$DB_NAME" --eval "$MONGO_SCRIPT" 
+if command -v mongosh &> /dev/null; then
+    mongosh "$DB_NAME" --eval "$MONGO_SCRIPT" 
+else
+    mongo "$DB_NAME" --eval "$MONGO_SCRIPT"
+fi
 
 sleep 0.1
 

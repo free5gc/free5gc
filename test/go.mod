@@ -13,10 +13,11 @@ require (
 	github.com/free5gc/chf v1.2.2
 	github.com/free5gc/ike v1.2.1
 	github.com/free5gc/nas v1.2.3
+	github.com/free5gc/nef v1.2.4
 	github.com/free5gc/ngap v1.1.3
 	github.com/free5gc/nrf v0.0.0
 	github.com/free5gc/nssf v0.0.0
-	github.com/free5gc/openapi v1.2.4
+	github.com/free5gc/openapi v1.2.5-0.20260527003827-02dc71b4d94f
 	github.com/free5gc/pcf v0.0.0
 	github.com/free5gc/sctp v1.1.2
 	github.com/free5gc/smf v1.4.3
@@ -33,7 +34,7 @@ require (
 	github.com/stretchr/testify v1.11.1
 	github.com/urfave/cli/v2 v2.27.7
 	github.com/vishvananda/netlink v1.1.0
-	go.mongodb.org/mongo-driver v1.17.1
+	go.mongodb.org/mongo-driver v1.17.7
 	golang.org/x/net v0.48.0
 	golang.org/x/sys v0.39.0
 	gopkg.in/yaml.v2 v2.4.0
@@ -157,6 +158,7 @@ replace (
 	github.com/free5gc/bsf => ../NFs/bsf
 	github.com/free5gc/chf => ../NFs/chf
 	github.com/free5gc/n3iwf => ../NFs/n3iwf
+	github.com/free5gc/nef => ../NFs/nef
 	github.com/free5gc/nrf => ../NFs/nrf
 	github.com/free5gc/nssf => ../NFs/nssf
 	github.com/free5gc/pcf => ../NFs/pcf

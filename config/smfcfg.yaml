@@ -20,6 +20,7 @@ configuration:
     - nsmf-pdusession # Nsmf_PDUSession service
     - nsmf-event-exposure # Nsmf_EventExposure service
     - nsmf-oam # OAM service
+    - nsmf-callback
 
   # the S-NSSAI (Single Network Slice Selection Assistance Information) list supported by this AMF
   snssaiInfos:

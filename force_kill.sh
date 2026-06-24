@@ -30,6 +30,12 @@ done
 sudo killall tcpdump
 sudo ip link del upfgtp
 sudo ip link del ipsec0
+
+# Clean test network environment created by test.sh
+sudo ip link del veth0 2>/dev/null || true
+sudo ip netns del UPFns 2>/dev/null || true
+sudo ip addr del 10.60.0.1/32 dev lo 2>/dev/null || true
+
 XFRMI_LIST=($(ip link | grep xfrmi | awk -F'[:,@]' '{print $2}'))
 for XFRMI_IF in "${XFRMI_LIST[@]}"
 do
@@ -42,14 +48,20 @@ sudo rm -f test/cert/*_*
 sudo rm -f /tmp/config.json # CHF ChargingGatway FTP config
 
 if [ $DROP_ALL_DB -eq 1 ]; then
-    mongo --eval "db.dropDatabase()" "$DB_NAME"
-    mongosh --eval "db.dropDatabase()" "$DB_NAME"
+    if command -v mongosh &> /dev/null; then
+        mongosh --eval "db.dropDatabase()" "$DB_NAME"
+    else
+        mongo --eval "db.dropDatabase()" "$DB_NAME"
+    fi
 else
     MONGO_SCRIPT=""
     for COLLECTION in "${DB_DROP_COLLECTION[@]}"
     do
         MONGO_SCRIPT+="db.$COLLECTION.drop();"
     done
-    mongo "$DB_NAME" --eval "$MONGO_SCRIPT"
-    mongosh "$DB_NAME" --eval "$MONGO_SCRIPT" 
+    if command -v mongosh &> /dev/null; then
+        mongosh "$DB_NAME" --eval "$MONGO_SCRIPT" 
+    else
+        mongo "$DB_NAME" --eval "$MONGO_SCRIPT"
+    fi
 fi
