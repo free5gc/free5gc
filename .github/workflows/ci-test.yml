@@ -42,6 +42,8 @@ jobs:
 
       - name: E2E Basic test
         run: |
+          cd ${{ env.CI_TEST_DIR }}
+
           for test in ${{ env.E2E_BASIC_TEST_POOL }}; do
             echo "Running test: $test"
             ./ci-test-e2e-basic.sh --test $test
@@ -49,6 +51,8 @@ jobs:
 
       - name: E2E ULCL test
         run: |
+          cd ${{ env.CI_TEST_DIR }}
+
           for test in ${{ env.E2E_ULCL_TEST_POOL }}; do
             echo "Running test: $test"
             ./ci-test-e2e-ulcl.sh --test $test
@@ -96,6 +100,8 @@ jobs:
 
       - name: E2E Basic test
         run: |
+          cd ${{ env.CI_TEST_DIR }}
+
           for test in ${{ env.E2E_BASIC_TEST_POOL }}; do
             echo "Running test: $test"
             ./ci-test-e2e-basic.sh --test $test --build
@@ -103,6 +109,8 @@ jobs:
 
       - name: E2E ULCL test
         run: |
+          cd ${{ env.CI_TEST_DIR }}
+
           for test in ${{ env.E2E_ULCL_TEST_POOL }}; do
             echo "Running test: $test"
             ./ci-test-e2e-ulcl.sh --test $test --build
