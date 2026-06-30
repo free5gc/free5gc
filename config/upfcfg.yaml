@@ -39,3 +39,10 @@ logger:
   enable: true # true or false
   level: info # how detailed to output, value: trace, debug, info, warn, error, fatal, panic
   reportCaller: false # enable the caller report or not, value: true or false
+
+ees:
+  enabled: true # true or false
+  ip: "[IP_ADDRESS]" # IP used to bind the service
+  port: 8088 # Port used to bind the service
+  periodSec: 5 # how often to collect data
+
