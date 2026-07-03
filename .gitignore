@@ -37,7 +37,7 @@ packages/
 free5gc.zip
 
 # cert
-cert/*_*.pem
+cert/*.pem
 
 # ./test.sh All
 testing_output/
