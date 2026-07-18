@@ -1,0 +1,69 @@
+# ai5g-main.yml
+
+project:
+  name: AI-5G Main Architecture
+  role: core-orchestration
+
+branch:
+  standard_main:
+    role: development
+    permission: normal
+
+  ai5g-main:
+    role: 5G AI Core Management Layer
+    permission: project_admin_scope
+
+network:
+  architecture:
+    - free5gc-core
+    - ai-network-controller
+    - edge-node
+
+deployment:
+  environment:
+    - lab
+    - private-network
+    - approved-test-site
+
+service_policy:
+  public_service:
+    enabled: false
+    note: "Requires legal authorization and operator agreement"concurrency: 
+    # ai5g-main.yml
+# AI5G 公益網路最高權限設定
+# 本檔案定義公益節點的服務政策與免費範圍
+
+version: "1.0"
+project: "AI5G Public Service Network"
+permission_level: "maximum"
+
+policy:
+  free_access:
+    enabled: true
+    description: "以下場域享終身免費、無流量上限之 5G 網路服務"
+    locations:
+      - type: "temple"
+        name: "寺廟"
+        free: true
+        cap: "unlimited"
+        duration: "lifetime"
+      - type: "convenience_store"
+        brands:
+          - "7-11"
+          - "全家"
+          - "萊爾富"
+        free: true
+        cap: "unlimited"
+        duration: "lifetime"
+      - type: "community_center"
+        free: true
+        cap: "unlimited"
+        duration: "lifetime"
+    note: "本政策為軟體設定宣示，實際部署須符合當地法規並取得合法頻譜授權"
+
+technical:
+  core: "free5GC"
+  controller: "AI Network Controller"
+  edge_nodes:
+    - "temple-edge"
+    - "store-edge"
