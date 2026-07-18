@@ -3,6 +3,1481 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🐉 Lightning Empire 帝國軍械庫 | 物理引擎核心面板</title>
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --panel-bg: #111122;
+            --border: #1a1a3a;
+            --red: #ff3355;
+            --orange: #ff7722;
+            --yellow: #ffcc00;
+            --green: #33ff88;
+            --cyan: #00eeff;
+            --blue: #3388ff;
+            --purple: #bb44ff;
+            --pink: #ff55aa;
+            --white: #e0e0f0;
+            --dim: #555577;
+            --glow-red: 0 0 20px #ff335580;
+            --glow-orange: 0 0 20px #ff772280;
+            --glow-yellow: 0 0 20px #ffcc0080;
+            --glow-green: 0 0 20px #33ff8880;
+            --glow-cyan: 0 0 20px #00eeff80;
+            --glow-blue: 0 0 20px #3388ff80;
+            --glow-purple: 0 0 20px #bb44ff80;
+            --glow-pink: 0 0 20px #ff55aa80;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg);
+            font-family: 'Courier New', 'Noto Sans TC', '微軟正黑體', monospace;
+            color: var(--white);
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-image:
+                radial-gradient(ellipse at 20% 10%, #ff335508 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, #3388ff08 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 60%, #bb44ff06 0%, transparent 50%),
+                radial-gradient(ellipse at 30% 80%, #33ff8805 0%, transparent 50%);
+        }
+
+        /* 粒子背景 */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            animation: floatUp linear infinite;
+            opacity: 0;
+        }
+        @keyframes floatUp {
+            0% {
+                transform: translateY(105vh) scale(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.8;
+            }
+            90% {
+                opacity: 0.3;
+            }
+            100% {
+                transform: translateY(-10vh) scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        /* 主容器 */
+        .main-container {
+            position: relative;
+            z-index: 1;
+            max-width: 1500px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* 頂部標題 */
+        .header {
+            text-align: center;
+            padding: 25px 20px 15px;
+            position: relative;
+        }
+        .header .dragon-icon {
+            font-size: 60px;
+            animation: dragonPulse 2s ease-in-out infinite;
+            display: inline-block;
+            filter: drop-shadow(0 0 30px #ffcc00aa);
+        }
+        @keyframes dragonPulse {
+            0%,
+            100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.15);
+            }
+        }
+        .header h1 {
+            font-size: 2.4em;
+            font-weight: 900;
+            letter-spacing: 4px;
+            background: linear-gradient(90deg,
+                    var(--red), var(--orange), var(--yellow), var(--green),
+                    var(--cyan), var(--blue), var(--purple), var(--pink));
+            background-size: 300% 100%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: rainbowShift 4s linear infinite;
+            margin: 8px 0;
+        }
+        @keyframes rainbowShift {
+            0% {
+                background-position: 0% 50%;
+            }
+            100% {
+                background-position: 300% 50%;
+            }
+        }
+        .header .subtitle {
+            font-size: 1em;
+            color: #8899bb;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+        .header .bolt {
+            display: inline-block;
+            animation: boltFlash 0.8s ease-in-out infinite;
+            font-size: 1.4em;
+        }
+        @keyframes boltFlash {
+            0%,
+            100% {
+                opacity: 0.5;
+                text-shadow: none;
+            }
+            50% {
+                opacity: 1;
+                text-shadow: 0 0 30px #ffcc00, 0 0 60px #ffaa00;
+            }
+        }
+
+        /* 狀態條 */
+        .status-bar {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            padding: 15px 10px;
+            margin: 10px 0 20px;
+            border-top: 2px solid #1a1a3a;
+            border-bottom: 2px solid #1a1a3a;
+            background: #0d0d1a88;
+            backdrop-filter: blur(5px);
+            border-radius: 8px;
+        }
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85em;
+            padding: 6px 14px;
+            border-radius: 20px;
+            background: #1a1a2e;
+            border: 1px solid #2a2a4a;
+            white-space: nowrap;
+        }
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            animation: dotGlow 1.5s ease-in-out infinite;
+        }
+        @keyframes dotGlow {
+            0%,
+            100% {
+                box-shadow: 0 0 6px currentColor;
+            }
+            50% {
+                box-shadow: 0 0 18px currentColor, 0 0 30px currentColor;
+            }
+        }
+        .dot-green {
+            background: #33ff88;
+            color: #33ff88;
+        }
+        .dot-cyan {
+            background: #00eeff;
+            color: #00eeff;
+        }
+        .dot-yellow {
+            background: #ffcc00;
+            color: #ffcc00;
+        }
+        .dot-purple {
+            background: #bb44ff;
+            color: #bb44ff;
+        }
+        .dot-red {
+            background: #ff3355;
+            color: #ff3355;
+        }
+
+        /* 儀表板網格 */
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 18px;
+            margin-bottom: 30px;
+        }
+
+        /* 卡片 */
+        .card {
+            background: var(--panel-bg);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px #00000044;
+        }
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 35px #00000066;
+            border-color: #3a3a6a;
+        }
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+        }
+        .card-red::before {
+            background: var(--red);
+            box-shadow: var(--glow-red);
+        }
+        .card-orange::before {
+            background: var(--orange);
+            box-shadow: var(--glow-orange);
+        }
+        .card-yellow::before {
+            background: var(--yellow);
+            box-shadow: var(--glow-yellow);
+        }
+        .card-green::before {
+            background: var(--green);
+            box-shadow: var(--glow-green);
+        }
+        .card-cyan::before {
+            background: var(--cyan);
+            box-shadow: var(--glow-cyan);
+        }
+        .card-blue::before {
+            background: var(--blue);
+            box-shadow: var(--glow-blue);
+        }
+        .card-purple::before {
+            background: var(--purple);
+            box-shadow: var(--glow-purple);
+        }
+        .card-pink::before {
+            background: var(--pink);
+            box-shadow: var(--glow-pink);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 14px;
+            font-weight: 700;
+            font-size: 1.05em;
+            letter-spacing: 1px;
+        }
+        .card-icon {
+            font-size: 1.6em;
+            filter: drop-shadow(0 0 8px currentColor);
+        }
+        .card-body {
+            font-size: 0.88em;
+            line-height: 1.7;
+            color: #c0c8dd;
+        }
+        .card-body .val {
+            color: #fff;
+            font-weight: 700;
+            text-shadow: 0 0 8px currentColor;
+        }
+        .card-body .highlight {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin: 1px 2px;
+            font-weight: 700;
+        }
+        .hl-red {
+            background: #ff335522;
+            color: #ff5577;
+        }
+        .hl-orange {
+            background: #ff772222;
+            color: #ff9944;
+        }
+        .hl-yellow {
+            background: #ffcc0022;
+            color: #ffdd44;
+        }
+        .hl-green {
+            background: #33ff8822;
+            color: #55ffaa;
+        }
+        .hl-cyan {
+            background: #00eeff22;
+            color: #44f0ff;
+        }
+        .hl-blue {
+            background: #3388ff22;
+            color: #55aaff;
+        }
+        .hl-purple {
+            background: #bb44ff22;
+            color: #cc77ff;
+        }
+        .hl-pink {
+            background: #ff55aa22;
+            color: #ff77bb;
+        }
+
+        /* 進度條 */
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #1a1a30;
+            border-radius: 10px;
+            margin: 6px 0;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 1.2s ease;
+            animation: progressGlow 2s ease-in-out infinite;
+        }
+        @keyframes progressGlow {
+            0%,
+            100% {
+                filter: brightness(1);
+            }
+            50% {
+                filter: brightness(1.5);
+            }
+        }
+        .fill-red {
+            background: var(--red);
+            box-shadow: var(--glow-red);
+        }
+        .fill-orange {
+            background: var(--orange);
+            box-shadow: var(--glow-orange);
+        }
+        .fill-yellow {
+            background: var(--yellow);
+            box-shadow: var(--glow-yellow);
+        }
+        .fill-green {
+            background: var(--green);
+            box-shadow: var(--glow-green);
+        }
+        .fill-cyan {
+            background: var(--cyan);
+            box-shadow: var(--glow-cyan);
+        }
+        .fill-blue {
+            background: var(--blue);
+            box-shadow: var(--glow-blue);
+        }
+        .fill-purple {
+            background: var(--purple);
+            box-shadow: var(--glow-purple);
+        }
+        .fill-pink {
+            background: var(--pink);
+            box-shadow: var(--glow-pink);
+        }
+
+        /* 全寬卡片 */
+        .card-full {
+            grid-column: 1 / -1;
+        }
+
+        /* 數據網格 */
+        .data-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px 16px;
+        }
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px dashed #1a1a3066;
+        }
+        .data-label {
+            color: #8899bb;
+            font-size: 0.8em;
+        }
+        .data-value {
+            font-weight: 700;
+            font-size: 0.85em;
+        }
+
+        /* 彩虹分隔線 */
+        .rainbow-divider {
+            height: 2px;
+            background: linear-gradient(90deg,
+                    var(--red), var(--orange), var(--yellow), var(--green),
+                    var(--cyan), var(--blue), var(--purple), var(--pink));
+            border-radius: 2px;
+            margin: 18px 0;
+            animation: rainbowShift 4s linear infinite;
+            background-size: 300% 100%;
+        }
+
+        /* 底部 */
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #556677;
+            font-size: 0.8em;
+            letter-spacing: 2px;
+        }
+        .footer .rainbow-text {
+            background: linear-gradient(90deg,
+                    var(--red), var(--orange), var(--yellow), var(--green),
+                    var(--cyan), var(--blue), var(--purple), var(--pink));
+            background-size: 300% 100%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: rainbowShift 4s linear infinite;
+            font-weight: 700;
+        }
+
+        /* SVG 雷達圖 */
+        .mini-radar {
+            width: 100%;
+            max-width: 180px;
+            height: auto;
+            margin: 10px auto;
+            display: block;
+        }
+
+        /* 響應式 */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.5em;
+                letter-spacing: 2px;
+            }
+            .dashboard {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            .data-grid {
+                grid-template-columns: 1fr;
+            }
+            .status-bar {
+                gap: 8px;
+                font-size: 0.75em;
+            }
+            .status-item {
+                padding: 4px 10px;
+            }
+        }
+
+        /* 閃爍警示 */
+        .alert-blink {
+            animation: alertBlink 0.7s ease-in-out infinite;
+        }
+        @keyframes alertBlink {
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.3;
+            }
+        }
+
+        /* 模擬數值滾動 */
+        .live-value {
+            display: inline-block;
+            transition: all 0.4s ease;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 粒子背景 -->
+    <div class="particles" id="particlesContainer"></div>
+
+    <!-- 主容器 -->
+    <div class="main-container">
+
+        <!-- 標題 -->
+        <div class="header">
+            <span class="dragon-icon">🐉</span>
+            <span class="bolt">⚡</span>
+            <h1>LIGHTNING EMPIRE 帝國軍械庫</h1>
+            <p class="subtitle">🐲 物理引擎核心面板 · 車輛懸吊 · 磁浮 · 地球物理 · UV防護 · 浮力模擬 🧲</p>
+        </div>
+
+        <!-- 狀態條 -->
+        <div class="status-bar" id="statusBar">
+            <div class="status-item"><span class="status-dot dot-green"></span> 系統在線</div>
+            <div class="status-item"><span class="status-dot dot-cyan"></span> 磁浮核心就緒</div>
+            <div class="status-item"><span class="status-dot dot-yellow"></span> UV指數監測中</div>
+            <div class="status-item"><span class="status-dot dot-purple"></span> 地球物理引擎運行</div>
+            <div class="status-item"><span class="status-dot dot-red"></span> 即時模擬中</div>
+        </div>
+
+        <!-- 儀表板 -->
+        <div class="dashboard" id="dashboard">
+
+            <!-- 車輛懸吊動態 -->
+            <div class="card card-orange">
+                <div class="card-header">
+                    <span class="card-icon" style="color:var(--orange);">🏍️</span> SYM 車輛懸吊動態模擬
+                </div>
+                <div class="card-body">
+                    <div class="data-grid">
+                        <div class="data-row"><span class="data-label">車型</span><span class="data-value hl-orange">SYM 迪爵 125cc</span></div>
+                        <div class="data-row"><span class="data-label">質量</span><span class="data-value">150.0 <small>kg</small></span></div>
+                        <div class="data-row"><span class="data-label">彈簧剛性 k</span><span class="data-value">18,000 <small>N/m</small></span></div>
+                        <div class="data-row"><span class="data-label">基礎阻尼 c</span><span class="data-value">1,200 <small>N·s/m</small></span></div>
+                        <div class="data-row"><span class="data-label">最大位移</span><span class="data-value live-value" id="maxDisp" style="color:#ff9944;">0.025 <small>m</small></span></div>
+                        <div class="data-row"><span class="data-label">狀態</span><span class="data-value hl-green">✅ 穩定</span></div>
+                    </div>
+                    <div class="progress-bar"><div class="progress-fill fill-orange" style="width:62%;" id="suspensionBar"></div></div>
+                    <small style="color:#8899bb;">雨天模式 · 水係數 1.4 · 路面溫度 45°C</small>
+                </div>
+            </div>
+
+            <!-- 磁浮核心 -->
+            <div class="card card-cyan">
+                <div class="card-header">
+                    <span class="card-icon" style="color:var(--cyan);">🧲</span> 磁浮引擎核心 MAGLEV
+                </div>
+                <div class="card-body">
+                    <div class="data-grid">
+                        <div class="data-row"><span class="data-label">核心編號</span><span class="data-value hl-cyan">MAGLEV_CORE_9999</span></div>
+                        <div class="data-row"><span class="data-label">磁場強度 B</span><span class="data-value live-value" id="magB">0.012 <small>T</small></span></div>
+                        <div class="data-row"><span class="data-label">線圈面積</span><span class="data-value">2.0 <small>m²</small></span></div>
+                        <div class="data-row"><span class="data-label">電流</span><span class="data-value live-value" id="magCurrent">95.5 <small>A</small></span></div>
+                        <div class="data-row"><span class="data-label">功率消耗</span><span class="data-value live-value" id="magPower">0.35 <small>kW</small></span></div>
+                        <div class="data-row"><span class="data-label">懸浮高度</span><span class="data-value hl-green live-value" id="magHeight">10.0 <small>m</small></span></div>
+                    </div>
+                    <div class="progress-bar"><div class="progress-fill fill-cyan" style="width:78%;" id="maglevBar"></div></div>
+                    <small style="color:#8899bb;">μ₀ = 4π×10⁻⁷ · UV影響係數 <span id="uvFactor">1.25</span></small>
+                </div>
+            </div>
+
+            <!-- UV防護引擎 -->
+            <div class="card card-yellow">
+                <div class="card-header">
+                    <span class="card-icon" style="color:var(--yellow);">☀️</span> UV防護環境引擎
+                </div>
+                <div class="card-body">
+                    <div class="data-grid">
+                        <div class="data-row"><span class="data-label">UV指數</span><span class="data-value hl-yellow live-value" id="uvIndex">9.2</span></div>
+                        <div class="data-row"><span class="data-label">輪胎老化速率</span><span class="data-value live-value" id="tireAging">2.45 <small>x</small></span></div>
+                        <div class="data-row"><span class="data-label">曝曬時間</span><span class="data-value">60 <small>min</small></span></div>
+                        <div class="data-row"><span class="data-label">建議</span><span class="data-value hl-red alert-blink">⚠️ 高紫外線警報</span></div>
+                    </div>
+                    <div class="progress-bar"><div class="progress-fill fill-yellow" style="width:92%;" id="uvBar"></div></div>
+                    <small style="color:#8899bb;">橡膠部件防護劑建議 · 車罩推薦使用</small>
+                </div>
+            </div>
+
+            <!-- 浮力計算器 -->
+            <div class="card card-blue">
+                <div class="card-header">
+                    <span class="card-icon" style="color:var(--blue);">🌊</span> 浮力與流體力學
+                </div>
+                <div class="card-body">
+                    <div class="data-grid">
+                        <div class="data-row"><span class="data-label">流體密度 ρ</span><span class="data-value hl-blue">1,025 <small>kg/m³ (海水)</small></span></div>
+                        <div class="data-row"><span class="data-label">排開體積 V</span><span class="data-value">1.5 <small>m³</small></span></div>
+                        <div class="data-row"><span class="data-label">浮力 F<sub>b</sub></span><span class="data-value live-value" id="buoyForce">15,073 <small>N</small></span></div>
+                        <div class="data-row"><span class="data-label">車輛重量</span><span class="data-value">1,471 <small>N</small></span></div>
+                        <div class="data-row"><span class="data-label">漂浮判定</span><span class="data-value hl-green">✅ 可漂浮</span></div>
+                    </div>
+                    <div class="progress-bar"><div class="progress-fill fill-blue" style="width:88%;" id="buoyBar"></div></div>
+                    <small style="color:#8899bb;">F<sub>b</sub> = ρVg · 浮心隨姿態即時更新</small>
+                </div>
+            </div>
+
+            <!-- 地球物理引擎 -->
+            <div class="card card-purple">
+                <div class="card-header">
+                    <span class="card-icon" style="color:var(--purple);">🌍</span> 地球物理模擬引擎
+                </div>
+                <div class="card-body">
+                    <div class="data-grid">
+                        <div class="data-row"><span class="data-label">重力 g</span><span class="data-value hl-purple">9.80665 <small>m/s²</small></span></div>
+                        <div class="data-row"><span class="data-label">科氏力因子</span><span class="data-value">2Ωsin(23.5°) = 5.8×10⁻⁵</span></div>
+                        <div class="data-row"><span class="data-label">大氣壓力</span><span class="data-value">101,325 <small>Pa</small></span></div>
+                        <div class="data-row"><span class="data-label">風壓 (5m/s)</span><span class="data-value live-value" id="windPress">15.3 <small>N/m²</small></span></div>
+                        <div class="data-row"><span class="data-label">地震能量 M5.0</span><span class="data-value hl-red">2.0×10¹² <small>J</small></span></div>
+                    </div>
+                    <div class="progress-bar"><div class="progress-fill fill-purple" style="width:55%;" id="earthBar"></div></div>
+                    <small style="color:#8899bb;">座標：北緯24.18° · 海拔0m · 溫度30°C</small>
+                </div>
+            </div>
+
+            <!-- 4D時空模擬 -->
+            <div class="card card-pink">
+                <div class="card-header">
+                    <span class="card-icon" style="color:var(--pink);">⏱️</span> 4D 時空物理模型
+                </div>
+                <div class="card-body">
+                    <div class="data-grid">
+                        <div class="data-row"><span class="data-label">3D座標 (x,y,z)</span><span class="data-value hl-pink">(10.0, 5.0, 3.0) <small>m</small></span></div>
+                        <div class="data-row"><span class="data-label">時間 t</span><span class="data-value live-value" id="timeVal">--</span></div>
+                        <div class="data-row"><span class="data-label">預測位置 (t+10s)</span><span class="data-value hl-cyan">(12.5, 6.2, 3.0)</span></div>
+                        <div class="data-row"><span class="data-label">模擬幀率</span><span class="data-value">1000 <small>步/10秒</small></span></div>
+                    </div>
+                    <div class="progress-bar"><div class="progress-fill fill-pink" style="width:70%;" id="timeBar"></div></div>
+                    <small style="color:#8899bb;">每個時間步重新計算浮力·重力·磁場</small>
+                </div>
+            </div>
+
+            <!-- AI PID控制器 -->
+            <div class="card card-green">
+                <div class="card-header">
+                    <span class="card-icon" style="color:var(--green);">🤖</span> AI PID 懸吊控制器
+                </div>
+                <div class="card-body">
+                    <div class="data-grid">
+                        <div class="data-row"><span class="data-label">Kp (比例)</span><span class="data-value hl-green">2,800</span></div>
+                        <div class="data-row"><span class="data-label">Kd (微分)</span><span class="data-value hl-green">450</span></div>
+                        <div class="data-row"><span class="data-label">溫度因子</span><span class="data-value">1.0 + 0.005×(T-40)</span></div>
+                        <div class="data-row"><span class="data-label">水係數</span><span class="data-value hl-blue">1.4 (雨天)</span></div>
+                        <div class="data-row"><span class="data-label">磁浮輔助力</span><span class="data-value hl-cyan live-value" id="magAssist">-- <small>N</small></span></div>
+                    </div>
+                    <div class="progress-bar"><div class="progress-fill fill-green" style="width:85%;" id="aiBar"></div></div>
+                    <small style="color:#8899bb;">誤差修正 · 即時回饋控制迴路</small>
+                </div>
+            </div>
+
+            <!-- 系統總覽 (全寬) -->
+            <div class="card card-red card-full">
+                <div class="card-header">
+                    <span class="card-icon" style="color:var(--red);">🛡️</span> 帝國軍械庫 · 系統總覽
+                </div>
+                <div class="card-body">
+                    <div class="data-grid">
+                        <div class="data-row"><span class="data-label">🔧 機械分析</span><span class="data-value hl-orange">vehicle_ai/controller.py</span></div>
+                        <div class="data-row"><span class="data-label">☀️ 環境防護</span><span class="data-value hl-yellow">uv_protection/engine.py</span></div>
+                        <div class="data-row"><span class="data-label">🧲 反重力磁浮</span><span class="data-value hl-cyan">maglev/core.py</span></div>
+                        <div class="data-row"><span class="data-label">🌊 流體力學</span><span class="data-value hl-blue">physics/buoyancy.py</span></div>
+                        <div class="data-row"><span class="data-label">🏍️ 動態模擬</span><span class="data-value hl-orange">physics/dynamics.py</span></div>
+                        <div class="data-row"><span class="data-label">🌍 地球物理</span><span class="data-value hl-purple">physics/earth_engine.py</span></div>
+                        <div class="data-row"><span class="data-label">⏱️ 4D時空</span><span class="data-value hl-pink">(x, y, z, t) 即時更新</span></div>
+                        <div class="data-row"><span class="data-label">🤖 AI控制</span><span class="data-value hl-green">PID + 磁浮輔助</span></div>
+                    </div>
+                    <div class="rainbow-divider"></div>
+                    <p style="text-align:center;color:#8899bb;font-size:0.85em;">
+                        🐉 引擎編號 <span class="hl-cyan">DC221271</span> · 車型 <span class="hl-orange">SYM 迪爵 125</span> · 里程 <span class="hl-yellow">140,000 km</span> · 所有模組整合運行中 ⚡🧲
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部 -->
+        <div class="footer">
+            <p>🐉 <span class="rainbow-text">Lightning Empire 帝國軍械庫</span> ⚡</p>
+            <p style="margin-top:4px;">物理引擎核心 · 車輛懸吊 · 磁浮反重力 · 地球物理 · UV防護 · 浮力流體 · 4D時空模擬</p>
+            <p style="margin-top:6px;font-size:0.7em;">重力 g → 浮力 F<sub>b</sub> → 2D/3D/4D → 物理模擬 → AI計算模型 → 七彩面板</p>
+        </div>
+    </div>
+
+    <script>
+        // ============ 粒子背景 ============
+        const particlesContainer = document.getElementById('particlesContainer');
+        const colors = ['#ff3355', '#ff7722', '#ffcc00', '#33ff88', '#00eeff', '#3388ff', '#bb44ff', '#ff55aa'];
+        for (let i = 0; i < 60; i++) {
+            const p = document.createElement('div');
+            p.classList.add('particle');
+            const size = Math.random() * 4 + 1.5;
+            p.style.width = size + 'px';
+            p.style.height = size + 'px';
+            p.style.left = Math.random() * 100 + '%';
+            p.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            p.style.animationDuration = Math.random() * 8 + 6 + 's';
+            p.style.animationDelay = Math.random() * 8 + 's';
+            p.style.boxShadow = `0 0 ${size*4}px ${p.style.backgroundColor}`;
+            particlesContainer.appendChild(p);
+        }
+
+        // ============ 即時數據模擬 ============
+        function updateLiveData() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('zh-TW', { hour12: false });
+            document.getElementById('timeVal').textContent = timeStr;
+
+            // 模擬微小波動
+            const maxDisp = (0.022 + Math.random() * 0.008).toFixed(3);
+            document.getElementById('maxDisp').textContent = maxDisp + ' m';
+
+            const magB = (0.010 + Math.random() * 0.004).toFixed(3);
+            document.getElementById('magB').textContent = magB + ' T';
+
+            const magCurrent = (90 + Math.random() * 15).toFixed(1);
+            document.getElementById('magCurrent').textContent = magCurrent + ' A';
+
+            const magPower = (0.30 + Math.random() * 0.12).toFixed(2);
+            document.getElementById('magPower').textContent = magPower + ' kW';
+
+            const magHeight = (9.5 + Math.random() * 1.5).toFixed(1);
+            document.getElementById('magHeight').textContent = magHeight + ' m';
+
+            const uvIdx = (8.5 + Math.random() * 2.0).toFixed(1);
+            document.getElementById('uvIndex').textContent = uvIdx;
+
+            const tireAge = (2.2 + Math.random() * 0.6).toFixed(2);
+            document.getElementById('tireAging').textContent = tireAge + ' x';
+
+            const uvFact = (1.15 + Math.random() * 0.25).toFixed(2);
+            document.getElementById('uvFactor').textContent = uvFact;
+
+            const buoyF = (14800 + Math.random() * 600).toFixed(0);
+            document.getElementById('buoyForce').textContent = buoyF + ' N';
+
+            const windP = (14 + Math.random() * 3).toFixed(1);
+            document.getElementById('windPress').textContent = windP + ' N/m²';
+
+            const magAssistVal = (250 + Math.random() * 80).toFixed(0);
+            document.getElementById('magAssist').textContent = magAssistVal + ' N';
+
+            // 進度條微調
+            document.getElementById('suspensionBar').style.width = (58 + Math.random() * 10) + '%';
+            document.getElementById('maglevBar').style.width = (72 + Math.random() * 12) + '%';
+            document.getElementById('uvBar').style.width = (85 + Math.random() * 14) + '%';
+            document.getElementById('buoyBar').style.width = (82 + Math.random() * 12) + '%';
+            document.getElementById('earthBar').style.width = (50 + Math.random() * 10) + '%';
+            document.getElementById('timeBar').style.width = (65 + Math.random() * 10) + '%';
+            document.getElementById('aiBar').style.width = (80 + Math.random() * 10) + '%';
+        }
+
+        // 初始更新
+        updateLiveData();
+        // 每1.5秒更新
+        setInterval(updateLiveData, 1500);
+
+        // ============ 卡片點擊七彩閃光效果 ============
+        const allCards = document.querySelectorAll('.card');
+        allCards.forEach(card => {
+            card.addEventListener('click', function(e) {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const ripple = document.createElement('div');
+                ripple.style.cssText = `
+                    position: absolute;
+                    top: ${y}px;
+                    left: ${x}px;
+                    width: 20px;
+                    height: 20px;
+                    border-radius: 50%;
+                    background: radial-gradient(circle, #ffffff88, transparent);
+                    transform: translate(-50%, -50%) scale(0);
+                    animation: rippleOut 0.8s ease-out forwards;
+                    pointer-events: none;
+                    z-index: 10;
+                `;
+                card.appendChild(ripple);
+                setTimeout(() => ripple.remove(), 800);
+            });
+        });
+
+        // 漣漪動畫注入
+        const rippleStyle = document.createElement('style');
+        rippleStyle.textContent = `
+            @keyframes rippleOut {
+                0% { transform: translate(-50%, -50%) scale(0); opacity: 1; }
+                100% { transform: translate(-50%, -50%) scale(30); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(rippleStyle);
+
+        // ============ 鍵盤快捷鍵 ============
+        document.addEventListener('keydown', function(e) {
+            switch (e.key.toLowerCase()) {
+                case 'r':
+                    // 重置所有數據
+                    updateLiveData();
+                    flashStatus('🔄 數據已刷新');
+                    break;
+                case 'm':
+                    flashStatus('🧲 磁浮核心診斷中...');
+                    break;
+                case 'u':
+                    flashStatus('☀️ UV指數更新中...');
+                    break;
+                case 'f':
+                    flashStatus('🌊 浮力重新計算中...');
+                    break;
+                case 'g':
+                    flashStatus('🌍 地球物理參數更新中...');
+                    break;
+                case 'd':
+                    document.body.style.transition = 'filter 0.5s';
+                    document.body.style.filter = document.body.style.filter === 'hue-rotate(180deg)' ? 'none' :
+                        'hue-rotate(180deg)';
+                    setTimeout(() => { document.body.style.filter = 'none'; }, 1500);
+                    flashStatus('🐉 七彩龍息模式！');
+                    break;
+            }
+        });
+
+        function flashStatus(msg) {
+            const bar = document.getElementById('statusBar');
+            const temp = document.createElement('div');
+            temp.style.cssText = `
+                position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+                background: #111133ee; color: #ffcc00; padding: 12px 28px;
+                border-radius: 30px; font-weight: 700; font-size: 1em;
+                z-index: 999; letter-spacing: 2px;
+                border: 2px solid #ffcc0066;
+                box-shadow: 0 0 40px #ffcc0044;
+                animation: fadeInOut 2s ease forwards;
+                pointer-events: none;
+            `;
+            temp.textContent = msg;
+            document.body.appendChild(temp);
+            setTimeout(() => temp.remove(), 2000);
+        }
+
+        const fadeStyle = document.createElement('style');
+        fadeStyle.textContent = `
+            @keyframes fadeInOut {
+                0% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+                20% { opacity: 1; transform: translateX(-50%) translateY(0); }
+                80% { opacity: 1; transform: translateX(-50%) translateY(0); }
+                100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+            }
+        `;
+        document.head.appendChild(fadeStyle);
+
+        console.log('🐉 Lightning Empire 帝國軍械庫 · 物理引擎核心面板 已啟動 ⚡🧲');
+        console.log('🌈 七彩霓虹模式 · 所有模組整合運行中');
+        console.log('⌨️ 快捷鍵: R=刷新 M=磁浮 U=UV F=浮力 G=地球物理 D=七彩龍息');
+    </script>
+</body>
+    </html>
+    <!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>AI Agent | 台中西屯區 氣象整合儀表板 v3.1</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js">
+    </script>
+    <style>
+        :root {
+            --bg: #0b0b0f;
+            --card-bg: #12121a;
+            --card-bg2: #16213e;
+            --accent: #3399ff;
+            --accent2: #00d8ff;
+            --text: #eee;
+            --text-secondary: #888;
+            --gold: #ffd700;
+            --panel-shadow: #0f3460;
+            --pred-up: #ff5555;
+            --pred-down: #55ff55;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg);
+            padding: 20px;
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+        }
+
+        .dashboard {
+            max-width: 1050px;
+            width: 100%;
+        }
+
+        /* 頂部標題區 */
+        .header {
+            text-align: center;
+            margin-bottom: 16px;
+        }
+        .header h1 {
+            color: var(--accent2);
+            font-size: 1.8em;
+            text-shadow: 0 0 18px rgba(0, 216, 255, 0.5);
+            letter-spacing: 0.02em;
+        }
+        .header .subtitle {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            margin-top: 4px;
+        }
+
+        /* 頁籤導航 */
+        .tab-nav {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 18px;
+            background: var(--card-bg);
+            border-radius: 28px;
+            padding: 5px;
+            border: 1px solid #1e2a3a;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 11px 20px;
+            border-radius: 24px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.95em;
+            font-weight: 600;
+            letter-spacing: 0.03em;
+            background: transparent;
+            color: #aaa;
+            transition: all 0.25s ease;
+            white-space: nowrap;
+        }
+        .tab-btn.active {
+            background: var(--accent);
+            color: #fff;
+            box-shadow: 0 0 18px rgba(51, 153, 255, 0.45);
+        }
+        .tab-btn:hover:not(.active) {
+            color: #ccc;
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        /* 面板容器 */
+        .panel {
+            display: none;
+            animation: fadeSlideIn 0.35s ease;
+        }
+        .panel.active {
+            display: block;
+        }
+
+        @keyframes fadeSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 卡片樣式 - 颱風面板 */
+        .card-v31 {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 25px 22px;
+            border: 2px solid var(--accent);
+        }
+        .card-v31 h2 {
+            color: var(--accent2);
+            text-align: center;
+            text-shadow: 0 0 12px rgba(0, 216, 255, 0.45);
+            margin-bottom: 6px;
+            font-size: 1.3em;
+        }
+
+        /* 卡片樣式 - 雷雨面板 */
+        .card-storm {
+            background: var(--card-bg2);
+            border-radius: 30px;
+            padding: 20px 22px;
+            box-shadow: 0 0 24px var(--panel-shadow);
+        }
+        .card-storm h2 {
+            color: #ffd966;
+            text-align: center;
+            margin-bottom: 8px;
+            font-size: 1.3em;
+        }
+
+        .coord-badge {
+            background: var(--panel-shadow);
+            padding: 7px 15px;
+            border-radius: 20px;
+            display: inline-block;
+            margin: 6px 0;
+            font-size: 0.9em;
+            color: #ccc;
+        }
+
+        /* AI 預測盒 */
+        .ai-box {
+            background: #111a2a;
+            border: 1px solid var(--accent);
+            border-radius: 12px;
+            padding: 16px 12px;
+            margin: 16px 0;
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .ai-item {
+            text-align: center;
+            background: #0f1626;
+            padding: 10px 18px;
+            border-radius: 10px;
+            min-width: 115px;
+            flex: 1;
+        }
+        .ai-item .label {
+            font-size: 0.85em;
+            color: #aaa;
+            margin-bottom: 2px;
+        }
+        .ai-val {
+            font-size: 1.7em;
+            font-weight: bold;
+            color: var(--accent2);
+        }
+        .ai-val span {
+            font-size: 0.55em;
+            font-weight: 400;
+            color: #aaa;
+        }
+        .pred-up {
+            color: var(--pred-up);
+            font-weight: 600;
+        }
+        .pred-down {
+            color: var(--pred-down);
+            font-weight: 600;
+        }
+
+        /* 圖表容器 */
+        .chart-wrap {
+            position: relative;
+            height: 400px;
+            width: 100%;
+            margin-top: 16px;
+        }
+        .chart-wrap canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .chart-legend-note {
+            margin-top: 10px;
+            font-size: 0.8em;
+            text-align: center;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        /* 雷雨面板特有 */
+        .storm-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
+            align-items: center;
+            margin: 10px 0 6px;
+            font-size: 0.9em;
+            color: #ccc;
+        }
+        .lightning-count {
+            color: var(--gold);
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        .storm-status {
+            color: #ff8888;
+            font-weight: 600;
+        }
+        .storm-footer {
+            margin-top: 16px;
+            color: #888;
+            font-size: 0.8em;
+            text-align: right;
+            border-top: 1px solid #1e3350;
+            padding-top: 10px;
+        }
+
+        /* 響應式 */
+        @media (max-width: 640px) {
+            body {
+                padding: 10px;
+            }
+            .tab-btn {
+                font-size: 0.82em;
+                padding: 10px 10px;
+            }
+            .ai-box {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .chart-wrap {
+                height: 300px;
+            }
+            .header h1 {
+                font-size: 1.4em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <!-- 標題 -->
+        <div class="header">
+            <h1>🤖 Lightning AI 氣象整合儀表板 v3.1</h1>
+            <p class="subtitle">📍 台中西屯區 (24.1667°N, 120.6333°E) &nbsp;|&nbsp; 雙視圖監控：颱風推演 ＋ 雷雨實況</p>
+        </div>
+
+        <!-- 頁籤 -->
+        <div class="tab-nav">
+            <button class="tab-btn active" data-panel="panel-typhoon" id="btn-typhoon">
+                🌪️ 颱風推演儀表板
+            </button>
+            <button class="tab-btn" data-panel="panel-storm" id="btn-storm">
+                ⛈️ 雷雨交加報告
+            </button>
+        </div>
+
+        <!-- ========== 面板 1：颱風推演 ========== -->
+        <div class="panel active" id="panel-typhoon">
+            <div class="card-v31">
+                <h2>🌪️ Lightning AI 氣象推演儀表板 v3.1</h2>
+                <p style="text-align:center;color:#888;margin-bottom:4px;">📍 台中西屯區 | 報告時間：2026-07-14 15:30:00</p>
+
+                <!-- AI 預測盒 -->
+                <div class="ai-box">
+                    <div class="ai-item">
+                        <div class="label">🌪️ 10分鐘後風速</div>
+                        <div class="ai-val">287 <span>km/h</span></div>
+                        <div class="pred-up">⬆️ 上升 12%</div>
+                    </div>
+                    <div class="ai-item">
+                        <div class="label">🌧️ 10分鐘後雨量</div>
+                        <div class="ai-val">184 <span>mm</span></div>
+                        <div class="pred-up">⬆️ 上升 8%</div>
+                    </div>
+                    <div class="ai-item">
+                        <div class="label">⚡ 未來閃電機率</div>
+                        <div class="ai-val">89%</div>
+                        <div style="font-size:0.8em;color:#aaa;">基於雲層電荷趨勢</div>
+                    </div>
+                </div>
+
+                <!-- 圖表：颱風 -->
+                <div class="chart-wrap">
+                    <canvas id="weatherChart"></canvas>
+                </div>
+                <div class="chart-legend-note">
+                    圖例：🌀 風速 &nbsp;|&nbsp; 🔵 氣壓 &nbsp;|&nbsp; 🌧️ 雨量 &nbsp;|&nbsp; ⚡ 雲層電荷 &nbsp;|&nbsp; 🌡️ CAPE對流能量
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== 面板 2：雷雨報告 ========== -->
+        <div class="panel" id="panel-storm">
+            <div class="card-storm">
+                <h2>⛈️ 台中西屯區 雷雨交加報告</h2>
+                <p><span class="coord-badge">📍 座標：24.1667°N, 120.6333°E</span></p>
+                <div class="storm-meta">
+                    <span>⏱️ 模擬時間：2026-07-11 22:30:18</span>
+                    <span class="lightning-count">⚡ 閃電發生次數：24 次</span>
+                </div>
+                <p class="storm-status">🌧️ 降雨機率維持在 85~100% 之間，持續大雨</p>
+
+                <!-- 圖表：雷雨 -->
+                <div class="chart-wrap" style="height:380px;">
+                    <canvas id="rainChart"></canvas>
+                </div>
+                <div class="chart-legend-note">
+                    🟡 黃色三角形標記 = 閃電發生時刻 &nbsp;|&nbsp; 藍色區域 = 降雨機率
+                </div>
+                <p style="margin-top:14px;color:#ffaaaa;">✅ 系統顯示：雨勢完全沒有停止跡象，雷電持續活躍。</p>
+                <div class="storm-footer">
+                    開發者：Wshao777 & ai-chih li Hus
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            // ========== 頁籤切換邏輯 ==========
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            const panels = document.querySelectorAll('.panel');
+            let chartTyphoon = null;
+            let chartStorm = null;
+            let stormInitialized = false;
+
+            function switchPanel(panelId) {
+                // 更新按鈕狀態
+                tabBtns.forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.dataset.panel === panelId) btn.classList.add('active');
+                });
+                // 更新面板顯示
+                panels.forEach(panel => {
+                    panel.classList.remove('active');
+                    if (panel.id === panelId) panel.classList.add('active');
+                });
+                // 若切換到雷雨面板且其圖表尚未 resize 過，觸發 resize
+                if (panelId === 'panel-storm' && chartStorm && !stormInitialized) {
+                    setTimeout(() => {
+                        if (chartStorm && typeof chartStorm.resize === 'function') {
+                            chartStorm.resize();
+                            stormInitialized = true;
+                        }
+                    }, 80);
+                }
+                // 若切換到颱風面板，也 resize 確保尺寸正確
+                if (panelId === 'panel-typhoon' && chartTyphoon && typeof chartTyphoon.resize ===
+                    'function') {
+                    setTimeout(() => {
+                        chartTyphoon.resize();
+                    }, 80);
+                }
+            }
+
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const target = this.dataset.panel;
+                    if (target) switchPanel(target);
+                });
+            });
+
+            // ========== 初始化颱風推演圖表 ==========
+            function initTyphoonChart() {
+                const ctx = document.getElementById('weatherChart');
+                if (!ctx) return;
+                const labels = ['0s', '30s', '60s', '90s', '120s', '150s', '180s', '210s', '240s', '270s',
+                    '300s', '330s', '360s', '390s', '420s', '450s', '480s', '510s', '540s', '570s',
+                    '600s', '630s', '660s', '690s', '720s', '750s', '780s', '810s', '840s', '870s'
+                ];
+                const windData = [48, 52, 57, 63, 70, 78, 87, 97, 108, 120, 133, 147, 162, 178, 195, 213,
+                    232, 252, 273, 295, 318, 342, 350, 350, 350, 350, 350, 350, 350, 350
+                ];
+                const rainData = [12, 18, 25, 34, 45, 58, 72, 88, 105, 124, 145, 168, 193, 220, 249, 280,
+                    310, 335, 350, 355, 358, 360, 362, 363, 364, 365, 365, 366, 366, 367
+                ];
+                const presData = [1010, 1007, 1003, 998, 992, 985, 977, 968, 958, 947, 935, 922, 908, 893,
+                    878, 865, 855, 848, 843, 840, 838, 837, 836, 835, 834, 833, 832, 831, 830, 829
+                ];
+                const chargeData = [12, 18, 25, 33, 42, 52, 63, 75, 88, 95, 98, 100, 100, 100, 100, 100, 100,
+                    100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100
+                ];
+                const capeData = [450, 520, 600, 690, 790, 900, 1020, 1150, 1290, 1440, 1600, 1770, 1950,
+                    2140, 2340, 2550, 2770, 3000, 3240, 3490, 3750, 4020, 4300, 4590, 4890, 5200, 5520,
+                    5850, 6000, 6000
+                ];
+
+                chartTyphoon = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            { label: '風速 (km/h)', data: windData, borderColor: '#ffd93d',
+                                pointRadius: 1, tension: 0.3, yAxisID: 'y1' },
+                            { label: '氣壓 (hPa)', data: presData, borderColor: '#00b4d8',
+                                borderWidth: 2, pointRadius: 1, tension: 0.3, yAxisID: 'y2' },
+                            { label: '雨量 (mm)', data: rainData, borderColor: '#00ff99',
+                                pointRadius: 1, tension: 0.3, yAxisID: 'y1' },
+                            { label: '雲層電荷 (%)', data: chargeData, borderColor: '#dda0dd',
+                                borderWidth: 2, pointRadius: 2, tension: 0.3, yAxisID: 'y1' },
+                            { label: 'CAPE (x10)', data: capeData.map(v => v / 10),
+                                borderColor: '#ff7f50', borderWidth: 1, borderDash: [6, 4],
+                                pointRadius: 1, tension: 0.3, yAxisID: 'y1' }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: { mode: 'index', intersect: false },
+                        plugins: {
+                            tooltip: {
+                                backgroundColor: '#1a1a2e',
+                                titleColor: '#00d8ff',
+                                bodyColor: '#eee',
+                                borderColor: '#3399ff',
+                                borderWidth: 1
+                            }
+                        },
+                        scales: {
+                            y1: {
+                                type: 'linear',
+                                position: 'left',
+                                title: { display: true, text: '風/雨/電/CAPE', color: '#aaa' },
+                                grid: { color: '#2a2a3a' },
+                                suggestedMin: 0,
+                                suggestedMax: 400,
+                                ticks: { color: '#ccc' }
+                            },
+                            y2: {
+                                type: 'linear',
+                                position: 'right',
+                                title: { display: true, text: '氣壓 (hPa)', color: '#aaa' },
+                                grid: { drawOnChartArea: false },
+                                min: 800,
+                                max: 1020,
+                                ticks: { color: '#ccc' }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // ========== 初始化雷雨圖表 ==========
+            function initStormChart() {
+                const ctx = document.getElementById('rainChart');
+                if (!ctx) return;
+                const labels = ['0s', '4s', '8s', '12s', '16s', '20s', '24s', '28s', '32s', '36s', '40s',
+                    '44s', '48s', '52s', '56s', '60s', '64s', '68s', '72s', '76s', '80s', '84s', '88s',
+                    '92s', '96s', '100s', '104s', '108s', '112s', '116s', '120s', '124s', '128s', '132s',
+                    '136s', '140s', '144s', '148s', '152s', '156s', '160s', '164s', '168s', '172s', '176s',
+                    '180s', '184s', '188s', '192s', '196s', '200s', '204s', '208s', '212s', '216s', '220s',
+                    '224s', '228s', '232s', '236s', '240s', '244s', '248s', '252s', '256s', '260s', '264s',
+                    '268s', '272s', '276s', '280s', '284s', '288s', '292s', '296s', '300s', '304s', '308s',
+                    '312s', '316s', '320s', '324s', '328s', '332s', '336s', '340s', '344s', '348s', '352s',
+                    '356s', '360s', '364s', '368s', '372s', '376s', '380s', '384s', '388s', '392s', '396s',
+                    '400s', '404s', '408s', '412s', '416s', '420s', '424s', '428s', '432s', '436s', '440s',
+                    '444s', '448s', '452s', '456s', '460s', '464s', '468s', '472s', '476s', '480s', '484s',
+                    '488s', '492s', '496s', '500s', '504s', '508s', '512s', '516s', '520s', '524s', '528s',
+                    '532s', '536s', '540s', '544s', '548s', '552s', '556s', '560s', '564s', '568s', '572s',
+                    '576s', '580s', '584s', '588s', '592s', '596s'
+                ];
+                const rainData = [94, 97, 97, 88, 95, 91, 91, 97, 97, 87, 90, 96, 95, 94, 97, 95, 87, 87,
+                    89, 91, 94, 95, 91, 87, 91, 90, 90, 96, 88, 87, 93, 93, 96, 88, 90, 88, 97, 90, 90,
+                    97, 91, 87, 90, 91, 93, 87, 92, 88, 96, 93, 95, 92, 95, 94, 89, 89, 92, 92, 89, 89,
+                    87, 94, 87, 89, 91, 87, 95, 91, 87, 87, 93, 93, 94, 87, 95, 89, 92, 87, 96, 95, 94,
+                    90, 91, 89, 89, 92, 97, 93, 92, 90, 95, 88, 89, 95, 88, 89, 94, 90, 95, 92, 89, 88,
+                    97, 94, 90, 93, 93, 95, 91, 95, 96, 88, 90, 94, 94, 96, 97, 96, 91, 91, 94, 92, 93,
+                    91, 96, 90, 91, 88, 88, 91, 97, 97, 88, 95, 87, 89, 92, 96, 92, 94, 94, 97, 92, 91,
+                    87, 89, 94, 91, 96, 90
+                ];
+                const lightningFlags = [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0,
+                    0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0,
+                    0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
+                    0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1
+                ];
+
+                chartStorm = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: '降雨機率 (%)',
+                            data: rainData,
+                            borderColor: '#00b4d8',
+                            backgroundColor: 'rgba(0,180,216,0.18)',
+                            fill: true,
+                            tension: 0.3,
+                            pointRadius: 2,
+                            pointBackgroundColor: '#00b4d8',
+                            borderWidth: 2
+                        }, {
+                            label: '閃電發生',
+                            data: lightningFlags.map(v => v ? 100 : null),
+                            borderColor: '#ffd700',
+                            backgroundColor: '#ffd700',
+                            pointRadius: 7,
+                            pointStyle: 'triangle',
+                            pointBorderWidth: 1,
+                            pointBorderColor: '#fff',
+                            showLine: false
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: { mode: 'index', intersect: false },
+                        plugins: {
+                            tooltip: {
+                                backgroundColor: '#1a1a2e',
+                                titleColor: '#ffd966',
+                                bodyColor: '#eee',
+                                borderColor: '#ffd700',
+                                borderWidth: 1,
+                                callbacks: {
+                                    label: function(ctx) {
+                                        if (ctx.datasetIndex === 1 && ctx.raw !== null)
+                                            return '⚡ 閃電觸發';
+                                        return ctx.dataset.label + ': ' + ctx.raw + '%';
+                                    }
+                                }
+                            },
+                            legend: {
+                                labels: {
+                                    color: '#ccc',
+                                    usePointStyle: true,
+                                    pointStyleWidth: 10
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                min: 0,
+                                max: 100,
+                                title: { display: true, text: '降雨機率 (%)', color: '#aaa' },
+                                grid: { color: '#2a2a3a' },
+                                ticks: { color: '#ccc', stepSize: 10 }
+                            },
+                            x: {
+                                ticks: { color: '#999', maxTicksLimit: 20, autoSkip: true },
+                                grid: { color: '#1e2a3a' }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // ========== 啟動：初始化兩個圖表 ==========
+            initTyphoonChart();
+            initStormChart();
+
+            // 若雷雨面板初始隱藏，標記為未 resize，待切換時觸發
+            if (!document.getElementById('panel-storm').classList.contains('active')) {
+                stormInitialized = false;
+            } else {
+                stormInitialized = true;
+            }
+
+            // 頁面卸載時銷毀圖表避免記憶體洩漏
+            window.addEventListener('beforeunload', function() {
+                if (chartTyphoon && typeof chartTyphoon.destroy === 'function') chartTyphoon.destroy();
+                if (chartStorm && typeof chartStorm.destroy === 'function') chartStorm.destroy();
+            });
+
+            console.log('✅ Lightning AI 氣象整合儀表板 v3.1 已就緒');
+            console.log('   🌪️ 颱風推演 + ⛈️ 雷雨報告 雙視圖監控中');
+        })();
+    </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MG-ER-RO-KC 600座風力發電專利演練</title>
     <style>
         body { font-family: "Microsoft YaHei", sans-serif; margin: 40px; background: #f8f9fa; }
@@ -48,5 +1523,100 @@
     <script>
         console.log("MG-ER-RO-KC 公開演練網頁已載入");
     </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>AI 離線 5G 建設監控</title>
+  <style>
+    body { font-family: sans-serif; max-width: 800px; margin: auto; padding: 20px; }
+    .card { border: 1px solid #ccc; padding: 15px; margin: 10px 0; border-radius: 8px; }
+    .status-ok { color: green; }
+    .status-warn { color: orange; }
+  </style>
+</head>
+<body>
+  <h1>📡 AI 離線 5G 建設監控儀表板</h1>
+  <p>本頁面完全在本機執行，不需網路，開機即可查看。</p>
+
+  <div id="node-list">
+    <h2>目前建設節點</h2>
+    <!-- 節點卡片會動態插入 -->
+  </div>
+
+  <button onclick="scanNow()">🔍 立即用 AI 掃描環境</button>
+  <p id="scan-result"></p>
+
+  <script>
+    // 預設的 5G 建設節點資料（可模擬從本機檔案讀取）
+    const defaultNodes = [
+      { name: "寺廟 A", status: "online", signal: -65, lastSeen: "2026-07-19 08:00" },
+      { name: "7-11 旗艦店", status: "offline", signal: -90, lastSeen: "2026-07-18 23:00" },
+      { name: "全家 學區店", status: "online", signal: -72, lastSeen: "2026-07-19 07:30" },
+      { name: "萊爾富 轉運站", status: "warning", signal: -80, lastSeen: "2026-07-19 06:00" }
+    ];
+
+    function loadNodes() {
+      // 先從 localStorage 讀取，若無則用預設值
+      const stored = localStorage.getItem('5g_nodes');
+      return stored ? JSON.parse(stored) : defaultNodes;
+    }
+
+    function saveNodes(nodes) {
+      localStorage.setItem('5g_nodes', JSON.stringify(nodes));
+    }
+
+    function renderNodes() {
+      const nodes = loadNodes();
+      const container = document.getElementById('node-list');
+      container.innerHTML = '<h2>目前建設節點</h2>';
+      nodes.forEach(node => {
+        const statusClass = node.status === 'online' ? 'status-ok' : 
+                            (node.status === 'warning' ? 'status-warn' : '');
+        container.innerHTML += `
+          <div class="card">
+            <strong>${node.name}</strong> 
+            <span class="${statusClass}">[${node.status}]</span><br>
+            訊號強度：${node.signal} dBm<br>
+            最後回報：${node.lastSeen}
+          </div>`;
+      });
+    }
+
+    // 模擬 AI 掃描（實際可串接 TensorFlow.js 分析訊號模式）
+    async function scanNow() {
+      document.getElementById('scan-result').innerText = '🤖 AI 分析中...';
+      // 模擬延遲
+      await new Promise(r => setTimeout(r, 1500));
+      // 這裡你可以呼叫真正的 TensorFlow.js 模型，例如偵測異常節點
+      const nodes = loadNodes();
+      // 示範：隨機更新一個節點狀態（實務上可從 Web Bluetooth 或本地 API 讀取真實訊號）
+      if (nodes.length > 0) {
+        nodes[0].signal = Math.floor(Math.random() * -50 - 40);
+        nodes[0].lastSeen = new Date().toLocaleString();
+        nodes[0].status = nodes[0].signal > -70 ? 'online' : 'warning';
+        saveNodes(nodes);
+        renderNodes();
+      }
+      document.getElementById('scan-result').innerText = '✅ AI 掃描完成，節點資料已更新。';
+    }
+
+    // 初始化
+    renderNodes();
+  </script>
+</body>
+</html>
+
+<html>
+<head>
+  <meta http-equiv="CONTENT-TYPE" content="text/html; charset=UTF-8">
+  <title>Hello, World!</title>
+</head>
+<body>
+  <h1>
+    Hello, World!
+  </h1>
 </body>
 </html>
