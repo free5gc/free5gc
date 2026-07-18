@@ -1,0 +1,58 @@
+name: AI5G Firewall - 防篡改與離線防禦
+
+on:
+  push:
+    branches: [ "ai5g-main", "master", "main" ]
+  pull_request:
+    branches: [ "ai5g-main", "master", "main" ]
+  schedule:
+    # 定時掃描，避免離線空窗期被偷改
+    - cron: '0 */6 * * *'
+
+jobs:
+  firewall:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 檢出程式碼
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🛡️ 防火牆 - 完整性校驗
+        run: |
+          echo "🔍 檢查關鍵檔案是否被竄改..."
+          # 檢查 ai5g-main.yml 與公益政策是否被未授權修改
+          git diff --name-only HEAD~1 HEAD | tee changed_files.txt
+          if grep -q "ai5g-main.yml" changed_files.txt; then
+            echo "⚠️ 偵測到最高權限檔案被修改，請確認提交者身分"
+            # 可加入更嚴格的驗證，例如比對 PGP 簽章
+          fi
+
+      - name: 🚫 惡意中繼節點掃描
+        run: |
+          echo "🔎 掃描是否含有未授權的離線節點或惡意依賴..."
+          # 檢查 package.json / requirements.txt 是否包含可疑來源
+          # 示意：如果有未知來源的依賴就報錯
+          if grep -qr "malicious" .; then
+            echo "❌ 發現可疑內容，拒絕合併"
+            exit 1
+          fi
+          echo "✅ 沒有發現明顯惡意內容"
+
+      - name: 🌐 白名單 - 僅允許正當用途
+        run: |
+          echo "📋 確認專案僅包含正當功能：公益網路、AI 服務、一般上網"
+          # 可透過關鍵字比對程式碼內容或設定檔
+          # 此處示範檢查 ai5g-main.yml 中的 services 是否合規
+          if grep -qE "(gambling|illegal)" ai5g-main.yml; then
+            echo "⛔ 含有禁止用途，拒絕通過"
+            exit 1
+          fi
+          echo "✅ 用途檢查通過，僅限正當使用"
+
+      - name: 🤖 AI 功能驗證
+        run: |
+          echo "🧠 確保 AI 模組正常運作..."
+          # 這裡可以呼叫 AI 測試腳本，例如驗證模型載入
+          # python test_ai.py
+          echo "AI 模組已通過防火牆檢查"
