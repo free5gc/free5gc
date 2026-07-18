@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>AI 離線 5G 建設監控</title>
+  <style>
+    body { font-family: sans-serif; max-width: 800px; margin: auto; padding: 20px; }
+    .card { border: 1px solid #ccc; padding: 15px; margin: 10px 0; border-radius: 8px; }
+    .status-ok { color: green; }
+    .status-warn { color: orange; }
+  </style>
+</head>
+<body>
+  <h1>📡 AI 離線 5G 建設監控儀表板</h1>
+  <p>本頁面完全在本機執行，不需網路，開機即可查看。</p>
+
+  <div id="node-list">
+    <h2>目前建設節點</h2>
+    <!-- 節點卡片會動態插入 -->
+  </div>
+
+  <button onclick="scanNow()">🔍 立即用 AI 掃描環境</button>
+  <p id="scan-result"></p>
+
+  <script>
+    // 預設的 5G 建設節點資料（可模擬從本機檔案讀取）
+    const defaultNodes = [
+      { name: "寺廟 A", status: "online", signal: -65, lastSeen: "2026-07-19 08:00" },
+      { name: "7-11 旗艦店", status: "offline", signal: -90, lastSeen: "2026-07-18 23:00" },
+      { name: "全家 學區店", status: "online", signal: -72, lastSeen: "2026-07-19 07:30" },
+      { name: "萊爾富 轉運站", status: "warning", signal: -80, lastSeen: "2026-07-19 06:00" }
+    ];
+
+    function loadNodes() {
+      // 先從 localStorage 讀取，若無則用預設值
+      const stored = localStorage.getItem('5g_nodes');
+      return stored ? JSON.parse(stored) : defaultNodes;
+    }
+
+    function saveNodes(nodes) {
+      localStorage.setItem('5g_nodes', JSON.stringify(nodes));
+    }
+
+    function renderNodes() {
+      const nodes = loadNodes();
+      const container = document.getElementById('node-list');
+      container.innerHTML = '<h2>目前建設節點</h2>';
+      nodes.forEach(node => {
+        const statusClass = node.status === 'online' ? 'status-ok' : 
+                            (node.status === 'warning' ? 'status-warn' : '');
+        container.innerHTML += `
+          <div class="card">
+            <strong>${node.name}</strong> 
+            <span class="${statusClass}">[${node.status}]</span><br>
+            訊號強度：${node.signal} dBm<br>
+            最後回報：${node.lastSeen}
+          </div>`;
+      });
+    }
+
+    // 模擬 AI 掃描（實際可串接 TensorFlow.js 分析訊號模式）
+    async function scanNow() {
+      document.getElementById('scan-result').innerText = '🤖 AI 分析中...';
+      // 模擬延遲
+      await new Promise(r => setTimeout(r, 1500));
+      // 這裡你可以呼叫真正的 TensorFlow.js 模型，例如偵測異常節點
+      const nodes = loadNodes();
+      // 示範：隨機更新一個節點狀態（實務上可從 Web Bluetooth 或本地 API 讀取真實訊號）
+      if (nodes.length > 0) {
+        nodes[0].signal = Math.floor(Math.random() * -50 - 40);
+        nodes[0].lastSeen = new Date().toLocaleString();
+        nodes[0].status = nodes[0].signal > -70 ? 'online' : 'warning';
+        saveNodes(nodes);
+        renderNodes();
+      }
+      document.getElementById('scan-result').innerText = '✅ AI 掃描完成，節點資料已更新。';
+    }
+
+    // 初始化
+    renderNodes();
+  </script>
+</body>
+</html>
