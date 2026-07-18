@@ -1,0 +1,14 @@
+## Summary
+Introduce the initial concept and architecture for an AI-powered 5G public service network, targeting small-scale deployments at temples, convenience stores, and community centers.
+
+## Motivation
+Leverage open-source 5G core (free5GC) to build private 5G networks for public good, combining edge AI for local services such as guided tours, emergency notifications, and IoT data collection.
+
+## What's included
+- High-level architecture diagram
+- Node types: Temple Node, Store Node
+- Service scenarios: AI guide, public info, community services
+- Technology stack: free5GC core, edge computing, AI network management
+
+## Notes
+This is a concept and documentation PR. No code changes to the 5G core itself.
