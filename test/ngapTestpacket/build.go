@@ -540,7 +540,7 @@ func BuildUEContextReleaseComplete(amfUeNgapID, ranUeNgapID int64, pduSessionIDL
 	}
 
 	userLocationInformationNR.TAI.PLMNIdentity.Value = aper.OctetString("\x02\xf8\x39")
-	userLocationInformationNR.TAI.TAC.Value = aper.OctetString("\x00\x00\x11")
+	userLocationInformationNR.TAI.TAC.Value = aper.OctetString("\x00\x00\x01")
 
 	uEContextReleaseCompleteIEs.List = append(uEContextReleaseCompleteIEs.List, ie)
 	// Information on Recommended Cells and RAN Nodes for Paging (optional)
