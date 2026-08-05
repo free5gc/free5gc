@@ -126,7 +126,7 @@ func nGsSetup(t *testing.T, MranConn *sctp.SCTPConn, SranConn *sctp.SCTPConn) {
 	var recvMsg = make([]byte, 2048)
 
 	// send Master RAN NGSetupRequest Msg
-	sendMsg, err := test.GetNGSetupRequest([]byte("\x00\x01\x02"), 24, "MasterRAN")
+	sendMsg, err := test.GetNGSetupRequest([]byte("\x00\x01\x02"), 24, "MasterRAN", "", "\x01", "\xfe\xdc\xba")
 	assert.Nil(t, err)
 	_, err = MranConn.Write(sendMsg)
 	assert.Nil(t, err)
@@ -139,7 +139,7 @@ func nGsSetup(t *testing.T, MranConn *sctp.SCTPConn, SranConn *sctp.SCTPConn) {
 	assert.True(t, ngapPdu.Present == ngapType.NGAPPDUPresentSuccessfulOutcome && ngapPdu.SuccessfulOutcome.ProcedureCode.Value == ngapType.ProcedureCodeNGSetup, "No NGSetupResponse received.")
 
 	// send Second RAN NGSetupRequest Msg
-	sendMsg, err = test.GetNGSetupRequest([]byte("\x00\x03\x04"), 24, "SecondRAN")
+	sendMsg, err = test.GetNGSetupRequest([]byte("\x00\x03\x04"), 24, "SecondRAN", "\x00\x00\x11", "\x01", "\xfe\xdc\xba")
 	assert.Nil(t, err)
 	_, err = SranConn.Write(sendMsg)
 	assert.Nil(t, err)
