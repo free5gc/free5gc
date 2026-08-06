@@ -12,7 +12,7 @@ require (
 	github.com/free5gc/bsf v0.0.0
 	github.com/free5gc/chf v1.2.2
 	github.com/free5gc/ike v1.2.1
-	github.com/free5gc/nas v1.2.3
+	github.com/free5gc/nas v1.2.4-0.20260707010827-03622ac0336e
 	github.com/free5gc/nef v1.2.4
 	github.com/free5gc/ngap v1.1.3
 	github.com/free5gc/nrf v0.0.0
@@ -142,6 +142,7 @@ require (
 	golang.org/x/exp v0.0.0-20231127185646-65229373498e // indirect
 	golang.org/x/oauth2 v0.36.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
+	golang.org/x/text v0.37.0 // indirect
 	golang.org/x/text v0.37.0 // indirect
 	google.golang.org/api v0.126.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect

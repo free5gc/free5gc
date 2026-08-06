@@ -90,7 +90,7 @@ func BuildNGSetupRequest() (pdu ngapType.NGAPPDU) {
 	sliceSupportItem.SNSSAI.SST.Value = aper.OctetString("\x01")
 	// optional
 	sliceSupportItem.SNSSAI.SD = new(ngapType.SD)
-	sliceSupportItem.SNSSAI.SD.Value = aper.OctetString("\xfe\xdc\xba")
+	sliceSupportItem.SNSSAI.SD.Value = aper.OctetString("\x11\x22\x33")
 
 	sliceSupportList.List = append(sliceSupportList.List, sliceSupportItem)
 
@@ -540,7 +540,7 @@ func BuildUEContextReleaseComplete(amfUeNgapID, ranUeNgapID int64, pduSessionIDL
 	}
 
 	userLocationInformationNR.TAI.PLMNIdentity.Value = aper.OctetString("\x02\xf8\x39")
-	userLocationInformationNR.TAI.TAC.Value = aper.OctetString("\x00\x00\x11")
+	userLocationInformationNR.TAI.TAC.Value = aper.OctetString("\x00\x00\x01")
 
 	uEContextReleaseCompleteIEs.List = append(uEContextReleaseCompleteIEs.List, ie)
 	// Information on Recommended Cells and RAN Nodes for Paging (optional)
