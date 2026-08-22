@@ -9,6 +9,8 @@ pfcp:
   retransTimeout: 1s # retransmission timeout
   maxRetrans: 3 # the max number of retransmission
 
+# NRF Configuration
+nrfUri: http://127.0.0.10:8000  # a valid URI of NRF (for Nupf_EventExposure service, if don't use this service, you can set it to empty string)
 # GTP-U Configuration
 gtpu:
   forwarder: gtp5g
