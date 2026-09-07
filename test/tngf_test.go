@@ -12,6 +12,7 @@ import (
 	"math/big"
 	"net"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -768,24 +769,20 @@ func tngfSendPduSessionEstablishmentRequest(
 	var pduAddr net.IP
 
 	// Read NAS from TNGF
-	if n, err := nasConn.Read(buffer); err != nil {
-		return ifaces, fmt.Errorf("Read NAS Message Fail:%+v", err)
-	} else {
-		nasMsg, err := DecodePDUSessionEstablishmentAccept(ue, n, buffer)
-		if err != nil {
-			t.Errorf("DecodePDUSessionEstablishmentAccept Fail: %+v", err)
-		}
-		spew.Config.Indent = "\t"
-		nasStr := spew.Sdump(nasMsg)
-		t.Log("Dump DecodePDUSessionEstablishmentAccept:\n", nasStr)
-
-		pduAddr, err = GetPDUAddress(nasMsg)
-		if err != nil {
-			t.Errorf("GetPDUAddress Fail: %+v", err)
-		}
-
-		t.Logf("PDU Address: %s", pduAddr.String())
+	nasMsg, err := tngfReadPDUSessionEstablishmentAccept(t, ue, nasConn, buffer)
+	if err != nil {
+		return ifaces, err
 	}
+	spew.Config.Indent = "\t"
+	nasStr := spew.Sdump(nasMsg)
+	t.Log("Dump DecodePDUSessionEstablishmentAccept:\n", nasStr)
+
+	pduAddr, err = GetPDUAddress(nasMsg)
+	if err != nil {
+		t.Errorf("GetPDUAddress Fail: %+v", err)
+	}
+
+	t.Logf("PDU Address: %s", pduAddr.String())
 
 	var linkGRE netlink.Link
 
@@ -891,6 +888,35 @@ func GetMessageAuthenticator(message *radiusMessage.RadiusMessage) []byte {
 	hmacFun := hmac.New(md5.New, radius_secret) // radius_secret is same as cfg's radius_secret
 	hmacFun.Write(radiusMessageData)
 	return hmacFun.Sum(nil)
+}
+
+func tngfReadPDUSessionEstablishmentAccept(
+	t *testing.T,
+	ue *RanUeContext,
+	conn interface{ Read([]byte) (int, error) },
+	buffer []byte,
+) (*nasMessage.PDUSessEstAccept, error) {
+	t.Helper()
+
+	for i := 0; i < 4; i++ {
+		n, err := conn.Read(buffer)
+		if err != nil {
+			return nil, fmt.Errorf("Read NAS Message Fail:%+v", err)
+		}
+
+		nasMsg, err := DecodePDUSessionEstablishmentAccept(ue, n, buffer)
+		if err == nil {
+			return nasMsg, nil
+		}
+		if strings.Contains(err.Error(), "got *message.CfgUpdateCmd") {
+			t.Logf("Skip NAS message before PDU Session Establishment Accept: %+v", err)
+			continue
+		}
+
+		return nil, fmt.Errorf("DecodePDUSessionEstablishmentAccept Fail: %+v", err)
+	}
+
+	return nil, fmt.Errorf("PDU Session Establishment Accept not received")
 }
 
 func AppendMessageAuthenticator(
@@ -1772,24 +1798,20 @@ func TestTngfUE(t *testing.T) {
 	var pduAddress net.IP
 
 	// Read NAS from TNGF
-	if n, err := tcpConnWithTNGF.Read(buffer); err != nil {
-		t.Fatalf("Read NAS Message Fail:%+v", err)
-	} else {
-		nasMsg, err := DecodePDUSessionEstablishmentAccept(ue, n, buffer)
-		if err != nil {
-			t.Fatalf("DecodePDUSessionEstablishmentAccept Fail: %+v", err)
-		}
-
-		spew.Config.Indent = "\t"
-		nasStr := spew.Sdump(nasMsg)
-		t.Log("Dump DecodePDUSessionEstablishmentAccept:\n", nasStr)
-		pduAddress, err = GetPDUAddress(nasMsg)
-		if err != nil {
-			t.Fatalf("GetPDUAddress Fail: %+v", err)
-		}
-
-		t.Logf("PDU Address: %s", pduAddress.String())
+	pduSessionAccept, err := tngfReadPDUSessionEstablishmentAccept(t, ue, tcpConnWithTNGF, buffer)
+	if err != nil {
+		t.Fatalf("%+v", err)
 	}
+
+	spew.Config.Indent = "\t"
+	nasStr = spew.Sdump(pduSessionAccept)
+	t.Log("Dump DecodePDUSessionEstablishmentAccept:\n", nasStr)
+	pduAddress, err = GetPDUAddress(pduSessionAccept)
+	if err != nil {
+		t.Fatalf("GetPDUAddress Fail: %+v", err)
+	}
+
+	t.Logf("PDU Address: %s", pduAddress.String())
 
 	var linkGRE netlink.Link
 
