@@ -24,10 +24,8 @@ import (
 	"golang.org/x/sys/unix"
 
 	ike_security "github.com/free5gc/ike/security"
-	"github.com/free5gc/nas"
-	"github.com/free5gc/nas/nasMessage"
-	"github.com/free5gc/nas/nasType"
-	nasSecurity "github.com/free5gc/nas/security"
+	nasIE "github.com/free5gc/nas/ie"
+	nasMessage "github.com/free5gc/nas/message"
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/tngf/pkg/context"
 	"github.com/free5gc/tngf/pkg/ike/handler"
@@ -293,7 +291,12 @@ func tngfEncryptProcedure(ikeSecurityAssociation *context.IKESecurityAssociation
 // For dealing with EAP-5G start, return EAP-5G response including
 // "AN-Parameters and NASPDU of Registration Request"
 
-func tngfBuildEAP5GANParameters(mobileIdentity5GS nasType.MobileIdentity5GS) []byte {
+func mobileIdentityBytes(mobileIdentity *nasIE.MobileId5GS) []byte {
+	value, _ := mobileIdentity.MarshalBinary()
+	return value
+}
+
+func tngfBuildEAP5GANParameters(mobileIdentity5GS *nasIE.MobileId5GS) []byte {
 	var anParameters []byte
 
 	// [TS 24.502] 9.3.2.2.2.3
@@ -364,14 +367,15 @@ func tngfBuildEAP5GANParameters(mobileIdentity5GS nasType.MobileIdentity5GS) []b
 	anParameters = append(anParameters, anParameter...)
 
 	// Build UE ID
+	mobileIdentityValue := mobileIdentityBytes(mobileIdentity5GS)
 	anParameter = make([]byte, 3)
 	anParameter[0] = radiusMessage.ANParametersTypeUEIdentity
-	anParameter[1] = byte(16)
-	anParameter[2] = mobileIdentity5GS.GetIei()
+	anParameter[1] = byte(3 + len(mobileIdentityValue))
+	anParameter[2] = 0
 	anParameterLength := make([]byte, 2)
-	binary.BigEndian.PutUint16(anParameterLength, mobileIdentity5GS.GetLen())
+	binary.BigEndian.PutUint16(anParameterLength, uint16(len(mobileIdentityValue)))
 	anParameter = append(anParameter, anParameterLength...)
-	anParameter = append(anParameter, mobileIdentity5GS.Buffer...)
+	anParameter = append(anParameter, mobileIdentityValue...)
 
 	anParameters = append(anParameters, anParameter...)
 
@@ -572,8 +576,8 @@ func tngfSendPduSessionEstablishmentRequest(
 
 	// PDU session establishment request
 	// TS 24.501 9.11.3.47.1 Request type
-	pdu := nasTestpacket.GetUlNasTransport_PduSessionEstablishmentRequest(pduSessionId, nasMessage.ULNASTransportRequestTypeInitialRequest, "internet", &sNssai)
-	pdu, err = EncodeNasPduInEnvelopeWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCiphered, true, false)
+	pdu := nasTestpacket.GetUlNasTransport_PduSessionEstablishmentRequest(pduSessionId, nasIE.ReqType_InitialReq, "internet", &sNssai)
+	pdu, err = EncodeNasPduInEnvelopeWithSecurity(ue, pdu, nasMessage.SecHdrTypeIntegrityProtectedAndCiphered, true, false)
 	if err != nil {
 		return ifaces, fmt.Errorf("Encode NAS PDU In Envelope Fail:%+v", err)
 	}
@@ -775,7 +779,7 @@ func tngfSendPduSessionEstablishmentRequest(
 		nasStr := spew.Sdump(nasMsg)
 		t.Log("Dump DecodePDUSessionEstablishmentAccept:\n", nasStr)
 
-		pduAddr, err = GetPDUAddress(nasMsg.PDUSessionEstablishmentAccept)
+		pduAddr, err = GetPDUAddress(nasMsg)
 		if err != nil {
 			t.Errorf("GetPDUAddress Fail: %+v", err)
 		}
@@ -889,16 +893,29 @@ func GetMessageAuthenticator(message *radiusMessage.RadiusMessage) []byte {
 	return hmacFun.Sum(nil)
 }
 
+func AppendMessageAuthenticator(
+	message *radiusMessage.RadiusMessage,
+	payloadContainer *radiusMessage.RadiusPayloadContainer,
+) {
+	authPayload := new(radiusMessage.RadiusPayload)
+	authPayload.Type = radiusMessage.TypeMessageAuthenticator
+	authPayload.Length = uint8(18)
+	authPayload.Val = make([]byte, 16)
+
+	message.Payloads = *payloadContainer
+	message.Payloads = append(message.Payloads, *authPayload)
+	authPayload.Val = GetMessageAuthenticator(message)
+	*payloadContainer = append(*payloadContainer, *authPayload)
+	message.Payloads = *payloadContainer
+}
+
 func TestTngfUE(t *testing.T) {
 	// New UE
-	ue := NewRanUeContext("imsi-208930000007487", 1, nasSecurity.AlgCiphering128NEA0, nasSecurity.AlgIntegrity128NIA2,
+	ue := NewRanUeContext("imsi-208930000007487", 1, nasMessage.AlgCiphering128NEA0, nasMessage.AlgIntegrity128NIA2,
 		models.AccessType_NON_3_GPP_ACCESS)
 	ue.AmfUeNgapId = 1
 	ue.AuthenticationSubs = getAuthSubscription()
-	mobileIdentity5GS := nasType.MobileIdentity5GS{
-		Len:    13, // suci
-		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
-	}
+	mobileIdentity5GS := nasTestpacket.MobileIdentity5GS([]uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78})
 
 	// Used to save IPsec/IKE related data
 	tngfue := context.TNGFSelf().NewTngfUe()
@@ -964,18 +981,7 @@ func TestTngfUE(t *testing.T) {
 		return
 	}
 	BuildEAPIdentity(ueRadiusPayload, identifier, []byte("tngfue"))
-
-	// create Authenticator payload
-	authPayload := new(radiusMessage.RadiusPayload)
-	authPayload.Type = radiusMessage.TypeMessageAuthenticator
-	authPayload.Length = uint8(18)
-	authPayload.Val = make([]byte, 16)
-
-	ueRadiusMessage.Payloads = *ueRadiusPayload
-	ueRadiusMessage.Payloads = append(ueRadiusMessage.Payloads, *authPayload)
-	authPayload.Val = GetMessageAuthenticator(ueRadiusMessage)
-	*ueRadiusPayload = append(*ueRadiusPayload, *authPayload)
-	ueRadiusMessage.Payloads = *ueRadiusPayload
+	AppendMessageAuthenticator(ueRadiusMessage, ueRadiusPayload)
 
 	pkt, err = UEencode(ueRadiusMessage)
 
@@ -1025,7 +1031,7 @@ func TestTngfUE(t *testing.T) {
 
 	// NAS-PDU (Registration Request)
 	ueSecurityCapability := ue.GetUESecurityCapability()
-	registrationRequest := nasTestpacket.GetRegistrationRequest(nasMessage.RegistrationType5GSInitialRegistration,
+	registrationRequest := nasTestpacket.GetRegistrationRequest(nasIE.RegType_InitialReg,
 		mobileIdentity5GS, nil, ueSecurityCapability, nil, nil, nil)
 
 	nasLength := make([]byte, 2)
@@ -1034,9 +1040,8 @@ func TestTngfUE(t *testing.T) {
 	eapVendorTypeData = append(eapVendorTypeData, registrationRequest...)
 
 	BuildEAP5GNAS(ueRadiusPayload, identifier, eapVendorTypeData)
-
-	ueRadiusMessage.Payloads = *ueRadiusPayload
-	pkt, err = ueRadiusMessage.Encode()
+	AppendMessageAuthenticator(ueRadiusMessage, ueRadiusPayload)
+	pkt, err = UEencode(ueRadiusMessage)
 	if err != nil {
 		t.Fatalf("Radius Message Encoding error: %+v", err)
 	}
@@ -1073,20 +1078,18 @@ func TestTngfUE(t *testing.T) {
 	eapTypeData := eap.EAPTypeData[0]
 	var eapExpanded *radiusMessage.EAPExpanded
 
-	var decodedNAS *nas.Message
-
 	eapExpanded = eapTypeData.(*radiusMessage.EAPExpanded)
 
 	// Decode NAS - Authentication Request
 	nasData := eapExpanded.VendorData[4:]
-	decodedNAS = new(nas.Message)
-	if err := decodedNAS.PlainNasDecode(&nasData); err != nil {
+	decodedNAS, err := nasMessage.ParseGMM(nasData)
+	if err != nil {
 		t.Fatalf("Decode plain NAS fail: %+v", err)
 	}
 
 	// Calculate for RES*
 	assert.NotNil(t, decodedNAS)
-	rand := decodedNAS.GetRANDValue()
+	rand := decodedNAS.(*nasMessage.AuthReq).AuthParamRAND5GAuthChlg.Rand
 	resStat := ue.DeriveRESstarAndSetKey(ue.AuthenticationSubs, rand[:], "5G:mnc093.mcc208.3gppnetwork.org")
 
 	// Send Authentication
@@ -1122,9 +1125,8 @@ func TestTngfUE(t *testing.T) {
 	eapVendorTypeData = append(eapVendorTypeData, authenticationResponse...)
 
 	BuildEAP5GNAS(ueRadiusPayload, identifier, eapVendorTypeData)
-
-	ueRadiusMessage.Payloads = *ueRadiusPayload
-	pkt, err = ueRadiusMessage.Encode()
+	AppendMessageAuthenticator(ueRadiusMessage, ueRadiusPayload)
+	pkt, err = UEencode(ueRadiusMessage)
 	if err != nil {
 		t.Fatalf("Radius Message Encoding error: %+v", err)
 	}
@@ -1176,10 +1178,10 @@ func TestTngfUE(t *testing.T) {
 	eapVendorTypeData = append(eapVendorTypeData, anParameters...)
 
 	// NAS-PDU (SMC Complete)
-	registrationRequestWith5GMM := nasTestpacket.GetRegistrationRequest(nasMessage.RegistrationType5GSInitialRegistration,
+	registrationRequestWith5GMM := nasTestpacket.GetRegistrationRequest(nasIE.RegType_InitialReg,
 		mobileIdentity5GS, nil, ueSecurityCapability, ue.Get5GMMCapability(), nil, nil)
 	smcComplete := nasTestpacket.GetSecurityModeComplete(registrationRequestWith5GMM)
-	smcComplete, err = EncodeNasPduWithSecurity(ue, smcComplete, nas.SecurityHeaderTypeIntegrityProtectedAndCipheredWithNew5gNasSecurityContext, true, true)
+	smcComplete, err = EncodeNasPduWithSecurity(ue, smcComplete, nasMessage.SecHdrTypeIntegrityProtectedAndCipheredWithNew5gNasSecCtx, true, true)
 	assert.Nil(t, err)
 	nasLength = make([]byte, 2)
 	binary.BigEndian.PutUint16(nasLength, uint16(len(smcComplete)))
@@ -1187,9 +1189,8 @@ func TestTngfUE(t *testing.T) {
 	eapVendorTypeData = append(eapVendorTypeData, smcComplete...)
 
 	BuildEAP5GNAS(ueRadiusPayload, identifier, eapVendorTypeData)
-
-	ueRadiusMessage.Payloads = *ueRadiusPayload
-	pkt, err = ueRadiusMessage.Encode()
+	AppendMessageAuthenticator(ueRadiusMessage, ueRadiusPayload)
+	pkt, err = UEencode(ueRadiusMessage)
 	if err != nil {
 		t.Fatalf("Radius Message Encoding error: %+v", err)
 	}
@@ -1230,9 +1231,8 @@ func TestTngfUE(t *testing.T) {
 		return
 	}
 	BuildEAP5GNotification(ueRadiusPayload, identifier)
-
-	ueRadiusMessage.Payloads = *ueRadiusPayload
-	pkt, err = ueRadiusMessage.Encode()
+	AppendMessageAuthenticator(ueRadiusMessage, ueRadiusPayload)
+	pkt, err = UEencode(ueRadiusMessage)
 	if err != nil {
 		t.Fatalf("Radius Message Encoding error: %+v", err)
 	}
@@ -1360,7 +1360,7 @@ func TestTngfUE(t *testing.T) {
 	var ikePayload message.IKEPayloadContainer
 
 	// Identification
-	ikePayload.BuildIdentificationInitiator(message.ID_KEY_ID, mobileIdentity5GS.GetMobileIdentity5GSContents())
+	ikePayload.BuildIdentificationInitiator(message.ID_KEY_ID, mobileIdentityBytes(mobileIdentity5GS))
 
 	// Security Association
 	securityAssociation = ikePayload.BuildSecurityAssociation()
@@ -1385,7 +1385,7 @@ func TestTngfUE(t *testing.T) {
 	P0 := make([]byte, 4)
 	binary.BigEndian.PutUint32(P0, ue.ULCount.Get()-1)
 	L0 := ueauth.KDFLen(P0)
-	P1 := []byte{nasSecurity.AccessTypeNon3GPP}
+	P1 := []byte{byte(nasMessage.AccessTypeNon3GPP)}
 	L1 := ueauth.KDFLen(P1)
 	Ktngf, err := ueauth.GetKDFValue(ue.Kamf, ueauth.FC_FOR_KGNB_KN3IWF_DERIVATION, P0, L0, P1, L1)
 	if err != nil {
@@ -1401,7 +1401,7 @@ func TestTngfUE(t *testing.T) {
 		return
 	}
 	var idPayload message.IKEPayloadContainer
-	idPayload.BuildIdentificationInitiator(message.ID_KEY_ID, mobileIdentity5GS.GetMobileIdentity5GSContents())
+	idPayload.BuildIdentificationInitiator(message.ID_KEY_ID, mobileIdentityBytes(mobileIdentity5GS))
 	idPayloadData, err := idPayload.Encode()
 	if err != nil {
 		t.Fatalf("Encode IKE payload failed : %+v", err)
@@ -1600,7 +1600,7 @@ func TestTngfUE(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	nasMsg, err := NASDecode(ue, nas.SecurityHeaderTypeIntegrityProtectedAndCiphered, nasEnv[:n])
+	nasMsg, err := NASDecode(ue, nasMessage.SecHdrTypeIntegrityProtectedAndCiphered, nasEnv[:n])
 	if err != nil {
 		t.Fatalf("NAS Decode Fail: %+v", err)
 	}
@@ -1611,7 +1611,7 @@ func TestTngfUE(t *testing.T) {
 
 	// send NAS Registration Complete Msg
 	pdu := nasTestpacket.GetRegistrationComplete(nil)
-	pdu, err = EncodeNasPduInEnvelopeWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCiphered, true, false)
+	pdu, err = EncodeNasPduInEnvelopeWithSecurity(ue, pdu, nasMessage.SecHdrTypeIntegrityProtectedAndCiphered, true, false)
 	if err != nil {
 		t.Fatal(err)
 		return
@@ -1633,8 +1633,8 @@ func TestTngfUE(t *testing.T) {
 
 	var pduSessionId uint8 = 1
 
-	pdu = nasTestpacket.GetUlNasTransport_PduSessionEstablishmentRequest(pduSessionId, nasMessage.ULNASTransportRequestTypeInitialRequest, "internet", &sNssai)
-	pdu, err = EncodeNasPduInEnvelopeWithSecurity(ue, pdu, nas.SecurityHeaderTypeIntegrityProtectedAndCiphered, true, false)
+	pdu = nasTestpacket.GetUlNasTransport_PduSessionEstablishmentRequest(pduSessionId, nasIE.ReqType_InitialReq, "internet", &sNssai)
+	pdu, err = EncodeNasPduInEnvelopeWithSecurity(ue, pdu, nasMessage.SecHdrTypeIntegrityProtectedAndCiphered, true, false)
 	if err != nil {
 		t.Fatal(err)
 		return
@@ -1783,7 +1783,7 @@ func TestTngfUE(t *testing.T) {
 		spew.Config.Indent = "\t"
 		nasStr := spew.Sdump(nasMsg)
 		t.Log("Dump DecodePDUSessionEstablishmentAccept:\n", nasStr)
-		pduAddress, err = GetPDUAddress(nasMsg.PDUSessionEstablishmentAccept)
+		pduAddress, err = GetPDUAddress(nasMsg)
 		if err != nil {
 			t.Fatalf("GetPDUAddress Fail: %+v", err)
 		}
@@ -1856,15 +1856,12 @@ func TestTngfUE(t *testing.T) {
 	t.Log("====== UE Initiated Deregistration ======")
 
 	// Non3GPPtype (0xf2) and the GUTI value.
-	mobileIdentity5GS = nasType.MobileIdentity5GS{
-		Len:    11, // 5g-guti
-		Buffer: []uint8{0xf2, 0x02, 0xf8, 0x39, 0xca, 0xfe, 0x00, 0x00, 0x00, 0x00, 0x01},
-	}
+	mobileIdentity5GS = nasTestpacket.MobileIdentity5GS([]uint8{0xf2, 0x02, 0xf8, 0x39, 0xca, 0xfe, 0x00, 0x00, 0x00, 0x00, 0x01})
 
 	deregistrationRequest := nasTestpacket.GetDeregistrationRequest(0x02, 0x01, 0x00, mobileIdentity5GS)
 
 	// Encrypt and integrity protect the message using the existing security context.
-	pdu, err = EncodeNasPduInEnvelopeWithSecurity(ue, deregistrationRequest, nas.SecurityHeaderTypeIntegrityProtectedAndCiphered, true, false)
+	pdu, err = EncodeNasPduInEnvelopeWithSecurity(ue, deregistrationRequest, nasMessage.SecHdrTypeIntegrityProtectedAndCiphered, true, false)
 
 	if err != nil {
 		t.Fatalf("Failed to encode Deregistration Request with security: %+v", err)
