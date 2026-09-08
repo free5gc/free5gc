@@ -1102,9 +1102,7 @@ func TestTngfUE(t *testing.T) {
 	}
 
 	eapTypeData := eap.EAPTypeData[0]
-	var eapExpanded *radiusMessage.EAPExpanded
-
-	eapExpanded = eapTypeData.(*radiusMessage.EAPExpanded)
+	var eapExpanded = eapTypeData.(*radiusMessage.EAPExpanded)
 
 	// Decode NAS - Authentication Request
 	nasData := eapExpanded.VendorData[4:]
