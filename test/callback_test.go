@@ -73,7 +73,7 @@ func getOAuthToken(t *testing.T, clientNfID, targetNfType, scope string) string 
 
 func TestOAuth2Callback(t *testing.T) {
 	t.Log("[TestOAuth2Callback] Running in STRICT OAuth2 mode.")
-	
+
 	if _, err := os.Stat("../cert/af.pem"); os.IsNotExist(err) {
 		t.Log("[Setup] Copying nef.pem to af.pem for NRF verification...")
 		certData, err := os.ReadFile("../cert/nef.pem")
