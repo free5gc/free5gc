@@ -119,6 +119,16 @@ func init() {
 			Chf:  true,
 			Bsf:  true,
 			Nef:  true,
+			Scp:  initNfCfg.TestId == test.TestSCP,
+		}
+		if initNfCfg.TestId == test.TestSCP {
+			// Keep AMF for the UE-driven authentication flow; unrelated NFs stay disabled.
+			startNfCfg.Smf = false
+			startNfCfg.Pcf = false
+			startNfCfg.Nssf = false
+			startNfCfg.Chf = false
+			startNfCfg.Bsf = false
+			startNfCfg.Nef = false
 		}
 		NFstructs = test.CreateNFs(startNfCfg)
 		NfStart()

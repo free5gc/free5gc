@@ -28,6 +28,8 @@ import (
 	nssf_service "github.com/free5gc/nssf/pkg/service"
 	pcf_factory "github.com/free5gc/pcf/pkg/factory"
 	pcf_service "github.com/free5gc/pcf/pkg/service"
+	scp_app "github.com/free5gc/scp/pkg/app"
+	scp_factory "github.com/free5gc/scp/pkg/factory"
 	smf_factory "github.com/free5gc/smf/pkg/factory"
 	smf_service "github.com/free5gc/smf/pkg/service"
 	udm_factory "github.com/free5gc/udm/pkg/factory"
@@ -46,6 +48,7 @@ const (
 	TestRequestTwoPDUSessions       TestId = "TestRequestTwoPDUSessions"
 	TestOAuth2Callback              TestId = "TestOAuth2Callback"
 	TestOAuth2TokenMatrix           TestId = "TestOAuth2TokenMatrix"
+	TestSCP                         TestId = "TestSCP"
 )
 
 func (id TestId) Matches(testID TestId) bool {
@@ -69,6 +72,7 @@ type StartNFsConfig struct {
 	Chf  bool `yaml:"chf,omitempty" default:"false"`
 	Bsf  bool `yaml:"bsf,omitempty" default:"false"`
 	Nef  bool `yaml:"nef,omitempty" default:"false"`
+	Scp  bool `yaml:"scp,omitempty" default:"false"`
 
 	OAuth  bool   `yaml:"oauth,omitempty" default:"false"`
 	TestId TestId `yaml:"testId,omitempty"`
@@ -149,6 +153,9 @@ func CreateNFs(cfg StartNFsConfig) []app.NFstruct {
 	if cfg.Nrf {
 		nfs = append(nfs, NewNrfStruct(NfCtx, cfg.OAuth))
 	}
+	if cfg.Scp {
+		nfs = append(nfs, NewScpStruct(NfCtx))
+	}
 	if cfg.Amf {
 		nfs = append(nfs, NewAmfStruct(NfCtx, cfg.TestId))
 	}
@@ -156,19 +163,19 @@ func CreateNFs(cfg StartNFsConfig) []app.NFstruct {
 		nfs = append(nfs, NewSmfStruct(NfCtx, cfg.TestId))
 	}
 	if cfg.Udr {
-		nfs = append(nfs, NewUdrStruct(NfCtx))
+		nfs = append(nfs, NewUdrStruct(NfCtx, cfg.TestId))
 	}
 	if cfg.Pcf {
 		nfs = append(nfs, NewPcfStruct(NfCtx))
 	}
 	if cfg.Udm {
-		nfs = append(nfs, NewUdmStruct(NfCtx))
+		nfs = append(nfs, NewUdmStruct(NfCtx, cfg.TestId))
 	}
 	if cfg.Nssf {
 		nfs = append(nfs, NewNssfStruct(NfCtx))
 	}
 	if cfg.Ausf {
-		nfs = append(nfs, NewAusfStruct(NfCtx))
+		nfs = append(nfs, NewAusfStruct(NfCtx, cfg.TestId))
 	}
 	if cfg.Chf {
 		nfs = append(nfs, NewChfStruct(NfCtx))
@@ -240,8 +247,8 @@ func NewSmfStruct(ctx context.Context, testId TestId) app.NFstruct {
 	}
 }
 
-func NewUdmStruct(ctx context.Context) app.NFstruct {
-	if err := udmConfig(); err != nil {
+func NewUdmStruct(ctx context.Context, testID TestId) app.NFstruct {
+	if err := udmConfig(testID); err != nil {
 		fmt.Printf("UDM Config failed: %v\n", err)
 	}
 	udm_ctx, udm_cancel := context.WithCancel(ctx)
@@ -274,8 +281,8 @@ func NewPcfStruct(ctx context.Context) app.NFstruct {
 	}
 }
 
-func NewUdrStruct(ctx context.Context) app.NFstruct {
-	if err := udrConfig(); err != nil {
+func NewUdrStruct(ctx context.Context, testID TestId) app.NFstruct {
+	if err := udrConfig(testID); err != nil {
 		fmt.Printf("UDR Config failed: %v\n", err)
 	}
 	udr_ctx, udr_cancel := context.WithCancel(ctx)
@@ -308,8 +315,8 @@ func NewNssfStruct(ctx context.Context) app.NFstruct {
 	}
 }
 
-func NewAusfStruct(ctx context.Context) app.NFstruct {
-	if err := ausfConfig(); err != nil {
+func NewAusfStruct(ctx context.Context, testID TestId) app.NFstruct {
+	if err := ausfConfig(testID); err != nil {
 		fmt.Printf("AUSF Config failed: %v\n", err)
 	}
 
@@ -323,6 +330,36 @@ func NewAusfStruct(ctx context.Context) app.NFstruct {
 		Nf:     ausfApp,
 		Ctx:    &ausf_ctx,
 		Cancel: &ausf_cancel,
+	}
+}
+
+// scpAppWrapper adapts the context-aware SCP lifecycle to the common test NF interface.
+type scpAppWrapper struct {
+	inner *scp_app.ScpApp
+	ctx   context.Context
+}
+
+func (w *scpAppWrapper) SetLogEnable(enable bool)          { w.inner.SetLogEnable(enable) }
+func (w *scpAppWrapper) SetLogLevel(level string)          { w.inner.SetLogLevel(level) }
+func (w *scpAppWrapper) SetReportCaller(reportCaller bool) { w.inner.SetReportCaller(reportCaller) }
+func (w *scpAppWrapper) Start()                            { w.inner.Start(w.ctx) }
+func (w *scpAppWrapper) Terminate()                        { w.inner.Terminate(context.Background()) }
+
+func NewScpStruct(ctx context.Context) app.NFstruct {
+	cfg, err := scpConfig()
+	if err != nil {
+		fmt.Printf("SCP Config failed: %v\n", err)
+	}
+	scpCtx, scpCancel := context.WithCancel(ctx)
+	scpApp, err := scp_app.NewApp(cfg, "")
+	if err != nil {
+		fmt.Printf("SCP NewApp failed: %v\n", err)
+	}
+
+	return app.NFstruct{
+		Nf:     &scpAppWrapper{inner: scpApp, ctx: scpCtx},
+		Ctx:    &scpCtx,
+		Cancel: &scpCancel,
 	}
 }
 
@@ -835,7 +872,60 @@ func smfUeRoutingConfig() {
 	}
 }
 
-func udrConfig() error {
+func scpConfig() (*scp_factory.Config, error) {
+	cfg := &scp_factory.Config{
+		Info: &scp_factory.Info{
+			Version:     "1.0.1",
+			Description: "SCP test configuration",
+		},
+		Configuration: &scp_factory.Configuration{
+			Sbi: &scp_factory.Sbi{
+				Scheme:       "http",
+				RegisterIPv4: "127.0.0.6",
+				BindingIPv4:  "127.0.0.6",
+				Port:         8000,
+				Tls: &scp_factory.Tls{
+					Pem: "../cert/scp.pem",
+					Key: "../cert/scp.key",
+				},
+			},
+			NrfUri:     "http://127.0.0.10:8000",
+			NrfCertPem: "../cert/nrf.pem",
+			ServiceList: []scp_factory.Service{
+				{ServiceName: scp_factory.ServiceNausfAuth},
+				{ServiceName: scp_factory.ServiceNudmUeau},
+				{ServiceName: scp_factory.ServiceNudmSubManage},
+				{ServiceName: scp_factory.ServiceNudrDR},
+			},
+			AmfUri:  "http://127.0.0.18:8000",
+			AusfUri: "http://127.0.0.9:8000",
+			ChfUri:  "http://127.0.0.113:8000",
+			NefUri:  "http://127.0.0.5:8000",
+			NssfUri: "http://127.0.0.31:8000",
+			PcfUri:  "http://127.0.0.7:8000",
+			SmfUri:  "http://127.0.0.2:8000",
+			UdmUri:  "http://127.0.0.3:8000",
+			UdrUri:  "http://127.0.0.4:8000",
+			UpfUri:  "http://127.0.0.8:8000",
+		},
+		Logger: &scp_factory.Logger{
+			Enable:       true,
+			Level:        "info",
+			ReportCaller: false,
+		},
+	}
+	if _, err := cfg.Validate(); err != nil {
+		return cfg, err
+	}
+	return cfg, nil
+}
+
+func udrConfig(testID TestId) error {
+	registerIPv4 := "127.0.0.4"
+	if testID == TestSCP {
+		// Advertise SCP as the UDR service endpoint while UDR keeps its own bind address.
+		registerIPv4 = "127.0.0.6"
+	}
 	udr_factory.UdrConfig = &udr_factory.Config{
 		Info: &udr_factory.Info{
 			Version:     "1.1.0",
@@ -844,7 +934,7 @@ func udrConfig() error {
 		Configuration: &udr_factory.Configuration{
 			Sbi: &udr_factory.Sbi{
 				Scheme:       "http",
-				RegisterIPv4: "127.0.0.4",
+				RegisterIPv4: registerIPv4,
 				BindingIPv4:  "127.0.0.4",
 				Port:         8000,
 				Tls: &udr_factory.Tls{
@@ -933,7 +1023,12 @@ func pcfConfig() error {
 	return nil
 }
 
-func udmConfig() error {
+func udmConfig(testID TestId) error {
+	registerIPv4 := "127.0.0.3"
+	if testID == TestSCP {
+		// Advertise SCP as the UDM service endpoint while UDM keeps its own bind address.
+		registerIPv4 = "127.0.0.6"
+	}
 	udm_factory.UdmConfig = &udm_factory.Config{
 		Info: &udm_factory.Info{
 			Version:     "1.0.3",
@@ -949,7 +1044,7 @@ func udmConfig() error {
 			},
 			Sbi: &udm_factory.Sbi{
 				Scheme:       "http",
-				RegisterIPv4: "127.0.0.3",
+				RegisterIPv4: registerIPv4,
 				BindingIPv4:  "127.0.0.3",
 				Port:         8000,
 				Tls: &udm_factory.Tls{
@@ -1479,7 +1574,12 @@ func nssfConfig() error {
 	return nil
 }
 
-func ausfConfig() error {
+func ausfConfig(testID TestId) error {
+	registerIPv4 := "127.0.0.9"
+	if testID == TestSCP {
+		// Advertise SCP as the AUSF service endpoint while AUSF keeps its own bind address.
+		registerIPv4 = "127.0.0.6"
+	}
 	ausf_factory.AusfConfig = &ausf_factory.Config{
 		Info: &ausf_factory.Info{
 			Version:     "1.0.3",
@@ -1488,7 +1588,7 @@ func ausfConfig() error {
 		Configuration: &ausf_factory.Configuration{
 			Sbi: &ausf_factory.Sbi{
 				Scheme:       "http",
-				RegisterIPv4: "127.0.0.9",
+				RegisterIPv4: registerIPv4,
 				BindingIPv4:  "127.0.0.9",
 				Port:         8000,
 				Tls: &ausf_factory.Tls{

@@ -77,8 +77,7 @@ network_config() {
     sudo systemctl disable ufw
 
     sudo sysctl -w net.ipv4.ip_forward=1
-    sudo iptables -t nat -A POSTROUTING -o ${NETWORK_INTERFACE} -j MASQUERADE
-    sudo iptables -I FORWARD 1 -j ACCEPT
+    # UPF manages NAT and FORWARD rules using the configured DNN NAT interface.
 
     log_success "Network configured with interface ${NETWORK_INTERFACE}"
     SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
@@ -276,8 +275,10 @@ substitute_ip() {
     sed -i -e '/ngapIpList:/!b;n;s/- .*/- '"$IP_ADDRESS"'/' config/amfcfg.yaml
     sed -i -e '/endpoints:/!b;n;s/- .*/- '"$IP_ADDRESS"'/' config/smfcfg.yaml
     sed -i -e '/ifList:/!b;n;s/addr: .*/addr: '"$IP_ADDRESS"'/' config/upfcfg.yaml
+    # Set the NAT interface for every DNN, including already configured entries.
+    sed -i -E 's/^[[:space:]]*#?[[:space:]]*natifname:.*/    natifname: '"$NETWORK_INTERFACE"'/' config/upfcfg.yaml
 
-    log_success "IP addresses substituted"
+    log_success "IP addresses substituted and UPF NAT interface set to ${NETWORK_INTERFACE}"
     SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
 }
 

@@ -1,0 +1,35 @@
+info:
+  version: 1.0.1
+  description: SCP initial local configuration
+
+configuration:
+  sbi:
+    scheme: http
+    registerIPv4: 127.0.0.6
+    bindingIPv4: 127.0.0.6
+    port: 8000
+    tls:
+      pem: cert/scp.pem
+      key: cert/scp.key
+  nrfUri: http://127.0.0.10:8000
+  nrfCertPem: cert/nrf.pem
+  serviceList:
+    - serviceName: nausf-auth
+    - serviceName: nudm-ueau
+    - serviceName: nudm-sdm
+    - serviceName: nudr-dr
+  amfUri: http://127.0.0.18:8000
+  ausfUri: http://127.0.0.9:8000
+  chfUri: http://127.0.0.113:8000
+  nefUri: http://127.0.0.5:8000
+  nssfUri: http://127.0.0.31:8000
+  pcfUri: http://127.0.0.7:8000
+  smfUri: http://127.0.0.2:8000
+  udmUri: http://127.0.0.3:8000
+  udrUri: http://127.0.0.4:8000
+  upfUri: http://127.0.0.8:8000
+
+logger:
+  enable: true
+  level: info
+  reportCaller: false

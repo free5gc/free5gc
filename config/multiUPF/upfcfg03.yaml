@@ -22,7 +22,11 @@ gtpu:
 dnnList:
   - dnn: internet # Data Network Name
     cidr: 10.61.0.0/16 # Classless Inter-Domain Routing for assigned IPv4 pool of UE
+    # Optional NAT interface in the UPF network namespace; takes precedence over natIfCIDR.
     # natifname: eth0
+    # natIfCIDR: 192.168.0.0/24 # Select the NAT interface by its subnet; adapt to your deployment
+    ipForwardEnable: true # Add FORWARD rules when natifname or natIfCIDR is set
+    # tcpMss: 1400 # Optional fixed TCP MSS; omit or set 0 to clamp MSS to PMTU
 
 logger: # log output setting
   enable: true # true or false
