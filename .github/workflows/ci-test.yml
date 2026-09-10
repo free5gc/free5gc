@@ -141,10 +141,12 @@ jobs:
           fi
           PAYLOAD="$(jq -n \
             --arg tn "❌ $DATE" \
-            --arg content "<@${DISCORD_ADMIN_USER_ID}> <@&${DISCORD_MENTION_ROLE_ID}> Daily IT failed — ${RUN_URL}" \
             --arg uid "$DISCORD_ADMIN_USER_ID" \
             --arg rid "$DISCORD_MENTION_ROLE_ID" \
-            '{thread_name: $tn, content: $content, allowed_mentions: {parse: [], roles: [$rid], users: [$uid]}}')"
+            --arg url "$RUN_URL" \
+            '{thread_name: $tn,
+              content: "<@\($uid)> <@&\($rid)>\nDaily IT failed\nRun: \($url)\nLog: daily-it-fail.log (attached)",
+              allowed_mentions: {parse: [], roles: [$rid], users: [$uid]}}')"
           curl -sf -X POST "$DISCORD_WEBHOOK_URL" \
             -F "payload_json=$PAYLOAD" \
             -F "files[0]=@${TAIL};type=text/plain;filename=daily-it-fail.log"
@@ -162,10 +164,12 @@ jobs:
             -H "Content-Type: application/json" \
             -d "$(jq -n \
               --arg tn "✅ $DATE" \
-              --arg content "<@${DISCORD_ADMIN_USER_ID}> <@&${DISCORD_MENTION_ROLE_ID}> All passed — ${RUN_URL}" \
               --arg uid "$DISCORD_ADMIN_USER_ID" \
               --arg rid "$DISCORD_MENTION_ROLE_ID" \
-              '{thread_name: $tn, content: $content, allowed_mentions: {parse: [], roles: [$rid], users: [$uid]}}')"
+              --arg url "$RUN_URL" \
+              '{thread_name: $tn,
+                content: "<@\($uid)> <@&\($rid)>\nAll passed\nRun: \($url)",
+                allowed_mentions: {parse: [], roles: [$rid], users: [$uid]}}')"
 
       - name: Cleanup docker resources
         if: always()
