@@ -161,6 +161,7 @@ replace (
 	github.com/free5gc/nef => ../NFs/nef
 	github.com/free5gc/nrf => ../NFs/nrf
 	github.com/free5gc/nssf => ../NFs/nssf
+	github.com/free5gc/openapi => github.com/carlhus/openapi v0.0.0-20260831123630-67c603f8c589
 	github.com/free5gc/pcf => ../NFs/pcf
 	github.com/free5gc/scp => ../NFs/scp
 	github.com/free5gc/smf => ../NFs/smf

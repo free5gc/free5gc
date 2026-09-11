@@ -88,6 +88,8 @@ github.com/bytedance/sonic/loader v0.5.0 h1:gXH3KVnatgY7loH5/TkeVyXPfESoqSBSBEiD
 github.com/bytedance/sonic/loader v0.5.0/go.mod h1:AR4NYCk5DdzZizZ5djGqQ92eEhCCcdf5x77udYiSJRo=
 github.com/calee0219/fatal v0.0.1 h1:oWcLpGM3It4Q/PZ+P96TzTz5KvSHCmhGXhZJuI5onSE=
 github.com/calee0219/fatal v0.0.1/go.mod h1:LD4ehT5zbja+zJG6QhHToilfoCh+XByVfdUV71b//Yc=
+github.com/carlhus/openapi v0.0.0-20260831123630-67c603f8c589 h1:P9g2fairdJ9HAlbPe+2PgIuudLcvCaONK3aQAunHDYU=
+github.com/carlhus/openapi v0.0.0-20260831123630-67c603f8c589/go.mod h1:ixcBUsgwkQBAT/4peVVB0daqxk0qv6V8zOMSFvhKVfo=
 github.com/casbin/casbin/v2 v2.31.6/go.mod h1:vByNa/Fchek0KZUgG5wEsl7iFsiviAYKRtgrQfcJqHg=
 github.com/cenkalti/backoff v2.2.1+incompatible/go.mod h1:90ReRw6GdpyfrHakVjL/QHaoyV4aDUVVkXQJJJ3NXXM=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
@@ -170,8 +172,6 @@ github.com/free5gc/nas v1.3.0 h1:r42lNApvMtAwaHwpb50ZpOXZabGaQvFRy/q3JxS0o/g=
 github.com/free5gc/nas v1.3.0/go.mod h1:T/krdGjxSut+MQJAFFBS4lsWZa/NPEz7wO0G/D3qHeE=
 github.com/free5gc/ngap v1.2.0 h1:tZPokNiF/J97dmq0DVATcE1lZi7stCo7LZaosSB8otQ=
 github.com/free5gc/ngap v1.2.0/go.mod h1:1lfw7JP0fs8bdv0B685KDC2/shOciL9gf1f3KwKnGvk=
-github.com/free5gc/openapi v1.3.0 h1:dVJ9FXM2qr8jesiHeTR9ZGZwYRmr7qcHx5Xgm/ip6s0=
-github.com/free5gc/openapi v1.3.0/go.mod h1:ggzAcwqg4JotSSdUvFFFruK6M0Yyr6mhBOCFaDHZmdE=
 github.com/free5gc/pfcp v1.1.2 h1:onqDTlZok41OiagZxzw9+2c5bxMSOwqHOYxbORRYUTw=
 github.com/free5gc/pfcp v1.1.2/go.mod h1:Odjw78gt0DYEbwUQD4w/vU+GvfrRZLgqyaL+AvwD4ww=
 github.com/free5gc/sctp v1.2.0 h1:xzvFWZSMUdJkW7Q0Xo6YY77SbkNZwSw9Hl2rH1njSlo=

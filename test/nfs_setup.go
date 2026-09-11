@@ -3,6 +3,9 @@ package test
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
+	"regexp"
 	"test/app"
 	"time"
 
@@ -43,8 +46,19 @@ const (
 	TestCN                          TestId = "TestCN"
 	TestAFInfluenceOnTrafficRouting TestId = "TestAFInfluenceOnTrafficRouting"
 	TestRequestTwoPDUSessions       TestId = "TestRequestTwoPDUSessions"
+	TestOAuth2Callback              TestId = "TestOAuth2Callback"
+	TestOAuth2TokenMatrix           TestId = "TestOAuth2TokenMatrix"
 	TestSCP                         TestId = "TestSCP"
 )
+
+func (id TestId) Matches(testID TestId) bool {
+	if id == "" {
+		return false
+	}
+
+	testPattern, err := regexp.Compile(string(id))
+	return err == nil && testPattern.MatchString(string(testID))
+}
 
 type StartNFsConfig struct {
 	Nrf  bool `yaml:"nrf,omitempty" default:"false"`
@@ -66,6 +80,70 @@ type StartNFsConfig struct {
 
 var NfCtx context.Context
 var NfCancel context.CancelFunc
+
+var (
+	oauthCertificateDir string
+	nrfCertPemPath      = "../cert/nrf.pem"
+	nrfCertKeyPath      = "../cert/nrf.key"
+	nefNFInstanceID     string
+)
+
+func prepareOAuthCertificateDirectory() error {
+	if oauthCertificateDir != "" {
+		return nil
+	}
+
+	dir, err := os.MkdirTemp("", "free5gc-oauth-certs-")
+	if err != nil {
+		return err
+	}
+
+	oauthCertificateDir = dir
+	nrfCertPemPath = filepath.Join(dir, "nrf.pem")
+	nrfCertKeyPath = filepath.Join(dir, "nrf.key")
+	return nil
+}
+
+func CleanupOAuthCertificates() error {
+	if oauthCertificateDir == "" {
+		return nil
+	}
+
+	dir := oauthCertificateDir
+	oauthCertificateDir = ""
+	nrfCertPemPath = "../cert/nrf.pem"
+	nrfCertKeyPath = "../cert/nrf.key"
+	return os.RemoveAll(dir)
+}
+
+func OAuthCertificateDirectory() (string, bool) {
+	return oauthCertificateDir, oauthCertificateDir != ""
+}
+
+func GetNFInstanceID(nfType models.Nrf_NFMgmt_NFType) (string, bool) {
+	switch nfType {
+	case models.Nrf_NFMgmt_NFType_AMF:
+		return amf_factory.AmfConfig.GetNfInstanceId(), true
+	case models.Nrf_NFMgmt_NFType_AUSF:
+		return ausf_factory.AusfConfig.GetNfInstanceId(), true
+	case models.Nrf_NFMgmt_NFType_PCF:
+		return pcf_factory.PcfConfig.GetNfInstanceId(), true
+	case models.Nrf_NFMgmt_NFType_SMF:
+		return smf_factory.SmfConfig.GetNfInstanceId(), true
+	case models.Nrf_NFMgmt_NFType_UDM:
+		return udm_factory.UdmConfig.GetNfInstanceId(), true
+	case models.Nrf_NFMgmt_NFType_UDR:
+		return udr_factory.UdrConfig.GetNfInstanceId(), true
+	case models.Nrf_NFMgmt_NFType_NEF:
+		return nefNFInstanceID, nefNFInstanceID != ""
+	case models.Nrf_NFMgmt_NFType_CHF:
+		return chf_factory.ChfConfig.GetNfInstanceId(), true
+	case models.Nrf_NFMgmt_NFType_NSSF:
+		return nssf_factory.NssfConfig.GetNfInstanceId(), true
+	default:
+		return "", false
+	}
+}
 
 func CreateNFs(cfg StartNFsConfig) []app.NFstruct {
 	var nfs []app.NFstruct
@@ -151,6 +229,12 @@ func NewSmfStruct(ctx context.Context, testId TestId) app.NFstruct {
 	}
 	smf_ctx, smf_cancel := context.WithCancel(ctx)
 	pfcpStart, pfcpTerminate := smf_utils.InitPFCPFunc(ctx)
+	if testId.Matches(TestOAuth2Callback) || testId.Matches(TestOAuth2TokenMatrix) {
+		// This test exercises only SBI/OAuth callbacks and does not require a UPF.
+		// Avoid depending on the test network namespace for the PFCP listener.
+		pfcpStart = func(*smf_service.SmfApp) {}
+		pfcpTerminate = func() {}
+	}
 	smfApp, errApp := smf_service.NewApp(smf_ctx, smf_factory.SmfConfig, "", pfcpStart, pfcpTerminate)
 	if errApp != nil {
 		fmt.Printf("SMF NewApp failed: %v\n", errApp)
@@ -314,6 +398,12 @@ func NewBsfStruct(ctx context.Context) app.NFstruct {
 }
 
 func nrfConfig(oauth bool) error {
+	if oauth {
+		if err := prepareOAuthCertificateDirectory(); err != nil {
+			return fmt.Errorf("prepare temporary OAuth certificate directory: %w", err)
+		}
+	}
+
 	nrf_factory.NrfConfig = &nrf_factory.Config{
 		Info: &nrf_factory.Info{
 			Version:     "1.0.2",
@@ -328,8 +418,8 @@ func nrfConfig(oauth bool) error {
 				BindingIPv4:  "127.0.0.10",
 				Port:         8000,
 				Cert: &nrf_factory.Cert{
-					Pem: "../cert/nrf.pem",
-					Key: "../cert/nrf.key",
+					Pem: nrfCertPemPath,
+					Key: nrfCertKeyPath,
 				},
 				RootCert: &nrf_factory.Cert{
 					Pem: "../cert/root.pem",
@@ -436,7 +526,7 @@ func amfConfig(testID TestId) error {
 				"internet",
 			},
 			NrfUri:     "http://127.0.0.10:8000",
-			NrfCertPem: "../cert/nrf.pem",
+			NrfCertPem: nrfCertPemPath,
 			Security: &amf_factory.Security{
 				IntegrityOrder: integrityOrder,
 				CipheringOrder: cipheringOrder,
@@ -653,7 +743,7 @@ func smfConfig(testID TestId) error {
 				MaxRetryTimes: 2,
 			},
 			NrfUri:       "http://127.0.0.10:8000",
-			NrfCertPem:   "../cert/nrf.pem",
+			NrfCertPem:   nrfCertPemPath,
 			UrrPeriod:    30,
 			UrrThreshold: 10000,
 			PLMNList: []smf_factory.PlmnID{
@@ -858,7 +948,7 @@ func udrConfig(testID TestId) error {
 				Url:  "mongodb://localhost:27017",
 			},
 			NrfUri:     "http://127.0.0.10:8000",
-			NrfCertPem: "../cert/nrf.pem",
+			NrfCertPem: nrfCertPemPath,
 		},
 		Logger: &udr_factory.Logger{
 			Enable:       true,
@@ -895,7 +985,7 @@ func pcfConfig() error {
 			TimeFormat:      "2019-01-02 15:04:05",
 			DefaultBdtRefId: "BdtPolicyId-",
 			NrfUri:          "http://127.0.0.10:8000",
-			NrfCertPem:      "../cert/nrf.pem",
+			NrfCertPem:      nrfCertPemPath,
 			ServiceList: []pcf_factory.Service{{
 				ServiceName: "npcf-am-policy-control",
 			}, {
@@ -963,7 +1053,7 @@ func udmConfig(testID TestId) error {
 				},
 			},
 			NrfUri:     "http://127.0.0.10:8000",
-			NrfCertPem: "../cert/nrf.pem",
+			NrfCertPem: nrfCertPemPath,
 			SuciProfiles: []suci.SuciProfile{
 				{
 					ProtectionScheme: "1", // Protect Scheme: Profile A
@@ -1016,7 +1106,7 @@ func nssfConfig() error {
 				"nnssf-nssaiavailability",
 			},
 			NrfUri:     "http://127.0.0.10:8000",
-			NrfCertPem: "../cert/nrf.pem",
+			NrfCertPem: nrfCertPemPath,
 			SupportedPlmnList: []models.PlmnId{{
 				Mcc: "208",
 				Mnc: "93",
@@ -1510,7 +1600,7 @@ func ausfConfig(testID TestId) error {
 				"nausf-auth",
 			},
 			NrfUri:     "http://127.0.0.10:8000",
-			NrfCertPem: "../cert/nrf.pem",
+			NrfCertPem: nrfCertPemPath,
 			PlmnSupportList: []models.PlmnId{{
 				Mcc: "208",
 				Mnc: "93",
@@ -1586,7 +1676,7 @@ func chfConfig() error {
 				},
 			},
 			NrfUri:     "http://127.0.0.10:8000",
-			NrfCertPem: "../cert/nrf.pem",
+			NrfCertPem: nrfCertPemPath,
 			ServiceNameList: []string{
 				"nchf-convergedcharging",
 			},
@@ -1660,6 +1750,9 @@ func NewNefStruct(ctx context.Context) app.NFstruct {
 	if err != nil {
 		fmt.Printf("NEF Config failed: %v\n", err)
 	}
+	if cfg != nil {
+		nefNFInstanceID = cfg.GetNfInstanceId()
+	}
 	nef_ctx, nef_cancel := context.WithCancel(ctx)
 	nefApp, errApp := nef_service.NewApp(nef_ctx, cfg, "")
 	if errApp != nil {
@@ -1690,7 +1783,7 @@ func nefConfig() (*nef_factory.Config, error) {
 				Port:         8000,
 			},
 			NrfUri:     "http://127.0.0.10:8000",
-			NrfCertPem: "../cert/nrf.pem",
+			NrfCertPem: nrfCertPemPath,
 			ServiceList: []nef_factory.Service{
 				{ServiceName: nef_factory.ServiceNefCallback},
 				{ServiceName: nef_factory.ServiceTraffInflu},

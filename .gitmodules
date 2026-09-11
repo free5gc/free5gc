@@ -1,45 +1,56 @@
 [submodule "amf"]
 	path = NFs/amf
-	url = https://github.com/free5gc/amf.git
+	url = https://github.com/Zach1113/amf.git
+	branch = fix/oauth-jwt
 [submodule "ausf"]
 	path = NFs/ausf
-	url = https://github.com/free5gc/ausf.git
+	url = https://github.com/Zach1113/ausf.git
+	branch = fix/oauth-jwt
 [submodule "n3iwf"]
 	path = NFs/n3iwf
 	url = https://github.com/free5gc/n3iwf.git
 [submodule "nrf"]
 	path = NFs/nrf
-	url = https://github.com/free5gc/nrf.git
+	url = https://github.com/Zach1113/nrf.git
+	branch = fix/oauth-jwt
 [submodule "nssf"]
 	path = NFs/nssf
-	url = https://github.com/free5gc/nssf.git
+	url = https://github.com/Zach1113/nssf.git
+	branch = fix/oauth-jwt
 [submodule "pcf"]
 	path = NFs/pcf
-	url = https://github.com/free5gc/pcf.git
+	url = https://github.com/Zach1113/pcf.git
+	branch = fix/oauth-jwt
 [submodule "smf"]
 	path = NFs/smf
-	url = https://github.com/free5gc/smf.git
+	url = https://github.com/Zach1113/smf.git
+	branch = fix/oauth-jwt
 [submodule "udm"]
 	path = NFs/udm
-	url = https://github.com/free5gc/udm.git
+	url = https://github.com/Zach1113/udm.git
+	branch = fix/oauth-jwt
 [submodule "udr"]
 	path = NFs/udr
-	url = https://github.com/free5gc/udr.git
+	url = https://github.com/Zach1113/udr.git
+	branch = fix/oauth-jwt
 [submodule "upf"]
 	path = NFs/upf
 	url = https://github.com/free5gc/go-upf.git
 [submodule "webconsole"]
 	path = webconsole
-	url = https://github.com/free5gc/webconsole.git
+	url = https://github.com/carlhus/webconsole.git
+	branch = fix/oauth-jwt
 [submodule "chf"]
 	path = NFs/chf
-	url = https://github.com/free5gc/chf.git
+	url = https://github.com/Zach1113/chf.git
+	branch = fix/oauth-jwt
 [submodule "tngf"]
 	path = NFs/tngf
 	url = https://github.com/free5gc/tngf.git
 [submodule "NFs/nef"]
 	path = NFs/nef
-	url = https://github.com/free5gc/nef.git
+	url = https://github.com/Zach1113/nef.git
+	branch = fix/oauth-jwt
 [submodule "NFs/bsf"]
 	path = NFs/bsf
 	url = https://github.com/free5gc/bsf.git
