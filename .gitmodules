@@ -56,5 +56,5 @@
 	url = https://github.com/free5gc/bsf.git
 [submodule "NFs/scp"]
 	path = NFs/scp
-	url = https://github.com/Zach1113/scp.git
+	url = https://github.com/free5gc/scp.git
 	branch = fix/oauth-jwt
