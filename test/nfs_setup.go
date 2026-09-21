@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"path/filepath"
 	"regexp"
 	"test/app"
 	"time"
@@ -99,8 +98,6 @@ func prepareOAuthCertificateDirectory() error {
 	}
 
 	oauthCertificateDir = dir
-	nrfCertPemPath = filepath.Join(dir, "nrf.pem")
-	nrfCertKeyPath = filepath.Join(dir, "nrf.key")
 	return nil
 }
 
@@ -111,8 +108,6 @@ func CleanupOAuthCertificates() error {
 
 	dir := oauthCertificateDir
 	oauthCertificateDir = ""
-	nrfCertPemPath = "../cert/nrf.pem"
-	nrfCertKeyPath = "../cert/nrf.key"
 	return os.RemoveAll(dir)
 }
 
@@ -425,7 +420,8 @@ func nrfConfig(oauth bool) error {
 					Pem: "../cert/root.pem",
 					Key: "../cert/root.key",
 				},
-				OAuth: oauth,
+				NfCertBasePath: oauthCertificateDir,
+				OAuth:          oauth,
 			},
 			DefaultPlmnId: models.PlmnId{
 				Mcc: "208",
