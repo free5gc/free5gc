@@ -68,8 +68,6 @@ require (
 	github.com/fclairamb/go-log v0.4.1 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fiorix/go-diameter v3.0.2+incompatible // indirect
-	github.com/free5gc/pfcp v1.1.2 // indirect
-	github.com/free5gc/tlv v1.1.1 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.12 // indirect
 	github.com/gin-contrib/cors v1.7.6 // indirect
 	github.com/gin-contrib/sse v1.1.0 // indirect
@@ -124,6 +122,7 @@ require (
 	github.com/ugorji/go/codec v1.3.1 // indirect
 	github.com/vishvananda/netns v0.0.4 // indirect
 	github.com/wmnsk/go-gtp v0.8.0 // indirect
+	github.com/wmnsk/go-pfcp v0.0.25-0.20251110163217-837df5430868 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.2.0 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect
