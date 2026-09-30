@@ -19,6 +19,7 @@ import (
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/util/mongoapi"
 	"github.com/stretchr/testify/assert"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 var NFstructs = []app.NFstruct{}
@@ -83,7 +84,7 @@ func init() {
 
 		NFstructs = test.CreateNFs(startNfCfg)
 
-		NfStart()
+		NfStart(startNfCfg)
 		setMongoDB()
 
 	case initNF:
@@ -116,7 +117,7 @@ func init() {
 			startNfCfg.Nef = false
 		}
 		NFstructs = test.CreateNFs(startNfCfg)
-		NfStart()
+		NfStart(startNfCfg)
 
 	default:
 		setMongoDB()
@@ -141,8 +142,14 @@ func setMongoDB() {
 
 var nfWaitingGroup sync.WaitGroup
 
-func NfStart() {
+func NfStart(cfg test.StartNFsConfig) {
 	fmt.Println("NfStart", len(NFstructs))
+
+	// Remove NF profiles left by an aborted run, so they are not mistaken for fresh registrations
+	setMongoDB()
+	if err := mongoapi.Drop(nfProfileCollName); err != nil {
+		fmt.Printf("Drop %s collection failed: %v\n", nfProfileCollName, err)
+	}
 
 	for _, app := range NFstructs {
 		go func() {
@@ -153,7 +160,35 @@ func NfStart() {
 		}()
 		time.Sleep(200 * time.Millisecond)
 	}
+	waitNfsRegistered(cfg.RegisteredNfTypes(), 30*time.Second)
 	time.Sleep(1 * time.Second)
+}
+
+const nfProfileCollName = "NfProfile"
+
+// waitNfsRegistered blocks until every NF type in nfTypes is registered to NRF or timeout expires.
+// NFs retry the NRF registration every 2s, so a fixed sleep is not enough when NRF starts slowly.
+func waitNfsRegistered(nfTypes []string, timeout time.Duration) {
+	start := time.Now()
+	deadline := start.Add(timeout)
+	for {
+		var missing []string
+		for _, nfType := range nfTypes {
+			profiles, err := mongoapi.RestfulAPIGetMany(nfProfileCollName, bson.M{"nfType": nfType})
+			if err != nil || len(profiles) == 0 {
+				missing = append(missing, nfType)
+			}
+		}
+		if len(missing) == 0 {
+			fmt.Printf("All NFs registered to NRF in %v\n", time.Since(start))
+			return
+		}
+		if time.Now().After(deadline) {
+			fmt.Printf("Timeout waiting for NFs to register to NRF, missing: %v\n", missing)
+			return
+		}
+		time.Sleep(200 * time.Millisecond)
+	}
 }
 
 func NfTerminate() {
