@@ -64,6 +64,25 @@ type StartNFsConfig struct {
 	TestId TestId `yaml:"testId,omitempty"`
 }
 
+// RegisteredNfTypes returns the NF types that are expected to register to NRF
+func (cfg StartNFsConfig) RegisteredNfTypes() []string {
+	var nfTypes []string
+	enabled := []struct {
+		on     bool
+		nfType string
+	}{
+		{cfg.Scp, "SCP"}, {cfg.Amf, "AMF"}, {cfg.Smf, "SMF"}, {cfg.Udr, "UDR"},
+		{cfg.Pcf, "PCF"}, {cfg.Udm, "UDM"}, {cfg.Nssf, "NSSF"}, {cfg.Ausf, "AUSF"},
+		{cfg.Chf, "CHF"}, {cfg.Bsf, "BSF"}, {cfg.Nef, "NEF"},
+	}
+	for _, nf := range enabled {
+		if nf.on {
+			nfTypes = append(nfTypes, nf.nfType)
+		}
+	}
+	return nfTypes
+}
+
 var NfCtx context.Context
 var NfCancel context.CancelFunc
 
