@@ -66,6 +66,10 @@ configuration:
         type: UPF # the type of the node (AN or UPF)
         nodeID: 127.0.0.8 # the Node ID of this UPF
         addr: 127.0.0.8 # the IP/FQDN of N4 interface on this UPF (PFCP)
+        # Optional Nupf Event Exposure API root for SMF Event Exposure.
+        # The SMF appends /nupf-ee/v1 when calling the selected UPF.
+        # Enable only when this UPF exposes Nupf_EventExposure at this API root.
+        # nupfEeApiRoot: http://upf.example.com:<nupf-ee-port>
         sNssaiUpfInfos: # S-NSSAI information list for this UPF
           - sNssai: # S-NSSAI (Single Network Slice Selection Assistance Information)
               sst: 1 # Slice/Service Type (uinteger, range: 0~255)
