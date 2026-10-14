@@ -3,6 +3,9 @@ info:
   description: NRF initial local configuration
 
 configuration:
+  idleTimeout: 60s # HTTP server idle timeout; 0s disables it
+  readIdleTimeout: 60s # HTTP/2 client idle time before sending a health-check ping; 0s disables it
+  pingTimeout: 15s # HTTP/2 health-check ping response timeout; 0s uses the transport default
   MongoDBName: free5gc # database name in MongoDB
   MongoDBUrl: mongodb://127.0.0.1:27017 # a valid URL of the mongodb
   sbi: # Service-based interface information

@@ -3,6 +3,9 @@ info:
   description: NEF initial local configuration
 
 configuration:
+  idleTimeout: 60s # HTTP server idle timeout; 0s disables it
+  readIdleTimeout: 60s # HTTP/2 client idle time before sending a health-check ping; 0s disables it
+  pingTimeout: 15s # HTTP/2 health-check ping response timeout; 0s uses the transport default
   sbi:
     scheme: http # The protocol for sbi (http or https)
     registerIPv4: 127.0.0.5 # IP used to register to NRF
