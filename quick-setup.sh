@@ -200,21 +200,27 @@ install_gtp5g() {
 }
 
 install_yarn() {
-    log_info "Installing Yarn..."
+    log_info "Installing Node.js 22 and Yarn..."
 
-    if yarn --version > /dev/null 2>&1; then
-        log_info "Yarn already installed"
+    export COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+
+    if [[ "$(node --version 2>/dev/null)" == v22.* ]] && yarn --version > /dev/null 2>&1; then
+        log_info "Node.js 22 and Yarn already installed"
         SKIP_COUNT=$((SKIP_COUNT + 1))
         return
     fi
-    curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - 
+
+    curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
     sudo apt update
     sudo apt install -y nodejs
-    sudo corepack enable
-    echo 'export COREPACK_ENABLE_DOWNLOAD_PROMPT=0' >> ~/.bashrc
-    export COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 
-    log_success "Yarn installed"
+    sudo corepack enable
+
+    if ! grep -q 'COREPACK_ENABLE_DOWNLOAD_PROMPT=0' ~/.bashrc; then
+        echo 'export COREPACK_ENABLE_DOWNLOAD_PROMPT=0' >> ~/.bashrc
+    fi
+
+    log_success "Node.js 22 and Yarn installed"
     SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
 }
 
