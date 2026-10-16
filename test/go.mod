@@ -16,7 +16,7 @@ require (
 	github.com/free5gc/ngap v1.2.0
 	github.com/free5gc/nrf v0.0.0
 	github.com/free5gc/nssf v0.0.0
-	github.com/free5gc/openapi v1.3.0
+	github.com/free5gc/openapi v1.3.1-0.20261014070323-89accd9890ce
 	github.com/free5gc/pcf v0.0.0
 	github.com/free5gc/scp v0.0.0
 	github.com/free5gc/sctp v1.2.0
@@ -24,7 +24,7 @@ require (
 	github.com/free5gc/tngf v0.0.0-00010101000000-000000000000
 	github.com/free5gc/udm v0.0.0
 	github.com/free5gc/udr v0.0.0
-	github.com/free5gc/util v1.4.0
+	github.com/free5gc/util v1.4.1-0.20261014070359-d865b0ce854b
 	github.com/free5gc/webconsole v0.0.0
 	github.com/gin-gonic/gin v1.10.1
 	github.com/go-ping/ping v1.1.0
