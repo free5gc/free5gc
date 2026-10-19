@@ -16,6 +16,7 @@ configuration:
     bindingIPv4: 127.0.0.18  # IP used to bind the service
     port: 8000 # port used to bind the service
     tls: # the local path of TLS key
+      verify: false # Verify outgoing SBI HTTPS certificates
       pem: cert/amf.pem # AMF TLS Certificate
       key: cert/amf.key # AMF TLS Private key
   serviceNameList: # the SBI services provided by this AMF, refer to TS 29.518

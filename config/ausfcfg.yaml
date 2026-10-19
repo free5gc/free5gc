@@ -12,6 +12,7 @@ configuration:
     bindingIPv4: 127.0.0.9  # IP used to bind the service
     port: 8000 # Port used to bind the service
     tls: # the local path of TLS key
+      verify: false # Verify outgoing SBI HTTPS certificates
       pem: cert/ausf.pem # AUSF TLS Certificate
       key: cert/ausf.key # AUSF TLS Private key
   serviceNameList: # the SBI services provided by this AUSF, refer to TS 29.509
