@@ -13,6 +13,7 @@ configuration:
     bindingIPv4: 127.0.0.2 # IP used to bind the service
     port: 8000
     tls:
+      verify: false # Verify outgoing SBI HTTPS certificates
       key: cert/smf.key
       pem: cert/smf.pem
   serviceNameList:

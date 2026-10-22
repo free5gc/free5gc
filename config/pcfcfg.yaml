@@ -13,6 +13,7 @@ configuration:
     bindingIPv4: 127.0.0.7  # IP used to bind the service
     port: 8000              # port used to bind the service
     tls: # the local path of TLS key
+      verify: false # Verify outgoing SBI HTTPS certificates
       pem: cert/pcf.pem # PCF TLS Certificate
       key: cert/pcf.key # PCF TLS Private key
   timeFormat: 2019-01-02 15:04:05 # time format of this PCF

@@ -12,6 +12,7 @@ configuration:
     bindingIPv4: 127.0.0.6
     port: 8000
     tls:
+      verify: false # Verify outgoing SBI HTTPS certificates
       pem: cert/scp.pem
       key: cert/scp.key
   nrfUri: http://127.0.0.10:8000
