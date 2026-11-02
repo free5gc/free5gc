@@ -48,3 +48,8 @@ logger:
   enable: true # true or false
   level: info # how detailed to output, value: trace, debug, info, warn, error, fatal, panic
   reportCaller: false # enable the caller report or not, value: true or false
+
+ees:
+  enabled: false # true or false; free5GC single-UPF only, keep false with ULCL
+  ip: 127.0.0.8  # IP used to bind the Nupf_EventExposure service
+  port: 8088     # Port used to bind the service
