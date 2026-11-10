@@ -24,7 +24,7 @@ require (
 	github.com/free5gc/tngf v0.0.0-00010101000000-000000000000
 	github.com/free5gc/udm v0.0.0
 	github.com/free5gc/udr v0.0.0
-	github.com/free5gc/util v1.4.1-0.20261014070359-d865b0ce854b
+	github.com/free5gc/util v1.4.1-0.20261105063436-ea3001890fa5
 	github.com/free5gc/webconsole v0.0.0
 	github.com/gin-gonic/gin v1.10.1
 	github.com/go-ping/ping v1.1.0
