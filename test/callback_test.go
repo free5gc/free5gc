@@ -1,7 +1,7 @@
 package test_test
 
 import (
-"bytes"
+	"bytes"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -89,6 +89,7 @@ func TestOAuth2Callback(t *testing.T) {
 
 	var afCallCount int64
 	afMock := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Empty(t, r.Header.Get("Authorization"), "Notify must not carry an OAuth access token")
 		atomic.AddInt64(&afCallCount, 1)
 		t.Logf("[AF mock] notification received: method=%s path=%s", r.Method, r.URL.Path)
 		w.WriteHeader(http.StatusNoContent)
@@ -139,7 +140,7 @@ func TestOAuth2Callback(t *testing.T) {
 	callbackURL := "http://127.0.0.5:8000/nnef-callback/v1/notification/smf"
 	reqNotif, _ := http.NewRequest(http.MethodPost, callbackURL, bytes.NewReader(notifBody))
 	reqNotif.Header.Set("Content-Type", "application/json")
-	reqNotif.Header.Set("Authorization", "Bearer "+getOAuthToken(t, clientNfID, "NEF", "nnef-callback"))
+	// TS 29.500 §6.7.3: Notify does not use OAuth 2.0 access tokens.
 
 	notifResp, err := http.DefaultClient.Do(reqNotif)
 	require.NoError(t, err)
@@ -161,18 +162,5 @@ func TestOAuth2Callback(t *testing.T) {
 		}
 	}
 
-	nfCallbacks := map[string]string{
-		"AMF": "namf-callback",
-		"SMF": "nsmf-callback",
-		"PCF": "npcf-callback",
-	}
-
-	for nfType, scope := range nfCallbacks {
-		t.Logf("[Strict Check] Verifying OAuth2 registration for %s service: %s", nfType, scope)
-		token := getOAuthToken(t, clientNfID, nfType, scope)
-		require.NotEmpty(t, token)
-		t.Logf("[Strict Check] Success: %s has registered %s and NRF issued a token.", nfType, scope)
-	}
-
-	t.Log("[TestOAuth2Callback] PASS - E2E Callback and Service Registration verified.")
+	t.Log("[TestOAuth2Callback] PASS - OAuth subscription and token-free Notify verified.")
 }
