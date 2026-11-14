@@ -169,8 +169,8 @@ github.com/free5gc/nas v1.3.1-0.20261020065227-320605c34466 h1:/WUpCYToRAMDr8djL
 github.com/free5gc/nas v1.3.1-0.20261020065227-320605c34466/go.mod h1:T/krdGjxSut+MQJAFFBS4lsWZa/NPEz7wO0G/D3qHeE=
 github.com/free5gc/ngap v1.2.0 h1:tZPokNiF/J97dmq0DVATcE1lZi7stCo7LZaosSB8otQ=
 github.com/free5gc/ngap v1.2.0/go.mod h1:1lfw7JP0fs8bdv0B685KDC2/shOciL9gf1f3KwKnGvk=
-github.com/free5gc/openapi v1.3.1-0.20261104070955-7fad8e868cb2 h1:BOJSQK6arB7Ohf51fAceHY/cPwXSyb07Tnj6bpm5Wxw=
-github.com/free5gc/openapi v1.3.1-0.20261104070955-7fad8e868cb2/go.mod h1:ixcBUsgwkQBAT/4peVVB0daqxk0qv6V8zOMSFvhKVfo=
+github.com/free5gc/openapi v1.3.1-0.20261114083954-6dc929a25d22 h1:zMql7nRaWVp5DlUaGECUSF00K/Ujt+4T0rSWfL9smc0=
+github.com/free5gc/openapi v1.3.1-0.20261114083954-6dc929a25d22/go.mod h1:ixcBUsgwkQBAT/4peVVB0daqxk0qv6V8zOMSFvhKVfo=
 github.com/free5gc/sctp v1.2.0 h1:xzvFWZSMUdJkW7Q0Xo6YY77SbkNZwSw9Hl2rH1njSlo=
 github.com/free5gc/sctp v1.2.0/go.mod h1:wOvct9P1T6DGk1fxkleF7zeTHsU8ZKxKzewu2ciZh/4=
 github.com/free5gc/util v1.4.1-0.20261105063436-ea3001890fa5 h1:NuwrVOBaWmw7oTQkU/P6KwzrLS4+Pv+RIWNmylKtvkg=
