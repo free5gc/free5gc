@@ -11,12 +11,12 @@ require (
 	github.com/free5gc/bsf v0.0.0
 	github.com/free5gc/chf v1.2.6-0.20260819160712-4e06244b5612
 	github.com/free5gc/ike v1.2.1
-	github.com/free5gc/nas v1.3.0
+	github.com/free5gc/nas v1.3.1-0.20261020065227-320605c34466
 	github.com/free5gc/nef v1.2.4
 	github.com/free5gc/ngap v1.2.0
 	github.com/free5gc/nrf v0.0.0
 	github.com/free5gc/nssf v0.0.0
-	github.com/free5gc/openapi v1.3.1-0.20261022060819-1fa510b3e4a2
+	github.com/free5gc/openapi v1.3.1-0.20261114083954-6dc929a25d22
 	github.com/free5gc/pcf v0.0.0
 	github.com/free5gc/scp v0.0.0
 	github.com/free5gc/sctp v1.2.0

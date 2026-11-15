@@ -17,6 +17,9 @@ configuration:
       key: cert/scp.key
   nrfUri: http://127.0.0.10:8000
   nrfCertPem: cert/nrf.pem
+  # TS 29.500 §6.10.11.2.1: token acquisition on behalf of the consumer for delegated discovery.
+  # Disabled by default; enable only when SCP is officially enabled in the deployment.
+  delegatedOAuth: false
   serviceList:
     - serviceName: nausf-auth
     - serviceName: nudm-ueau
