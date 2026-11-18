@@ -13,6 +13,7 @@ configuration:
     bindingIPv4: 127.0.0.31  # IP used to bind the service
     port: 8000 # Port used to bind the service
     tls: # the local path of TLS key
+      verify: false # Verify outgoing SBI HTTPS certificates
       pem: cert/nssf.pem # NSSF TLS Certificate
       key: cert/nssf.key # NSSF TLS Private key
   serviceNameList: # the SBI services provided by this SMF, refer to TS 29.531
