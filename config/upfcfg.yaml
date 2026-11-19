@@ -50,6 +50,9 @@ logger:
   reportCaller: false # enable the caller report or not, value: true or false
 
 ees:
-  enabled: false # true or false; free5GC single-UPF only, keep false with ULCL
+  enabled: false # true or false; report usage from the SMF-provisioned URR 2; free5GC single-UPF only, keep false with ULCL
+  upfUrrEnabled: false # true or false; report usage from UPF-owned URRs; independent of enabled, and both on report both
+  upfUrrPeriod: 1 # measurement period of the UPF-owned URRs in seconds
+  nrfUri: http://127.0.0.10:8000 # URI of the NRF to register nupf-ee with; set it to "" to skip registration
   ip: 127.0.0.8  # IP used to bind the Nupf_EventExposure service
   port: 8088     # Port used to bind the service
