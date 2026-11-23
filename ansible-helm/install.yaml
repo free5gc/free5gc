@@ -135,7 +135,7 @@
       git:
         repo: https://github.com/free5gc/gtp5g.git
         dest: "{{ gtp5g_dir }}"
-        version: v0.9.14
+        version: v0.10.3
 
     - name: Build gtp5g
       become: no
