@@ -9,6 +9,15 @@ TNGF_ENABLE=0
 BSF_ENABLE=0
 SCP_ENABLE=0
 
+# cfg-generator renders config/<nf>cfg.yaml from the global config before any
+# NF starts. Override the input with: GLOBAL_CONFIG=/path/to/file ./run.sh
+# Refuse to start when a global value cannot reach an NF (e.g. a PLMN an NF
+# hard-codes) with: GLOBAL_CONFIG_STRICT=1 ./run.sh
+CFG_GENERATOR="./bin/cfg-generator"
+GLOBAL_CONFIG="${GLOBAL_CONFIG:-./config/global-config.yaml}"
+GLOBAL_CONFIG_STRICT="${GLOBAL_CONFIG_STRICT:-0}"
+CONFIG_DIR="./config"
+
 PID_LIST=()
 echo $$ > run.pid
 
@@ -54,6 +63,36 @@ if [ $# -ne 0 ]; then
         esac
         shift
     done
+fi
+
+function generate_config()
+{
+    if [ ! -x "${CFG_GENERATOR}" ]; then
+        echo "[ERRO] ${CFG_GENERATOR} not found; build it with: make cfg-generator"
+        return 1
+    fi
+    if [ ! -f "${GLOBAL_CONFIG}" ]; then
+        echo "[ERRO] Global config ${GLOBAL_CONFIG} not found"
+        return 1
+    fi
+    local strict_flag=()
+    if [ "${GLOBAL_CONFIG_STRICT}" = "1" ]; then
+        strict_flag=(--strict)
+    fi
+    echo "Generating NF configs from ${GLOBAL_CONFIG} into ${CONFIG_DIR}..."
+    "${CFG_GENERATOR}" -i "${GLOBAL_CONFIG}" -o "${CONFIG_DIR}" "${strict_flag[@]}"
+}
+
+# Generate configs before anything is started; on failure no NF runs and the
+# generator's exit code is returned (1 input, 2 global, 3 adapter,
+# 4 NF validation, 5 publish, 6 global value not applied with
+# GLOBAL_CONFIG_STRICT=1).
+generate_config
+GENERATE_RC=$?
+if [ ${GENERATE_RC} -ne 0 ]; then
+    echo "[ERRO] Config generation failed (exit code ${GENERATE_RC}); free5GC not started"
+    rm -f run.pid
+    exit ${GENERATE_RC}
 fi
 
 function terminate()
