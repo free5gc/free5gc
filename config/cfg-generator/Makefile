@@ -1,4 +1,4 @@
-.PHONY: build test lint tidy
+.PHONY: build test test-run-sh lint tidy
 
 .DEFAULT_GOAL := build
 
@@ -7,6 +7,10 @@ build:
 
 test:
 	go test ./... -v
+
+# Runs the repository's run.sh with stub NFs (Linux only).
+test-run-sh:
+	bash scripts/test-run-sh.sh
 
 lint:
 	golangci-lint run

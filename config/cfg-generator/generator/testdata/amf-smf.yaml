@@ -1,0 +1,296 @@
+# AMF and SMF blocks copied verbatim from free5gc config/amfcfg.yaml and
+# config/smfcfg.yaml (free5gc main aab3d81), indented under their NF key.
+# Tests prepend a `global:` block to build an integrated input file.
+amf:
+  info:
+    version: 1.0.9
+    description: AMF initial local configuration
+
+  configuration:
+    idleTimeout: 60s # HTTP server idle timeout; 0s disables it
+    readIdleTimeout: 60s # HTTP/2 client idle time before sending a health-check ping; 0s disables it
+    pingTimeout: 15s # HTTP/2 health-check ping response timeout; 0s uses the transport default
+    amfName: AMF # the name of this AMF
+    ngapIpList:  # the IP list of N2 interfaces on this AMF
+      - 127.0.0.18
+    ngapPort: 38412 # the SCTP port listened by NGAP
+
+    # Service-based Interface (SBI) Configuration
+    sbi:
+      scheme: http # the protocol for sbi (http or https)
+      registerIPv4: 127.0.0.18 # IP used to register to NRF
+      bindingIPv4: 127.0.0.18  # IP used to bind the service
+      port: 8000 # port used to bind the service
+      tls: # the local path of TLS key
+        verify: false # Verify outgoing SBI HTTPS certificates
+        pem: cert/amf.pem # AMF TLS Certificate
+        key: cert/amf.key # AMF TLS Private key
+
+    # SBI Services offered by this AMF, as per TS 29.518
+    serviceNameList:
+      - namf-comm # Namf_Communication service
+      - namf-evts # Namf_EventExposure service
+      - namf-mt   # Namf_MT service
+      - namf-loc  # Namf_Location service
+      - namf-oam  # OAM service
+      - namf-callback # Namf_Callback service
+
+    # Guami (Globally Unique AMF ID) list supported by this AMF
+    servedGuamiList:
+      # <GUAMI> = <MCC><MNC><AMF ID>
+      - plmnId: # Public Land Mobile Network ID, <PLMN ID> = <MCC><MNC>
+          mcc: 208 # Mobile Country Code (3 digits string, digit: 0~9)
+          mnc: 93 # Mobile Network Code (2 or 3 digits string, digit: 0~9)
+        amfId: cafe00 # AMF identifier (3 bytes hex string, range: 000000~FFFFFF)
+
+    # the TAI (Tracking Area Identifier) list supported by this AMF
+    supportTaiList:
+      - plmnId: # Public Land Mobile Network ID, <PLMN ID> = <MCC><MNC>
+          mcc: 208 # Mobile Country Code (3 digits string, digit: 0~9)
+          mnc: 93 # Mobile Network Code (2 or 3 digits string, digit: 0~9)
+        tac: 000001 # Tracking Area Code (3 bytes hex string, range: 000000~FFFFFF)
+
+    # the PLMNs (Public land mobile network) list supported by this AMF
+    plmnSupportList:
+      - plmnId: # Public Land Mobile Network ID, <PLMN ID> = <MCC><MNC>
+          mcc: 208 # Mobile Country Code (3 digits string, digit: 0~9)
+          mnc: 93 # Mobile Network Code (2 or 3 digits string, digit: 0~9)
+        snssaiList: # the S-NSSAI (Single Network Slice Selection Assistance Information) list supported by this AMF
+          - sst: 1 # Slice/Service Type (uinteger, range: 0~255)
+            sd: 010203 # Slice Differentiator (3 bytes hex string, range: 000000~FFFFFF)
+          - sst: 1 # Slice/Service Type (uinteger, range: 0~255)
+            sd: 112233 # Slice Differentiator (3 bytes hex string, range: 000000~FFFFFF)
+
+    # the DNN (Data Network Name) list supported by this AMF
+    supportDnnList:
+      - internet
+    nrfUri: http://127.0.0.10:8000 # a valid URI of NRF
+    nrfCertPem: cert/nrf.pem # NRF Certificate
+
+    # NAS Security Configuration
+    # the priority of integrity algorithms
+    # the priority of ciphering algorithms
+    security:
+      integrityOrder:
+        - NIA2
+        # - NIA0
+      cipheringOrder:
+        - NEA0
+        - NEA2
+
+    # Network Name Information
+    networkName:
+      full: free5GC
+      short: free
+
+    # Optional NGAP Information Elements (IE)
+    ngapIE:
+      mobilityRestrictionList: # Mobility Restriction List IE, refer to TS 38.413
+        enable: true # append this IE in related message or not
+      maskedIMEISV: # Masked IMEISV IE, refer to TS 38.413
+        enable: true # append this IE in related message or not
+      redirectionVoiceFallback: # Redirection Voice Fallback IE, refer to TS 38.413
+        enable: false # append this IE in related message or not
+
+    # Optional NAS Information Elements (IE)
+    nasIE:
+      networkFeatureSupport5GS: # 5gs Network Feature Support IE, refer to TS 24.501
+        enable: true # append this IE in Registration accept or not
+        length: 1 # IE content length (uinteger, range: 1~3)
+        imsVoPS: 0 # IMS voice over PS session indicator (uinteger, range: 0~1)
+        emc: 0 # Emergency service support indicator for 3GPP access (uinteger, range: 0~3)
+        emf: 0 # Emergency service fallback indicator for 3GPP access (uinteger, range: 0~3)
+        iwkN26: 0 # Interworking without N26 interface indicator (uinteger, range: 0~1)
+        mpsi: 0 # MPS indicator (uinteger, range: 0~1)
+        emcN3: 0 # Emergency service support indicator for Non-3GPP access (uinteger, range: 0~1)
+        mcsi: 0 # MCS indicator (uinteger, range: 0~1)
+    t3502Value: 720  # timer value (seconds) at UE side
+    t3512Value: 3600 # timer value (seconds) at UE side
+    non3gppDeregTimerValue: 3240 # timer value (seconds) at UE side
+    # retransmission timer for paging message
+    t3513:
+      enable: true     # true or false
+      expireTime: 6s   # default is 6 seconds
+      maxRetryTimes: 4 # the max number of retransmission
+    # retransmission timer for NAS Deregistration Request message
+    t3522:
+      enable: true     # true or false
+      expireTime: 6s   # default is 6 seconds
+      maxRetryTimes: 4 # the max number of retransmission
+    # retransmission timer for NAS Registration Accept message
+    t3550:
+      enable: true     # true or false
+      expireTime: 6s   # default is 6 seconds
+      maxRetryTimes: 4 # the max number of retransmission
+    # retransmission timer for NAS Configuration Update Command message
+    t3555:
+      enable: true     # true or false
+      expireTime: 6s   # default is 6 seconds
+      maxRetryTimes: 4 # the max number of retransmission
+    # retransmission timer for NAS Authentication Request/Security Mode Command message
+    t3560:
+      enable: true     # true or false
+      expireTime: 6s   # default is 6 seconds
+      maxRetryTimes: 4 # the max number of retransmission
+    # retransmission timer for NAS Notification message
+    t3565:
+      enable: true     # true or false
+      expireTime: 6s   # default is 6 seconds
+      maxRetryTimes: 4 # the max number of retransmission
+    # retransmission timer for NAS Identity Request message
+    t3570:
+      enable: true     # true or false
+      expireTime: 6s   # default is 6 seconds
+      maxRetryTimes: 4 # the max number of retransmission
+    locality: area1 # Name of the location where a set of AMF, SMF, PCF and UPFs are located
+
+    # set the sctp server setting <optinal>, once this field is set, please also add maxInputStream, maxOsStream, maxAttempts, maxInitTimeOut
+    sctp:
+      numOstreams: 3 # the maximum out streams of each sctp connection
+      maxInstreams: 5 # the maximum in streams of each sctp connection
+      maxAttempts: 2 # the maximum attempts of each sctp connection
+      maxInitTimeout: 2 # the maximum init timeout of each sctp connection
+    defaultUECtxReq: false # the default value of UE Context Request to decide when triggering Initial Context Setup procedure
+
+    ngapWorkerPoolSize: 0 # (int), default equal to runtime.NumCPU()
+    ngapTaskBufferSize: 4096 # (int)
+
+  logger: # log output setting
+    enable: true # true or false
+    level: info # how detailed to output, value: trace, debug, info, warn, error, fatal, panic
+    reportCaller: false # enable the caller report or not, value: true or false
+smf:
+  info:
+    version: 1.0.7
+    description: SMF initial local configuration
+
+  configuration:
+    idleTimeout: 60s # HTTP server idle timeout; 0s disables it
+    readIdleTimeout: 60s # HTTP/2 client idle time before sending a health-check ping; 0s disables it
+    pingTimeout: 15s # HTTP/2 health-check ping response timeout; 0s uses the transport default
+    smfName: SMF # the name of this SMF
+
+    # Service-based interface information
+    sbi:
+      scheme: http # the protocol for sbi (http or https)
+      registerIPv4: 127.0.0.2 # IP used to register to NRF
+      bindingIPv4: 127.0.0.2 # IP used to bind the service
+      port: 8000 # Port used to bind the service
+      tls: # the local path of TLS key
+        verify: false # Verify outgoing SBI HTTPS certificates
+        key: cert/smf.key # SMF TLS Certificate
+        pem: cert/smf.pem # SMF TLS Private key
+
+    # the SBI services provided by this SMF, refer to TS 29.502
+    serviceNameList:
+      - nsmf-pdusession # Nsmf_PDUSession service
+      - nsmf-event-exposure # Nsmf_EventExposure service
+      - nsmf-oam # OAM service
+      - nsmf-callback
+
+    # the S-NSSAI (Single Network Slice Selection Assistance Information) list supported by this AMF
+    snssaiInfos:
+      - sNssai: # S-NSSAI (Single Network Slice Selection Assistance Information)
+          sst: 1 # Slice/Service Type (uinteger, range: 0~255)
+          sd: 010203 # Slice Differentiator (3 bytes hex string, range: 000000~FFFFFF)
+        dnnInfos: # DNN information list
+          - dnn: internet # Data Network Name
+            dns: # the IP address of DNS
+              ipv4: 8.8.8.8
+              ipv6: 2001:4860:4860::8888
+      - sNssai: # S-NSSAI (Single Network Slice Selection Assistance Information)
+          sst: 1 # Slice/Service Type (uinteger, range: 0~255)
+          sd: 112233 # Slice Differentiator (3 bytes hex string, range: 000000~FFFFFF)
+        dnnInfos: # DNN information list
+          - dnn: internet # Data Network Name
+            dns: # the IP address of DNS
+              ipv4: 8.8.8.8
+              ipv6: 2001:4860:4860::8888
+
+    # Optional: PLMN IDs configuration.
+    plmnList:
+      - mcc: 208 # Mobile Country Code (3 digits string, digit: 0~9)
+        mnc: 93 # Mobile Network Code (2 or 3 digits string, digit: 0~9)
+    locality: area1 # Name of the location where a set of AMF, SMF, PCF and UPFs are located
+
+    # PFCP (Packet Forwarding Control Protocol) configuration for N4 interface.
+    pfcp:
+      # addr config is deprecated in smf config v1.0.3, please use the following config
+      nodeID: 127.0.0.1 # the Node ID of this SMF
+      listenAddr: 127.0.0.1 # the IP/FQDN of N4 interface on this SMF (PFCP)
+      externalAddr: 127.0.0.1 # the IP/FQDN of N4 interface on this SMF (PFCP)
+      assocFailAlertInterval: 10s
+      assocFailRetryInterval: 30s
+      heartbeatInterval: 10s
+
+    # Userplane nodes information, specifying details for AN and UPF.
+    userplaneInformation:
+      upNodes: # information of userplane node (AN or UPF)
+        gNB1: # the name of the node
+          type: AN # the type of the node (AN or UPF)
+        UPF: # the name of the node
+          type: UPF # the type of the node (AN or UPF)
+          nodeID: 127.0.0.8 # the Node ID of this UPF
+          addr: 127.0.0.8 # the IP/FQDN of N4 interface on this UPF (PFCP)
+          # Optional Nupf Event Exposure API root for this UPF.
+          # SMF appends /nupf-ee/v1; do not include that service path here.
+          # Enable only when this UPF exposes Nupf_EventExposure at this API root.
+          # nupfEeApiRoot: http://upf.example.com:<nupf-ee-port>
+          sNssaiUpfInfos: # S-NSSAI information list for this UPF
+            - sNssai: # S-NSSAI (Single Network Slice Selection Assistance Information)
+                sst: 1 # Slice/Service Type (uinteger, range: 0~255)
+                sd: 010203 # Slice Differentiator (3 bytes hex string, range: 000000~FFFFFF)
+              dnnUpfInfoList: # DNN information list for this S-NSSAI
+                - dnn: internet
+                  pools:
+                    - cidr: 10.60.0.0/16
+                  staticPools:
+                    - cidr: 10.60.100.0/24
+            - sNssai: # S-NSSAI (Single Network Slice Selection Assistance Information)
+                sst: 1 # Slice/Service Type (uinteger, range: 0~255)
+                sd: 112233 # Slice Differentiator (3 bytes hex string, range: 000000~FFFFFF)
+              dnnUpfInfoList: # DNN information list for this S-NSSAI
+                - dnn: internet
+                  pools:
+                    - cidr: 10.61.0.0/16
+                  staticPools:
+                    - cidr: 10.61.100.0/24
+          # The IP address for the N3 interface must match the IP bound in the UPF N3 interface.
+          # If UPF binds to a specific IP, set that same IP here.
+          # If UPF binds to all IPs (0.0.0.0), you can set any of the available UPF IPs here.
+          # Do NOT set 0.0.0.0 as this is not a valid routable address.
+          interfaces: # Interface list for this UPF
+            - interfaceType: N3 # the type of the interface (N3 or N9)
+              endpoints: # the IP address of this N3/N9 interface on this UPF
+                - 127.0.0.8
+              networkInstances: # Data Network Name (DNN)
+                - internet
+
+      # the topology graph of userplane, A and B represent the two nodes of each link
+      links:
+        - A: gNB1
+          B: UPF
+
+    # retransmission timer for PDU session modification command
+    t3591:
+      enable: true # true or false
+      expireTime: 16s # default is 6 seconds
+      maxRetryTimes: 3 # the max number of retransmission
+
+    # retransmission timer for PDU session release command
+    t3592:
+      enable: true # true or false
+      expireTime: 16s # default is 6 seconds
+      maxRetryTimes: 3 # the max number of retransmission
+
+    nrfUri: http://127.0.0.10:8000 # a valid URI of NRF
+    nrfCertPem: cert/nrf.pem # NRF Certificate
+    urrPeriod: 30 # default usage report period in seconds
+    urrThreshold: 500000 # default usage report threshold in bytes
+    requestedUnit: 1000
+
+  # Logging Configuration
+  logger:
+    enable: true # true or false
+    level: info # how detailed to output, value: trace, debug, info, warn, error, fatal, panic
+    reportCaller: false # enable the caller report or not, value: true or false
