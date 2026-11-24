@@ -8,6 +8,10 @@ GO_NF = amf ausf bsf nrf nssf pcf smf udm udr n3iwf upf chf tngf nef scp
 
 WEBCONSOLE = webconsole
 
+CFG_GENERATOR = cfg-generator
+CFG_GENERATOR_PATH = config/cfg-generator
+CFG_GENERATOR_GO_FILES = $(shell find $(CFG_GENERATOR_PATH) -name "*.go" ! -name "*_test.go") $(CFG_GENERATOR_PATH)/go.mod
+
 NF_GO_FILES = $(shell find $(GO_SRC_PATH)/$(%) -name "*.go" ! -name "*_test.go")
 WEBCONSOLE_GO_FILES = $(shell find $(WEBCONSOLE) -name "*.go" ! -name "*_test.go")
 WEBCONSOLE_JS_FILES = $(shell find $(WEBCONSOLE)/frontend -name '*.tsx' ! -path "*/node_modules/*")
@@ -29,13 +33,13 @@ WEBCONSOLE_LDFLAGS = -X github.com/free5gc/util/version.VERSION=$(VERSION) \
                      -X github.com/free5gc/util/version.COMMIT_HASH=$(WEBCONSOLE_COMMIT_HASH) \
                      -X github.com/free5gc/util/version.COMMIT_TIME=$(WEBCONSOLE_COMMIT_TIME)
 
-.PHONY: $(NF) $(WEBCONSOLE) clean
+.PHONY: $(NF) $(WEBCONSOLE) $(CFG_GENERATOR) clean
 
 .DEFAULT_GOAL: nfs
 
-nfs: $(NF)
+nfs: $(NF) $(CFG_GENERATOR)
 
-all: $(NF) $(WEBCONSOLE)
+all: $(NF) $(CFG_GENERATOR) $(WEBCONSOLE)
 
 debug: GCFLAGS += -N -l
 debug: all
@@ -49,6 +53,16 @@ $(GO_BIN_PATH)/%: $(NF_GO_FILES)
 	CGO_ENABLED=0 go build -gcflags "$(GCFLAGS)" -ldflags "$(LDFLAGS)" -o $(ROOT_PATH)/$@ main.go
 
 vpath %.go $(addprefix $(GO_SRC_PATH)/, $(GO_NF))
+
+# cfg-generator renders config/<nf>cfg.yaml from config/global-config.yaml;
+# run.sh calls it before starting the NFs. The explicit rule below takes
+# precedence over the $(GO_BIN_PATH)/% pattern rule used for the NFs.
+$(CFG_GENERATOR): $(GO_BIN_PATH)/$(CFG_GENERATOR)
+
+$(GO_BIN_PATH)/$(CFG_GENERATOR): $(CFG_GENERATOR_GO_FILES)
+	@echo "Start building $(@F)...."
+	cd $(CFG_GENERATOR_PATH) && \
+	CGO_ENABLED=0 go build -o $(ROOT_PATH)/$@ .
 
 $(C_NF): % :
 	@echo "Start building $@...."
@@ -76,7 +90,7 @@ $(WEBCONSOLE_FRONTEND): $(WEBCONSOLE_JS_FILES)
 	cp -R build ../public
 
 clean:
-	rm -rf $(addprefix $(GO_BIN_PATH)/, $(GO_NF))
+	rm -rf $(addprefix $(GO_BIN_PATH)/, $(GO_NF) $(CFG_GENERATOR))
 	rm -rf $(addprefix $(GO_SRC_PATH)/, $(addsuffix /$(C_BUILD_PATH), $(C_NF)))
 	rm -rf $(WEBCONSOLE)/$(GO_BIN_PATH)/$(WEBCONSOLE)
 

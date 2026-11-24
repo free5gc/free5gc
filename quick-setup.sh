@@ -278,11 +278,12 @@ make_free5gc() {
 substitute_ip() {
     log_info "Substituting IP addresses in config files..."
 
-    sed -i -e '/ngapIpList:/!b;n;s/- .*/- '"$IP_ADDRESS"'/' config/amfcfg.yaml
-    sed -i -e '/endpoints:/!b;n;s/- .*/- '"$IP_ADDRESS"'/' config/smfcfg.yaml
-    sed -i -e '/ifList:/!b;n;s/addr: .*/addr: '"$IP_ADDRESS"'/' config/upfcfg.yaml
+    sed -i -e '/ngapIpList:/!b;n;s/- .*/- '"$IP_ADDRESS"'/' config/global-config.yaml
+    sed -i -e '/endpoints:/!b;n;s/- .*/- '"$IP_ADDRESS"'/' config/global-config.yaml
+    sed -i -e '/ifList:/!b;n;s/addr: .*/addr: '"$IP_ADDRESS"'/' config/global-config.yaml
     # Set the NAT interface for every DNN, including already configured entries.
-    sed -i -E 's/^[[:space:]]*#?[[:space:]]*natifname:.*/    natifname: '"$NETWORK_INTERFACE"'/' config/upfcfg.yaml
+    # Keep each line's indentation: the UPF block is nested in global-config.yaml.
+    sed -i -E 's/^([[:space:]]*)#?[[:space:]]*natifname:.*/\1natifname: '"$NETWORK_INTERFACE"'/' config/global-config.yaml
 
     log_success "IP addresses substituted and UPF NAT interface set to ${NETWORK_INTERFACE}"
     SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
