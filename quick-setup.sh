@@ -9,7 +9,7 @@ LINT=false
 DOCKER=false
 
 GTP5G_PATH="$HOME/gtp5g"
-GTP5G_VERSION="v0.9.16"
+GTP5G_VERSION="v0.10.3"
 
 SUCCESS_COUNT=0
 FAIL_COUNT=0
@@ -146,22 +146,26 @@ install_mongodb() {
         return
     fi
 
-    sudo apt-get install gnupg curl
-    curl -fsSL https://www.mongodb.org/static/pgp/server-8.0.asc | sudo gpg -o /usr/share/keyrings/mongodb-server-8.0.gpg --dearmor
-
+    local mongodb_version="8.2"
+    local mongodb_key_version="8.0"
+    local ubuntu_codename
+    local ubuntu_version
     ubuntu_version=$(lsb_release -rs)
     case $ubuntu_version in
         20.04)
-            echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-8.0.gpg ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/8.2 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-8.2.list
+            ubuntu_codename="focal"
             ;;
         22.04)
-            echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-8.0.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/8.2 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-8.2.list
+            ubuntu_codename="jammy"
             ;;
-        24.04)
-            echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-8.0.gpg ] https://repo.mongodb.org/apt/ubuntu noble/mongodb-org/8.2 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-8.2.list
+        24.04|25.04)
+            ubuntu_codename="noble"
             ;;
-        25.04)
-            echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-8.0.gpg ] https://repo.mongodb.org/apt/ubuntu noble/mongodb-org/8.2 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-8.2.list
+        26.04)
+            # Ubuntu 26.04 is supported starting with MongoDB 9.0.4.
+            ubuntu_codename="resolute"
+            mongodb_version="9.0"
+            mongodb_key_version="9"
             ;;
         *)
             log_error "Unsupported Ubuntu version: $ubuntu_version"
@@ -169,6 +173,10 @@ install_mongodb() {
             return 1
             ;;
     esac
+
+    sudo apt-get install gnupg curl
+    curl -fsSL "https://pgp.mongodb.com/server-${mongodb_key_version}.asc" | sudo gpg -o "/usr/share/keyrings/mongodb-server-${mongodb_key_version}.gpg" --dearmor
+    echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-${mongodb_key_version}.gpg ] https://repo.mongodb.org/apt/ubuntu ${ubuntu_codename}/mongodb-org/${mongodb_version} multiverse" | sudo tee "/etc/apt/sources.list.d/mongodb-org-${mongodb_version}.list"
     sudo apt-get update
     sudo apt-get install -y mongodb-org
     sudo systemctl enable --now mongod
