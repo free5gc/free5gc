@@ -21,6 +21,7 @@ import (
 	chffactory "github.com/free5gc/chf/pkg/factory"
 	"github.com/free5gc/config/cfg-generator/adapter"
 	"github.com/free5gc/config/cfg-generator/generator"
+	"github.com/free5gc/config/cfg-generator/internal/testfixture"
 	upffactory "github.com/free5gc/go-upf/pkg/factory"
 	n3iwffactory "github.com/free5gc/n3iwf/pkg/factory"
 	neffactory "github.com/free5gc/nef/pkg/factory"
@@ -34,9 +35,7 @@ import (
 	udrfactory "github.com/free5gc/udr/pkg/factory"
 )
 
-const fixtureAllNFs = "testdata/all-nfs.yaml"
-
-// allFiles are the outputs for the all-NF fixture, in run.sh start order.
+// allFiles are the outputs for the sample NF blocks, in run.sh start order.
 var allFiles = []string{
 	"upfcfg.yaml", "nrfcfg.yaml", "amfcfg.yaml", "smfcfg.yaml", "udrcfg.yaml",
 	"pcfcfg.yaml", "udmcfg.yaml", "nssfcfg.yaml", "ausfcfg.yaml", "chfcfg.yaml",
@@ -61,9 +60,7 @@ const fullGlobalAll = `global:
 
 func writeAllInput(t *testing.T, globalYAML string) string {
 	t.Helper()
-	nf, err := os.ReadFile(fixtureAllNFs)
-	require.NoError(t, err)
-	return writeFile(t, "input.yaml", globalYAML+"\n"+string(nf))
+	return writeFile(t, "input.yaml", globalYAML+"\n"+testfixture.NFBlocks(t))
 }
 
 // decodeFile decodes an output file the way NFs do, without running their

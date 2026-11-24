@@ -7,20 +7,16 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/free5gc/config/cfg-generator/internal/testfixture"
 )
 
 // fixedNow is the clock used for backup names in tests.
 var fixedNow = time.Date(2026, 11, 22, 15, 30, 0, 0, time.UTC)
 
-const fixtureNFBlocks = "testdata/amf-smf.yaml"
-
-// writeInput writes an integrated input file made of globalYAML followed by
-// the AMF and SMF blocks from the fixture, and returns its path.
 func writeInput(t *testing.T, globalYAML string) string {
 	t.Helper()
-	nf, err := os.ReadFile(fixtureNFBlocks)
-	require.NoError(t, err)
-	return writeFile(t, "input.yaml", globalYAML+"\n"+string(nf))
+	return writeFile(t, "input.yaml", globalYAML+"\n"+testfixture.NFBlocks(t, "amf", "smf"))
 }
 
 // writeFile writes content to a new file in a fresh temp dir.

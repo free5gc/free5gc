@@ -11,15 +11,12 @@ import (
 
 	"github.com/free5gc/config/cfg-generator/cmd"
 	"github.com/free5gc/config/cfg-generator/generator"
+	"github.com/free5gc/config/cfg-generator/internal/testfixture"
 )
 
 func input(t *testing.T, global string) string {
 	t.Helper()
-	nf, err := os.ReadFile("../generator/testdata/amf-smf.yaml")
-	require.NoError(t, err)
-	p := filepath.Join(t.TempDir(), "input.yaml")
-	require.NoError(t, os.WriteFile(p, []byte(global+"\n"+string(nf)), 0o600))
-	return p
+	return testInput(t, global, "amf", "smf")
 }
 
 func runCLI(args ...string) (code int, stdout, stderr string) {
@@ -45,10 +42,14 @@ func TestCLISuccess(t *testing.T) {
 // present and can report values they do not apply.
 func allInput(t *testing.T, global string) string {
 	t.Helper()
-	nf, err := os.ReadFile("../generator/testdata/all-nfs.yaml")
-	require.NoError(t, err)
+	return testInput(t, global)
+}
+
+func testInput(t *testing.T, global string, names ...string) string {
+	t.Helper()
+	nf := testfixture.NFBlocks(t, names...)
 	p := filepath.Join(t.TempDir(), "input.yaml")
-	require.NoError(t, os.WriteFile(p, []byte(global+"\n"+string(nf)), 0o600))
+	require.NoError(t, os.WriteFile(p, []byte(global+"\n"+nf), 0o600))
 	return p
 }
 

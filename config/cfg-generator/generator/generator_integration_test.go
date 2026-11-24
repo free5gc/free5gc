@@ -13,6 +13,7 @@ import (
 
 	amffactory "github.com/free5gc/amf/pkg/factory"
 	"github.com/free5gc/config/cfg-generator/generator"
+	"github.com/free5gc/config/cfg-generator/internal/testfixture"
 	smffactory "github.com/free5gc/smf/pkg/factory"
 )
 
@@ -176,8 +177,7 @@ func TestEndToEndDryRunWritesNothing(t *testing.T) {
 // TestEndToEndFailuresLeaveOutputUntouched covers exit codes 1-4: each must
 // report the right stage and must not modify the output directory.
 func TestEndToEndFailuresLeaveOutputUntouched(t *testing.T) {
-	nfBlocks, err := os.ReadFile(fixtureNFBlocks)
-	require.NoError(t, err)
+	nfBlocks := testfixture.NFBlocks(t, "amf", "smf")
 
 	cases := []struct {
 		name     string
@@ -211,7 +211,7 @@ func TestEndToEndFailuresLeaveOutputUntouched(t *testing.T) {
 			name: "validate: NF rejects its config",
 			input: func(t *testing.T) string {
 				// Break the AMF version; AMF Validate only accepts 1.0.9.
-				broken := []byte(string(nfBlocks))
+				broken := []byte(nfBlocks)
 				broken = replaceOnce(t, broken, "version: 1.0.9", "version: 9.9.9")
 				return writeFile(t, "in.yaml", globalPlmn46601+"\n"+string(broken))
 			},
