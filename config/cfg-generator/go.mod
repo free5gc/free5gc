@@ -4,7 +4,7 @@ go 1.26.2
 
 require (
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
-	github.com/free5gc/openapi v1.3.1-0.20261022060819-1fa510b3e4a2
+	github.com/free5gc/openapi v1.3.1-0.20261114120255-a2fc2fa97b0e
 	github.com/google/go-cmp v0.7.0
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.12.1
@@ -19,10 +19,10 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fclairamb/go-log v0.4.1 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
-	github.com/free5gc/nas v1.3.0 // indirect
+	github.com/free5gc/nas v1.3.1 // indirect
 	github.com/free5gc/ngap v1.2.0 // indirect
 	github.com/free5gc/sctp v1.2.0 // indirect
-	github.com/free5gc/util v1.4.1-0.20261014070359-d865b0ce854b // indirect
+	github.com/free5gc/util v1.4.1-0.20261118044530-a14766fe79d2 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.12 // indirect
 	github.com/gin-contrib/sse v1.1.0 // indirect
 	github.com/gin-gonic/gin v1.12.0 // indirect
