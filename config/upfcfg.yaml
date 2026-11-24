@@ -29,9 +29,18 @@ gtpu:
 dnnList:
   - dnn: internet # Data Network Name
     cidr: 10.60.0.0/16 # Classless Inter-Domain Routing for assigned IPv4 pool of UE
+    # Optional NAT interface in the UPF network namespace; takes precedence over natIfCIDR.
+    # natifname: eth0
+    # natIfCIDR: 192.168.0.0/24 # Select the NAT interface by its subnet; adapt to your deployment
+    ipForwardEnable: true # Add FORWARD rules when natifname or natIfCIDR is set
+    # tcpMss: 1400 # Optional fixed TCP MSS; omit or set 0 to clamp MSS to PMTU
   - dnn: internet # Data Network Name
     cidr: 10.61.0.0/16 # Classless Inter-Domain Routing for assigned IPv4 pool of UE
+    # Optional NAT interface in the UPF network namespace; takes precedence over natIfCIDR.
     # natifname: eth0
+    # natIfCIDR: 192.168.0.0/24 # Select the NAT interface by its subnet; adapt to your deployment
+    ipForwardEnable: true # Add FORWARD rules when natifname or natIfCIDR is set
+    # tcpMss: 1400 # Optional fixed TCP MSS; omit or set 0 to clamp MSS to PMTU
 
 # Logging Configuration
 # Controls logging level and output for the UPF.
@@ -39,3 +48,8 @@ logger:
   enable: true # true or false
   level: info # how detailed to output, value: trace, debug, info, warn, error, fatal, panic
   reportCaller: false # enable the caller report or not, value: true or false
+
+ees:
+  enabled: false # true or false; free5GC single-UPF only, keep false with ULCL
+  ip: 127.0.0.8  # IP used to bind the Nupf_EventExposure service
+  port: 8088     # Port used to bind the service

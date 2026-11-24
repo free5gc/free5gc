@@ -45,69 +45,131 @@ jobs:
         run: |
           cd ${{ env.CI_TEST_DIR }}
 
-          docker compose -f "$CI_COMPOSE_IT_FILE" up -d --wait --wait-timeout "$TIMEOUT"
-          docker compose -f "$CI_COMPOSE_IT_FILE" down
+          {
+            docker compose -f "$CI_COMPOSE_IT_FILE" up -d --wait --wait-timeout "$TIMEOUT"
+            docker compose -f "$CI_COMPOSE_IT_FILE" down
+          } 2>&1 | tee -a "$RUNNER_TEMP/daily-it.log"
 
       - name: Run basic tests
         run: |
           cd ${{ env.CI_TEST_DIR }}
 
-          ./ci-test-it.sh --test TestRegistration
-          ./ci-test-it.sh --test TestDeregistration
-          ./ci-test-it.sh --test TestGUTIRegistration
-          ./ci-test-it.sh --test TestEAPAKAPrimeAuthentication
-          ./ci-test-it.sh --test TestDuplicateRegistration
-          ./ci-test-it.sh --test TestServiceRequest
-          ./ci-test-it.sh --test TestPDUSessionReleaseRequest
-          ./ci-test-it.sh --test TestNasReroute
-          ./ci-test-it.sh --test TestN2Handover
-          ./ci-test-it.sh --test TestXnHandover
-          ./ci-test-it.sh --test TestPaging
-          ./ci-test-it.sh --test TestReSynchronization
-          ./ci-test-it.sh --test TestMultiAmfRegistration
-          ./ci-test-it.sh --test TestRequestTwoPDUSessions
+          {
+            ./ci-test-it.sh --test TestRegistration
+            ./ci-test-it.sh --test TestDeregistration
+            ./ci-test-it.sh --test TestGUTIRegistration
+            ./ci-test-it.sh --test TestEAPAKAPrimeAuthentication
+            ./ci-test-it.sh --test TestDuplicateRegistration
+            ./ci-test-it.sh --test TestServiceRequest
+            ./ci-test-it.sh --test TestPDUSessionReleaseRequest
+            ./ci-test-it.sh --test TestNasReroute
+            ./ci-test-it.sh --test TestN2Handover
+            ./ci-test-it.sh --test TestXnHandover
+            ./ci-test-it.sh --test TestPaging
+            ./ci-test-it.sh --test TestReSynchronization
+            ./ci-test-it.sh --test TestMultiAmfRegistration
+            ./ci-test-it.sh --test TestRequestTwoPDUSessions
+          } 2>&1 | tee -a "$RUNNER_TEMP/daily-it.log"
 
       - name: Run basic non3gpp tests
         run: |
           cd ${{ env.CI_TEST_DIR }}
 
-          ./ci-test-it.sh --test TestN3iwf
-          ./ci-test-it.sh --test TestTngf
+          {
+            ./ci-test-it.sh --test TestN3iwf
+            ./ci-test-it.sh --test TestTngf
+          } 2>&1 | tee -a "$RUNNER_TEMP/daily-it.log"
 
       - name: Run basic DC tests
         run: |
           cd ${{ env.CI_TEST_DIR }}
 
-          ./ci-test-it.sh --test TestDC
-          ./ci-test-it.sh --test TestDynamicDC
-          ./ci-test-it.sh --test TestXnDcHandover
+          {
+            ./ci-test-it.sh --test TestDC
+            ./ci-test-it.sh --test TestDynamicDC
+            ./ci-test-it.sh --test TestXnDcHandover
+          } 2>&1 | tee -a "$RUNNER_TEMP/daily-it.log"
 
       - name: Check E2E basic compose
         run: |
           cd ${{ env.CI_TEST_DIR }}
 
-          docker compose -f "$CI_COMPOSE_E2E_BASIC_FILE" up -d --wait --wait-timeout "$TIMEOUT"
-          docker compose -f "$CI_COMPOSE_E2E_BASIC_FILE" down
+          {
+            docker compose -f "$CI_COMPOSE_E2E_BASIC_FILE" up -d --wait --wait-timeout "$TIMEOUT"
+            docker compose -f "$CI_COMPOSE_E2E_BASIC_FILE" down
+          } 2>&1 | tee -a "$RUNNER_TEMP/daily-it.log"
 
       - name: Run E2E basic tests
         run: |
           cd ${{ env.CI_TEST_DIR }}
 
-          ./ci-test-e2e-basic.sh --test TestRegPduCharging
+          ./ci-test-e2e-basic.sh --test TestRegPduCharging 2>&1 | tee -a "$RUNNER_TEMP/daily-it.log"
 
       - name: Check E2E ULCL compose
         run: |
           cd ${{ env.CI_TEST_DIR }}
 
-          docker compose -f "$CI_COMPOSE_E2E_ULCL_FILE" up -d --wait --wait-timeout "$TIMEOUT"
-          docker compose -f "$CI_COMPOSE_E2E_ULCL_FILE" down
+          {
+            docker compose -f "$CI_COMPOSE_E2E_ULCL_FILE" up -d --wait --wait-timeout "$TIMEOUT"
+            docker compose -f "$CI_COMPOSE_E2E_ULCL_FILE" down
+          } 2>&1 | tee -a "$RUNNER_TEMP/daily-it.log"
 
       - name: Run E2E ULCL tests
         run: |
           cd ${{ env.CI_TEST_DIR }}
 
-          ./ci-test-e2e-ulcl.sh --test TestULCLTrafficInfluence
-          ./ci-test-e2e-ulcl.sh --test TestULCLMultiPathUe
+          {
+            ./ci-test-e2e-ulcl.sh --test TestULCLTrafficInfluence
+            ./ci-test-e2e-ulcl.sh --test TestULCLMultiPathUe
+          } 2>&1 | tee -a "$RUNNER_TEMP/daily-it.log"
+
+      - name: Notify Discord on failure
+        if: failure()
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          DISCORD_ADMIN_USER_ID: ${{ secrets.DISCORD_ADMIN_USER_ID }}
+          DISCORD_MENTION_ROLE_ID: ${{ secrets.DISCORD_MENTION_ROLE_ID }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          DATE="$(TZ=Asia/Taipei date +%F)"
+          LOG="$RUNNER_TEMP/daily-it.log"
+          TAIL="$RUNNER_TEMP/daily-it-fail.log"
+          if [ -s "$LOG" ]; then
+            tail -c 40000 "$LOG" > "$TAIL"
+          else
+            echo "No captured log (failed before any test output). See run: $RUN_URL" > "$TAIL"
+          fi
+          PAYLOAD="$(jq -n \
+            --arg tn "❌ $DATE" \
+            --arg uid "$DISCORD_ADMIN_USER_ID" \
+            --arg rid "$DISCORD_MENTION_ROLE_ID" \
+            --arg url "$RUN_URL" \
+            '{thread_name: $tn,
+              content: "<@\($uid)> <@&\($rid)>\nDaily IT failed\nRun: \($url)\nLog: daily-it-fail.log (attached)",
+              allowed_mentions: {parse: [], roles: [$rid], users: [$uid]}}')"
+          curl -sf -X POST "$DISCORD_WEBHOOK_URL" \
+            -F "payload_json=$PAYLOAD" \
+            -F "files[0]=@${TAIL};type=text/plain;filename=daily-it-fail.log"
+
+      - name: Notify Discord on success
+        if: success()
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          DISCORD_ADMIN_USER_ID: ${{ secrets.DISCORD_ADMIN_USER_ID }}
+          DISCORD_MENTION_ROLE_ID: ${{ secrets.DISCORD_MENTION_ROLE_ID }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          DATE="$(TZ=Asia/Taipei date +%F)"
+          curl -sf -X POST "$DISCORD_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -d "$(jq -n \
+              --arg tn "✅ $DATE" \
+              --arg uid "$DISCORD_ADMIN_USER_ID" \
+              --arg rid "$DISCORD_MENTION_ROLE_ID" \
+              --arg url "$RUN_URL" \
+              '{thread_name: $tn,
+                content: "<@\($uid)> <@&\($rid)>\nAll passed\nRun: \($url)",
+                allowed_mentions: {parse: [], roles: [$rid], users: [$uid]}}')"
 
       - name: Cleanup docker resources
         if: always()

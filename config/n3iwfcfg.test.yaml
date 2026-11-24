@@ -3,6 +3,7 @@ info:
   description: N3IWF initial local configuration
 
 configuration:
+  idleTimeout: 60s # HTTP server idle timeout; 0s disables it
   n3iwfInformation:
     globalN3IWFID: # ID used to globally identify an N3IWF
       plmnID: # Public Land Mobile Network ID, <PLMN ID> = <MCC><MNC>

@@ -3,6 +3,7 @@ info:
   description: TNGF initial local configuration
 
 configuration:
+  idleTimeout: 60s # HTTP server idle timeout; 0s disables it
   TNGFInformation:
     GlobalTNGFID: # ID used to globally identify an TNGF
       PLMNID: # Public Land Mobile Network ID, <PLMN ID> = <MCC><MNC>

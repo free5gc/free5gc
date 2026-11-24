@@ -3,6 +3,9 @@ info:
   description: NSSF initial local configuration
 
 configuration:
+  idleTimeout: 60s # HTTP server idle timeout; 0s disables it
+  readIdleTimeout: 60s # HTTP/2 client idle time before sending a health-check ping; 0s disables it
+  pingTimeout: 15s # HTTP/2 health-check ping response timeout; 0s uses the transport default
   nssfName: NSSF # the name of this NSSF
   sbi: # Service-based interface information
     scheme: http # the protocol for sbi (http or https)
@@ -10,6 +13,7 @@ configuration:
     bindingIPv4: 127.0.0.31  # IP used to bind the service
     port: 8000 # Port used to bind the service
     tls: # the local path of TLS key
+      verify: false # Verify outgoing SBI HTTPS certificates
       pem: cert/nssf.pem # NSSF TLS Certificate
       key: cert/nssf.key # NSSF TLS Private key
   serviceNameList: # the SBI services provided by this SMF, refer to TS 29.531

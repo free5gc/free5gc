@@ -43,3 +43,6 @@
 [submodule "NFs/bsf"]
 	path = NFs/bsf
 	url = https://github.com/free5gc/bsf.git
+[submodule "NFs/scp"]
+	path = NFs/scp
+	url = https://github.com/free5gc/scp.git

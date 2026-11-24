@@ -1,7 +1,7 @@
 #!/bin/bash
 
 GO_VERSION="1.26.2"
-GOLANGCI_LINT_VERSION="2.11.4"
+GOLANGCI_LINT_VERSION="v2.11.4"
 
 NETWORK_INTERFACE=""
 IP_ADDRESS=""
@@ -77,8 +77,7 @@ network_config() {
     sudo systemctl disable ufw
 
     sudo sysctl -w net.ipv4.ip_forward=1
-    sudo iptables -t nat -A POSTROUTING -o ${NETWORK_INTERFACE} -j MASQUERADE
-    sudo iptables -I FORWARD 1 -j ACCEPT
+    # UPF manages NAT and FORWARD rules using the configured DNN NAT interface.
 
     log_success "Network configured with interface ${NETWORK_INTERFACE}"
     SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
@@ -201,21 +200,27 @@ install_gtp5g() {
 }
 
 install_yarn() {
-    log_info "Installing Yarn..."
+    log_info "Installing Node.js 22 and Yarn..."
 
-    if yarn --version > /dev/null 2>&1; then
-        log_info "Yarn already installed"
+    export COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+
+    if [[ "$(node --version 2>/dev/null)" == v22.* ]] && yarn --version > /dev/null 2>&1; then
+        log_info "Node.js 22 and Yarn already installed"
         SKIP_COUNT=$((SKIP_COUNT + 1))
         return
     fi
-    curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - 
+
+    curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
     sudo apt update
     sudo apt install -y nodejs
-    sudo corepack enable
-    echo 'export COREPACK_ENABLE_DOWNLOAD_PROMPT=0' >> ~/.bashrc
-    export COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 
-    log_success "Yarn installed"
+    sudo corepack enable
+
+    if ! grep -q 'COREPACK_ENABLE_DOWNLOAD_PROMPT=0' ~/.bashrc; then
+        echo 'export COREPACK_ENABLE_DOWNLOAD_PROMPT=0' >> ~/.bashrc
+    fi
+
+    log_success "Node.js 22 and Yarn installed"
     SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
 }
 
@@ -276,8 +281,10 @@ substitute_ip() {
     sed -i -e '/ngapIpList:/!b;n;s/- .*/- '"$IP_ADDRESS"'/' config/amfcfg.yaml
     sed -i -e '/endpoints:/!b;n;s/- .*/- '"$IP_ADDRESS"'/' config/smfcfg.yaml
     sed -i -e '/ifList:/!b;n;s/addr: .*/addr: '"$IP_ADDRESS"'/' config/upfcfg.yaml
+    # Set the NAT interface for every DNN, including already configured entries.
+    sed -i -E 's/^[[:space:]]*#?[[:space:]]*natifname:.*/    natifname: '"$NETWORK_INTERFACE"'/' config/upfcfg.yaml
 
-    log_success "IP addresses substituted"
+    log_success "IP addresses substituted and UPF NAT interface set to ${NETWORK_INTERFACE}"
     SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
 }
 

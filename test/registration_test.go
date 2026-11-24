@@ -2253,7 +2253,7 @@ func TestAFInfluenceOnTrafficRouting(t *testing.T) {
 			c.Status(http.StatusNoContent)
 		})
 
-		server, err := httpwrapper.NewHttp2Server("127.0.0.100:8000", "", router)
+		server, err := httpwrapper.NewHttp2Server("127.0.0.100:8000", "", router, time.Millisecond)
 		if err == nil && server != nil {
 			err = server.ListenAndServe()
 		}

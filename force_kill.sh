@@ -21,7 +21,7 @@ if [ $# -ne 0 ]; then
     done
 fi
 
-NF_LIST="nrf amf smf udr pcf udm nssf ausf bsf n3iwf upf chf nef tngf"
+NF_LIST="nrf amf smf udr pcf udm nssf ausf bsf n3iwf upf chf nef tngf scp"
 
 for NF in ${NF_LIST}; do
     sudo killall -9 ${NF}
@@ -60,7 +60,7 @@ else
         MONGO_SCRIPT+="db.$COLLECTION.drop();"
     done
     if command -v mongosh &> /dev/null; then
-        mongosh "$DB_NAME" --eval "$MONGO_SCRIPT" 
+        mongosh "$DB_NAME" --eval "$MONGO_SCRIPT"
     else
         mongo "$DB_NAME" --eval "$MONGO_SCRIPT"
     fi

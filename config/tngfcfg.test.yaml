@@ -3,6 +3,9 @@ info:
   description: TNGF initial local configuration
 
 configuration:
+  idleTimeout: 60s # HTTP server idle timeout; 0s disables it
+  readIdleTimeout: 60s # HTTP/2 client idle time before sending a health-check ping; 0s disables it
+  pingTimeout: 15s # HTTP/2 health-check ping response timeout; 0s uses the transport default
   TNGFInformation:
     GlobalTNGFID: # ID used to globally identify an TNGF
       PLMNID: # Public Land Mobile Network ID, <PLMN ID> = <MCC><MNC>

@@ -3,6 +3,9 @@ info:
   description: PCF initial local configuration
 
 configuration:
+  idleTimeout: 60s # HTTP server idle timeout; 0s disables it
+  readIdleTimeout: 60s # HTTP/2 client idle time before sending a health-check ping; 0s disables it
+  pingTimeout: 15s # HTTP/2 health-check ping response timeout; 0s uses the transport default
   pcfName: PCF # the name of this PCF
   sbi: # Service-based interface information
     scheme: http # the protocol for sbi (http or https)
@@ -10,6 +13,7 @@ configuration:
     bindingIPv4: 127.0.0.7  # IP used to bind the service
     port: 8000              # port used to bind the service
     tls: # the local path of TLS key
+      verify: false # Verify outgoing SBI HTTPS certificates
       pem: cert/pcf.pem # PCF TLS Certificate
       key: cert/pcf.key # PCF TLS Private key
   timeFormat: 2019-01-02 15:04:05 # time format of this PCF
